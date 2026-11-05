@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#061428"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>Field Sales Atlas | Reconnect</title>
+  <style>
+    :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+    *{box-sizing:border-box}
+    html,body{min-height:100%;margin:0}
+    body{
+      display:grid;place-items:center;min-height:100dvh;
+      padding:calc(20px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+      color:#f3fbff;
+      background:
+        radial-gradient(circle at 82% 19%,rgba(246,72,162,.18),transparent 37%),
+        radial-gradient(circle at 9% 76%,rgba(45,238,237,.17),transparent 42%),
+        linear-gradient(165deg,#071225,#082239 54%,#101631);
+    }
+    .card{
+      width:min(100%,440px);position:relative;overflow:hidden;
+      border:1px solid rgba(53,224,231,.48);border-radius:24px;
+      background:linear-gradient(135deg,rgba(7,24,46,.96),rgba(10,34,60,.93));
+      box-shadow:0 30px 80px rgba(0,4,22,.32);
+      padding:28px 24px;
+    }
+    .card:after{content:'';position:absolute;inset:auto 0 0;height:4px;background:linear-gradient(90deg,#34f2ea,#ff56af,#ffb37a)}
+    .brand{display:flex;gap:13px;align-items:center}
+    .brand img{
+      display:block;width:59px;height:59px;flex-shrink:0;object-fit:cover;
+      border:1px solid #3be8e8;border-radius:14px;
+      box-shadow:0 0 20px rgba(40,243,239,.13);
+    }
+    .brand span{display:block;font-size:10px;font-weight:850;letter-spacing:1.9px;color:#7cfef8}
+    .brand strong{display:block;margin-top:4px;font-size:20px;letter-spacing:-.7px}
+    .horizon{height:2px;margin:23px 0;background:linear-gradient(90deg,#33f5ed,#ff4dac 72%,transparent)}
+    .signal{display:flex;align-items:center;gap:8px;color:#ffb0d9;font-size:11px;font-weight:850;letter-spacing:1.1px}
+    .signal i{width:9px;height:9px;background:#ff5cb1;box-shadow:0 0 12px #ff5cb1;border-radius:50%}
+    h1{margin:14px 0 12px;font-size:clamp(27px,8vw,38px);letter-spacing:-1.6px;line-height:1.1}
+    h1 em{color:#ff67b9;font-style:normal}
+    p{color:#d1e5f2;line-height:1.56;font-size:14px;margin:0}
+    button{
+      width:100%;min-height:55px;margin-top:22px;border:1px solid #ff65b4;
+      border-radius:13px;background:linear-gradient(110deg,#ff74c4,#f22d9a);
+      color:#150d2b;font-size:16px;font-weight:850;
+    }
+    button:focus-visible{outline:3px solid #55f9f1;outline-offset:3px}
+    .saved{display:none;margin:18px 0;padding:16px;border-radius:13px;
+      border:1px solid #388da8;background:rgba(5,52,77,.67)}
+    .saved strong{display:block;font-size:25px;color:#70fff7;margin:6px 0;letter-spacing:-1px}
+    .saved span{display:block;color:#d7f2f7;font-size:12px;line-height:1.5;margin-top:5px}
+    .saved small{margin-top:8px}
+    .saved ul{display:grid;gap:7px;padding:0;margin:10px 0;list-style:none}
+    .saved li{border:1px solid #275c75;border-radius:9px;padding:9px;
+      background:rgba(4,24,43,.62);font-size:11px;color:#d8eff7;line-height:1.45}
+    .saved h2{font-size:12px;color:#6cfcf0;letter-spacing:.8px;margin:15px 0 6px}
+    .note{display:flex;gap:9px;margin:16px 0 0;padding:13px;border:1px solid #28516d;
+      border-radius:11px;background:rgba(1,18,38,.48);
+      color:#c7dfeb;font-size:12px;line-height:1.45}
+    .note svg{flex:0 0 17px;color:#5df9ee}
+    small{display:block;margin-top:18px;color:#acc8db;font-size:11px;line-height:1.5}
+    @media(prefers-color-scheme:light){
+      :root{color-scheme:light}
+      body{background:linear-gradient(155deg,#ecf9f9,#f7ebf2)}
+      .card{background:linear-gradient(135deg,#fff,#ecf9fb);border-color:#2f9eaa;box-shadow:0 20px 50px rgba(12,50,76,.15)}
+      .brand strong,h1{color:#12324c}
+      .brand span,.signal{color:#147b8a}
+      h1 em{color:#dc287e}p,small{color:#315f73}
+      .note{background:#e5f5f5;border-color:#c0dede;color:#2a6172}
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">
+      <img src="/resources/field-sales-atlas-logo.jpg" alt="" width="59" height="59"/>
+      <div><span>FIELD SALES ATLAS</span><strong>Travel intelligence</strong></div>
+    </div>
+    <div class="horizon" aria-hidden="true"></div>
+    <div class="signal"><i aria-hidden="true"></i> OFFLINE / CONNECTION REQUIRED</div>
+    <h1>Your journey <em>isn't over.</em></h1>
+    <p>Connect to the internet to load current FAA, NOAA and NWS observations, historical flight research and shared field records.</p>
+    <section class="saved" id="savedBrief" aria-label="Previously saved offline travel card">
+      <div class="signal">SAVED ON THIS DEVICE / NOT CURRENT</div>
+      <strong id="savedRoute"></strong>
+      <span id="savedDate"></span>
+      <span id="savedAlt"></span>
+      <span id="savedConnection"></span>
+      <div id="savedHistory" hidden>
+        <h2>HISTORICAL SAMPLES / NOT LIVE</h2>
+        <ul id="savedLegs"></ul>
+      </div>
+      <small id="savedAt"></small>
+      <small>Live flight status, weather, FAA events, calendar edits and fares are unavailable offline.</small>
+    </section>
+    <button type="button" id="retry">Reconnect to Atlas</button>
+    <div class="note">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <span>We won't show stale flight signals as live or cache your private team records in this offline screen.</span>
+    </div>
+    <small>Your original workspace address stays in the browser. This screen does not change your saved plans.</small>
+  </main>
+  <script>
+    try{
+      var item=JSON.parse(localStorage.getItem('atlas-travel-offline-brief-v1')||'null');
+      if(item&&typeof item.route==='string'&&/^[A-Z]{3}( → [A-Z]{3}){1,2}$/.test(item.route)){
+        document.getElementById('savedRoute').textContent=item.route;
+        document.getElementById('savedDate').textContent='Travel date: '+String(item.travelDate||'Not set');
+        document.getElementById('savedAlt').textContent=item.alternate?
+          'Potential alternate to verify: '+String(item.alternate):'';
+        document.getElementById('savedConnection').textContent=
+          Number(item.connectionMinutes)>0?'Entered connection time: '+Number(item.connectionMinutes)+' minutes. Actual transfer risk unverified.':'';
+        if(Array.isArray(item.historical)&&item.historical.length){
+          var list=document.getElementById('savedLegs');
+          item.historical.slice(0,3).forEach(function(leg){
+            if(!leg||typeof leg.segment!=='string'||leg.segment.length>30)return;
+            var li=document.createElement('li');
+            li.textContent=leg.segment+' · '+String(leg.basis||'no match')+
+              ' · '+Number(leg.sample||0).toLocaleString()+
+              ' historical records'+(leg.periodEnd?' · through '+String(leg.periodEnd):'')+
+              '. No future flight prediction.';
+            list.appendChild(li);
+          });
+          if(list.children.length)document.getElementById('savedHistory').hidden=false;
+        }
+        document.getElementById('savedAt').textContent='Saved '+new Date(item.savedAt).toLocaleString()+
+          '. This is not a fresh operational check.';
+        document.getElementById('savedBrief').style.display='block';
+      }
+    }catch(error){/* Offline reference is optional. */}
+    document.getElementById('retry').addEventListener('click',function(){window.location.reload();});
+    window.addEventListener('online',function(){window.location.reload();},{once:true});
+  </script>
+</body>
+</html>

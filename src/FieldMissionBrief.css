@@ -1,0 +1,131 @@
+/* Field Mission Intelligence / single-screen next-best-action decisions */
+.mv-app .fao .fao-mission-director {
+  min-width:0;display:grid;grid-template-columns:minmax(0,1.72fr) minmax(252px,.68fr);
+  overflow:hidden;isolation:isolate;position:relative;border-radius:19px;
+  border:1px solid color-mix(in srgb,var(--at-cyan) 44%,var(--at-border));
+  background:
+    radial-gradient(ellipse 540px 330px at 5% 92%,color-mix(in srgb,var(--at-cyan) 17%,transparent),transparent 80%),
+    radial-gradient(ellipse 440px 370px at 79% -19%,color-mix(in srgb,var(--at-rose) 13%,transparent),transparent 80%),
+    var(--at-surface);
+  color:var(--at-text);
+  box-shadow:0 21px 57px rgba(0,8,28,.17);
+}
+.mv-app .fao .fao-mission-director::before{
+  content:'';position:absolute;z-index:0;pointer-events:none;
+  inset:0 0 auto;height:2px;
+  background:linear-gradient(90deg,transparent 3%,var(--at-cyan) 19%,var(--at-rose) 74%,transparent);
+}
+.mv-app .fao .fao-mission-main {
+  display:flex;flex-direction:column;min-width:0;
+  gap:15px;padding:clamp(20px,2.05vw,34px);position:relative;
+}
+.mv-app .fao .fao-mission-overline {
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  color:var(--at-cyan);font-size:10px;font-weight:850;letter-spacing:.12em;
+}
+.mv-app .fao .fao-mission-signal {
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--at-cyan);box-shadow:0 0 13px color-mix(in srgb,var(--at-cyan) 74%,transparent);
+}
+.mv-app .fao .fao-mission-overline-divider {color:var(--at-border);}
+.mv-app .fao .fao-mission-titles {min-width:0;max-width:790px;}
+.mv-app .fao .fao-mission-kicker {
+  color:var(--at-rose);font-size:10px;font-weight:850;letter-spacing:.12em;
+}
+.mv-app .fao .fao-mission-titles h2 {
+  font:840 clamp(27px,3.3vw,48px)/1.04 'Outfit','DM Sans',system-ui,sans-serif;
+  letter-spacing:-.054em;margin:8px 0 9px;color:var(--at-text);
+}
+.mv-app .fao .fao-mission-period {color:var(--at-cyan);}
+.mv-app .fao .fao-mission-titles p {max-width:640px;font-size:13.2px;line-height:1.54;color:var(--at-muted);margin:0;}
+.mv-app .fao .fao-mission-facts {
+  display:grid;grid-template-columns:1fr 1.2fr 1.4fr;gap:10px;
+}
+.mv-app .fao .fao-mission-facts>div {
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+  padding:12px;border:1px solid var(--at-border-soft);
+  border-radius:12px;background:color-mix(in srgb,var(--at-field) 85%,var(--at-surface));
+}
+.mv-app .fao .fao-mission-facts>div>span {display:flex;align-items:center;gap:6px;color:var(--at-muted);font-size:10px;font-weight:800;letter-spacing:.07em;}
+.mv-app .fao .fao-mission-facts strong {font:850 clamp(17px,1.65vw,24px)/1.14 'Outfit',system-ui,sans-serif;color:var(--at-text);}
+.mv-app .fao .fao-mission-facts small {font-size:11px;line-height:1.3;color:var(--at-muted);overflow-wrap:anywhere;}
+.mv-app .fao .fao-mission-reasons {display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.mv-app .fao .fao-mission-reasons>span {
+  color:var(--at-muted);font-size:11px;line-height:1.3;
+  display:inline-flex;align-items:center;gap:8px;padding:7px 10px;
+  background:color-mix(in srgb,var(--at-cyan) 7%,var(--at-surface));
+  border:1px solid var(--at-border-soft);border-radius:999px;
+}
+.mv-app .fao .fao-mission-bullet {width:5px;height:5px;flex:0 0 5px;background:var(--at-cyan);border-radius:50%;}
+.mv-app .fao .fao-mission-footer {display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.mv-app .fao .fao-mission-primary,
+.mv-app .fao .fao-mission-secondary,
+.mv-app .fao .fao-mission-review {
+  min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:11px;
+  padding:10px 16px;border:1px solid var(--at-border);
+  border-radius:11px;font-size:13px;font-weight:790;transition:transform .2s ease,background .2s ease;
+}
+.mv-app .fao .fao-mission-primary {background:var(--at-action);border-color:var(--at-action);color:var(--at-action-fg);}
+.mv-app .fao .fao-mission-primary:disabled {opacity:.55;cursor:not-allowed;}
+.mv-app .fao .fao-mission-primary:hover:not(:disabled){transform:translateY(-2px);background:var(--at-action-hover);}
+.mv-app .fao .fao-mission-secondary {color:var(--at-text);background:var(--at-field);}
+.mv-app .fao .fao-mission-secondary:hover {border-color:var(--at-cyan);}
+.mv-app .fao .fao-mission-provenance {font-size:10.5px;line-height:1.45;color:var(--at-muted);margin:0;}
+.mv-app .fao .fao-mission-health {
+  display:flex;flex-direction:column;gap:1px;
+  min-width:0;padding:24px 18px;
+  border-left:1px solid var(--at-border-soft);
+  background:
+    radial-gradient(ellipse at 95% 92%,color-mix(in srgb,var(--at-rose) 12%,transparent),transparent 85%),
+    color-mix(in srgb,var(--at-field) 72%,var(--at-surface));
+}
+.mv-app .fao .fao-mission-health-title {display:flex;align-items:center;gap:9px;padding:0 0 18px;font-size:10px;font-weight:850;letter-spacing:.1em;color:var(--at-cyan);}
+.mv-app .fao .fao-mission-indicator-row {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:54px;border-bottom:1px solid var(--at-border-soft);
+}
+.mv-app .fao .fao-mission-indicator {display:flex;align-items:center;gap:9px;color:var(--at-muted);font-size:11.5px;}
+.mv-app .fao .fao-mission-indicator svg {color:var(--at-cyan);flex-shrink:0;}
+.mv-app .fao .fao-mission-indicator-row strong {font:820 22px 'Outfit',system-ui,sans-serif;color:var(--at-text);font-variant-numeric:tabular-nums;}
+.mv-app .fao .fao-mission-indicator-row strong.is-warning {color:var(--at-rose);}
+.mv-app .fao .fao-mission-review {width:100%;margin-top:18px;justify-content:space-between;color:var(--at-text);background:var(--at-surface);}
+.mv-app .fao .fao-mission-review:hover {border-color:var(--at-cyan);}
+.mv-app .fao .fao-mission-health>small {font-size:10px;color:var(--at-muted);line-height:1.4;margin-top:12px;}
+@media (max-width:1200px) {
+  .mv-app .fao .fao-mission-director {grid-template-columns:minmax(0,1fr) minmax(228px,.75fr);}
+  .mv-app .fao .fao-mission-main {padding:22px;}
+  .mv-app .fao .fao-mission-facts {grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (max-width:880px) {
+  .mv-app .fao .fao-mission-director {grid-template-columns:minmax(0,1fr);}
+  .mv-app .fao .fao-mission-main {padding:18px;}
+  .mv-app .fao .fao-mission-titles h2 {font-size:clamp(25px,6vw,37px);}
+  .mv-app .fao .fao-mission-health {
+    border-left:0;border-top:1px solid var(--at-border-soft);
+    padding:15px 18px;display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 15px;
+  }
+  .mv-app .fao .fao-mission-health-title {grid-column:1/-1;padding-bottom:8px;}
+  .mv-app .fao .fao-mission-indicator-row {min-height:47px;}
+  .mv-app .fao .fao-mission-review {margin-top:9px;}
+  .mv-app .fao .fao-mission-health>small {align-self:center;}
+}
+@media (max-width:480px) {
+  .mv-app .fao .fao-mission-main {gap:13px;padding:16px;}
+  .mv-app .fao .fao-mission-titles h2 {font-size:29px;}
+  .mv-app .fao .fao-mission-titles p {font-size:12.5px;}
+  .mv-app .fao .fao-mission-facts {grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .mv-app .fao .fao-mission-facts>div {padding:9px;gap:5px;}
+  .mv-app .fao .fao-mission-facts strong {font-size:17px;}
+  .mv-app .fao .fao-mission-facts small {font-size:9.6px;}
+  .mv-app .fao .fao-mission-facts>div>span {font-size:9px;}
+  .mv-app .fao .fao-mission-footer {display:grid;grid-template-columns:1fr;}
+  .mv-app .fao .fao-mission-primary,.mv-app .fao .fao-mission-secondary {width:100%;}
+  .mv-app .fao .fao-mission-health {grid-template-columns:1fr 1fr;padding:13px;}
+  .mv-app .fao .fao-mission-indicator {font-size:10px;}
+  .mv-app .fao .fao-mission-indicator-row strong {font-size:19px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .mv-app .fao .fao-mission-primary {transition:none;}
+  .mv-app .fao .fao-mission-primary:hover:not(:disabled) {transform:none;}
+}

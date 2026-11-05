@@ -1,0 +1,1552 @@
+/* FIELD SALES ATLAS | iOS PRODUCT SURFACE v7
+ * One mobile layout owner. Purposeful density, readable content and touch-first
+ * controls. Desktop components and the existing Miami Vice brand stay intact.
+ */
+.mv-app.atlas-product-v4 .atlas-next-flight,
+.mv-app.atlas-product-v4 .fg-mobile-heading,
+.mv-app.atlas-product-v4 .fg-mobile-saved {display:none}
+
+@media (max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 {
+    --ui-gutter: 12px;
+    --ui-space: 10px;
+    --ui-radius: 12px;
+    --ui-tap: 44px;
+    overflow-x:clip;
+    background:var(--at-bg);
+    font-size:14px;
+    line-height:1.42;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(button,a,summary){
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(button,a,summary):active {
+    transition:transform .12s ease,background-color .12s ease;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(button,a,summary):focus-visible {
+    outline:2px solid var(--at-cyan);
+    outline-offset:2px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header {
+    height:calc(54px + env(safe-area-inset-top))!important;
+    min-height:calc(54px + env(safe-area-inset-top))!important;
+    padding:calc(6px + env(safe-area-inset-top)) 9px 6px!important;
+    gap:4px;
+    border-bottom:1px solid var(--at-border-soft);
+    background:color-mix(in srgb,var(--at-bg) 93%,transparent);
+    backdrop-filter:blur(18px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header .mv-brand,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header .official-atlas-brand {
+    width:33px;height:33px;min-width:33px;flex:0 0 33px;
+    border-radius:9px;overflow:hidden;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-nav-title {
+    min-width:0;gap:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-nav-title>span {
+    font-size:9px;letter-spacing:.09em;line-height:1.2;
+    color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-nav-title>strong {
+    font-size:18px;letter-spacing:-.035em;line-height:1.22;
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header :is(.fsa-command-trigger,.ios-mobile-add,.mv-mobile-menu-trigger) {
+    display:grid;place-items:center;
+    width:43px;min-width:43px;height:44px;min-height:44px;
+    flex:0 0 43px;margin:0;padding:0;
+    border-radius:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header :is(.fsa-command-trigger,.ios-mobile-add,.mv-mobile-menu-trigger) svg {
+    width:19px;height:19px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-mobile-add {
+    background:var(--at-rose);color:var(--at-action-fg);
+    box-shadow:0 2px 12px color-mix(in srgb,var(--at-rose) 15%,transparent);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar {
+    position:fixed;bottom:0;left:0;right:0;
+    z-index:105;display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:2px;
+    min-height:calc(61px + env(safe-area-inset-bottom))!important;
+    padding:5px 7px calc(7px + env(safe-area-inset-bottom))!important;
+    background:color-mix(in srgb,var(--at-bg) 94%,transparent);
+    backdrop-filter:blur(22px) saturate(1.24);
+    border-top:1px solid var(--at-border-soft);
+    box-shadow:0 -3px 20px rgb(0 0 0 / 7%);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar button {
+    min-height:49px;min-width:0;padding:3px 0;
+    border:0;border-radius:9px;
+    color:var(--at-muted);background:transparent;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:2px;font:750 10.5px/1.15 var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar button.active {
+    color:var(--at-cyan);background:transparent;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar button.active .ios-tab-icon {
+    background:var(--at-aqua-soft);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar .ios-tab-icon {
+    width:37px;height:26px;border-radius:9px;
+    display:grid;place-items:center;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar .ios-tab-icon svg {
+    width:20px;height:20px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar .ios-tab-icon::after {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-content-inner.op-content {
+    min-width:0;width:100%;
+    padding:8px var(--ui-gutter) calc(80px + env(safe-area-inset-bottom))!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-content-map.op-content {
+    min-width:0;
+    padding-bottom:calc(77px + env(safe-area-inset-bottom))!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-footer {display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub {
+    padding:0 0 18px!important;min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-head.atlas-hub-banner {
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs {
+    display:flex!important;flex-wrap:nowrap;
+    gap:5px;align-items:stretch;
+    overflow-x:auto;overflow-y:hidden;
+    margin:1px 0 9px!important;padding:3px!important;
+    width:100%;max-width:100%;
+    border:1px solid var(--at-border-soft);
+    background:var(--at-field);
+    border-radius:11px;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs::-webkit-scrollbar{display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs>button {
+    flex:0 0 auto;min-width:104px;
+    width:auto;min-height:44px!important;
+    padding:7px 10px!important;
+    display:flex;align-items:center;justify-content:center;flex-direction:row;
+    gap:7px;border:1px solid transparent;border-radius:8px;
+    background:transparent;color:var(--at-muted);
+    scroll-snap-align:start;
+    white-space:nowrap;
+    font:750 12px/1.1 var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs>button.is-active {
+    background:var(--at-raised);
+    border-color:color-mix(in srgb,var(--at-cyan) 45%,var(--at-border));
+    color:var(--at-text);box-shadow:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs>button svg {
+    flex-shrink:0;width:16px;height:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs strong{font-size:12px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs small{display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-body{min-width:0}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-provenance {
+    margin:12px 0 0;font-size:11px;line-height:1.4;
+  }
+
+  /* One contextual next-trip row. There is deliberately no command dashboard. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight {
+    display:flex;align-items:center;gap:9px;
+    min-width:0;margin:2px 0 9px;padding:10px 10px;
+    min-height:72px;
+    border:1px solid var(--at-border-soft);
+    border-radius:12px;
+    background:linear-gradient(100deg,var(--at-field),var(--at-surface));
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-icon {
+    flex:0 0 34px;height:34px;width:34px;
+    display:grid;place-items:center;
+    border-radius:10px;background:var(--at-aqua-soft);color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-copy {
+    display:grid;gap:2px;min-width:0;flex:1;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-copy>span {
+    font:850 9px/1.2 var(--atlas-font);letter-spacing:.08em;color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-copy strong {
+    display:flex;align-items:center;gap:5px;
+    font:800 16px/1.15 var(--atlas-font);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-copy small {
+    color:var(--at-muted);
+    font-size:11px;line-height:1.28;
+    display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:2;overflow:hidden;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-action {
+    flex:0 0 auto;min-width:57px;min-height:44px;
+    padding:7px 8px;
+    display:flex;gap:4px;align-items:center;justify-content:center;
+    background:var(--at-aqua-soft);color:var(--at-cyan);
+    border:1px solid var(--at-border);border-radius:9px;
+    font:800 11px var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-secondary {display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-empty {
+    min-height:66px;
+  }
+
+  /* Work surfaces, not nested glass cards and billboard headers. */
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-head,.atlas-editorial-head,.travel-command-head) {
+    min-height:0;margin:2px 0 9px;padding:9px 11px;
+    border-radius:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-head,.atlas-editorial-head,.travel-command-head) h1 {
+    font-size:clamp(21px,5.4vw,26px);line-height:1.12;margin:2px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-subtitle,.fsa-hub-guide) {
+    font-size:12px;line-height:1.4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-card,.travel-panel,.coord-panel,.studio-panel,.fg-panel) {
+    min-width:0;border-radius:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-card-body,.op-card-header,.studio-panel-header) {
+    padding:10px 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-card-header,.studio-panel-header,.op-section-head) h2 {
+    font-size:16px;line-height:1.25;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-empty,.fsa-directory-empty,.studio-quiet-empty) {
+    padding:13px 11px;min-height:0;gap:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-queue-row {
+    min-height:52px;padding:8px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-queue-main strong {font-size:13px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-queue-main small {font-size:11px}
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-btn,.travel-gateway,.sh-run,.fg-primary,.fg-tertiary,.fg-leg-research) {
+    min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .op-form,.travel-fields,.fg-fields,.fg-import-zone,.sh-query,
+    .sh-memory,.fd-controls,.fr-builder,.coord-unavailable-controls,.trainer-dialog-body
+  ) :is(input:not([type='checkbox']):not([type='radio']),select,textarea){
+    min-height:44px;
+    font-size:16px;
+  }
+
+  /* Flight DNA has one task: enter the journey, then see evidence. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-page {
+    gap:10px!important;min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero {
+    min-height:48px!important;
+    height:auto!important;
+    border-radius:10px!important;
+    padding:9px 11px!important;
+    background:var(--at-field)!important;
+    border:1px solid var(--at-border-soft);
+    box-shadow:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero::before {
+    content:'';position:absolute;inset:0 auto 0 0;
+    width:3px;background:linear-gradient(var(--at-rose),var(--at-cyan));
+    opacity:1;z-index:2;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero .fs-photo-plane,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero .fr-eyebrow,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero p,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero .fs-guardian-launch,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero .fs-travel-menu {display:none!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero h1 {
+    font:850 19px/1.2 var(--atlas-font)!important;
+    letter-spacing:-.045em;margin:0!important;
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero h1 span{color:var(--at-cyan)}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder.fs-ref-route {
+    min-width:0;margin:0!important;padding:12px 10px!important;
+    background:var(--at-surface);
+    border:1px solid var(--at-border-soft);
+    border-radius:11px!important;
+    box-shadow:none;
+    scroll-margin-top:calc(68px + env(safe-area-inset-top));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary {
+    display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)!important;
+    align-items:end;gap:7px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary>label {
+    min-width:0;gap:4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary>label>span{
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary input {
+    width:100%;min-width:0;height:46px!important;min-height:46px!important;
+    padding:7px 9px!important;
+    font:750 16px/1.25 var(--atlas-font)!important;
+    border-radius:9px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary .fs-route-swap {
+    width:44px;height:46px;min-height:46px;
+    border-radius:9px;align-self:end;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary .fs-route-date,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary .fr-check-button {
+    grid-column:1/-1!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary .fr-check-button{
+    min-height:46px!important;
+    height:46px!important;width:100%;
+    border-radius:9px!important;
+    padding:9px;
+    font:850 13px/1.2 var(--atlas-font)!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-utilities {
+    gap:5px;margin-top:7px;flex-wrap:wrap;
+    font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-utilities>span{display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-row {
+    gap:5px;flex-wrap:wrap;margin:5px 0 0;padding-top:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-row>button {
+    flex:1;min-width:132px;min-height:44px;
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-saved-plan,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-advanced-fields {gap:7px}
+
+  /* A concise flight brief, then six short evidence shortcuts. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-root{gap:9px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief{
+    min-height:0!important;
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    padding:10px!important;gap:8px!important;
+    background:var(--at-surface);
+    border:1px solid var(--at-border-soft);
+    border-radius:11px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-head{
+    grid-column:1/-1;min-width:0;gap:8px;
+    padding:0 0 7px;border-bottom:1px solid var(--at-border-soft);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-plane{
+    width:30px;height:30px;flex:0 0 30px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-plane svg{width:18px;height:18px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-text strong{font-size:13px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-text span{font-size:10px;line-height:1.3}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-column{
+    min-width:0;min-height:0;
+    padding:0!important;gap:3px;
+    border:0!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mini-label {
+    font-size:9px;line-height:1.3;letter-spacing:.065em;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-column strong {
+    font-size:12px;line-height:1.25;
+    white-space:normal;overflow-wrap:anywhere;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-sub{
+    font-size:10px;line-height:1.3;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-column:last-child{
+    grid-column:1/-1;
+    padding-top:6px!important;
+    border-top:1px solid var(--at-border-soft)!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead{
+    padding:6px 0 1px;min-height:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead h2{
+    font-size:16px;margin:1px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead p,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolbuttons,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-pager {display:none!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-cards {
+    display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    overflow:visible!important;
+    margin:0!important;padding:0!important;
+    gap:7px!important;scroll-snap-type:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card {
+    display:block;position:relative;
+    min-width:0;max-width:none;width:auto!important;
+    flex:auto!important;
+    height:auto!important;min-height:82px!important;
+    border:1px solid var(--at-border-soft);
+    border-radius:11px!important;
+    color:var(--at-text);
+    background:var(--at-field)!important;
+    box-shadow:none!important;
+    overflow:hidden;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-picture,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card::after {display:none!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-inner {
+    display:grid!important;
+    grid-template-columns:25px minmax(0,1fr);
+    grid-template-rows:auto auto;
+    align-content:center;align-items:center;
+    min-width:0;min-height:82px!important;
+    gap:3px 7px;padding:10px!important;
+    background:transparent!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-kicker,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card p {display:none!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-icon{
+    grid-column:1;grid-row:1/3;
+    width:25px;height:25px;
+    display:grid;place-items:center;
+    color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-icon svg{width:19px;height:19px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card strong {
+    grid-column:2;grid-row:1;
+    margin:0!important;
+    font:800 12px/1.25 var(--atlas-font)!important;
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-value {
+    grid-column:2;grid-row:2;
+    min-width:0;max-width:100%;
+    font:650 10.5px/1.25 var(--atlas-font)!important;
+    gap:3px;padding:0!important;margin:0!important;
+    overflow-wrap:anywhere;white-space:normal;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-value svg{
+    width:12px;height:12px;flex:0 0 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-below-fold {
+    display:flex;flex-direction:column;gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary{order:1;padding:11px;border-radius:11px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-map-panel{order:2}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-heading{
+    padding-bottom:7px;gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-heading h2{font-size:17px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-heading p{font-size:11px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-row{
+    min-height:54px;padding:8px 0;
+    gap:4px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-row>strong{font-size:12px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-row>span{font-size:11px;line-height:1.35}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-row>i{font-size:9px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-actions{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-actions a{
+    min-height:44px;padding:8px;font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-map-panel .fn-head{
+    min-height:0;padding:10px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-map-panel .fn-head h2{font-size:15px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-map-panel .fn-head p{font-size:11px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fn-map-viewport{
+    overflow-x:auto;overscroll-behavior-x:contain;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fn-map-viewport svg{
+    max-height:245px;height:auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-research-title{
+    margin-top:6px;padding:11px;
+    border-radius:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-research-title h2{font-size:17px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-research-title p{font-size:11.5px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-evidence-basis{font-size:11.5px}
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fr-findings,.fr-card,.fd-root,.sh-root,.fdb-root){
+    padding:11px;border-radius:11px;gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fd-head,.sh-head){
+    min-height:0;padding:9px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fd-head h2,.sh-head h2){font-size:17px}
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fd-metric-grid,.fd-legs,.fd-scenarios){gap:7px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fd-metric-grid>div{padding:8px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fd-metric-grid strong{font-size:18px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-query{gap:7px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-query :is(input,select){font-size:16px;min-height:44px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-memory{padding:9px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-memory-overview>div{padding:8px}
+
+  /* Booked Flights becomes an itinerary-led interface, not a landing page. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page{gap:9px;padding-bottom:12px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero{display:none!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-heading{
+    display:block;padding:5px 1px 2px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-heading h1{
+    margin:0;font:850 23px/1.2 var(--atlas-font);letter-spacing:-.04em;
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-heading p{
+    font-size:12px;line-height:1.4;color:var(--at-muted);
+    margin:2px 0 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved{
+    display:flex;gap:7px;overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x proximity;
+    scrollbar-width:none;
+    margin:0 -2px;padding:2px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved::-webkit-scrollbar{display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved button{
+    flex:0 0 auto;min-width:160px;min-height:73px;
+    display:grid;gap:3px;justify-items:start;
+    padding:9px 11px;
+    background:var(--at-field);
+    border:1px solid var(--at-border-soft);
+    border-radius:11px;color:var(--at-text);
+    scroll-snap-align:start;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved button.is-selected{
+    border-color:var(--at-cyan);background:var(--at-aqua-soft);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved button>span{
+    font-size:10px;color:var(--at-muted);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved button>strong{
+    display:flex;align-items:center;gap:6px;
+    font:850 16px/1.2 var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved button>small{
+    font-size:10px;color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-layout,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-side{
+    grid-template-columns:minmax(0,1fr);gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-panel{
+    padding:11px;border-radius:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-panel h2{font-size:17px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-step{gap:8px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-number{
+    flex:0 0 28px;width:28px;height:28px;font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-step p{font-size:11.5px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-modes{
+    gap:4px;padding:3px;margin:10px 0 7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-modes button{
+    min-height:44px;padding:7px 4px;font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-import-zone{
+    gap:7px;margin:7px 0 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-import-zone textarea{
+    min-height:96px;padding:10px;
+    font-size:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy{
+    gap:8px;margin:8px 0 10px;padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy strong{
+    font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy p{
+    font-size:11px;line-height:1.4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-review-top{
+    margin:10px 0 8px;gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-leg{
+    padding:10px;gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields{
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields label{
+    gap:5px;font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input{
+    min-height:44px;padding:8px;font-size:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-verify{margin:11px 0}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-side .fg-saved{display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page:not(.fg-valid) .fg-impact,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page:not(.fg-valid) .fg-publish {display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-impact-item{padding:10px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-impact-list{gap:7px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-impact-actions{grid-template-columns:1fr 1fr;gap:7px}
+
+  /* Actual territory map first. Detail is a dismissible bottom sheet. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2:not(.has-active-region),
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused){
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:'heading' 'atlas' 'legend' 'telemetry' 'regions';
+    padding:6px 9px calc(72px + env(safe-area-inset-bottom))!important;
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .vice-atlas-intro{
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-mission-layout{
+    grid-area:atlas;min-width:0;overflow:visible;
+    border-radius:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading{
+    padding:7px;gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading-text{
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search{
+    min-width:0;min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search input{
+    min-height:44px;font-size:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions{
+    gap:5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions>select{
+    max-width:min(50vw,205px);
+    min-height:44px;font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 :is(.mv-layers-button,.atlas-focus){
+    min-height:44px;font-size:11px;padding:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame{
+    height:clamp(310px,49svh,440px)!important;
+    min-width:0;border-radius:0 0 11px 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .mv-map-frame{
+    height:calc(100svh - 185px)!important;min-height:370px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-legend{
+    padding:6px 8px;gap:5px;
+    max-width:calc(100% - 82px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools{
+    right:7px;bottom:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools button{
+    min-width:42px;min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-insets{
+    gap:5px;left:7px;bottom:64px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-insets button{
+    min-height:44px;min-width:54px;padding:4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend{
+    grid-area:legend;padding:7px 9px;gap:5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-strip{
+    grid-area:telemetry;padding:5px;gap:3px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item{
+    min-height:41px;padding:6px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item strong{
+    font-size:17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item small{
+    font-size:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-all-regions{
+    grid-area:regions;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector{
+    max-height:76svh;
+    border-radius:17px 17px 0 0;
+    overscroll-behavior:contain;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector-art{
+    flex-basis:76px;padding:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector-cover strong{
+    font-size:20px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector-tabs>button{
+    min-height:44px;font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector-main{
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-manager-row{
+    min-height:65px;padding:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-popover{
+    z-index:200;max-height:60svh;overflow-y:auto;
+  }
+
+  /* Calendar defaults to agenda on phones; month remains available. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-head{
+    padding:8px 10px;min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid{
+    background:var(--at-surface);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day{
+    position:relative;min-height:53px;
+    padding:3px 2px 7px;background:var(--at-field);
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day.other{
+    background:var(--at-bg);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day-number{
+    display:grid;place-items:center;
+    width:100%;min-width:0!important;
+    min-height:44px;
+    padding:3px!important;
+    border-radius:8px;
+    font:800 13px/1.15 var(--atlas-font);
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day.other .op-day-number{color:var(--at-muted)}
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-calendar-event{display:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .ios-calendar-dots{
+    position:absolute;left:3px;bottom:3px;gap:3px;height:4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-calendar-view-switch button{
+    min-height:44px;padding:7px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-grid-two,
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-geo-layout{
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-foot{
+    padding:9px;
+  }
+
+  /* Roster, coaching, reports and weekly work as short scan-friendly rows. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-manager-cards{
+    gap:7px;max-height:none;overflow:visible;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-manager-card{
+    min-height:0;padding:10px;gap:7px;
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-manager-card-main{
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-manager-card-identity strong{
+    font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-manager-card-facts{
+    gap:7px;padding:7px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-report-columns{gap:8px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-reports .op-metrics{gap:7px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-reports .op-metric{
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-reports .op-metric strong{
+    font-size:22px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-report-panel-head{
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-report-panel-head h2{
+    font-size:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fsa-report-queue button,.fsa-report-visit-list button){
+    min-height:50px;padding:8px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .coord-hero,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-week-header{
+    padding:12px;gap:7px;border-radius:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.coord-hero h1,.mv-week-header h1){
+    font-size:22px;margin:4px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .coord-panel{
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .coord-day{
+    min-height:54px;padding:6px 3px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .coord-metrics>div{
+    padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .coord-metrics strong{
+    font-size:19px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-week-person{
+    min-height:50px;padding:9px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-masthead{
+    gap:7px;margin-bottom:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-masthead h1{
+    font-size:23px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-spotlight{
+    min-height:0;grid-template-columns:minmax(0,1fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-spotlight-copy{
+    padding:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-spotlight h2{
+    font-size:22px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-spotlight-art{
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-metrics{
+    gap:7px;margin:9px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-metric{
+    padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-metric strong{
+    font-size:21px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .studio-quiet-empty{
+    min-height:0;padding:15px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.travel-workflow,.travel-form-block){
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .travel-step{
+    min-height:48px;padding:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .travel-gateway{
+    min-height:55px;padding:9px;
+  }
+
+  /* Native-feeling dismissible sheets without stealing the screen. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-mobile-drawer,
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-quick-actions{
+    max-height:min(82svh,var(--atlas-visual-height,82svh));
+    border-radius:18px 18px 0 0;
+    padding:7px 13px calc(14px + env(safe-area-inset-bottom));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-mobile-drawer>button:not(.ios-sheet-grab){
+    min-height:44px;padding:9px 11px;font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-quick-actions>header{
+    padding:5px 5px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-quick-actions>header h2{
+    font-size:19px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-quick-grid>button{
+    min-height:52px;padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-pwa-sheet{
+    border-radius:18px 18px 0 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-pwa-header,
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-pwa-section{
+    padding:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-pwa-header h2{font-size:18px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-pwa-section h3{font-size:15px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-install-nudge{
+    bottom:calc(70px + env(safe-area-inset-bottom));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-update-banner{
+    bottom:calc(70px + env(safe-area-inset-bottom));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-modal-head,
+  .mv-app.atlas-design-v3.atlas-product-v4 .trainer-dialog-head{
+    padding:11px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-modal-head h2,
+  .mv-app.atlas-design-v3.atlas-product-v4 .trainer-dialog-head h2{
+    font-size:18px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-modal-body,
+  .mv-app.atlas-design-v3.atlas-product-v4 .trainer-dialog-body{
+    padding:10px 12px calc(16px + env(safe-area-inset-bottom));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-form-actions{
+    padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-screen-loading{
+    min-height:140px;display:flex;align-items:center;justify-content:center;
+    gap:9px;border:1px solid var(--at-border-soft);border-radius:12px;
+    background:var(--at-field);color:var(--at-muted);
+    font-size:13px;letter-spacing:-.01em;
+  }
+}
+
+@media (max-width:430px){
+  .mv-app.atlas-design-v3.atlas-product-v4{--ui-gutter:9px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight {
+    gap:7px;padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-icon{
+    width:31px;height:31px;flex-basis:31px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-action{
+    min-width:52px;font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-inner {
+    padding:8px!important;gap:3px 5px;
+    grid-template-columns:22px minmax(0,1fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card strong{
+    font-size:11.5px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-value {
+    font-size:10px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-route-primary{
+    gap:6px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-heading h1{
+    font-size:22px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame{
+    height:325px!important;
+  }
+}
+@media (min-width:640px) and (max-width:900px){
+  .mv-app.atlas-design-v3.atlas-product-v4{--ui-gutter:17px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-cards{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-layout{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-side{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+html[data-atlas-keyboard='open'] .mv-app.atlas-product-v4 .ios-tab-bar {
+  display:none!important;
+}
+@media (max-width:900px) {
+  html[data-atlas-keyboard='open'] .mv-app.atlas-design-v3.atlas-product-v4 .mv-content-inner.op-content {
+    padding-bottom:18px!important;
+  }
+  html[data-atlas-keyboard='open'] .mv-app.atlas-design-v3.atlas-product-v4 .ios-install-nudge {
+    display:none!important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mv-app.atlas-product-v4 :is(.ios-tab-bar button,.fsc-card,.atlas-next-flight-action) {
+    transition:none!important;
+    animation:none!important;
+  }
+}
+@media (prefers-reduced-data:reduce) {
+  .mv-app.atlas-product-v4 :is(.fg-hero,.fr-hero,.studio-spotlight)::before{
+    background-image:none!important;
+  }
+}
+
+
+/* Native mobile disclosure and action continuation.
+   Selected saved flight opens its review, not a second import screen. */
+@media (max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import>.fg-step:first-child,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import>.fg-modes,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import>.fg-import-zone {
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import {
+    padding-top:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 #fg-review-start {
+    scroll-margin-top:calc(72px + env(safe-area-inset-top));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy-details {
+    min-width:0;flex:1;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy-details>summary {
+    display:flex;align-items:center;justify-content:space-between;gap:9px;
+    min-height:35px;
+    list-style:none;
+    color:var(--at-text);
+    font-weight:750;font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy-details>summary::-webkit-details-marker {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy-details[open] summary svg {
+    transform:rotate(180deg);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy-details>p {
+    margin:5px 0 1px;
+    line-height:1.45;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-mobile-saved button:active,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card:active,
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-next-flight-action:active {
+    background:var(--at-aqua-soft)!important;
+    border-color:var(--at-cyan);
+    transform:scale(.986);
+    transition:transform .13s cubic-bezier(.2,.8,.2,1),background-color .13s ease;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-tab-bar button:active .ios-tab-icon {
+    transform:scale(.91);
+    transition:transform .12s ease;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .fsa-hub-body>.fr-page,.fsa-hub-body>.fg-page,
+    .fsa-hub-body>.coord-page,.mv-map-page.atlas-v2
+  ) {
+    animation:atlas-mobile-enter .18s ease-out both;
+  }
+  @keyframes atlas-mobile-enter {
+    from{opacity:.6;transform:translateY(5px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+}
+@media (max-width:900px) and (prefers-reduced-motion:reduce) {
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .fsa-hub-body>.fr-page,.fsa-hub-body>.fg-page,
+    .fsa-hub-body>.coord-page,.mv-map-page.atlas-v2
+  ) {animation:none}
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .fg-mobile-saved button,.fsc-card,.atlas-next-flight-action
+  ):active {transform:none}
+}
+
+
+/* v8 MOBILE CALM: this remains in the existing mobile-fit stylesheet.
+   Built around task progression, not scaling a desktop dashboard. */
+.mv-app.atlas-product-v4 .atlas-mobile-tool-switch,
+.mv-app.atlas-product-v4 .fr-mobile-title,
+.mv-app.atlas-product-v4 .fr-mobile-detail-toggle {
+  display:none;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start{
+  display:grid;
+  gap:14px;
+  max-width:760px;
+  margin:0 auto;
+  padding:8px 0 22px;
+  color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-head{display:grid;gap:4px}
+.mv-app.atlas-product-v4 .atlas-travel-start-head h1{
+
+/* v9 mobile touch-safe results: one status row, not a dense desktop card. */
+@media (max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result {
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    padding:10px;
+    margin:3px 0;
+    border:1px solid var(--at-border-soft);
+    border-radius:10px;
+    background:var(--at-surface);
+    flex-wrap:wrap;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result-icon {
+    display:grid;
+    place-items:center;
+    width:29px;
+    height:29px;
+    flex:0 0 29px;
+    background:var(--at-aqua-soft);
+    color:var(--at-cyan);
+    border-radius:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result-copy {
+    flex:1;
+    min-width:0;
+    display:grid;
+    gap:4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result-copy strong {
+    color:var(--at-text);
+    font-size:12.5px;
+    line-height:1.35;
+    font-weight:750;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result-copy small {
+    font-size:10.5px;
+    line-height:1.35;
+    color:var(--at-muted);
+    overflow-wrap:anywhere;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result>button {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    flex:0 0 100%;
+    min-height:44px;
+    padding:8px 10px;
+    border:1px solid var(--at-border);
+    border-radius:9px;
+    background:var(--at-aqua-soft);
+    color:var(--at-cyan);
+    font-size:12px;
+    font-weight:750;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-quick-result>button svg {
+    flex:0 0 15px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-deep-collapsed .fsc-brief,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-deep-collapsed .fsc-below-fold {
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-travel-start,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-body,
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-content {
+    min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .op-card,.fsa-manager-card,.fsa-report-panel,
+    .travel-panel,.fg-panel,.coord-panel
+  ) {
+    box-shadow:none;
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .op-subtitle,.fsa-hub-guide,.travel-microcopy,
+    .fg-step p,.coord-hero p
+  ) {
+    line-height:1.38;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .op-form input,.op-form select,.op-form textarea,
+    .travel-fields input,.travel-fields select,
+    .fg-fields input,.fg-fields select
+  ) {
+    min-height:44px;
+    font-size:16px;
+  }
+}
+
+  margin:0;
+  color:var(--at-text);
+  font:850 28px/1.17 var(--atlas-font);
+  letter-spacing:-.048em;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-head p{
+  margin:0;color:var(--at-muted);
+  font-size:13px;line-height:1.42;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start .atlas-next-flight{
+  display:flex;gap:10px;align-items:center;
+  min-height:72px;padding:10px 12px;margin:0;
+  border:1px solid var(--at-border-soft);
+  border-radius:12px;
+  background:var(--at-field);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-actions{
+  display:grid;gap:0;
+  border:1px solid var(--at-border-soft);
+  border-radius:12px;
+  overflow:hidden;
+  background:var(--at-surface);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-action{
+  display:flex;align-items:center;gap:10px;
+  width:100%;min-width:0;min-height:64px;
+  padding:10px 14px;
+  text-align:left;color:var(--at-text);
+  background:transparent;
+  border:0;border-bottom:1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-action:last-child{border-bottom:0}
+.mv-app.atlas-product-v4 .atlas-travel-start-action.is-primary .atlas-travel-action-icon{
+  background:var(--at-aqua-soft);
+  color:var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-action>svg:last-child{
+  flex:0 0 16px;color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .atlas-travel-action-icon{
+  flex:0 0 36px;width:36px;height:36px;
+  display:grid;place-items:center;
+  color:var(--at-cyan);
+  background:var(--at-field);
+  border-radius:9px;
+}
+.mv-app.atlas-product-v4 .atlas-travel-action-label{
+  min-width:0;flex:1;
+  display:grid;gap:2px;
+}
+.mv-app.atlas-product-v4 .atlas-travel-action-label strong{
+  font:800 14px/1.25 var(--atlas-font);
+  color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .atlas-travel-action-label small{
+  font:500 11.5px/1.3 var(--atlas-font);
+  color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-week{
+  display:grid;gap:8px;
+  padding:3px 0 0;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-section-head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-section-head h2{
+  margin:0;
+  color:var(--at-text);
+  font:800 16px/1.25 var(--atlas-font);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-section-head button{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 0;min-height:44px;
+  border:0;background:none;
+  color:var(--at-cyan);
+  font-size:12px;font-weight:750;
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-row,
+.mv-app.atlas-product-v4 .atlas-travel-week-empty{
+  display:flex;align-items:center;gap:9px;
+  min-height:51px;min-width:0;
+  padding:8px 10px;
+  border:1px solid var(--at-border-soft);
+  border-radius:10px;
+  background:var(--at-field);
+  color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-row{
+  text-align:left;width:100%;
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-row>span:nth-child(2){
+  min-width:0;flex:1;display:grid;gap:2px;
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-row strong{
+  font-size:12.5px;font-weight:750;
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-row small{
+  font-size:11px;color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-row>svg:last-child{
+  color:var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .atlas-week-symbol{
+  display:grid;place-items:center;
+  flex:0 0 27px;width:27px;height:27px;
+  border-radius:7px;background:var(--at-aqua-soft);
+  color:var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-empty{
+  font-size:12px;line-height:1.35;
+  color:var(--at-muted);
+  background:transparent;border-style:dashed;
+}
+.mv-app.atlas-product-v4 .atlas-travel-week-empty svg{
+  flex:0 0 16px;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-links{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start-links button{
+  min-height:44px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:7px 9px;
+  border:1px solid var(--at-border-soft);
+  border-radius:9px;
+  background:var(--at-field);color:var(--at-text);
+  font-size:11.5px;font-weight:700;
+}
+.mv-app.atlas-product-v4 .atlas-travel-start button:active{
+  background:var(--at-aqua-soft);
+}
+.mv-app.atlas-product-v4 .atlas-travel-start button:focus-visible{
+  outline:2px solid var(--at-cyan);outline-offset:2px;
+}
+
+@media(max-width:900px){
+  /* One slim native picker replaces six truncated navigation tabs. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub>.fsa-hub-tabs{
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-mobile-tool-switch{
+    display:flex;align-items:center;gap:7px;
+    margin:0 0 7px;min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-mobile-tool-switch .atlas-tool-back{
+    flex:0 0 auto;min-width:91px;min-height:44px;
+    display:flex;align-items:center;justify-content:center;gap:5px;
+    padding:7px 9px;
+    border:0;border-radius:9px;
+    color:var(--at-cyan);background:transparent;
+    font:800 12px/1.2 var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-mobile-tool-switch label{
+    flex:1;min-width:0;position:relative;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-mobile-tool-switch select{
+    width:100%;max-width:100%;
+    min-width:0;min-height:44px;
+    padding:8px 30px 8px 13px;
+    background:var(--at-field);
+    color:var(--at-text);
+    border:1px solid var(--at-border-soft);
+    border-radius:10px;
+    font:750 16px/1.2 var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start{
+    gap:11px;padding:3px 0 17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-head{gap:2px}
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-head h1{
+    font-size:22px;letter-spacing:-.045em;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-head p{
+    font-size:11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start .atlas-next-flight {
+    min-height:61px;
+    padding:9px 10px;
+    border-radius:10px;
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start .atlas-next-flight-icon{
+    flex:0 0 29px;height:29px;width:29px;border-radius:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start .atlas-next-flight-copy strong{
+    font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start .atlas-next-flight-copy small{
+    font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start .atlas-next-flight-action{
+    min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-actions{
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-action{
+    min-height:57px;padding:7px 11px;
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-action-icon{
+    flex:0 0 31px;width:31px;height:31px;
+    border-radius:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-action-icon svg{
+    width:17px;height:17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-action-label strong{
+    font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-action-label small{
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-section-head h2{
+    font-size:15px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-links{
+    gap:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-links button{
+    flex:1 1 auto;
+    font-size:11px;padding:6px 7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-links button svg{
+    width:14px;height:14px;
+  }
+
+  /* Fight the real source of the oversized research workflow: repetition.
+     One heading, one route composer, data only after a query. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-page{gap:7px!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero{
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-title{
+    display:block;
+    margin:2px 0 5px;
+    font:850 20px/1.18 var(--atlas-font);
+    letter-spacing:-.045em;
+    color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder.fs-ref-route{
+    margin:0!important;padding:10px 9px!important;
+    border-radius:10px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-primary {
+    gap:5px!important;
+    grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-primary input{
+    min-height:44px!important;
+    height:44px!important;
+    padding:6px 9px!important;
+    border-radius:8px!important;
+    font-size:16px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-primary>label>span{
+    font-size:10.5px;line-height:1.2;
+    gap:3px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-primary>label>span svg{
+    width:14px;height:14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-primary .fs-route-swap {
+    width:44px;height:44px;min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-primary .fr-check-button{
+    min-height:44px!important;height:44px!important;
+    font-size:13px!important;
+    border-radius:9px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-route-utilities{
+    margin-top:1px;gap:4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder .fs-advanced-toggle{
+    min-height:44px;
+    font-size:11.5px;
+    margin:0;
+    padding:7px 3px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools{
+    margin:3px 0 0;
+    border-top:1px solid var(--at-border-soft);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools>summary{
+    display:flex;gap:7px;align-items:center;
+    min-height:44px;
+    padding:6px 3px;
+    color:var(--at-muted);
+    font:700 11.5px/1.3 var(--atlas-font);
+    cursor:pointer;list-style:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools>summary::-webkit-details-marker{
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools>summary>svg:last-child{
+    margin-left:auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools[open]>summary>svg:last-child{
+    transform:rotate(180deg);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools .fs-offline-row{
+    padding:5px 0 7px;margin:0;
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fs-offline-tools .fs-offline-row button{
+    min-width:0;min-height:44px;
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-alert-top{
+    margin:5px 0;padding:8px;
+    font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-detail-toggle{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;min-height:44px;
+    margin:3px 0 8px;padding:9px;
+    font:750 12px/1.25 var(--atlas-font);
+    border:1px solid var(--at-border-soft);
+    border-radius:10px;
+    background:var(--at-field);color:var(--at-text);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-detail-toggle svg:first-child{
+    color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-detail-toggle svg:last-child{
+    margin-left:auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-deep-open .fr-mobile-detail-toggle svg:last-child{
+    transform:rotate(180deg);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-deep-collapsed :is(
+    .fs-research-title,.fr-findings,.fr-quiet,.fdb-root,
+    #atlas-flight-dna,#atlas-security-history,.fr-disclaimer,.fr-visual-credit,
+    .fsc-map-panel
+  ){display:none!important}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-deep-open :is(
+    #atlas-flight-dna,#atlas-security-history,#atlas-airport-operations,.fsc-map-panel
+  ){scroll-margin-top:calc(110px + env(safe-area-inset-top))}
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief{
+    padding:8px!important;gap:6px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-head{
+    gap:6px;padding-bottom:5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-column strong{
+    font-size:11.5px;line-height:1.3;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief-column .fsc-brief-sub{
+    font-size:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead{
+    padding:3px 0 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead>div>span,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead p{
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-mobile-toolhead h2{
+    font:800 15px/1.25 var(--atlas-font);
+    letter-spacing:-.025em;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card{
+    min-height:64px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-inner{
+    min-height:64px!important;
+    padding:7px!important;
+    gap:2px 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card strong{
+    font-size:11.5px!important;
+    line-height:1.2;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-value{
+    font-size:10px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-below-fold{
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary{
+    padding:9px;border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-heading h2{
+    font-size:15px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-heading p{
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-row{
+    min-height:48px;
+    padding:5px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fn-map-viewport svg{
+    max-height:205px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fr-airport,.fd-card,.fd-route-card,.sh-card){
+    padding:9px!important;
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fd-head,.sh-head,.fr-results-heading){
+    padding:8px 9px;
+    gap:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.fd-head h2,.sh-head h2,.fr-results-heading h2){
+    font-size:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-findings{
+    padding:9px;
+  }
+  /* The Home Screen installation education now lives in the explicit Tools menu. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .ios-install-nudge{
+    display:none!important;
+  }
+}
+@media(max-width:370px){
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-links{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-travel-start-links button{
+    min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-mobile-tool-switch .atlas-tool-back{
+    min-width:80px;padding:7px 3px;
+  }
+}

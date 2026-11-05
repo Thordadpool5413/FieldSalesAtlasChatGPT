@@ -1,0 +1,33 @@
+
+.atlas-live-map{position:absolute;inset:0;z-index:1;opacity:0;pointer-events:none;transition:opacity .34s ease;background:var(--pd-map-ocean,#092035)}
+.atlas-live-map-ready{z-index:2;opacity:1;pointer-events:auto}
+.mv-app.atlas-design-v3 .atlas-v2 .mv-map-svg.atlas-static-hidden{display:none!important;pointer-events:none}
+.atlas-live-map .maplibregl-canvas{cursor:grab;outline:none}
+.atlas-live-map .maplibregl-ctrl-bottom-right{bottom:65px;right:8px;z-index:8}
+.atlas-live-map .maplibregl-ctrl-attrib{padding:4px 7px;border-radius:7px;background:rgba(7,26,45,.86)!important;backdrop-filter:blur(8px)}
+.atlas-live-map .maplibregl-ctrl-attrib a,.atlas-live-map .maplibregl-ctrl-attrib{font:500 9px/1.3 'DM Sans',sans-serif!important;color:#e2f4f9!important}
+.mv-app[data-theme='light'] .atlas-live-map .maplibregl-ctrl-attrib{background:rgba(255,255,255,.91)!important}
+.mv-app[data-theme='light'] .atlas-live-map .maplibregl-ctrl-attrib a,.mv-app[data-theme='light'] .atlas-live-map .maplibregl-ctrl-attrib{color:#304e5d!important}
+.mv-app .atlas-v2 .mv-map-frame:has(.atlas-live-map-ready)::before{z-index:3;opacity:.16;pointer-events:none}
+.mv-app .atlas-v2 .mv-map-frame:has(.atlas-live-map-ready)::after{z-index:3;opacity:.1;pointer-events:none}
+.mv-app .atlas-v2 .mv-map-frame:has(.atlas-live-map-ready) .fsa-map-hud{z-index:8}
+.mv-app .atlas-v2 .mv-map-frame:has(.atlas-live-map-ready) :is(.mv-map-legend,.mv-map-tools,.atlas-ne-shortcuts,.mv-insets,.mv-map-insight){z-index:9}
+@media(max-width:600px){.atlas-live-map .maplibregl-ctrl-bottom-right{bottom:66px;right:5px}}
+@media(prefers-reduced-motion:reduce){.atlas-live-map{transition:none}}
+
+/* Atlas territory ownership, drilled county geometry and mapped towns. */
+.mv-app .atlas-ownership-legend{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:7px 12px;
+ border-top:1px solid var(--at-border-soft);background:var(--at-surface);color:var(--at-muted)}
+.mv-app .atlas-ownership-legend span{display:inline-flex;align-items:center;gap:6px;font:700 10px/1.4 'DM Sans',sans-serif}
+.mv-app .atlas-ownership-legend i{width:8px;height:8px;border-radius:3px;background:#25E7E6}
+.mv-app .atlas-ownership-legend .trainer-b i{background:#FF65B0}
+.mv-app .atlas-ownership-legend .shared i{background:#A98BFF}
+.mv-app .atlas-map-area-focus{padding:12px 14px;border-bottom:1px solid var(--at-border);
+ background:linear-gradient(105deg,var(--at-aqua-soft),var(--at-surface));}
+.mv-app .atlas-map-area-type{color:var(--at-cyan);font-size:10px;font-weight:800;letter-spacing:.07em}
+.mv-app .atlas-map-area-row{display:flex;justify-content:space-between;gap:7px;align-items:center;margin:4px 0}
+.mv-app .atlas-map-area-row strong{font-size:16px;color:var(--at-text)}
+.mv-app .atlas-map-area-row button{min-width:29px;min-height:29px;display:grid;place-items:center;border:1px solid var(--at-border);border-radius:7px;background:var(--at-field);color:var(--at-text)}
+.mv-app .atlas-map-area-focus p{font-size:11px;color:var(--at-muted);margin:3px 0 9px}
+.mv-app .atlas-map-area-focus>button{display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:6px 10px;border:1px solid var(--at-cyan);border-radius:8px;background:var(--at-aqua-soft);color:var(--at-text);font-size:11.5px;font-weight:750}
+@media(max-width:600px){.mv-app .atlas-ownership-legend{padding:8px 9px;gap:8px}}

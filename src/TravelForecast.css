@@ -1,0 +1,155 @@
+/* Destination Weather Intelligence · source-backed point forecast */
+.mv-app .fsa-destination-weather {
+  min-width:0;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--at-cyan) 31%,var(--at-border-soft));
+  background:linear-gradient(145deg,var(--at-surface),color-mix(in srgb,var(--at-raised) 17%,var(--at-surface)));
+}
+.mv-app .fsa-destination-weather .travel-weather-check {
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+}
+.mv-app .fsa-destination-weather .travel-weather-check input {
+  min-height:44px;
+}
+.mv-app .fsa-destination-weather .travel-weather-check button {
+  min-height:44px;display:flex;align-items:center;gap:8px;
+}
+.mv-app .fsa-outlook {
+  position:relative;
+  margin-top:17px;border-radius:15px;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--at-cyan) 40%,var(--at-border-soft));
+  background:var(--at-field);
+}
+.mv-app .fsa-outlook::before {
+  content:'';display:block;position:absolute;
+  inset:0 0 auto;height:2px;
+  background:linear-gradient(90deg,var(--at-cyan),var(--at-rose) 58%,transparent);
+}
+.mv-app .fsa-outlook-head {
+  display:flex;align-items:start;justify-content:space-between;
+  gap:13px;padding:18px;
+  background:radial-gradient(ellipse at 100% -35%,color-mix(in srgb,var(--at-rose) 12%,transparent),transparent 80%);
+}
+.mv-app .fsa-outlook-head>div {min-width:0;}
+.mv-app .fsa-outlook-kicker {
+  display:flex;align-items:center;gap:7px;
+  font-size:10px;letter-spacing:.1em;font-weight:850;color:var(--at-cyan);
+}
+.mv-app .fsa-outlook-head h4 {
+  margin:7px 0;font:830 clamp(19px,2vw,26px)/1.15 'Outfit','DM Sans',system-ui,sans-serif;
+  letter-spacing:-.04em;color:var(--at-text);
+}
+.mv-app .fsa-outlook-head p {
+  margin:0;font-size:12px;line-height:1.45;color:var(--at-muted);
+}
+.mv-app .fsa-outlook-head>a {
+  min-height:44px;flex:0 0 auto;
+  display:flex;align-items:center;gap:7px;justify-content:center;
+  border-radius:10px;border:1px solid var(--at-border-soft);
+  background:var(--at-surface);color:var(--at-text);
+  padding:9px 11px;text-decoration:none;
+  font-size:11.5px;font-weight:780;
+}
+.mv-app .fsa-outlook-head>a:hover {border-color:var(--at-cyan);}
+.mv-app .fsa-outlook-trip-date {
+  margin:0 17px 16px;
+  display:flex;align-items:center;flex-wrap:wrap;gap:7px 11px;
+  padding:11px 13px;border-radius:11px;
+  border:1px solid var(--at-border-soft);
+  background:var(--at-surface);color:var(--at-text);
+  font-size:12.5px;
+}
+.mv-app .fsa-outlook-trip-date>svg {color:var(--at-cyan);}
+.mv-app .fsa-outlook-trip-date>span:nth-child(3) {
+  flex:1 1 100%;color:var(--at-muted);font-size:11.5px;line-height:1.4;
+}
+.mv-app .fsa-outlook-trip-date.in-range {
+  border-color:color-mix(in srgb,var(--at-cyan) 49%,var(--at-border));
+}
+.mv-app .fsa-outlook-trip-date.out-of-range {
+  border-color:color-mix(in srgb,var(--at-rose) 57%,var(--at-border));
+}
+.mv-app .fsa-outlook-periods {
+  display:flex;gap:10px;
+  padding:6px 17px 17px;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.mv-app .fsa-outlook-period {
+  display:flex;flex:0 0 171px;flex-direction:column;align-items:start;
+  min-height:208px;gap:9px;
+  padding:14px 12px;border-radius:12px;
+  border:1px solid var(--at-border-soft);
+  background:var(--at-surface);color:var(--at-text);
+  scroll-snap-align:start;
+}
+.mv-app .fsa-outlook-period.is-travel-day {
+  border-color:var(--at-cyan);
+  box-shadow:inset 0 0 0 1px var(--at-cyan),0 8px 24px color-mix(in srgb,var(--at-cyan) 9%,transparent);
+}
+.mv-app .fsa-outlook-period.has-conditions {border-bottom:3px solid var(--at-rose);}
+.mv-app .fsa-outlook-period-time {
+  font-size:11px;font-weight:850;letter-spacing:.055em;
+  color:var(--at-cyan);
+}
+.mv-app .fsa-outlook-period>strong {
+  font:850 30px/1 'Outfit','DM Sans',system-ui,sans-serif;
+  color:var(--at-text);letter-spacing:-.05em;
+  font-variant-numeric:tabular-nums;
+}
+.mv-app .fsa-outlook-period-summary {
+  font-size:12px;line-height:1.4;font-weight:720;color:var(--at-text);
+  min-height:33px;
+}
+.mv-app .fsa-outlook-wind,.mv-app .fsa-outlook-precip {
+  display:flex;align-items:start;gap:6px;
+  font-size:11px;line-height:1.4;color:var(--at-muted);
+}
+.mv-app .fsa-outlook-wind svg,.mv-app .fsa-outlook-precip svg {
+  flex:0 0 13px;color:var(--at-cyan);
+}
+.mv-app .fsa-outlook-signal {
+  display:flex;align-items:center;gap:6px;
+  margin-top:auto;
+  font-size:10.5px;line-height:1.3;
+  padding:6px 7px;
+  border-radius:8px;
+  background:var(--at-rose-soft);color:var(--at-rose);
+  border:1px solid color-mix(in srgb,var(--at-rose) 42%,var(--at-border-soft));
+}
+.mv-app .fsa-outlook-signal svg {flex-shrink:0;}
+.mv-app .fsa-outlook-summary {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:9px;flex-wrap:wrap;
+  padding:12px 17px;border-top:1px solid var(--at-border-soft);
+  background:var(--at-surface);
+}
+.mv-app .fsa-outlook-summary>span {
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--at-muted);line-height:1.5;
+}
+.mv-app .fsa-outlook-summary svg {flex:0 0 17px;color:var(--at-cyan);}
+.mv-app .fsa-outlook-unavailable {
+  display:flex;align-items:center;gap:9px;
+  margin:0;padding:15px 18px;
+  font-size:12px;line-height:1.5;color:var(--at-muted);
+}
+.mv-app .fsa-outlook-loading {
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--at-muted);margin-top:14px;
+}
+.mv-app .fsa-weather-spin {animation:fsa-spin 1.1s linear infinite;}
+@keyframes fsa-spin {to{transform:rotate(360deg);}}
+@media(max-width:650px){
+  .mv-app .fsa-outlook-head {flex-wrap:wrap;padding:15px;}
+  .mv-app .fsa-outlook-head>a {width:100%;justify-content:start;}
+  .mv-app .fsa-outlook-periods {padding-inline:12px;}
+  .mv-app .fsa-outlook-period {flex-basis:164px;}
+  .mv-app .fsa-outlook-trip-date {margin-inline:12px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .mv-app .fsa-weather-spin {animation:none;}
+}

@@ -1,0 +1,1474 @@
+/* ATLAS PREMIERE / Map-first field intelligence v7.
+   A dedicated authoritative visual layer after legacy theme/density files.
+   Keeps the user's logo, real GeoJSON/TopoJSON geometry and all map controls. */
+.mv-app.atlas-design-v3.atlas-product-v4 {
+  --atlas-premiere-cyan: #2ceeea;
+  --atlas-premiere-pink: #f368ba;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2,
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2:not(.has-active-region),
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused) {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-columns: minmax(0, 1fr);
+  padding: 9px clamp(11px, 1.45vw, 24px) 27px;
+  gap: 9px;
+  grid-template-areas: 'heading' 'atlas' 'legend' 'telemetry' 'regions';
+  background: radial-gradient(ellipse 80% 330px at 72% 0%, rgba(28,158,176,.09), transparent 82%), var(--at-bg);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-intro {
+  grid-area: heading;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 14px; flex-wrap: wrap; min-width: 0;
+  min-height: 79px; padding: 8px 2px 12px; margin: 0;
+  border: none; background: none; box-shadow: none; border-radius: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-title { min-width: 0; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-kicker {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  color: var(--at-cyan); font-size: 9px; font-weight: 850; letter-spacing: .155em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-kicker>span:not(.atlas-command-pulse) {
+  opacity: .55; color: var(--at-muted);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-pulse {
+  flex: 0 0 7px; width: 7px; height: 7px; background: #28eae5;
+  border-radius: 50%; box-shadow: 0 0 13px rgba(32,242,239,.8);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-title h1 {
+  margin: 5px 0 4px;
+  font-size: clamp(26px, 2.5vw, 39px);
+  line-height: 1.09; letter-spacing: -.056em; font-weight: 880;
+  color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-title h1 span {
+  color: var(--atlas-premiere-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-title p {
+  color: var(--at-muted); margin: 0; line-height: 1.4; font-size: 11.5px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-pills {
+  display: flex; justify-content: flex-end; align-items: center; gap: 15px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-stat {
+  display: flex; align-items: baseline; gap: 7px; padding-right: 13px;
+  border-right: 1px solid var(--at-border-soft); white-space: nowrap;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-stat strong {
+  color: var(--at-text); font-size: 21px; font-weight: 870;
+  letter-spacing: -.055em; font-variant-numeric: tabular-nums;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-stat small {
+  color: var(--at-muted); font-size: 9px; letter-spacing: .05em; font-weight: 750;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-explore {
+  min-height: 42px; border-radius: 9px; border: 1px solid rgba(42,225,229,.45);
+  color: #052335; background: #2ce9e7; display: flex;
+  align-items: center; justify-content: center; gap: 9px; padding: 9px 13px;
+  font: 800 11px var(--atlas-font);
+  transition: transform .15s, background .15s;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-explore:hover {
+  background: #94fffb; transform: translateY(-1px);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-explore:focus-visible {
+  outline: 3px solid var(--at-rose); outline-offset: 3px;
+}
+
+/* A single geographic instrument replaces the split flyer-and-dashboard layout. */
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-mission-layout {
+  grid-area: atlas; width: 100%; max-width: none; min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--at-cyan) 46%, var(--at-border));
+  border-radius: 17px; overflow: visible; isolation: isolate;
+  background: var(--at-surface);
+  box-shadow: 0 18px 45px rgba(0, 11, 26, .17), inset 0 1px rgba(75,231,239,.12);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading {
+  display: grid; grid-template-columns: minmax(250px, .92fr) minmax(0, 1.08fr);
+  gap: 10px; align-items: center; padding: 10px 13px; min-height: 69px;
+  background: linear-gradient(100deg, var(--at-surface), var(--at-field));
+  border-bottom: 1px solid var(--at-border-soft);
+  border-radius: 17px 17px 0 0; position: relative; z-index: 29;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading-top {
+  display: flex; align-items: center; justify-content: flex-end;
+  flex-wrap: nowrap; gap: 8px; min-width: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading-text { display: none; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-field.atlas-destination {
+  max-width: none; width: 100%; position: relative; min-width: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-destination>label { display: none; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search {
+  height: 44px; min-height: 44px; border: 1px solid rgba(71,172,195,.5);
+  border-radius: 9px; padding: 0 12px; gap: 9px;
+  background: color-mix(in srgb, var(--at-field) 91%, var(--at-surface));
+  box-shadow: inset 0 1px rgba(77,209,226,.04);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search input {
+  min-height: 42px; height: 42px; font-size: 13px; font-weight: 650;
+  color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search input::placeholder {
+  color: var(--at-muted); opacity: 1;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility {
+  flex: 1 1 auto; min-width: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions {
+  display: flex; justify-content: flex-end; flex-wrap: nowrap; gap: 7px;
+  width: 100%; min-width: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions .atlas-mobile-region {
+  min-height: 42px; height: 42px; max-width: 225px; min-width: 175px;
+  border-radius: 9px; border: 1px solid var(--at-border);
+  font-size: 11px; background: var(--at-field); color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 :is(.mv-layers-button, .atlas-focus) {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; height: 42px; min-height: 42px;
+  padding: 8px 13px; border-radius: 9px;
+  background: var(--at-field); border: 1px solid var(--at-border);
+  font-size: 11px; font-weight: 850; color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 :is(.mv-layers-button, .atlas-focus):hover {
+  color: var(--at-cyan); border-color: var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-popover { z-index: 90; }
+
+/* Real map height is critical: a map with a very short frame looks tiny no matter
+   how ornate the surrounding cards are. ResizeObserver will refit Albers geometry. */
+@media(min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+    height: clamp(570px, calc(100dvh - 245px), 820px) !important;
+    min-height: 570px !important;
+    width: 100%;
+    background: #061b31;
+    border: 0; border-radius: 0 0 16px 16px;
+    box-shadow: inset 0 0 105px rgba(2,171,197,.10);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.has-active-region:not(.atlas-focused) .mv-map-frame {
+    height: clamp(570px, calc(100dvh - 245px), 820px) !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .atlas-v2 .mv-map-frame {
+    height: clamp(570px, calc(100dvh - 245px), 820px) !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .mv-map-frame {
+    min-height: 570px; height: calc(100dvh - 130px) !important;
+  }
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-body {
+  min-width: 0; position: relative;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-svg {
+  display: block; width: 100%; height: 100%; shape-rendering: geometricPrecision;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-region-us {
+  stroke: #69d6ee; stroke-opacity: .88; stroke-width: 1.28;
+  fill: url(#vice-territory-land);
+  filter: drop-shadow(0 0 1.6px rgba(18,199,228,.24));
+  transition: fill .17s, stroke .17s, filter .17s;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-region-us.assigned {
+  fill: #0f8295; stroke: #a2fff5; stroke-opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(34,243,231,.37));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-region-us:is(:hover,:focus-visible) {
+  fill: #17829d; stroke: #ffffff; stroke-width: 2.4;
+  filter: drop-shadow(0 0 6px rgba(42,235,239,.64));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-region-us.active {
+  fill: #a93d82; stroke: #ffd0e8; stroke-width: 2.6;
+  filter: drop-shadow(0 0 9px rgba(239,69,167,.56));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-state-label {
+  fill: #eafaff; stroke: #09314c; stroke-width: 3px;
+  paint-order: stroke; font-weight: 850;
+  filter: drop-shadow(0 1px 2px rgba(0,13,31,.42));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-airport-bubble {
+  stroke: #ff85cf; fill: #f94cae;
+  filter: drop-shadow(0 0 5px rgba(251,62,162,.53));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-airport-mark.primary .mv-airport-bubble {
+  fill: #7efff7; stroke: #081e39;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-airport-halo {
+  stroke: rgba(255,92,191,.43); fill: rgba(242,83,184,.11);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-grid-overlay { opacity: .10; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-graticule { stroke-opacity: .28; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-halo { opacity: .63; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame::after {
+  pointer-events: none; opacity: .18;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-hud {
+  z-index: 5; top: 14px; left: 17px; right: 17px;
+  pointer-events: none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-hud>span {
+  border: 1px solid rgba(66,221,224,.27);
+  background: rgba(5,30,49,.73);
+  backdrop-filter: blur(12px); border-radius: 7px;
+  padding: 7px 11px; font-size: 9px; letter-spacing: .095em;
+  font-weight: 850; color: #c4f9f9;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-insight {
+  z-index: 16; right: 16px; top: 61px; left: auto;
+  width: min(275px, 36%); min-width: 220px;
+  padding: 15px; border: 1px solid rgba(66,223,236,.45);
+  border-radius: 11px; background: rgba(4,27,47,.92);
+  backdrop-filter: blur(16px); box-shadow: 0 20px 45px rgba(0,8,27,.36);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-insight strong {
+  font-size: 20px; color: #f3ffff;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-insight strong small {
+  font-size: 12px; color: #b8d9e6;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-insight>span {
+  color: #b5d4e5; font-size: 11px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-insight .mv-map-insight-action {
+  color: #70fff2 !important; font-weight: 850;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-legend {
+  padding: 8px 10px; gap: 7px;
+  border-radius: 9px; background: rgba(6,26,47,.86);
+  border: 1px solid rgba(72,166,196,.30);
+  backdrop-filter: blur(12px); color: #d7f2fb;
+  box-shadow: 0 10px 30px rgba(0,15,29,.16);
+  max-width: calc(100% - 220px);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-legend>div {
+  color: #d7f2fb; font-size: 10px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools {
+  z-index: 11; bottom: 12px; right: 12px;
+  background: rgba(5,28,48,.89); backdrop-filter: blur(12px);
+  border: 1px solid rgba(98,214,220,.33); border-radius: 10px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools button {
+  min-height: 43px; min-width: 42px; color: #e5fbff;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools button:hover {
+  background: rgba(45,202,209,.13);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-zoom { color: #d6f4ff; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-insets {
+  bottom: 89px; left: 15px; z-index: 8;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-insets button {
+  background: rgba(4,31,52,.82);
+  border-color: rgba(66,180,202,.36); border-radius: 9px;
+  color: #dffcff; box-shadow: 0 8px 30px rgba(0,11,30,.12);
+  backdrop-filter: blur(12px);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-insets button:hover {
+  border-color: #37f3ed;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend {
+  grid-area: legend; min-width: 0;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 9px 17px;
+  min-height: 30px; border: 0; border-bottom: 1px solid var(--at-border-soft);
+  border-radius: 0; background: none; padding: 2px 5px 9px;
+  box-shadow: none; font-size: 11px; color: var(--at-muted);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend span {
+  font-size: 10px; line-height: 1.35;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend span:last-child {
+  margin-left: auto; font-size: 10px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-strip {
+  grid-area: telemetry;
+  border: 1px solid var(--at-border-soft); border-radius: 10px;
+  background: var(--at-surface);
+  box-shadow: none; min-height: 47px;
+  padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0,1fr));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item {
+  display: flex; flex-direction: row; align-items: center; gap: 9px;
+  min-height: 47px; padding: 8px 11px;
+  background: transparent; border-right: 1px solid var(--at-border-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item:last-child { border-right: 0; }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item>svg {
+  flex: 0 0 16px; width: 16px; height: 16px; color: var(--at-cyan); filter: none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item:nth-child(4)>svg { color: var(--at-rose); }
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item small {
+  display: block; font-size: 8px; letter-spacing: .08em; line-height: 1.2;
+  color: var(--at-muted); font-weight: 780;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item strong {
+  display: flex; align-items: baseline; gap: 5px;
+  font-size: 19px; font-weight: 850; letter-spacing: -.035em; color: var(--at-text);
+  text-shadow: none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item strong em {
+  color: var(--at-muted); font-size: 10px; font-style: normal; font-weight: 550;
+  letter-spacing: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-all-regions {
+  border-top: none; padding: 0 4px; margin: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-all-regions summary {
+  min-height: 44px; font-size: 11px; color: var(--at-muted);
+}
+
+/* The shell should look like the same product from Atlas to Travel and People. */
+@media (min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-structure {
+    grid-template-columns: 181px minmax(0, 1fr);
+  }
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-header {
+  background: color-mix(in srgb, var(--at-stage) 94%, var(--at-bg));
+  border-bottom: 1px solid rgba(62,196,210,.28);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fsa-side-link {
+  border-radius: 9px;
+  transition: background .16s, color .16s, box-shadow .16s;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fsa-side-link:hover {
+  background: var(--at-aqua-soft); color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fsa-side-link.active {
+  box-shadow: inset 3px 0 0 var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fsa-crumb strong {
+  color: var(--at-text); font-weight: 870;
+}
+
+/* Light mode: bright instrument surface with clear geography and calm shadows. */
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-frame {
+  background: #d5eef1;
+  box-shadow: inset 0 0 105px rgba(74,159,179,.11);
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-region-us {
+  fill: #7dbfcd; stroke: #276a89;
+  stroke-opacity: .9; filter: drop-shadow(0 0 1px rgba(10,77,98,.12));
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-region-us.assigned {
+  fill: #27a8ad; stroke: #066f77;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-region-us.active {
+  fill: #d970ad; stroke: #772956;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-state-label {
+  fill: #102e45; stroke: #c9eff2; stroke-width: 3;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-legend {
+  background: rgba(245,253,253,.92); color: #1d4854;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-legend>div {
+  color: #1d4854;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-tools {
+  background: rgba(249,254,253,.95);
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-tools button {
+  color: #173e55;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-zoom { color: #214d60; }
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-insets button {
+  background: rgba(250,254,254,.90); color: #19475b; border-color: #8cbfc6;
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .fsa-map-hud>span {
+  background: rgba(250,255,254,.90); color: #14445a; border-color: #8cc4c9;
+}
+
+/* Mobile PWA: map first, 44px touch controls, and the real territory inspector sheet. */
+@media (max-width: 900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2:not(.has-active-region),
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused) {
+    padding: 5px 9px calc(85px + env(safe-area-inset-bottom)) !important;
+    gap: 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-intro {
+    display: flex !important; gap: 7px; min-height: 50px; padding: 5px 1px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-title h1 {
+    font-size: 23px; margin: 2px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-title p { font-size: 10px; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-kicker { font-size: 8px; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-command-pills { display: none; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading {
+    grid-template-columns: 1fr; gap: 7px; padding: 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading-top { justify-content: flex-start; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions {
+    width: 100%; justify-content: space-between; gap: 6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions .atlas-mobile-region {
+    flex: 1 1 auto; min-width: 0; max-width: none; width: 100%; font-size: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 :is(.mv-layers-button, .atlas-focus) {
+    min-height: 44px; padding: 8px 10px; font-size: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search {
+    min-height: 44px; height: 44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search input {
+    font-size: 16px; min-height: 44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+    height: clamp(390px, 59svh, 570px) !important;
+    min-height: 390px; border-radius: 0 0 14px 14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .mv-map-frame {
+    min-height: 450px; height: calc(100svh - 170px) !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-legend {
+    left: 7px; bottom: 8px; max-width: calc(100% - 100px);
+    padding: 6px 8px; gap: 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools {
+    right: 7px; bottom: 7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools button {
+    min-width: 42px; min-height: 44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend {
+    padding: 4px 5px 8px; gap: 6px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend span:last-child {
+    margin-left: 0; width: 100%;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item:nth-child(2) {
+    border-right: 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--at-border-soft);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item strong {
+    font-size: 17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item strong em {
+    font-size: 9px;
+  }
+}
+@media(max-width:390px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions .atlas-mobile-region {
+    font-size: 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title h1 {
+    font-size: 21px;
+  }
+}
+
+/* Map-source chooser: always discoverable, not buried in a layer sub-menu. */
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  flex:0 0 auto;min-width:94px;min-height:42px;padding:7px 10px;
+  border:1px solid var(--at-border);border-radius:9px;
+  color:var(--at-muted);background:var(--at-field);
+  font-size:11px;font-weight:800;white-space:nowrap;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle.is-live {
+  border-color:color-mix(in srgb,var(--at-cyan) 52%,var(--at-border));
+  background:var(--at-aqua-soft);color:var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle:hover {
+  border-color:var(--at-cyan);color:var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle:focus-visible {
+  outline:3px solid var(--at-cyan);outline-offset:3px;
+}
+/* The map uses real contours or tiles as a full-size interactive instrument.
+   Status and feedback overlays belong to the map, never gigantic empty cards. */
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+  isolation:isolate;
+  box-shadow:inset 0 0 96px rgba(18,167,198,.09);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame .fsa-map-hud>span:first-child {
+  border-radius:5px;letter-spacing:.12em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-insight {
+  transition:opacity .2s ease,transform .2s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-region-us.active {
+  stroke-width:2.9;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title h1 {
+  font-family:'Outfit','DM Sans',system-ui,sans-serif;font-weight:850;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-stat strong {
+  font-family:'Outfit','DM Sans',system-ui,sans-serif;
+}
+@media(min-width:901px) and (max-width:1230px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading {
+    grid-template-columns:minmax(230px,.76fr) minmax(0,1.24fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions .atlas-mobile-region {
+    min-width:140px;max-width:175px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle {
+    min-width:85px;
+  }
+}
+@media(max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading {
+    border-radius:12px 12px 0 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions {
+    display:flex;flex-wrap:nowrap;gap:5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle {
+    flex:0 0 44px;min-width:44px;width:44px;height:44px;padding:0;
+    border-radius:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-map-mode-toggle span {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-button,
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-focus {
+    width:44px;min-width:44px;height:44px;min-height:44px;padding:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-button span,
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-button svg:last-child,
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-focus span {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-utility-actions .atlas-mobile-region {
+    flex:1 1 auto;width:auto;min-width:0;max-width:none;
+    height:44px;min-height:44px;font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+    min-height:410px;
+    height:clamp(410px,62svh,620px)!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame .fsa-map-hud {
+    top:8px;left:8px;right:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-legend {
+    max-width:calc(100% - 102px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-tools button {
+    min-width:44px;min-height:44px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .mv-map-frame {
+    height:calc(100svh - 155px)!important;
+    min-height:460px;
+  }
+}
+@media(max-width:390px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+    min-height:380px;height:clamp(380px,58svh,490px)!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title p {
+    display:none;
+  }
+}
+
+
+/* Atlas Command Edition: one-column map and a floating, non-destructive inspector.
+   The map does not shrink or collapse when selecting a territory. */
+@media (min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-areas: 'heading' 'atlas' 'legend' 'telemetry' 'regions';
+    position: relative;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.has-active-region:not(.atlas-focused) .mv-inspector {
+    grid-area: auto;
+    position: absolute;
+    top: 166px;
+    right: clamp(18px, 2.1vw, 34px);
+    width: clamp(320px, 29vw, 368px);
+    height: min(620px, calc(100dvh - 215px));
+    min-height: 430px;
+    max-height: none;
+    z-index: 48;
+    align-self: auto;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--at-cyan) 55%, var(--at-border));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--at-surface) 93%, transparent);
+    box-shadow: 0 26px 86px rgba(0, 5, 23, .5), 0 0 0 1px rgba(255, 103, 182, .08);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.has-active-region:not(.atlas-focused) .mv-map-frame {
+    height: clamp(590px, calc(100dvh - 238px), 850px) !important;
+    min-height: 590px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.has-active-region:not(.atlas-focused) .mv-map-insight {
+    display: none;
+  }
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-kicker {
+  font-size: 10px;
+  letter-spacing: .13em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title h1 {
+  font-size: clamp(28px, 2.7vw, 43px);
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: -.055em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-stat small {
+  font-size: 10px;
+  letter-spacing: .065em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  border: 1px solid var(--at-border);
+  border-radius: 9px;
+  padding: 9px 14px;
+  background: var(--at-field);
+  color: var(--at-text);
+  font: 800 12px var(--atlas-font);
+  white-space: nowrap;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-secondary:hover {
+  border-color: var(--at-rose);
+  color: var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-explore {
+  min-height: 44px;
+  font-size: 12px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-mission-layout {
+  position: relative;
+  box-shadow: 0 27px 76px rgba(0, 11, 28, .38), 0 0 42px rgba(40, 230, 228, .08);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-mission-layout::before {
+  content: '';
+  position: absolute;
+  z-index: 30;
+  left: 18px;
+  right: 18px;
+  top: -2px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--at-cyan) 20%, var(--at-rose) 58%, transparent 100%);
+  box-shadow: 0 0 24px rgba(242, 91, 168, .48);
+  pointer-events: none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading {
+  background: linear-gradient(110deg, var(--at-surface), color-mix(in srgb, var(--at-raised) 45%, var(--at-surface)));
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search input {
+  font-size: 14px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+  background: radial-gradient(ellipse at 55% 30%, #12415b, #06182c 70%);
+}
+.mv-app.atlas-design-v3.atlas-product-v4[data-theme='light'] .atlas-v2 .mv-map-frame {
+  background: #d9edf3;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item small {
+  font-size: 10px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-item strong em {
+  font-size: 11px;
+}
+@media (max-width: 900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title h1 {
+    font-size: clamp(22px, 5.8vw, 29px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-kicker {
+    font-size: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-command-title p {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 :is(.mv-region-us, .atlas-command-explore, .fsa-side-link) {
+    transition: none !important;
+  }
+}
+
+/* MAP EXPERIENCE V5 / territory intelligence as the core product */
+.mv-app.atlas-command-v5 .atlas-v2.atlas-reimagined {
+  padding:clamp(10px,1.4vw,22px) clamp(11px,1.75vw,27px) 32px;
+  gap:10px;
+  background:
+    radial-gradient(ellipse 740px 320px at 75% 0%,color-mix(in srgb,var(--at-rose) 8%,transparent),transparent 78%),
+    radial-gradient(ellipse 610px 470px at 17% 50%,color-mix(in srgb,var(--at-cyan) 5%,transparent),transparent 84%),
+    transparent;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro {
+  padding:12px 6px 19px;
+  min-height:105px;
+  gap:16px;
+  position:relative;
+  isolation:isolate;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro::before {
+  content:'';
+  position:absolute;z-index:-1;pointer-events:none;
+  width:255px;height:255px;right:11%;top:-157px;border-radius:50%;
+  background:radial-gradient(circle at 55% 65%,
+    color-mix(in srgb,var(--at-rose) 33%,transparent) 0%,
+    color-mix(in srgb,var(--at-rose) 6%,transparent) 53%,transparent 75%);
+  filter:blur(3px);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title h1 {
+  font-family:'Outfit','DM Sans',system-ui,sans-serif;
+  font-size:clamp(34px,3.55vw,57px);
+  font-weight:850;line-height:1.045;letter-spacing:-.067em;
+  margin:7px 0 8px;color:var(--at-text);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title h1 span {
+  color:var(--at-cyan);
+  text-shadow:0 0 24px color-mix(in srgb,var(--at-cyan) 18%,transparent);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title p {
+  font-size:clamp(12px,1.07vw,14px);
+  line-height:1.5;color:var(--at-muted);max-width:710px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-kicker {
+  font-size:10.5px;letter-spacing:.15em;color:var(--at-cyan);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat strong {
+  font-size:25px;letter-spacing:-.05em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat small {
+  font-size:10.5px;letter-spacing:.085em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-explore,
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-secondary {
+  min-height:47px;min-width:44px;border-radius:11px;
+  font-weight:790;font-size:13px;padding-inline:16px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-mission-layout {
+  border-radius:19px;
+  border:1px solid color-mix(in srgb,var(--at-cyan) 43%,var(--at-border));
+  overflow:hidden;
+  background:var(--at-surface);
+  box-shadow:0 26px 88px rgba(0,8,28,.30),0 0 40px color-mix(in srgb,var(--at-cyan) 9%,transparent);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-mission-layout::before {
+  left:24px;right:24px;opacity:.85;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-map-heading {
+  border-radius:18px 18px 0 0;
+  min-height:72px;
+  padding:12px 17px;
+  background:linear-gradient(110deg,var(--at-surface),color-mix(in srgb,var(--at-raised) 46%,var(--at-surface)));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-search {
+  border-radius:12px;min-height:47px;height:47px;
+  border-color:color-mix(in srgb,var(--at-cyan) 41%,var(--at-border));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-search input {
+  font-size:14px;height:45px;min-height:45px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses {
+  display:flex;justify-content:space-between;align-items:center;
+  gap:14px;min-width:0;padding:9px 18px;
+  border-bottom:1px solid var(--at-border-soft);
+  background:linear-gradient(100deg,var(--at-field),color-mix(in srgb,var(--at-raised) 32%,var(--at-field)));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses > span {
+  color:var(--at-muted);font-weight:840;letter-spacing:.13em;
+  font-size:10px;white-space:nowrap;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  white-space:nowrap;min-height:43px;
+  border-radius:10px;border:1px solid transparent;
+  background:transparent;color:var(--at-muted);
+  padding:9px 13px;font-size:12.7px;font-weight:760;
+  transition:background .2s ease,color .2s ease,border-color .2s ease;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button:hover {
+  color:var(--at-text);background:var(--at-raised);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button.is-active {
+  background:color-mix(in srgb,var(--at-cyan) 15%,var(--at-surface));
+  color:var(--at-text);
+  border-color:var(--at-cyan);
+  box-shadow:inset 0 -2px 0 var(--at-cyan),0 0 22px color-mix(in srgb,var(--at-cyan) 8%,transparent);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] .atlas-v5-lenses button.is-active {
+  border-color:var(--at-rose);box-shadow:inset 0 -2px 0 var(--at-rose);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='airports'] .atlas-v5-lenses button.is-active {
+  border-color:#9E83F5;box-shadow:inset 0 -2px 0 #9E83F5;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-focus {
+  margin-left:auto;max-width:265px;min-width:0;
+  font-size:11.8px;line-height:1.4;color:var(--at-muted);
+  text-align:right;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .mv-map-body {
+  background:var(--at-map-water);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+  min-width:0;
+  background:radial-gradient(ellipse at 50% 28%,#15506A,#061D34 72%);
+  border-radius:0;box-shadow:inset 0 0 95px rgba(5,209,229,.08);
+}
+.mv-app.atlas-command-v5[data-theme='light'] .atlas-reimagined .mv-map-frame {
+  background:radial-gradient(ellipse at 40% 18%,#D2EDF5,#AFD9E4 90%);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-strip {
+  border-radius:0 0 16px 16px;overflow:hidden;
+  border-color:var(--at-border-soft);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-item {
+  min-height:56px;padding:9px 13px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-item small {
+  font-size:10px;letter-spacing:.09em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-item strong {
+  font-size:23px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-ownership-legend {
+  padding:6px 8px 10px;gap:12px;font-size:11.5px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend {
+  display:flex;gap:10px;align-items:center;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend span {
+  display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend i {
+  width:9px;height:9px;display:inline-block;border-radius:50%;
+  box-shadow:0 0 12px currentColor;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend i.high {background:#FF5FAA;color:#FF5FAA;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend i.moderate {background:#FFC46C;color:#FFC46C;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend i.routine {background:#42DDCA;color:#42DDCA;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-airport-legend {
+  display:inline-flex;gap:6px;align-items:center;color:var(--at-rose);font-size:11.5px;
+}
+@media (min-width:901px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+    height:clamp(630px,calc(100dvh - 276px),930px)!important;
+    min-height:630px!important;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined.has-active-region:not(.atlas-focused) .mv-map-frame {
+    height:clamp(630px,calc(100dvh - 276px),930px)!important;
+    min-height:630px!important;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined.has-active-region:not(.atlas-focused) .mv-inspector {
+    top:clamp(226px,27dvh,268px);
+    width:clamp(330px,28vw,395px);
+    height:min(610px,calc(100dvh - 300px));
+    min-height:390px;right:clamp(20px,2.2vw,36px);
+    border-radius:16px;
+    background:color-mix(in srgb,var(--at-surface) 95%,transparent);
+    box-shadow:0 25px 85px rgba(0,7,27,.52);
+  }
+}
+@media (max-width:1050px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses {
+    flex-wrap:wrap;justify-content:flex-start;gap:5px;padding:9px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses > span {display:none;}
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-focus {
+    max-width:none;margin:2px 6px 0;
+  }
+}
+@media (max-width:900px) {
+  .mv-app.atlas-command-v5 .atlas-v2.atlas-reimagined {
+    padding:5px 8px calc(87px + env(safe-area-inset-bottom));
+    gap:8px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro {
+    min-height:62px;padding:7px 4px 10px;gap:4px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro::before {
+    right:-32px;top:-122px;width:190px;height:190px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title h1 {
+    font-size:clamp(24px,6.1vw,33px);line-height:1.08;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-kicker {
+    font-size:9.7px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title p {
+    display:block;font-size:12.2px;line-height:1.42;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .fsa-map-heading {
+    padding:10px;gap:8px;min-height:0;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-search input {
+    font-size:16px;min-height:46px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses {
+    display:flex;flex-wrap:nowrap;overflow-x:auto;
+    overscroll-behavior-inline:contain;scroll-snap-type:x proximity;
+    scrollbar-width:thin;padding:8px 9px;gap:5px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button {
+    flex:0 0 auto;scroll-snap-align:start;min-height:44px;
+    padding:8px 12px;font-size:12px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-focus {
+    flex:0 0 auto;white-space:nowrap;max-width:none;margin:0 8px;
+    text-align:left;font-size:11px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+    height:clamp(445px,64svh,720px)!important;min-height:445px!important;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-strip {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-item {
+    min-height:56px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-item strong {
+    font-size:21px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-ownership-legend span:last-child {
+    width:100%;margin-left:0;line-height:1.5;
+  }
+}
+@media (max-width:410px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title p {
+    display:block;font-size:11.8px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+    height:clamp(430px,61svh,590px)!important;min-height:430px!important;
+  }
+}
+
+/* Direct next steps for a selected territory.
+   Scope under the owning Atlas stylesheet so this is not a new global layer. */
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(12px, 2vw, 25px);
+  min-width: 0;
+  padding: 12px clamp(14px, 1.5vw, 23px);
+  border-bottom: 1px solid var(--at-border-soft);
+  background: linear-gradient(106deg,
+    color-mix(in srgb, var(--at-cyan) 10%, var(--at-surface)) 0%,
+    var(--at-surface) 46%,
+    color-mix(in srgb, var(--at-rose) 7%, var(--at-surface)) 100%);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-summary {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-summary > span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--at-cyan);
+  font: 820 10px/1.3 var(--atlas-font);
+  letter-spacing: .11em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-summary > strong {
+  color: var(--at-text);
+  font: 840 19px/1.14 'Outfit', 'DM Sans', system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-summary > small {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--at-muted);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--at-border);
+  background: var(--at-field);
+  color: var(--at-text);
+  font: 750 12px/1.25 var(--atlas-font);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button > svg:first-child {
+  color: var(--at-cyan);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button > svg:last-child {
+  color: var(--at-muted);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button:hover {
+  border-color: var(--at-cyan);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button.atlas-v5-strong {
+  background: var(--at-action);
+  color: var(--at-action-fg);
+  border-color: var(--at-action);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button.atlas-v5-strong svg {
+  color: var(--at-action-fg);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button.atlas-v5-strong:hover {
+  background: var(--at-action-hover);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button:focus-visible {
+  outline: 3px solid var(--at-cyan);
+  outline-offset: 3px;
+}
+@media (min-width: 901px) and (max-width: 1220px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 900px) {
+  /* On phones the existing state-inspector sheet owns the next-step actions.
+     Avoid a second redundant action bar that pushes the map down. */
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-actions {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons > button {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button {
+    transition:none;
+  }
+}
+
+/* Secondary intelligence is available on demand without displacing the Atlas. */
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence {
+  grid-area:telemetry;min-width:0;overflow:hidden;
+  border:1px solid var(--at-border-soft);border-radius:13px;background:var(--at-surface);
+}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence>summary {
+  list-style:none;display:flex;gap:12px;align-items:center;
+  min-height:54px;padding:11px 15px;cursor:pointer;color:var(--at-text);
+}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence>summary::-webkit-details-marker {display:none;}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-title {
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:820;color:var(--at-text);white-space:nowrap;
+}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-title svg {color:var(--at-cyan);}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-meta {
+  font-size:11px;line-height:1.4;color:var(--at-muted);
+}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-action {
+  margin-left:auto;display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:810;color:var(--at-cyan);white-space:nowrap;
+}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-action svg {transition:transform .18s ease;}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence[open] .atlas-deep-summary-action svg {transform:rotate(180deg);}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence>summary:focus-visible {outline:3px solid var(--at-cyan);outline-offset:-3px;}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence .atlas-telemetry-strip {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  width:100%;margin:0;border:0;border-radius:0;
+}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence .atlas-telemetry-strip>.fsa-mission-rail {grid-column:1/-1;}
+.mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence .atlas-telemetry-item {min-height:60px;padding:10px;}
+@media(max-width:900px) {
+  .mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence>summary {flex-wrap:wrap;padding:12px;}
+  .mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-meta {order:3;flex:1 1 100%;}
+  .mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-intelligence .atlas-telemetry-strip {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app.atlas-command-v5 .atlas-v2 .atlas-deep-summary-action svg {transition:none;}
+}
+
+
+/* Geographic art direction: the map is the primary product, not a card beneath a hero. */
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro {
+  min-height:76px;padding:9px 5px 10px;gap:15px;
+  align-items:center;justify-content:space-between;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro::before {
+  width:220px;height:220px;top:-153px;right:8%;
+  opacity:.65;filter:blur(18px);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title h1 {
+  font:860 clamp(29px,2.95vw,44px)/1.045 'Outfit','DM Sans',system-ui,sans-serif;
+  letter-spacing:-.061em;margin:6px 0 7px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title p {
+  font-size:13px;line-height:1.45;max-width:655px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-kicker {
+  font-size:10px;letter-spacing:.14em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-pills {
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat {
+  border-right:1px solid var(--at-border-soft);padding:4px 8px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat strong {
+  font-size:24px;font-variant-numeric:tabular-nums;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat small {
+  font-size:9.8px;letter-spacing:.07em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined :is(.atlas-command-explore,.atlas-command-secondary) {
+  min-height:44px;padding:9px 13px;font-size:12.5px;border-radius:10px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-mission-layout {
+  border:1px solid color-mix(in srgb,var(--at-cyan) 56%,var(--at-border));
+  border-radius:18px;
+  box-shadow:0 21px 72px rgba(0,8,28,.34),0 0 36px color-mix(in srgb,var(--at-cyan) 11%,transparent);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-mission-layout::before {
+  left:14px;right:14px;opacity:.9;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-map-heading {
+  min-height:66px;padding:10px 13px;gap:8px;
+  border-radius:17px 17px 0 0;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-search {
+  height:46px;min-height:46px;border-radius:10px;
+  border-color:color-mix(in srgb,var(--at-cyan) 43%,var(--at-border));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-search input {
+  font-size:15px;min-height:44px;height:44px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses {
+  gap:6px;padding:7px 13px;
+  background:color-mix(in srgb,var(--at-raised) 31%,var(--at-field));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button {
+  min-height:44px;border-radius:10px;font-weight:780;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button.is-active {
+  background:var(--at-aqua-soft);box-shadow:inset 0 -3px var(--at-cyan);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-actions {
+  min-height:55px;padding:9px 13px;gap:10px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-summary>strong {
+  font-size:18px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-region-buttons button {
+  min-height:43px;font-size:12px;border-radius:10px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+  background:
+    radial-gradient(ellipse 74% 71% at 59% 24%,rgba(45,125,145,.37),transparent 82%),
+    linear-gradient(143deg,#061729 0%,#092F48 50%,#06172B 100%);
+  border-radius:0;
+}
+.mv-app.atlas-command-v5[data-theme='light'] .atlas-reimagined .mv-map-frame {
+  background:radial-gradient(ellipse at 52% 24%,#DBF2F7,#A7D6E2 88%);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .mv-region {
+  transition:fill .18s ease,stroke .18s ease,filter .18s ease;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .mv-region:is(:hover,:focus-visible) {
+  filter:drop-shadow(0 0 4px color-mix(in srgb,var(--at-cyan) 51%,transparent));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-focus {font-size:11.5px;color:var(--at-muted);}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-deep-intelligence {
+  border-color:color-mix(in srgb,var(--at-cyan) 25%,var(--at-border-soft));
+  background:color-mix(in srgb,var(--at-surface) 88%,var(--at-field));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-deep-intelligence>summary:hover {
+  background:var(--at-aqua-soft);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-ownership-legend {
+  font-size:11.5px;gap:12px;padding:9px 12px;
+}
+@media(min-width:901px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame,
+  .mv-app.atlas-command-v5 .atlas-reimagined.has-active-region:not(.atlas-focused) .mv-map-frame {
+    height:clamp(590px,calc(100dvh - 250px),880px)!important;
+    min-height:590px!important;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined.has-active-region:not(.atlas-focused) .mv-inspector {
+    top:clamp(220px,26dvh,275px);
+    right:clamp(18px,2vw,32px);width:clamp(330px,28vw,390px);
+    border-radius:17px;
+  }
+}
+@media(max-width:900px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro {
+    padding:5px 4px 10px;min-height:65px;gap:7px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title h1 {
+    font-size:clamp(24px,6.1vw,34px);
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-title p {
+    font-size:12.5px;line-height:1.43;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat {display:none;}
+  .mv-app.atlas-command-v5 .atlas-reimagined .fsa-map-heading {
+    min-height:0;padding:9px;gap:6px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-search input {
+    font-size:16px;min-height:46px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses {
+    flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain;gap:5px;padding:8px 9px;
+    scrollbar-width:thin;-webkit-overflow-scrolling:touch;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-lenses button {
+    min-height:44px;flex:0 0 auto;scroll-snap-align:start;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+    height:clamp(450px,65svh,700px)!important;min-height:450px!important;
+  }
+}
+@media(max-width:410px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-map-frame {
+    height:clamp(435px,62svh,595px)!important;min-height:435px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .mv-region {transition:none;}
+}
+
+
+/* Four geographic lenses share one map: visit shading is saved work, not a forecast. */
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .atlas-v5-lenses button.is-active {
+  background:color-mix(in srgb,#FFBD79 16%,var(--at-surface));
+  border-color:#FFBD79;box-shadow:inset 0 -3px #FFBD79;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.visit-active,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.visit-active {
+  fill:#B85F89;stroke:#FFBE7E;stroke-opacity:1;
+  filter:drop-shadow(0 0 5px rgba(255,153,175,.4));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.visit-none,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.visit-none {
+  fill:var(--at-map-land);stroke:var(--at-map-stroke);stroke-opacity:.58;filter:none;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.active,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.active {
+  fill:#D34C98;stroke:#FFF1F7;
+  filter:drop-shadow(0 0 8px rgba(255,85,174,.55));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-legend {
+  display:flex;align-items:center;flex-wrap:wrap;gap:11px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-legend>span {
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;font-weight:780;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-legend>span svg {color:#FFBD79;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-legend button {
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:43px;padding:8px 11px;border:1px solid var(--at-border-soft);
+  border-radius:10px;background:var(--at-surface);color:var(--at-text);
+  font-size:11.5px;font-weight:780;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-legend button:hover {
+  border-color:#FFBD79;
+}
+
+/* Atlas root layout guard: region focus must never introduce a phantom grid column. */
+.mv-app.atlas-command-v5 .mv-map-page.atlas-v2.atlas-reimagined:not(.atlas-focused),
+.mv-app.atlas-command-v5 .mv-map-page.atlas-v2.atlas-reimagined.has-active-region:not(.atlas-focused) {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-auto-columns:minmax(0,1fr);
+  grid-template-areas:'heading' 'atlas' 'legend' 'telemetry' 'regions';
+  width:100%;min-width:0;
+}
+.mv-app.atlas-command-v5 .mv-map-page.atlas-v2.atlas-reimagined.atlas-focused {
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:'atlas' 'legend' 'regions';
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-intro {grid-area:heading;min-width:0;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-mission-layout {grid-area:atlas;width:100%;min-width:0;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-ownership-legend {grid-area:legend;min-width:0;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-deep-intelligence {grid-area:telemetry;min-width:0;}
+.mv-app.atlas-command-v5 .atlas-reimagined .mv-all-regions {grid-area:regions;min-width:0;}
+.mv-app.atlas-command-v5 .atlas-reimagined.atlas-focused .atlas-deep-intelligence {display:none;}
+@media(max-width:900px){
+  .mv-app.atlas-command-v5 .mv-map-page.atlas-v2.atlas-reimagined:not(.atlas-focused),
+  .mv-app.atlas-command-v5 .mv-map-page.atlas-v2.atlas-reimagined.has-active-region:not(.atlas-focused) {
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:'heading' 'atlas' 'legend' 'telemetry' 'regions';
+  }
+}
+
+/* Field time horizon: functional data visualization connected to saved visit dates. */
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline {
+  display:flex;flex-wrap:wrap;align-items:center;
+  gap:11px;
+  min-height:68px;
+  padding:10px 13px;
+  border-bottom:1px solid var(--at-border-soft);
+  background:linear-gradient(98deg,
+    color-mix(in srgb,#FFBD79 10%,var(--at-surface)),
+    color-mix(in srgb,var(--at-rose) 7%,var(--at-field)));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline-heading {
+  display:flex;align-items:center;gap:10px;min-width:215px;
+  margin-right:auto;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline-heading>svg {
+  flex:0 0 20px;color:#E7A75D;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline-heading>span {
+  display:flex;flex-direction:column;gap:4px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline-heading strong {
+  font:790 14px/1.18 'Outfit','DM Sans',system-ui,sans-serif;
+  color:var(--at-text);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline-heading small {
+  font-size:10px;line-height:1.4;color:var(--at-muted);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-horizons {
+  display:flex;align-items:center;gap:4px;
+  padding:4px;border:1px solid var(--at-border-soft);
+  background:var(--at-field);border-radius:12px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-horizons button {
+  min-height:43px;min-width:62px;
+  padding:9px 11px;border-radius:9px;
+  border:1px solid transparent;background:transparent;
+  color:var(--at-muted);font-size:12px;font-weight:790;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-horizons button.selected {
+  background:color-mix(in srgb,#FFBD79 14%,var(--at-surface));
+  border-color:#E7A75D;color:var(--at-text);
+  box-shadow:inset 0 -2px #E7A75D;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend {
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend span {
+  display:flex;align-items:center;gap:5px;
+  font-size:10.5px;color:var(--at-muted);white-space:nowrap;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend i {
+  width:10px;height:10px;border-radius:3px;display:block;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend .none {background:#355B6F;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend .low {background:#FFC37D;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend .medium {background:#FF84B5;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend .high {background:#FF55A3;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-open-calendar {
+  min-height:44px;display:flex;align-items:center;gap:8px;
+  border-radius:10px;border:1px solid #E7A75D;
+  background:color-mix(in srgb,#FFBD79 10%,var(--at-surface));
+  color:var(--at-text);font-size:12px;font-weight:820;padding:9px 11px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-horizons button:focus-visible,
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-open-calendar:focus-visible {
+  outline:3px solid var(--at-cyan);outline-offset:3px;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.visit-low,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.visit-low {
+  fill:#D6A46E;stroke:#FFE0A9;stroke-opacity:.94;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.visit-medium,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.visit-medium {
+  fill:#D76D9C;stroke:#FFD0E5;stroke-opacity:1;
+  filter:drop-shadow(0 0 4px rgba(255,132,181,.24));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.visit-high,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.visit-high {
+  fill:#D84393;stroke:#FFE0EF;stroke-opacity:1;
+  filter:drop-shadow(0 0 5px rgba(255,85,163,.4));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-us.visit-none,
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region-canada.visit-none {
+  fill:var(--at-map-land);stroke:var(--at-map-stroke);stroke-opacity:.45;filter:none;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='visits'] .mv-region.active {
+  fill:#FF5BAA;stroke:#FFFFFF;stroke-opacity:1;
+  filter:drop-shadow(0 0 8px rgba(255,88,174,.5));
+}
+@media(max-width:900px){
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline {
+    gap:9px;padding:11px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline-heading {
+    flex:1 1 100%;min-width:0;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-horizons {
+    flex:1 1 auto;justify-content:center;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-horizons button {
+    flex:1 1 auto;min-width:58px;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-range-legend {
+    flex:1 1 100%;
+  }
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-open-calendar {
+    margin-left:auto;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .mv-app.atlas-command-v5 .atlas-reimagined .atlas-visit-timeline * {transition:none;}
+}
+
+
+/* Dynamic public market intelligence: owned by the Atlas map design layer. */
+.mv-app.atlas-command-v5 .atlas-public-market-rail {
+ display:grid;grid-template-columns:minmax(160px,.85fr) minmax(0,3fr) auto;
+ align-items:center;gap:11px;min-width:0;padding:12px 15px;
+ border-bottom:1px solid color-mix(in srgb,var(--at-cyan) 34%,var(--at-border-soft));
+ background:linear-gradient(102deg,color-mix(in srgb,var(--at-cyan) 10%,var(--at-surface)),color-mix(in srgb,var(--at-rose) 8%,var(--at-field)) 78%,var(--at-surface));
+}
+.mv-app.atlas-command-v5 .atlas-public-market-lead{display:grid;gap:4px;min-width:0;}
+.mv-app.atlas-command-v5 .atlas-public-market-lead>span{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.09em;font-weight:850;color:var(--at-cyan);}
+.mv-app.atlas-command-v5 .atlas-public-market-lead>strong{font:780 clamp(13px,1.2vw,17px)/1.25 'Outfit','DM Sans',sans-serif;letter-spacing:-.04em;color:var(--at-text);}
+.mv-app.atlas-command-v5 .atlas-public-market-list{min-width:0;display:flex;gap:7px;overflow-x:auto;scrollbar-width:thin;overscroll-behavior-inline:contain;padding:3px 1px 5px;}
+.mv-app.atlas-command-v5 .atlas-public-market-list button{flex:0 0 auto;min-height:47px;display:flex;align-items:center;gap:7px;border:1px solid var(--at-border-soft);border-radius:10px;background:var(--at-surface);color:var(--at-text);padding:9px;}
+.mv-app.atlas-command-v5 .atlas-public-market-list button b{font:850 16px 'Outfit',sans-serif;letter-spacing:-.05em;}
+.mv-app.atlas-command-v5 .atlas-public-market-list button span{font-size:10px;color:var(--at-muted);font-weight:760;white-space:nowrap;}
+.mv-app.atlas-command-v5 .atlas-public-market-list button svg{color:var(--at-rose);}
+.mv-app.atlas-command-v5 .atlas-public-market-list button:hover{border-color:var(--at-cyan);background:var(--at-aqua-soft);}
+.mv-app.atlas-command-v5 .atlas-public-market-flight{display:flex;align-items:center;justify-content:center;gap:8px;min-height:47px;padding:10px 13px;border:1px solid var(--at-rose);border-radius:10px;background:var(--at-rose-soft);color:var(--at-text);font-size:11px;font-weight:790;white-space:nowrap;}
+.mv-app.atlas-command-v5 .atlas-stat-public{border-right:0!important;}
+.mv-app.atlas-command-v5 .atlas-stat-public strong{color:var(--at-cyan);}
+@media(min-width:901px) and (max-width:1340px){
+ .mv-app.atlas-command-v5 .atlas-public-market-rail{grid-template-columns:minmax(0,1fr) auto;}
+ .mv-app.atlas-command-v5 .atlas-public-market-lead{grid-column:1/-1;}
+}
+@media(max-width:900px){
+ .mv-app.atlas-command-v5 .atlas-public-market-rail{display:flex;flex-direction:column;align-items:stretch;padding:12px;gap:9px;}
+ .mv-app.atlas-command-v5 .atlas-public-market-list{width:100%;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+ .mv-app.atlas-command-v5 .atlas-public-market-list button{scroll-snap-align:start;min-height:48px;}
+ .mv-app.atlas-command-v5 .atlas-public-market-flight{width:100%;}
+ .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-pills{display:flex;flex-wrap:wrap;justify-content:flex-start;width:100%;gap:9px;}
+ .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-stat{display:none;}
+ .mv-app.atlas-command-v5 .atlas-reimagined .atlas-stat-public{display:flex;}
+ .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-secondary{display:none;}
+ .mv-app.atlas-command-v5 .atlas-reimagined .atlas-command-explore{flex:1;}
+}

@@ -1,0 +1,29 @@
+/* The coaching lens colors regions by the highest recorded manager urgency.
+   Unmapped locations remain neutral. Both themes preserve readable boundaries. */
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada).priority-high {
+  fill:#B94780;stroke:#FF9CC9;stroke-width:1.85;
+  filter:drop-shadow(0 0 6px rgba(255,86,170,.44));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada).priority-moderate {
+  fill:#98703B;stroke:#FFD28F;stroke-width:1.55;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada).priority-routine {
+  fill:#185F6B;stroke:#5BE5D8;stroke-width:1.5;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada).priority-none {
+  fill:#193346;stroke:#628399;stroke-width:1.13;filter:none;opacity:.75;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada).active {
+  stroke:#F7FBFF;stroke-width:3;filter:drop-shadow(0 0 9px rgba(255,119,192,.65));opacity:1;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada):is(:hover,:focus-visible) {
+  stroke:#FFFFFF;stroke-width:2.7;opacity:1;filter:drop-shadow(0 0 8px rgba(62,237,230,.6));
+}
+.mv-app.atlas-command-v5[data-theme='light'] .atlas-reimagined[data-lens='coaching'] .priority-high {fill:#E98AB2;stroke:#9D2358;}
+.mv-app.atlas-command-v5[data-theme='light'] .atlas-reimagined[data-lens='coaching'] .priority-moderate {fill:#EBC28B;stroke:#98621F;}
+.mv-app.atlas-command-v5[data-theme='light'] .atlas-reimagined[data-lens='coaching'] .priority-routine {fill:#96DAD0;stroke:#087F7B;}
+.mv-app.atlas-command-v5[data-theme='light'] .atlas-reimagined[data-lens='coaching'] .priority-none {fill:#D2E4E8;stroke:#6B9CAB;opacity:1;}
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-v5-priority-legend i.none {background:#5A7588;color:#5A7588;}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app.atlas-command-v5 .atlas-reimagined[data-lens='coaching'] :is(.mv-region-us,.mv-region-canada){transition:none;}
+}

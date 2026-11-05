@@ -1,0 +1,34 @@
+/* The app's final presentation entrypoint. Each file has one owner.
+   Feature styles retain functional geometry; these modules own the shared UI.
+   Do not append release-specific overrides here. */
+@import './styles/atlas-tokens.css';
+@import './styles/atlas-shell.css';
+@import './styles/atlas-map.css';
+@import './styles/atlas-components.css';
+@import './styles/atlas-experience.css';
+/* One authoritative art-direction layer shared by desktop, mobile, day and night. */
+@import './styles/vice-signature.css';
+/* Final readability and responsive refinement. */
+@import './styles/atlas-clarity.css';
+/* Product direction v4 owns the guided command experience and navigation scale. */
+@import './styles/product-direction.css';
+/* iOS and installed-PWA surface, isolated from desktop components. */
+@import './styles/ios-experience.css';
+/* Native-feeling calendar and forms with explicit mobile layout ownership. */
+@import './styles/ios-detail-workflows.css';
+/* Standalone-only pull-to-refresh and transparent reconnect feedback. */
+@import './styles/ios-reliability.css';
+/* Miami Vice Precision: one photo-led, travel-focused visual layer. */
+@import './styles/vice-cinematic.css';
+@import './styles/vice-fidelity.css';
+/* Mobile-only Miami Vice iOS and PWA polish. Loaded last to fix legacy overrides. */
+@import './styles/ios-vice-2026.css';
+/* One final spatial hierarchy for desktop and mobile; structural repairs
+   intentionally supersede contradictory historical styles. */
+@import './styles/precision-density.css';
+/* Mobile Fit owns the final <=900px/PWA density and touch-safe overrides. */
+@import './styles/mobile-fit.css';
+/* Map-first Atlas Premiere: final art direction and route/interaction hierarchy. */
+@import './styles/atlas-map-premiere.css';
+/* App-wide premium density and navigation coherence. */
+@import './styles/atlas-shell-premium.css';

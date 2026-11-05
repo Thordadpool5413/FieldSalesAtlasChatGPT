@@ -1,0 +1,1893 @@
+/*
+ FIELD SALES ATLAS / NEON SOUTH BEACH
+ Reference art direction: user-selected realistic 1672 x 941 screenshot.
+ This is the single final art-direction stylesheet; original branding
+ and live map operations are never replaced by a static screenshot.
+
+ Photographic scene credits, Unsplash License:
+ Alejandro Luengo — Miami skyline at sunset:
+ https://unsplash.com/photos/Ev0Vj_0PPck
+ Luise and Nic — palms on Miami's Ocean Drive at sunset:
+ https://unsplash.com/photos/SB66_vH94C0
+ Nightlife architecture — Clevelander, Ocean Drive:
+ https://unsplash.com/photos/oOlfsVs_V0w
+
+ The photos are atmospheric background only. Real records and map geography
+ come from app data and actual state boundary topology.
+*/
+
+/* AFTER DARK : liquid midnight indigo, electric lagoon and flamingo neon. */
+html[data-field-atlas-theme='dark'],
+.mv-app[data-theme='dark'] {
+  color-scheme: dark;
+  --at-bg: #061327;
+  --at-rail: #07142a;
+  --at-stage: #0b1d35;
+  --at-surface: #0b2942;
+  --at-raised: #184058;
+  --at-field: #09243c;
+  --at-text: #f4fbff;
+  --at-muted: #c5e0e9;
+  --at-subtle: #91bdcf;
+  --at-border: #3a7795;
+  --at-border-soft: #28536d;
+  --at-cyan: #37f5f0;
+  --at-rose: #ff56b2;
+  --at-accent: #ffb894;
+  --at-aqua-soft: #0d4c61;
+  --at-rose-soft: #3b224a;
+  --at-action: #ff59b5;
+  --at-action-fg: #190e29;
+  --at-action-hover: #ff86c9;
+  --at-map-water: #062039;
+  --at-map-land: #07516b;
+  --at-map-assigned: #088995;
+  --at-map-stroke: #61efff;
+  --at-map-label: #f8ffff;
+  --at-map-outline: #06273b;
+  --vice-map-canada: #142b48;
+  --vice-map-active: #ff54b1;
+  --at-shadow: 0 13px 40px rgba(0, 9, 33, .35);
+  --vice-glass: rgba(7, 26, 51, .78);
+  --vice-deep: #061327;
+  --vice-display-ink: #f7fcff;
+}
+/* SUNSET DAYLIGHT : pastel Biscayne sunrise with readable modern controls. */
+html[data-field-atlas-theme='light'],
+.mv-app[data-theme='light'] {
+  color-scheme: light;
+  --at-bg: #fbf3eb;
+  --at-rail: #e5f1ed;
+  --at-stage: #fff9f4;
+  --at-surface: #fffcf9;
+  --at-raised: #e7f4ee;
+  --at-field: #f4fbf8;
+  --at-text: #163848;
+  --at-muted: #496975;
+  --at-subtle: #507887;
+  --at-border: #a5cbd1;
+  --at-border-soft: #d8e8e7;
+  --at-cyan: #007f8d;
+  --at-rose: #bf296f;
+  --at-accent: #c37751;
+  --at-aqua-soft: #d8f3ed;
+  --at-rose-soft: #fde6ef;
+  --at-action: #c8307e;
+  --at-action-fg: #fff;
+  --at-action-hover: #a72668;
+  --at-map-water: #d4f0f1;
+  --at-map-land: #8dcec7;
+  --at-map-assigned: #4ab2b2;
+  --at-map-stroke: #398ca3;
+  --at-map-label: #153f51;
+  --at-map-outline: #f4fffa;
+  --vice-map-canada: #cdd7e4;
+  --vice-map-active: #efa1c2;
+  --at-shadow: 0 11px 30px rgba(25, 85, 107, .11);
+  --vice-glass: rgba(255, 254, 250, .84);
+  --vice-deep: #fcf4ed;
+  --vice-display-ink: #163848;
+}
+.mv-app {
+  --vice-font: 'Outfit', 'Manrope', 'DM Sans', system-ui, sans-serif;
+  --vice-condensed: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --vice-neon-cyan: 0 0 8px rgba(48, 245, 250, .65),
+    0 0 27px rgba(48, 245, 250, .21);
+  --vice-neon-pink: 0 0 10px rgba(255, 68, 179, .56),
+    0 0 27px rgba(255, 68, 179, .18);
+  --vice-edge: linear-gradient(90deg, #37f5f0, #ff55b1, #2ff6f3);
+}
+.mv-app.op-root {
+  font-family: var(--vice-font);
+  font-size: 13px;
+  line-height: 1.48;
+  font-variant-numeric: tabular-nums;
+  background: var(--at-bg);
+  color: var(--at-text);
+  -webkit-font-smoothing: antialiased;
+}
+.mv-app :is(input, button, select, textarea) { font-family: var(--vice-font); }
+.mv-app :is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--at-cyan);
+  outline-offset: 3px;
+}
+.mv-app :is(.fsa-stage, .mv-shell, .mv-content-map) { min-width: 0; }
+.mv-app .official-atlas-lockup em { color: var(--at-rose); }
+
+/* Side photographic panorama and protected original illustrated logo. */
+@media (min-width: 901px) {
+  .mv-app .fsa-structure { grid-template-columns: 196px minmax(0, 1fr); }
+  .mv-app .fsa-sidebar {
+    position: sticky;
+    top: 0;
+    isolation: isolate;
+    overflow: hidden auto;
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    width: 100%;
+    height: 100dvh;
+    padding: 11px 11px 16px;
+    border-right: 1px solid rgba(50, 232, 248, .43);
+    background:
+      linear-gradient(180deg, #091932, #122441 51%, #0d1935 100%);
+    scrollbar-width: thin;
+  }
+  .mv-app .fsa-sidebar::before {
+    content: '';
+    position: absolute;
+    z-index: -2;
+    top: 40%;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background:
+      linear-gradient(180deg, #0d1932 2%, rgba(12, 16, 36, .15) 27%,
+        rgba(10, 11, 32, .05) 61%, #07142b 100%),
+      url('https://images.unsplash.com/photo-1605723517503-3cadb5818a0c?auto=format&fit=crop&w=650&q=84')
+        center 58% / cover no-repeat;
+    filter: saturate(1.42) hue-rotate(-5deg);
+    pointer-events: none;
+  }
+  .mv-app .fsa-sidebar::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 38% 0 0;
+    background:
+      radial-gradient(ellipse at 29% 73%, rgba(255, 25, 174, .60), transparent 57%),
+      linear-gradient(180deg, rgba(6, 17, 39, .32), transparent 54%, rgba(5, 14, 31, .83));
+    pointer-events: none;
+  }
+  .mv-app .fsa-sidebar-brand {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-height: 161px;
+    margin: 0 0 10px;
+    padding: 0 7px 13px;
+    border: none;
+    border-bottom: 1px solid rgba(62, 170, 198, .32);
+    background: transparent;
+  }
+  .mv-app .fsa-sidebar-brand::after {
+    content: '';
+    position: absolute;
+    width: 73%;
+    height: 2px;
+    left: 14%;
+    bottom: -1px;
+    background: linear-gradient(90deg, transparent, #2af4fa, #ff5ab4, transparent);
+    box-shadow: var(--vice-neon-cyan);
+  }
+  .mv-app .fsa-sidebar-brand .official-atlas-brand {
+    display: block;
+    flex: 0 0 155px;
+    width: 155px;
+    height: 146px;
+    padding: 1px;
+    border: 1px solid rgba(51, 224, 247, .75);
+    border-radius: 15px;
+    background: #071529;
+    overflow: hidden;
+    box-shadow: 0 0 16px rgba(30, 238, 245, .19);
+  }
+  .mv-app .fsa-sidebar-brand .official-atlas-brand img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 13px;
+  }
+  .mv-app .fsa-sidebar-brand .official-atlas-lockup { display: none; }
+  .mv-app .fsa-sidebar-label {
+    margin: 7px 8px 9px;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 850;
+    letter-spacing: 1.3px;
+    color: #d3ebf5;
+  }
+  .mv-app .fsa-side-nav { gap: 3px; }
+  .mv-app .fsa-side-link {
+    gap: 11px;
+    min-height: 43px;
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid transparent;
+    background: rgba(10, 33, 57, .14);
+    color: #f4faff;
+    font-size: 13px;
+    font-weight: 720;
+    backdrop-filter: blur(3px);
+  }
+  .mv-app .fsa-side-link svg { width: 18px; height: 18px; flex-basis: 18px; }
+  .mv-app .fsa-side-link.active {
+    border-color: #39f8ed;
+    color: #fff;
+    background: linear-gradient(93deg, rgba(18, 120, 146, .65), rgba(25, 69, 101, .66));
+    box-shadow: inset 3px 0 #4ffcf1, var(--vice-neon-cyan);
+  }
+  .mv-app .fsa-side-link.active svg { color: #5ffff6; }
+  .mv-app .fsa-side-link:hover { border-color: rgba(48, 235, 239, .61); background: rgba(9, 67, 93, .67); }
+  .mv-app .fsa-sidebar-label-more { margin-top: 16px; }
+  .mv-app .fsa-more-tools summary {
+    color: #e3f7ff;
+    min-height: 40px;
+    padding: 9px 10px;
+    font-size: 12px;
+    background: rgba(9, 30, 52, .15);
+  }
+  .mv-app .fsa-more-tools nav button { font-size: 11px; min-height: 38px; color: #e8f4f9; }
+  .mv-app .fsa-sidebar-bottom {
+    margin-top: auto;
+    padding: 11px 9px 9px;
+    border: 1px solid rgba(66, 210, 231, .45);
+    border-radius: 9px;
+    background: rgba(7, 19, 43, .82);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 12px rgba(30, 234, 238, .11);
+  }
+  .mv-app .fsa-sidebar-bottom strong { color: #f4ffff; font-size: 9px; }
+  .mv-app .fsa-sidebar-bottom p { margin: 4px 0 0; color: #d9edf6; font-size: 11px; }
+  .mv-app .mv-header {
+    min-height: 62px;
+    padding: 8px 22px;
+    background:
+      linear-gradient(95deg, rgba(10, 24, 45, .97),
+        rgba(19, 30, 62, .94) 64%, rgba(20, 30, 63, .95));
+    border-bottom: 1px solid #e34a9e;
+    backdrop-filter: blur(12px);
+  }
+  .mv-app .mv-header::after {
+    content: '';
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 2px;
+    bottom: -1px;
+    background: linear-gradient(90deg, #35f7ed, #fe48ac 37%, rgba(255, 77, 174, .83) 88%);
+    box-shadow: var(--vice-neon-pink);
+  }
+  .mv-app .fsa-crumb { gap: 11px; font-size: 13px; color: #d8edfa; }
+  .mv-app .fsa-crumb strong { font-weight: 850; font-size: 17px; color: #fff; }
+  .mv-app .fsa-command-trigger {
+    min-height: 40px;
+    padding: 7px 11px;
+    margin-left: 15px;
+    background: rgba(8, 30, 56, .68);
+    border-color: rgba(59, 206, 228, .54);
+    color: #f0fbff;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .mv-app .fsa-command-trigger:hover { border-color: #4af8f2; box-shadow: var(--vice-neon-cyan); }
+  .mv-app .atlas-trainer-switch { min-height: 41px; border-color: #527c98; background: rgba(10, 28, 54, .67); }
+  .mv-app .atlas-trainer-description select { color: #fff; }
+  .mv-app .atlas-trainer-description small { color: #d3e7f5; }
+  .mv-app .mv-appearance-control { border-color: rgba(100, 145, 173, .61); background: rgba(10, 25, 52, .65); }
+  .mv-app .mv-appearance-control button { min-height: 33px; }
+  .mv-app .mv-appearance-control button.active {
+    color: #fff;
+    background: rgba(239, 57, 154, .32);
+    box-shadow: inset 0 0 0 1px rgba(255, 97, 182, .39);
+  }
+  .mv-app .mv-header-settings { min-height: 40px; min-width: 40px; border-color: #527b99; background: rgba(8, 24, 48, .75); }
+}
+/* The design preserves the original logo and functional nav on mobile. */
+.mv-app .fsa-status-led { background: var(--at-cyan); box-shadow: 0 0 12px var(--at-cyan); }
+.mv-app .mv-bottom-nav button.active { box-shadow: inset 0 2px var(--at-cyan); }
+.mv-app .mv-bottom-nav { background: var(--at-rail); }
+
+/* Atmospheric backdrop runs UNDER the interactive map, not as a fake map. */
+.mv-app .mv-map-page,
+.mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 306px;
+  grid-template-areas: 'heading heading' 'telemetry telemetry' 'atlas planner' 'regions regions';
+  align-items: start;
+  gap: 9px 10px;
+  min-width: 0;
+  padding: 10px 18px 24px;
+  background:
+    radial-gradient(ellipse at 81% 9%, rgba(255, 53, 167, .19), transparent 49%),
+    radial-gradient(ellipse at 44% 86%, rgba(23, 160, 208, .19), transparent 45%),
+    linear-gradient(155deg, #07182b 8%, #071b36 60%, #11162f);
+}
+.mv-app .mv-map-page::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 0;
+  z-index: -2;
+  background:
+    linear-gradient(0deg, rgba(7, 18, 39, .87), transparent 24%,
+      rgba(10, 21, 48, .25) 56%, rgba(7, 18, 41, .51)),
+    url('https://images.unsplash.com/photo-1558951387-a66e89fbf8df?auto=format&fit=crop&w=1700&q=80')
+      center 76% / cover no-repeat;
+  opacity: .19;
+  pointer-events: none;
+}
+.mv-app .mv-map-page::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 35% 0 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 77% 73%, rgba(255, 46, 164, .24), transparent 30%),
+    repeating-linear-gradient(178deg,
+      transparent 0, transparent 24px, rgba(249, 73, 181, .022) 26px);
+}
+.mv-app .fsa-home-head {
+  grid-area: heading;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  isolation: isolate;
+  min-height: 125px;
+  gap: 13px;
+  padding: 13px 20px 14px 12px;
+  border-radius: 0;
+  overflow: hidden;
+  background: linear-gradient(90deg,
+      rgba(7, 22, 42, .92) 0%,
+      rgba(8, 22, 43, .78) 32%,
+      rgba(13, 20, 48, .11) 83%);
+}
+.mv-app .vice-photo-scene { pointer-events: none; }
+.mv-app .vice-masthead-art {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  opacity: 1;
+}
+.mv-app .vice-scene-skyline {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 15, 39, .9) 3%,
+      rgba(7, 16, 37, .77) 33%, rgba(16, 16, 42, .13) 78%),
+    linear-gradient(0deg, rgba(9, 17, 37, .52), rgba(9, 17, 37, .09)),
+    url('https://images.unsplash.com/photo-1558951387-a66e89fbf8df?auto=format&fit=crop&w=1600&q=84')
+      63% 52% / cover no-repeat;
+  filter: saturate(1.56) hue-rotate(-9deg);
+}
+.mv-app .vice-scene-artdeco {
+  position: absolute;
+  top: -11%;
+  right: -1%;
+  width: 31%;
+  height: 128%;
+  background:
+    linear-gradient(90deg, rgba(9, 13, 41, 0) 0%,
+      rgba(10, 13, 42, .08) 16%,
+      rgba(10, 13, 43, .17)),
+    url('https://images.unsplash.com/photo-1719427274126-08fff6000be3?auto=format&fit=crop&w=950&q=84')
+      center 34% / cover no-repeat;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 19%, #000 100%);
+  filter: saturate(1.65) hue-rotate(7deg);
+}
+.mv-app .vice-scene-sun {
+  position: absolute;
+  top: 18%;
+  left: 62%;
+  width: min(75px, 11vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffd7a5 0%, #ffa8ab 53%, #fc5fab 100%);
+  box-shadow: 0 0 20px rgba(255, 100, 153, .28);
+  opacity: .89;
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 53px,
+    transparent 53px 57px, #000 58px 68px, transparent 69px 72px,
+    #000 73px 81px);
+  mask-image: repeating-linear-gradient(180deg, #000 0 53px,
+    transparent 53px 57px, #000 58px 68px, transparent 69px 72px,
+    #000 73px 81px);
+}
+.mv-app .vice-scene-water {
+  position: absolute;
+  inset: 70% 0 0;
+  background:
+    radial-gradient(ellipse at 68% 39%, rgba(255, 68, 182, .26), transparent 36%),
+    repeating-linear-gradient(175deg, rgba(40, 214, 234, .09) 0 1px,
+      transparent 2px 8px);
+  mix-blend-mode: screen;
+}
+.mv-app .vice-scene-color {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 74% 28%, rgba(255, 63, 174, .14), transparent 43%),
+    linear-gradient(90deg, rgba(5, 18, 37, .5), transparent 70%);
+}
+.mv-app .fsa-home-title { position: relative; z-index: 2; min-width: 0; }
+.mv-app .fsa-home-overline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #43fcf7;
+  font-size: 11px;
+  letter-spacing: 2.3px;
+  font-weight: 850;
+}
+.mv-app .fsa-home-beacon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+  background: #46fff5;
+  box-shadow: 0 0 12px #2df8f2, 0 0 21px rgba(36, 239, 241, .55);
+}
+.mv-app .fsa-home-title h1 {
+  margin: 8px 0 1px;
+  color: #f4f9ff;
+  font: 850 clamp(34px, 4vw, 57px)/.99 var(--vice-font);
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(2, 9, 32, .52);
+}
+.mv-app .fsa-home-title h1 em {
+  color: #ff52b2;
+  font-style: normal;
+  text-shadow: 0 0 18px rgba(255, 49, 168, .49), 0 0 36px rgba(255, 49, 168, .19);
+}
+.mv-app .fsa-home-title p { margin: 4px 0 0; color: #e5f1fc; font-size: 15px; line-height: 1.45; }
+.mv-app .fsa-head-actions { position: relative; z-index: 4; align-self: center; }
+.mv-app .fsa-head-actions button {
+  min-height: 49px;
+  padding: 11px 17px;
+  gap: 10px;
+  border: 1px solid #ffadd5;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ff8fc7, #ff54b4);
+  color: #160d24;
+  box-shadow: var(--vice-neon-pink), 0 10px 24px rgba(5, 0, 21, .22);
+  font-size: 13px;
+  font-weight: 850;
+}
+.mv-app .fsa-head-actions button:hover {
+  background: #ff90cb;
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(255, 85, 184, .73), 0 0 34px rgba(255, 85, 184, .29);
+}
+
+/* Glass status ribbon sits right below the scene; never fabricated counts. */
+.mv-app .atlas-telemetry-strip {
+  grid-area: telemetry;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1px;
+  min-height: 54px;
+  overflow: hidden;
+  border: 1px solid rgba(117, 207, 239, .71);
+  border-radius: 10px;
+  background: rgba(86, 187, 227, .24);
+  box-shadow: inset 0 1px rgba(201, 243, 255, .13),
+    0 0 12px rgba(49, 186, 235, .16);
+  margin-top: -4px;
+  z-index: 3;
+  position: relative;
+}
+.mv-app .atlas-telemetry-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  min-height: 53px;
+  padding: 7px 15px;
+  background: linear-gradient(135deg, rgba(17, 47, 80, .89), rgba(15, 45, 72, .80));
+  color: #f4faff;
+  backdrop-filter: blur(14px);
+}
+.mv-app .atlas-telemetry-item > svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  color: #41fdf3;
+  filter: drop-shadow(0 0 5px rgba(37, 241, 237, .55));
+}
+.mv-app .atlas-telemetry-item:nth-child(even) > svg {
+  color: #ff69bd;
+  filter: drop-shadow(0 0 5px rgba(255, 75, 178, .55));
+}
+.mv-app .atlas-telemetry-item > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mv-app .atlas-telemetry-item small {
+  font-size: 10px;
+  font-weight: 820;
+  line-height: 1.15;
+  letter-spacing: 1.1px;
+  color: #d4ecf6;
+}
+.mv-app .atlas-telemetry-item strong {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #f8fdff;
+  font: 800 28px/.99 var(--vice-condensed);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgba(255, 255, 255, .12);
+}
+.mv-app .atlas-telemetry-item strong em {
+  font: 500 11px/1.3 var(--vice-font);
+  color: #d8edf7;
+  font-style: normal;
+}
+
+/* Geo panel: real interactive state paths over a luminous data-rich map. */
+.mv-app .atlas-mission-layout {
+  position: relative;
+  grid-area: atlas;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid rgba(61, 234, 251, .94);
+  border-radius: 12px;
+  background: var(--at-surface);
+  box-shadow: 0 0 10px rgba(35, 238, 248, .24),
+    0 0 35px rgba(27, 232, 249, .09),
+    0 14px 43px rgba(0, 7, 29, .29);
+}
+.mv-app .atlas-mission-layout::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: 15px;
+  top: -1px;
+  width: 47%;
+  height: 2px;
+  background: linear-gradient(90deg, #35f8f0, #ff4bb4, transparent);
+  box-shadow: var(--vice-neon-cyan);
+}
+.mv-app .fsa-map-heading {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 13px;
+  background: linear-gradient(92deg, rgba(8, 34, 60, .95), rgba(16, 46, 70, .92));
+  border-bottom: 1px solid rgba(57, 174, 210, .53);
+}
+.mv-app .fsa-map-heading-top { display: flex; justify-content: flex-end; min-width: 0; }
+.mv-app .fsa-map-heading-text { display: none; }
+.mv-app .atlas-destination { min-width: 0; }
+.mv-app .atlas-destination > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.mv-app .atlas-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid rgba(121, 205, 231, .77);
+  border-radius: 8px;
+  background: rgba(4, 28, 50, .83);
+  color: #3dfff5;
+}
+.mv-app .atlas-search:focus-within { border-color: #2ffff4; box-shadow: var(--vice-neon-cyan); }
+.mv-app .atlas-search input {
+  height: 40px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  color: #f2fbff;
+  font-size: 13px;
+  font-weight: 500;
+}
+.mv-app .atlas-search input::placeholder { color: #d0e4f1; }
+.mv-app .atlas-utility { display: flex; align-items: center; justify-content: flex-end; min-width: 0; }
+.mv-app .atlas-utility-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; flex-wrap: nowrap; }
+.mv-app .atlas-utility-actions > select,
+.mv-app :is(.mv-layers-button, .atlas-focus) {
+  min-height: 39px;
+  max-width: 170px;
+  border: 1px solid rgba(121, 205, 231, .73);
+  border-radius: 7px;
+  background: rgba(4, 30, 54, .82);
+  color: #f4fcff;
+  font-size: 11px;
+  font-weight: 750;
+  padding: 8px 9px;
+}
+.mv-app :is(.mv-layers-button, .atlas-focus) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.mv-app .atlas-utility-actions :is(select, button):hover { border-color: #2ffff4; box-shadow: 0 0 7px rgba(33, 241, 249, .24); }
+.mv-app .mv-map-frame {
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  height: clamp(370px, calc(100dvh - 438px), 505px);
+  border-radius: 0 0 11px 11px;
+  background: #072138;
+  box-shadow: inset 0 0 70px rgba(0, 235, 245, .05);
+}
+.mv-app .mv-map-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 70% 76%, rgba(255, 55, 174, .19), transparent 38%),
+    radial-gradient(ellipse at 16% 24%, rgba(9, 181, 209, .11), transparent 40%);
+}
+.mv-app .mv-map-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: auto 0 0;
+  height: 25%;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(177deg,
+      rgba(255, 64, 176, .08) 0 1px,
+      transparent 2px 11px),
+    radial-gradient(ellipse at 68% 100%, rgba(255, 50, 171, .26), transparent 55%),
+    linear-gradient(180deg, transparent, rgba(16, 26, 66, .19));
+  mask-image: linear-gradient(transparent, #000 63%);
+  mix-blend-mode: screen;
+}
+.mv-app .mv-map-svg { position: relative; z-index: 1; width: 100%; height: 100%; display: block; }
+.mv-app .mv-water-start { stop-color: #062039; }
+.mv-app .mv-water-middle { stop-color: #082b4b; }
+.mv-app .mv-water-end { stop-color: #221b4c; }
+.mv-app .mv-halo-inner { stop-color: rgba(239, 51, 166, .28); }
+.mv-app .mv-map-halo { opacity: .58; }
+.mv-app .mv-map-grid-overlay { opacity: .13; }
+.mv-app .mv-map-grid-path { stroke: #3696b5; }
+.mv-app .fsa-perspective { stroke: #3ae5ef; stroke-width: .9; opacity: .23; }
+.mv-app .vice-land-first { stop-color: #0b4a64; }
+.mv-app .vice-land-last { stop-color: #086078; }
+.mv-app .mv-country-base { stroke: rgba(52, 234, 253, .32); }
+.mv-app .mv-region-us {
+  fill: url(#vice-territory-land);
+  stroke: #63f0ff;
+  stroke-opacity: .98;
+  stroke-width: 1.36;
+  filter: drop-shadow(0 0 2.4px rgba(35, 237, 255, .78))
+    drop-shadow(0 0 5px rgba(35, 237, 255, .27));
+  transition: fill .15s ease, stroke .15s ease;
+}
+.mv-app .mv-region-us.assigned {
+  fill: #078994;
+  filter: drop-shadow(0 0 4px rgba(35, 237, 255, .55));
+}
+.mv-app .mv-region-canada { fill: #17344e; stroke: rgba(100, 204, 226, .66); }
+.mv-app .mv-region:is(:hover, :focus-visible, .active) {
+  fill: #ef4aa6;
+  stroke: #ffa2d5;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 10px rgba(255, 57, 171, .81));
+}
+.mv-app .mv-state-label {
+  fill: #f8ffff;
+  stroke: #073048;
+  stroke-width: 3.2px;
+  paint-order: stroke;
+  font: 790 12px var(--vice-condensed);
+  letter-spacing: .65px;
+}
+.mv-app .mv-airport-bubble {
+  fill: #063a55;
+  stroke: #5dfff4;
+  stroke-width: 1.65;
+  filter: drop-shadow(0 0 5px rgba(56, 245, 243, .63));
+}
+.mv-app .mv-airport-bubble.signal {
+  fill: #f452b2;
+  stroke: #ffd6f0;
+  filter: drop-shadow(0 0 5px rgba(255, 53, 179, .84));
+}
+.mv-app .mv-airport-glyph {
+  fill: #fff6ff;
+  filter: drop-shadow(0 0 4px #ff71c7);
+}
+.mv-app .mv-airport-code { fill: #fff; stroke: #0a2845; stroke-width: 2.4; paint-order: stroke; }
+.mv-app .mv-manager-marker { filter: drop-shadow(0 0 5px rgba(60, 242, 243, .6)); }
+.mv-app .mv-map-legend,
+.mv-app .mv-map-tools,
+.mv-app .mv-insets button {
+  background: rgba(6, 25, 48, .81);
+  border: 1px solid rgba(105, 193, 230, .73);
+  border-radius: 8px;
+  color: #effdff;
+  backdrop-filter: blur(13px);
+}
+.mv-app .mv-map-legend { left: 11px; bottom: 11px; gap: 11px; padding: 7px 11px; max-width: calc(100% - 166px); }
+.mv-app .mv-map-legend > div { font-size: 10px; font-weight: 650; }
+.mv-app .mv-map-tools { right: 10px; bottom: 10px; gap: 4px; }
+.mv-app .mv-map-tools button { min-width: 35px; min-height: 35px; color: #fff; }
+.mv-app .mv-insets { left: 10px; bottom: 51px; }
+.mv-app .mv-insets button { padding: 7px 10px; min-height: 32px; }
+.mv-app .mv-map-credit {
+  z-index: 5;
+  position: absolute;
+  right: 10px;
+  bottom: 55px;
+  padding: 4px 6px;
+  max-width: calc(100% - 25px);
+  white-space: nowrap;
+  font-size: 9px;
+  color: #d0e6f0;
+  background: rgba(5, 21, 43, .78);
+}
+.mv-app .fsa-map-hud {
+  z-index: 5;
+  top: 11px;
+  left: 11px;
+  right: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 9px;
+  pointer-events: none;
+}
+.mv-app .fsa-map-hud > span:last-child { margin-left: auto; }
+.mv-app .fsa-map-hud > span {
+  color: #f4faff;
+  background: rgba(6, 25, 47, .82);
+  border: 1px solid rgba(91, 184, 218, .77);
+  border-radius: 7px;
+  padding: 6px 9px;
+  font-size: 9px;
+  letter-spacing: .85px;
+}
+.mv-app .fsa-map-hud i { background: #39fff7; box-shadow: 0 0 10px #39fff7; }
+.mv-app .mv-all-regions { grid-area: regions; padding: 8px 9px; border-top: 1px solid rgba(82, 170, 194, .42); }
+.mv-app .mv-all-regions summary { min-height: 37px; color: var(--at-muted); font-size: 13px; }
+
+.mv-app .mv-inspector {
+  grid-area: planner;
+  min-width: 0;
+  max-height: 650px;
+  border: 1px solid rgba(255, 122, 198, .82);
+  border-radius: 12px;
+  background: #112b49;
+  color: #fff;
+  box-shadow: var(--vice-neon-pink);
+}
+.mv-app .mv-inspector-tabs { border-color: rgba(75, 175, 211, .66); }
+
+/* Original product functions retain visual coherence outside the home. */
+.mv-app .fsa-today-hero { padding: 23px; min-height: 147px; border-radius: 12px; box-shadow: var(--at-shadow); }
+.mv-app .fsa-today-hero h1 { font-family: var(--vice-font); font-size: clamp(30px, 3.7vw, 48px); line-height: 1.06; }
+.mv-app .mv-content-inner .op-head h1 { font-family: var(--vice-font); font-size: clamp(30px, 3.2vw, 41px); }
+.mv-app :is(.op-card, .travel-panel, .smart-panel, .mv-week-trainer,
+  .mv-week-overview, .atlas-share-card) {
+  border-color: var(--at-border);
+  border-radius: 11px;
+  box-shadow: var(--at-shadow);
+}
+.mv-app .op-card-header h2 { font-size: 21px; font-weight: 800; }
+.mv-app :is(.op-btn.primary, .atlas-primary) { color: var(--at-action-fg); background: var(--at-action); border-color: var(--at-action); }
+
+/* Authentic pastel light mode, with its own image treatment and legibility. */
+.mv-app[data-theme='light'] .fsa-sidebar {
+  background: linear-gradient(175deg, #f1f7f2, #e7eee9 67%, #d7e8df);
+  border-color: #a7cace;
+}
+.mv-app[data-theme='light'] .fsa-sidebar::before { opacity: .32; }
+.mv-app[data-theme='light'] .fsa-sidebar::after {
+  background: linear-gradient(180deg, rgba(250, 248, 241, .57),
+    transparent 55%, rgba(253, 243, 236, .50));
+}
+.mv-app[data-theme='light'] .fsa-sidebar-label { color: #476875; }
+.mv-app[data-theme='light'] .fsa-side-link { color: #184052; background: rgba(255, 255, 252, .18); }
+.mv-app[data-theme='light'] .fsa-side-link.active {
+  color: #174354;
+  background: rgba(215, 246, 238, .84);
+  border-color: #238e9d;
+  box-shadow: inset 3px 0 #1a9da5, 0 0 12px rgba(6, 125, 145, .11);
+}
+.mv-app[data-theme='light'] .fsa-sidebar-bottom { background: rgba(255, 252, 247, .83); }
+.mv-app[data-theme='light'] .fsa-sidebar-bottom :is(strong, p) { color: #1a4956; }
+.mv-app[data-theme='light'] .mv-header {
+  background: linear-gradient(93deg, rgba(255, 253, 249, .97), rgba(255, 239, 245, .96));
+}
+.mv-app[data-theme='light'] .fsa-crumb,
+.mv-app[data-theme='light'] .fsa-crumb strong { color: #194254; }
+.mv-app[data-theme='light'] .fsa-command-trigger,
+.mv-app[data-theme='light'] .atlas-trainer-switch,
+.mv-app[data-theme='light'] .mv-appearance-control,
+.mv-app[data-theme='light'] .mv-header-settings {
+  background: rgba(255, 254, 251, .85);
+  color: #1c4254;
+  border-color: #aed0d4;
+}
+.mv-app[data-theme='light'] .atlas-trainer-description :is(small, select) { color: #1d495a; }
+.mv-app[data-theme='light'] .mv-appearance-control button.active { color: #1d495a; background: #fce4ef; }
+.mv-app[data-theme='light'] .mv-map-page {
+  background:
+    radial-gradient(ellipse at 78% 12%, rgba(248, 117, 168, .18), transparent 58%),
+    linear-gradient(150deg, #fffbf7, #f5f9f4 69%, #ffedf1);
+}
+.mv-app[data-theme='light'] .mv-map-page::before { opacity: .12; }
+.mv-app[data-theme='light'] .fsa-home-head {
+  background: linear-gradient(90deg, rgba(255, 250, 244, .96),
+    rgba(255, 246, 239, .69) 45%, rgba(255, 249, 243, .11));
+}
+.mv-app[data-theme='light'] .vice-scene-skyline {
+  background:
+    linear-gradient(90deg, rgba(255, 250, 240, .92),
+      rgba(255, 248, 239, .68) 38%, rgba(255, 247, 237, .12) 80%),
+    url('https://images.unsplash.com/photo-1759352641951-ee110085712a?auto=format&fit=crop&w=1600&q=80')
+      center 48% / cover no-repeat;
+}
+.mv-app[data-theme='light'] .vice-scene-artdeco { opacity: .65; }
+.mv-app[data-theme='light'] .fsa-home-overline { color: #087e8b; }
+.mv-app[data-theme='light'] .fsa-home-title h1 { color: #173b4e; text-shadow: none; }
+.mv-app[data-theme='light'] .fsa-home-title h1 em { color: #c72e7c; text-shadow: none; }
+.mv-app[data-theme='light'] .fsa-home-title p { color: #4b6876; }
+.mv-app[data-theme='light'] .atlas-telemetry-strip { background: #d3ebe9; border-color: #abcdd1; box-shadow: none; }
+.mv-app[data-theme='light'] .atlas-telemetry-item { background: rgba(255, 253, 250, .94); color: #153c4e; }
+.mv-app[data-theme='light'] .atlas-telemetry-item small { color: #55737f; }
+.mv-app[data-theme='light'] .atlas-telemetry-item strong { color: #194354; text-shadow: none; }
+.mv-app[data-theme='light'] .atlas-telemetry-item strong em { color: #567884; }
+.mv-app[data-theme='light'] .atlas-mission-layout { background: #fffdfa; border-color: #7abac2; box-shadow: 0 11px 36px rgba(18, 94, 109, .12); }
+.mv-app[data-theme='light'] .fsa-map-heading { background: #fffcf8; border-color: #a3d1d1; }
+.mv-app[data-theme='light'] .atlas-search { background: #f5fbf9; border-color: #aed3d4; color: #087f8b; }
+.mv-app[data-theme='light'] .atlas-search input { color: #193e50; }
+.mv-app[data-theme='light'] .atlas-search input::placeholder { color: #547985; }
+.mv-app[data-theme='light'] .atlas-utility-actions > select,
+.mv-app[data-theme='light'] :is(.mv-layers-button, .atlas-focus) { background: #f7fbf9; color: #193e4e; border-color: #a2cbd0; }
+.mv-app[data-theme='light'] .mv-map-frame { background: #cfeeea; }
+.mv-app[data-theme='light'] .mv-water-start { stop-color: #b9e8e7; }
+.mv-app[data-theme='light'] .mv-water-middle { stop-color: #d7efee; }
+.mv-app[data-theme='light'] .mv-water-end { stop-color: #f0cfe3; }
+.mv-app[data-theme='light'] .vice-land-first { stop-color: #8ad0c8; }
+.mv-app[data-theme='light'] .vice-land-last { stop-color: #b2dfd1; }
+.mv-app[data-theme='light'] .mv-region-us { stroke: #4b9caf; filter: none; }
+.mv-app[data-theme='light'] .mv-region-us.assigned { fill: #56b9b3; }
+.mv-app[data-theme='light'] .mv-state-label { fill: #194758; stroke: #f6fffb; }
+.mv-app[data-theme='light'] .mv-airport-bubble { fill: #e2f5f3; stroke: #1a8896; filter: none; }
+.mv-app[data-theme='light'] .mv-airport-bubble.signal { fill: #c93785; stroke: #fff4fb; }
+.mv-app[data-theme='light'] .atlas-journey { background: linear-gradient(160deg, #fff7f5, #f2faf7); border-color: #df9db9; box-shadow: 0 11px 36px rgba(48, 87, 112, .12); }
+.mv-app[data-theme='light'] .atlas-wayfinding-label { color: #147d8c; }
+.mv-app[data-theme='light'] .atlas-wayfinding h2 { color: #194052; text-shadow: none; }
+.mv-app[data-theme='light'] .atlas-wayfinding h2 em { color: #bd317a; text-shadow: none; }
+.mv-app[data-theme='light'] .atlas-wayfinding p { color: #496975; }
+.mv-app[data-theme='light'] .atlas-wayfinding-pulse { background: #fffdfa; border-color: #abcdd0; }
+.mv-app[data-theme='light'] .atlas-wayfinding-pulse strong { color: #173c4e; }
+.mv-app[data-theme='light'] .atlas-wayfinding-pulse small { color: #526d79; }
+.mv-app[data-theme='light'] .atlas-wayfinding-actions button:not(:first-child),
+.mv-app[data-theme='light'] .atlas-quick-jumps button,
+.mv-app[data-theme='light'] .atlas-origin select,
+.mv-app[data-theme='light'] .atlas-choose-home { color: #173d4c; background: #fffefa; border-color: #9ac5cb; }
+.mv-app[data-theme='light'] .atlas-quick-jumps > span,
+.mv-app[data-theme='light'] .atlas-origin > label { color: #55727e; }
+.mv-app[data-theme='light'] .atlas-quick-jumps button small { color: #536e7e; }
+.mv-app[data-theme='light'] .mv-inspector { color: #193c4f; background: #fffdfa; border-color: #d795b4; }
+
+/* At 1366 x 768 laptop the entire national map is above the fold. */
+@media (min-width: 1091px) and (max-height: 815px) {
+  .mv-app .mv-map-page, .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    padding: 9px 14px 18px;
+    gap: 8px;
+  }
+  .mv-app .fsa-home-head { min-height: 105px; padding: 11px 14px; }
+  .mv-app .fsa-home-title h1 { font-size: clamp(32px, 3.25vw, 48px); margin-top: 6px; }
+  .mv-app .fsa-home-title p { font-size: 12px; }
+  .mv-app .atlas-telemetry-strip, .mv-app .atlas-telemetry-item { min-height: 49px; }
+  .mv-app .atlas-telemetry-item strong { font-size: 25px; }
+  .mv-app .fsa-map-heading { padding: 7px 10px; }
+  .mv-app .mv-map-frame { height: clamp(300px, calc(100dvh - 390px), 415px); }
+  .mv-app .atlas-journey { gap: 8px; padding: 13px; }
+  .mv-app .atlas-wayfinding h2 { font-size: 22px; margin: 10px 0 5px; }
+  .mv-app .atlas-wayfinding-pulse { margin-top: 11px; padding: 8px; }
+  .mv-app .atlas-wayfinding-actions { margin-top: 8px; gap: 6px; }
+  .mv-app .atlas-wayfinding-actions button { min-height: 37px; }
+  .mv-app .atlas-wayfinding p { font-size: 10.5px; line-height: 1.4; }
+  .mv-app .atlas-quick-jumps button { min-height: 43px; }
+  .mv-app .atlas-quick-jumps > span { margin-bottom: 5px; }
+  .mv-app .atlas-origin { padding-top: 8px; }
+  .mv-app .atlas-origin select, .mv-app .atlas-choose-home { min-height: 37px; }
+  .mv-app .fsa-map-heading { min-height: 51px; }
+}
+/* Mid laptop keeps a practical inspector without crushing the map. */
+@media (min-width: 901px) and (max-width: 1240px) {
+  .mv-app .fsa-structure { grid-template-columns: 175px minmax(0, 1fr); }
+  .mv-app .fsa-sidebar-brand .official-atlas-brand { width: 134px; height: 128px; flex-basis: 134px; }
+  .mv-app .fsa-sidebar-brand { min-height: 142px; }
+  .mv-app .mv-map-page, .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    padding: 10px 13px 21px;
+  }
+  .mv-app .fsa-home-title h1 { font-size: 37px; }
+  .mv-app .atlas-utility-actions > select { max-width: 130px; }
+  .mv-app .atlas-utility-actions > select:not(.atlas-mobile-region) { display: none; }
+  .mv-app .atlas-quick-jumps button { min-height: 58px; padding: 7px; }
+}
+@media (min-width: 901px) and (max-width: 1090px) {
+  .mv-app .mv-map-page, .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'heading' 'telemetry' 'atlas' 'planner' 'regions';
+  }
+  .mv-app .atlas-journey { flex-direction: row; flex-wrap: wrap; }
+  .mv-app .atlas-journey > .atlas-wayfinding { flex: 1 1 290px; }
+  .mv-app .atlas-journey > .atlas-quick-jumps { flex: 1 1 245px; }
+  .mv-app .atlas-journey > .atlas-travel-fields { flex: 1 1 205px; }
+  .mv-app .mv-map-frame { height: 470px; }
+  .mv-app .mv-inspector { max-height: 480px; }
+}
+/* Mobile retains map-first priority, controls and a usable touch target size. */
+@media (max-width: 900px) {
+  .mv-app .fsa-structure { display: block; }
+  .mv-app .mv-map-page, .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'heading' 'atlas' 'telemetry' 'planner' 'regions';
+    padding: 12px 12px calc(92px + env(safe-area-inset-bottom));
+    gap: 12px;
+  }
+  .mv-app .fsa-home-head { min-height: 124px; padding: 13px; }
+  .mv-app .fsa-home-title h1 { font-size: clamp(30px, 5.5vw, 44px); white-space: normal; }
+  .mv-app .fsa-home-title p { max-width: 320px; font-size: 12px; }
+  .mv-app .vice-scene-artdeco { width: 45%; opacity: .64; }
+  .mv-app .vice-scene-sun { left: 66%; }
+  .mv-app .atlas-telemetry-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mv-app .atlas-telemetry-item { padding: 9px 12px; min-height: 55px; }
+  .mv-app .atlas-telemetry-item strong { font-size: 24px; }
+  .mv-app .fsa-map-heading { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .mv-app .fsa-map-heading-top, .mv-app .atlas-utility { justify-content: stretch; width: 100%; }
+  .mv-app .atlas-utility-actions { width: 100%; justify-content: space-between; }
+  .mv-app .atlas-utility-actions > select { min-height: 44px; flex: 1; }
+  .mv-app :is(.mv-layers-button, .atlas-focus) { min-height: 44px; }
+  .mv-app .mv-map-frame { height: clamp(360px, 57vw, 515px); }
+  .mv-app .mv-map-tools button, .mv-app .mv-insets button { min-height: 44px; min-width: 44px; }
+  .mv-app .atlas-journey { padding: 16px; }
+}
+@media (max-width: 620px) {
+  .mv-app .mv-map-page, .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    padding: 10px 9px calc(94px + env(safe-area-inset-bottom));
+    gap: 10px;
+  }
+  .mv-app .fsa-home-head { min-height: 125px; padding: 12px; gap: 7px; }
+  .mv-app .fsa-home-title h1 { font-size: clamp(26px, 7vw, 35px); letter-spacing: -1px; }
+  .mv-app .fsa-home-title p { font-size: 10px; max-width: 245px; }
+  .mv-app .fsa-home-overline { font-size: 8px; letter-spacing: .9px; }
+  .mv-app .fsa-head-actions button { width: 44px; min-height: 44px; padding: 8px; font-size: 0; }
+  .mv-app .fsa-head-actions button svg:last-child { display: none; }
+  .mv-app .atlas-telemetry-item small { font-size: 8px; letter-spacing: .7px; }
+  .mv-app .atlas-telemetry-item strong { font-size: 21px; }
+  .mv-app .atlas-telemetry-item strong em { font-size: 9px; }
+  .mv-app .fsa-map-heading { padding: 9px; }
+  .mv-app .atlas-utility-actions { flex-wrap: wrap; }
+  .mv-app .atlas-utility-actions > select { max-width: none; min-width: 0; }
+  .mv-app .atlas-search input { font-size: 15px; }
+  .mv-app .mv-map-frame { height: 360px; }
+  .mv-app .fsa-map-hud > span:last-child { display: none; }
+  .mv-app .mv-map-legend { max-width: calc(100% - 89px); gap: 6px; }
+  .mv-app .mv-map-legend > div { font-size: 9px; }
+  .mv-app .atlas-journey { gap: 12px; }
+  .mv-app .atlas-quick-jumps button { min-height: 56px; }
+}
+@media (max-width: 390px) {
+  .mv-app .fsa-home-title h1 { font-size: 26px; }
+  .mv-app .fsa-home-title p { max-width: 180px; }
+  .mv-app .atlas-telemetry-item { padding: 8px; }
+}
+/* Map focus and selected-state inspector must remain functional. */
+.mv-app .mv-map-page.atlas-focused {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'atlas' 'regions';
+}
+.mv-app .atlas-focused .fsa-home-head,
+.mv-app .atlas-focused .atlas-journey,
+.mv-app .atlas-focused > .mv-inspector,
+.mv-app .atlas-focused .atlas-telemetry-strip { display: none; }
+.mv-app .atlas-focused .mv-map-frame { height: max(470px, calc(100dvh - 220px)); }
+.mv-app .mv-map-page.has-active-region:not(.atlas-focused) .atlas-journey { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .mv-app :is(button, .mv-region) { transition: none; }
+  .mv-app :is(.fsa-home-beacon, .fsa-map-hud i) { animation: none; }
+}
+
+/* ---------------------------------------------------------------------
+   FIELD SALES ATLAS / READABILITY & CARTOGRAPHY QUALITY PASS
+   Deliberately authored in the established Miami Vice stylesheet,
+   not a separate cascade of patch files.
+   Keep photographic atmosphere, genuine logo and live map geometry.
+--------------------------------------------------------------------- */
+
+.mv-app {
+  --vice-font: 'DM Sans', 'Segoe UI', sans-serif;
+  --vice-heading: 'Outfit', 'DM Sans', sans-serif;
+  --vice-number: 'Outfit', 'DM Sans', sans-serif;
+  --vice-label-track: .055em;
+}
+.mv-app.op-root {
+  font-family: var(--vice-font);
+  font-size: 14px;
+  line-height: 1.56;
+  font-weight: 450;
+  letter-spacing: 0;
+}
+.mv-app :is(button,input,select,textarea) {
+  font-family: var(--vice-font);
+  letter-spacing: normal;
+}
+.mv-app :is(button,select,[role='button']) {
+  -webkit-tap-highlight-color: transparent;
+}
+.mv-app :is(button,select,a,[role='button']):focus-visible {
+  outline: 2px solid var(--at-cyan);
+  outline-offset: 3px;
+}
+.mv-app :is(button,select):disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.mv-app :is(h1,h2,h3,h4) {
+  text-wrap: pretty;
+}
+/* Readable presentation type; neon only defines accents and contours. */
+.mv-app .fsa-home-title h1,
+.mv-app .atlas-wayfinding h2,
+.mv-app .fsa-today-hero h1,
+.mv-app .mv-content-inner .op-head h1,
+.mv-app .fsa-hub-head h1,
+.mv-app .travel-command-head h1,
+.mv-app .mv-week-header h1,
+.mv-app .op-card-header h2 {
+  font-family: var(--vice-heading);
+  font-weight: 780;
+}
+.mv-app .fsa-home-title h1 {
+  letter-spacing: -.035em;
+  line-height: 1.06;
+  text-shadow: 0 2px 16px rgba(2,10,33,.38);
+}
+.mv-app .fsa-home-title h1 em {
+  letter-spacing: -.035em;
+  text-shadow: 0 0 14px rgba(255,68,172,.25);
+}
+.mv-app .fsa-home-title p {
+  font-size: 13px;
+  line-height: 1.52;
+  font-weight: 500;
+  max-width: 625px;
+}
+.mv-app .fsa-home-overline {
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  font-weight: 750;
+}
+/* Keep photographs behind the text rather than reducing legibility. */
+.mv-app .fsa-home-head {
+  background: linear-gradient(90deg,rgba(6,17,36,.96),rgba(7,19,41,.86) 42%,rgba(9,22,46,.11) 85%);
+}
+.mv-app .vice-scene-skyline {
+  filter: saturate(1.30) hue-rotate(-5deg);
+}
+.mv-app .fsa-side-link,
+.mv-app .mv-more-menu button,
+.mv-app .fsa-more-tools summary {
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.mv-app .fsa-side-link.active { font-weight: 750; }
+.mv-app .fsa-sidebar-label {
+  font-size: 10.5px;
+  font-weight: 780;
+  letter-spacing: .075em;
+}
+.mv-app .fsa-crumb strong {
+  font-family: var(--vice-heading);
+  font-weight: 750;
+}
+.mv-app .fsa-command-trigger {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mv-app .mv-appearance-control button,
+.mv-app .atlas-trainer-description select {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.mv-app .fsa-sidebar-bottom strong {
+  font-size: 10.5px;
+  font-weight: 760;
+}
+.mv-app .fsa-sidebar-bottom p {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.mv-app .fsa-head-actions button {
+  font-size: 13.5px;
+  font-weight: 770;
+  box-shadow: 0 0 13px rgba(255,66,163,.28),0 6px 21px rgba(0,5,21,.2);
+}
+/* The numbers use a true numerical font, never condensed decorative type. */
+.mv-app .atlas-telemetry-item {
+  gap: 11px;
+  padding: 9px 14px;
+}
+.mv-app .atlas-telemetry-item small {
+  color: #d1e7f1;
+  font-family: var(--vice-font);
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: .075em;
+  line-height: 1.32;
+}
+.mv-app .atlas-telemetry-item strong {
+  font: 750 26px/1.12 var(--vice-number);
+  letter-spacing: -.035em;
+  text-shadow: none;
+  gap: 9px;
+}
+.mv-app .atlas-telemetry-item strong em {
+  font: 500 11.5px/1.3 var(--vice-font);
+  font-style: normal;
+  letter-spacing: 0;
+  color: #d6eaf2;
+}
+.mv-app .atlas-telemetry-item > svg {
+  filter: none;
+  width: 21px;
+  height: 21px;
+}
+/* Map controls: stable, readable and predictable. */
+.mv-app .fsa-map-heading {
+  gap: 13px;
+  padding: 11px 13px;
+  min-height: 62px;
+}
+.mv-app .atlas-search {
+  min-height: 43px;
+  border-color: rgba(126,200,225,.65);
+}
+.mv-app .atlas-search input {
+  height: 42px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.mv-app .atlas-search input::placeholder { opacity: 1; color: #cedfe8; }
+.mv-app .atlas-utility-actions > select,
+.mv-app :is(.mv-layers-button,.atlas-focus) {
+  min-height: 42px;
+  font-size: 12px;
+  font-weight: 650;
+  border-color: rgba(111,189,216,.66);
+}
+.mv-app .mv-layers-popover {
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid var(--at-border);
+  border-radius: 11px;
+  box-shadow: 0 16px 38px rgba(1,9,29,.35);
+  background: var(--at-surface);
+}
+.mv-app .mv-layers-popover > strong {
+  font-family: var(--vice-heading);
+  font-size: 16px;
+  font-weight: 750;
+}
+.mv-app .mv-layers-popover label,
+.mv-app .mv-layer-subsection > span {
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 550;
+}
+.mv-app .mv-layers-popover :is(select,button) {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mv-app .mv-layers-popover input[type='checkbox'] {
+  accent-color: var(--at-cyan);
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+/* GIS restraint: glowing coastline, calm water, and legible state typography. */
+.mv-app .mv-map-frame {
+  background: #071e37;
+  box-shadow: inset 0 0 56px rgba(25,166,197,.075);
+}
+.mv-app .mv-map-frame::after { opacity: .54; }
+.mv-app .mv-map-grid-overlay { opacity: .065; }
+.mv-app .mv-map-halo { opacity: .40; }
+.mv-app .fsa-perspective { opacity: .10; }
+.mv-app .mv-water-start { stop-color: #061c32; }
+.mv-app .mv-water-middle { stop-color: #092945; }
+.mv-app .mv-water-end { stop-color: #161e42; }
+.mv-app .vice-land-first { stop-color: #0f536c; }
+.mv-app .vice-land-last { stop-color: #0a415e; }
+.mv-app .mv-country-base {
+  fill: url(#vice-territory-land);
+  stroke: #2b718d;
+  stroke-opacity: .24;
+}
+.mv-app .mv-region-us {
+  fill: url(#vice-territory-land);
+  stroke: #72d9e9;
+  stroke-opacity: .84;
+  stroke-width: 1.20;
+  filter: drop-shadow(0 0 1.6px rgba(48,212,237,.34));
+}
+.mv-app .mv-region-us.assigned {
+  fill: #127589;
+  stroke: #9beced;
+  stroke-opacity: 1;
+  filter: drop-shadow(0 0 2.3px rgba(40,239,244,.33));
+}
+.mv-app .mv-region-us:hover,
+.mv-app .mv-region-us:focus-visible {
+  fill: #237f93;
+  stroke: #b7ffff;
+  stroke-width: 2.1;
+  filter: drop-shadow(0 0 4px rgba(55,245,238,.48));
+}
+.mv-app .mv-region-us.active,
+.mv-app .mv-region-us.active:is(:hover,:focus-visible) {
+  fill: #db509d;
+  stroke: #ffe6f6;
+  stroke-opacity: 1;
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 5px rgba(255,79,175,.46));
+}
+.mv-app .mv-region-canada {
+  fill: #1b3550;
+  stroke: #4f879b;
+  stroke-opacity: .58;
+  filter: none;
+}
+.mv-app .mv-region-canada:is(:hover,:focus-visible) {
+  fill: #2d5c77;
+  stroke: #c2e6ed;
+  stroke-opacity: .95;
+}
+.mv-app .mv-region-canada.active,
+.mv-app .mv-region-canada.active:is(:hover,:focus-visible) {
+  fill: #bb4e97;
+  stroke: #ffe3f8;
+}
+.mv-app .mv-state-label {
+  fill: #f1fbfe;
+  stroke: #0a2b44;
+  stroke-width: 3.5px;
+  font-family: var(--vice-heading);
+  font-weight: 750;
+  letter-spacing: .015em;
+  paint-order: stroke;
+  pointer-events: none;
+}
+.mv-app .mv-airport-bubble {
+  fill: #073f5b;
+  stroke: #66e9e2;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 2.5px rgba(52,228,234,.30));
+}
+.mv-app .mv-airport-bubble.signal {
+  fill: #f060ad;
+  stroke: #ffe9fa;
+  filter: drop-shadow(0 0 3.5px rgba(251,96,185,.45));
+}
+.mv-app .mv-airport-mark:is(:hover,:focus-visible) .mv-airport-bubble {
+  stroke: white;
+  stroke-width: 2.3;
+  filter: drop-shadow(0 0 6px rgba(255,106,199,.67));
+}
+.mv-app .mv-airport-code {
+  font-family: var(--vice-heading);
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.mv-app .mv-travel-arc {
+  stroke: #ffd1ec;
+  stroke-width: 2.1;
+  stroke-dasharray: 7 6;
+}
+/* A live readable context card for hovered or selected geographic data. */
+.mv-app .mv-map-insight {
+  position: absolute;
+  z-index: 7;
+  top: 50px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: min(238px,calc(100% - 24px));
+  padding: 12px 13px;
+  border: 1px solid rgba(115,218,232,.69);
+  border-radius: 10px;
+  background: rgba(7,28,50,.92);
+  color: #f4feff;
+  box-shadow: 0 10px 34px rgba(1,12,34,.35),0 0 16px rgba(24,223,236,.14);
+  backdrop-filter: blur(13px);
+  pointer-events: none;
+}
+.mv-app .mv-map-insight-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #74f8ed;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .095em;
+}
+.mv-app .mv-map-insight strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  color: white;
+  font: 750 17px/1.15 var(--vice-heading);
+}
+.mv-app .mv-map-insight strong small {
+  font: 600 11.5px/1.35 var(--vice-font);
+  color: #d1e5ee;
+}
+.mv-app .mv-map-insight > span:not(.mv-map-insight-kicker) {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #d9eaf4;
+}
+.mv-app .mv-map-insight .mv-map-insight-action {
+  color: #ffb3d8;
+  font-weight: 650;
+}
+/* Geographic Alaska/Hawaii inset shapes, tappable and labeled. */
+.mv-app .mv-insets {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  left: 10px;
+  bottom: 56px;
+}
+.mv-app .mv-insets button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 82px;
+  min-height: 64px;
+  padding: 5px 6px 7px;
+  background: rgba(7,27,49,.86);
+  border: 1px solid rgba(87,184,208,.68);
+  color: #eaf9ff;
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+.mv-app .mv-insets button svg {
+  width: 78px;
+  max-width: 100%;
+  height: 38px;
+  overflow: visible;
+}
+.mv-app .mv-inset-shape {
+  fill: #155a72;
+  stroke: #7de1ef;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.mv-app .mv-insets button:is(:hover,:focus-visible) {
+  border-color: #56f9ef;
+  background: rgba(18,80,100,.91);
+  box-shadow: 0 0 9px rgba(50,244,240,.26);
+}
+.mv-app .mv-insets button:is(:hover,:focus-visible) .mv-inset-shape {
+  fill: #c44e96;
+  stroke: #ffd2ee;
+}
+/* Legend represents map state, with a directly usable airport switch. */
+.mv-app .mv-map-legend {
+  gap: 8px;
+  padding: 6px 9px;
+  background: rgba(7,29,51,.89);
+  max-width: calc(100% - 200px);
+}
+.mv-app .mv-map-legend > div {
+  font-size: 11px;
+  font-weight: 600;
+}
+.mv-app .mv-map-airport-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid rgba(120,205,218,.55);
+  border-radius: 7px;
+  color: #d4e6ee;
+  background: rgba(9,37,61,.70);
+  font-size: 11.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.mv-app .mv-map-airport-toggle.is-on {
+  color: #ffb5d9;
+  border-color: rgba(255,130,202,.64);
+}
+.mv-app .mv-map-airport-toggle:is(:hover,:focus-visible) {
+  border-color: #4ff9ed;
+  box-shadow: 0 0 10px rgba(41,232,232,.23);
+}
+.mv-app .mv-assigned-swatch {
+  display: inline-block;
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #167e90;
+  border: 1px solid #9bf8ec;
+}
+.mv-app .mv-map-tools {
+  align-items: center;
+  gap: 2px;
+}
+.mv-app .mv-map-tools button {
+  min-width: 35px;
+  min-height: 36px;
+  font-size: 18px;
+  font-weight: 750;
+}
+.mv-app .mv-map-tools button:disabled {
+  opacity: .32;
+  cursor: not-allowed;
+}
+.mv-app .mv-map-zoom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 0 5px;
+  color: #d4e9f1;
+  font: 700 11px/1 var(--vice-number);
+  letter-spacing: 0;
+}
+/* Keep controls readable against the map's nighttime palette. */
+.mv-app .fsa-map-hud > span {
+  font-family: var(--vice-font);
+  font-size: 10.5px;
+  font-weight: 720;
+  letter-spacing: .06em;
+}
+.mv-app .mv-map-credit {
+  font-size: 10px;
+  color: #d4e3ed;
+}
+.mv-app .atlas-wayfinding h2 {
+  font-size: 25px;
+  font-weight: 760;
+  letter-spacing: -.028em;
+  line-height: 1.13;
+  text-shadow: none;
+}
+.mv-app .atlas-wayfinding-label,
+.mv-app .atlas-quick-jumps > span {
+  color: #bce8ef;
+  font-size: 11px;
+  font-weight: 740;
+  letter-spacing: .075em;
+}
+.mv-app .atlas-wayfinding p {
+  color: #e0eef4;
+  font-size: 13px;
+  line-height: 1.56;
+  font-weight: 450;
+}
+.mv-app .atlas-wayfinding-pulse {
+  gap: 11px;
+  padding: 11px;
+  margin-top: 14px;
+}
+.mv-app .atlas-wayfinding-pulse strong {
+  font-size: 12.5px;
+  font-weight: 750;
+}
+.mv-app .atlas-wayfinding-pulse small {
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.mv-app .atlas-wayfinding-actions button {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 720;
+  line-height: 1.3;
+}
+.mv-app .atlas-quick-jumps button {
+  gap: 4px;
+  padding: 10px;
+}
+.mv-app .atlas-quick-jumps button strong {
+  font: 760 22px/1 var(--vice-number);
+}
+.mv-app .atlas-quick-jumps button small {
+  font-size: 11px;
+}
+.mv-app .atlas-origin > label {
+  font-size: 11.5px;
+  letter-spacing: .035em;
+}
+.mv-app .atlas-origin select,
+.mv-app .atlas-choose-home {
+  min-height: 44px;
+  font-size: 12.5px;
+}
+.mv-app .mv-inspector {
+  line-height: 1.5;
+}
+.mv-app .mv-inspector :is(button,input,select) {
+  font-size: 13px;
+}
+.mv-app .mv-inspector-tabs button {
+  font-size: 12.5px;
+  font-weight: 680;
+}
+.mv-app .mv-manager-name strong {
+  font-size: 13.5px;
+}
+.mv-app .mv-inspector-main,
+.mv-app .mv-inspector-list {
+  scrollbar-color: rgba(112,207,224,.4) transparent;
+}
+/* Cross-product polish. Carry one readable typography language everywhere. */
+.mv-app :is(.fsa-today,.fsa-hub,.mv-content-inner) {
+  font-family: var(--vice-font);
+  line-height: 1.58;
+}
+.mv-app .fsa-today :is(.fsa-today-item-copy small,.fsa-shortcuts small,.fsa-today-followups small),
+.mv-app .fsa-hub :is(.fsa-hub-guide,.fsa-card-eyebrow),
+.mv-app .mv-content-inner :is(.op-eyebrow,.op-field-list label,.op-table th) {
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: .005em;
+}
+.mv-app :is(.op-card,.fsa-today-card,.travel-panel,.smart-panel) {
+  overflow-wrap: anywhere;
+}
+.mv-app :is(.op-card,.fsa-today-card,.travel-panel,.smart-panel) p {
+  line-height: 1.6;
+}
+.mv-app .op-card-header h2 {
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -.02em;
+}
+.mv-app :is(.op-btn,.fsa-button) {
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.mv-app .fsa-hub-head h1,
+.mv-app .mv-content-inner .op-head h1 {
+  letter-spacing: -.035em;
+  line-height: 1.14;
+}
+.mv-app .fsa-today-hero h1 {
+  letter-spacing: -.038em;
+}
+.mv-app :is(.op-table td,.op-info-row,.op-manager-header) {
+  line-height: 1.5;
+}
+.mv-app :is(.op-card,.fsa-today-card,.travel-panel,.smart-panel) :is(button,input,select,textarea):focus-visible {
+  outline-offset: 2px;
+}
+/* Light mode keeps its pastel visual identity without sacrificing contrast. */
+.mv-app[data-theme='light'] .fsa-home-head {
+  background: linear-gradient(90deg,rgba(255,251,246,.96),rgba(255,247,239,.78) 43%,rgba(255,249,242,.10) 84%);
+}
+.mv-app[data-theme='light'] .atlas-telemetry-item small { color: #516a79; }
+.mv-app[data-theme='light'] .atlas-telemetry-item strong em { color: #58717e; }
+.mv-app[data-theme='light'] .mv-region-us {
+  fill: #9bd4cc;
+  stroke: #4e98a5;
+  filter: none;
+}
+.mv-app[data-theme='light'] .mv-region-us.assigned { fill: #64b9af; stroke: #267e8c; }
+.mv-app[data-theme='light'] .mv-region-us:is(:hover,:focus-visible) { fill: #57b0b3; stroke: #137b8b; }
+.mv-app[data-theme='light'] .mv-region-us.active { fill: #e78caf; stroke: #ab326d; }
+.mv-app[data-theme='light'] .mv-region-canada { fill: #c9d6e0; stroke: #84a5b3; }
+.mv-app[data-theme='light'] .mv-state-label { fill: #173f51; stroke: #eafff6; }
+.mv-app[data-theme='light'] .mv-map-frame { background: #d4efeb; box-shadow: inset 0 0 44px rgba(70,157,161,.08); }
+.mv-app[data-theme='light'] .mv-map-frame::after { opacity: .12; }
+.mv-app[data-theme='light'] .mv-map-grid-overlay { opacity: .11; }
+.mv-app[data-theme='light'] .mv-map-insight {
+  border-color: #8bc4c9;
+  color: #1a4051;
+  background: rgba(255,253,249,.94);
+  box-shadow: 0 10px 27px rgba(30,103,115,.13);
+}
+.mv-app[data-theme='light'] .mv-map-insight-kicker { color: #087d86; }
+.mv-app[data-theme='light'] .mv-map-insight strong { color: #163c4e; }
+.mv-app[data-theme='light'] .mv-map-insight strong small,
+.mv-app[data-theme='light'] .mv-map-insight > span:not(.mv-map-insight-kicker) { color: #4e6b78; }
+.mv-app[data-theme='light'] .mv-map-insight .mv-map-insight-action { color: #ab2969; }
+.mv-app[data-theme='light'] .mv-insets button {
+  background: rgba(255,253,247,.9);
+  color: #1b4453;
+  border-color: #82bac0;
+}
+.mv-app[data-theme='light'] .mv-inset-shape { fill: #91d0c7; stroke: #428f9e; }
+.mv-app[data-theme='light'] .mv-map-legend,
+.mv-app[data-theme='light'] .mv-map-tools {
+  background: rgba(255,253,249,.92);
+  color: #1a4555;
+  border-color: #91bec6;
+}
+.mv-app[data-theme='light'] .mv-map-airport-toggle {
+  background: #f3faf7;
+  color: #1b5460;
+  border-color: #95c5c8;
+}
+.mv-app[data-theme='light'] .mv-map-airport-toggle.is-on { color: #a32468; border-color: #d48bb0; }
+.mv-app[data-theme='light'] .mv-map-zoom { color: #355866; }
+.mv-app[data-theme='light'] .mv-map-credit { color: #294b5d; background: rgba(255,252,247,.87); }
+.mv-app[data-theme='light'] .fsa-map-hud > span { color: #184252; background: rgba(255,252,245,.88); }
+.mv-app[data-theme='light'] .atlas-wayfinding-label,
+.mv-app[data-theme='light'] .atlas-quick-jumps > span { color: #386e78; }
+.mv-app[data-theme='light'] .atlas-wayfinding p { color: #4a6775; }
+.mv-app[data-theme='light'] .atlas-wayfinding-pulse strong { color: #1c4051; }
+.mv-app[data-theme='light'] .atlas-wayfinding-pulse small { color: #54717b; }
+
+/* Laptop widths retain readable typography without hiding the map. */
+@media (min-width: 901px) and (max-width: 1350px) {
+  .mv-app .fsa-structure { grid-template-columns: 182px minmax(0,1fr); }
+  .mv-app .fsa-sidebar-brand .official-atlas-brand {
+    width: 140px;
+    height: 125px;
+    flex-basis: 140px;
+  }
+  .mv-app .fsa-sidebar-brand { min-height: 138px; }
+  .mv-app .mv-map-page,
+  .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0,1fr) minmax(250px,270px);
+  }
+  .mv-app .atlas-telemetry-item { padding: 8px 10px; }
+  .mv-app .atlas-telemetry-item small { font-size: 10px; }
+  .mv-app .atlas-telemetry-item strong { font-size: 24px; }
+  .mv-app .atlas-telemetry-item strong em { font-size: 11px; }
+  .mv-app .atlas-journey { padding: 13px; }
+  .mv-app .atlas-quick-jumps button { padding: 8px; }
+  .mv-app .atlas-utility-actions > select { max-width: 146px; }
+}
+@media (min-width: 901px) and (max-width: 1140px) {
+  .mv-app .mv-map-page,
+  .mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0,1fr);
+    grid-template-areas: 'heading' 'telemetry' 'atlas' 'planner' 'regions';
+  }
+  .mv-app .atlas-journey {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 17px;
+  }
+  .mv-app .atlas-journey > .atlas-wayfinding { flex: 1 1 280px; }
+  .mv-app .atlas-journey > .atlas-quick-jumps { flex: 1 1 230px; }
+  .mv-app .atlas-journey > .atlas-travel-fields { flex: 1 1 190px; }
+  .mv-app .mv-map-frame { height: clamp(365px,48vw,495px); }
+}
+@media (max-width: 900px) {
+  .mv-app .fsa-home-overline { font-size: 10px; }
+  .mv-app .atlas-telemetry-strip { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .mv-app .atlas-telemetry-item { min-height: 62px; padding: 9px 12px; }
+  .mv-app .fsa-map-heading { grid-template-columns: minmax(0,1fr); }
+  .mv-app .atlas-search { min-height: 46px; }
+  .mv-app .atlas-search input { min-height: 46px; font-size: 15px; }
+  .mv-app .atlas-utility-actions > select,
+  .mv-app :is(.mv-layers-button,.atlas-focus) { min-height: 44px; font-size: 12.5px; }
+  .mv-app .mv-insets { bottom: 58px; gap: 6px; }
+  .mv-app .mv-insets button { min-width: 64px; min-height: 58px; }
+  .mv-app .mv-insets button svg { width: 62px; height: 30px; }
+  .mv-app .mv-map-tools button { min-height: 42px; min-width: 42px; }
+  .mv-app .mv-map-airport-toggle { min-height: 41px; }
+  .mv-app .mv-map-legend { max-width: calc(100% - 203px); }
+  .mv-app .mv-map-insight { top: 47px; right: 8px; width: min(210px,calc(100% - 16px)); padding: 9px; }
+  .mv-app .atlas-wayfinding h2 { font-size: 24px; }
+}
+@media (max-width: 620px) {
+  .mv-app .mv-map-insight { display: none; }
+  .mv-app .fsa-home-title p { line-height: 1.45; }
+  .mv-app .atlas-telemetry-item strong { font-size: 23px; }
+  .mv-app .atlas-telemetry-item strong em { font-size: 10px; }
+  .mv-app .mv-insets { bottom: 61px; }
+  .mv-app .mv-insets button { min-width: 58px; min-height: 54px; padding: 4px; }
+  .mv-app .mv-insets button svg { width: 55px; height: 27px; }
+  .mv-app .mv-insets button span { font-size: 10px; }
+  .mv-app .mv-map-legend { max-width: calc(100% - 168px); padding: 5px; }
+  .mv-app .mv-map-airport-toggle { min-height: 36px; padding: 5px 7px; font-size: 10px; }
+  .mv-app .mv-map-zoom { display: none; }
+  .mv-app .mv-map-tools button { min-width: 42px; min-height: 42px; }
+  .mv-app .atlas-wayfinding p { font-size: 13px; }
+  .mv-app .atlas-quick-jumps button { min-height: 54px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mv-app .mv-region-us { transition: none; }
+}
+
+/* Consistent readable labels in Trip, Plan, Week, People and Calendar. */
+.mv-app :is(.travel-kicker,.travel-summary-label,.mv-week-eyebrow,
+  .atlas-nas-airport-top span,.fsa-hub-tabs small,
+  .fsa-today-summary span,.fsa-followup-date,.fsa-provenance) {
+  font-family: var(--vice-font);
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: .045em;
+}
+.mv-app :is(.travel-hero-meta span,.travel-actionstrip > div:first-child strong,
+  .travel-actionstrip > div:first-child span:last-child,
+  .travel-section-line p,.travel-city-shortcuts span,
+  .travel-number-input > span,.travel-number-field,
+  .mv-week-range label,.mv-week-range small,
+  .mv-week-warning span,.trainer-airport-item label,
+  .trainer-no-airports,.fsa-manager-card-facts small,
+  .atlas-nas-status-line,.atlas-nas-airport p) {
+  font-family: var(--vice-font);
+  font-size: 12px;
+  line-height: 1.55;
+  letter-spacing: normal;
+}
+.mv-app :is(.travel-fields label,.travel-place-results button,
+  .mv-week-person button,.mv-week-cluster button,
+  .mv-week-trainer-head button,.mv-week-show,
+  .atlas-nas-backup button,.trainer-airport-suggestions button) {
+  font-family: var(--vice-font);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.mv-app :is(.mv-week-priority,.mv-week-trainer-summary small,
+  .smart-status-bar span,.smart-itinerary-time span) {
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.mv-app :is(.travel-step,.travel-step-copy small,.travel-step > span) {
+  font-size: 12.5px;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+.mv-app :is(.smart-field,.smart-field input,.smart-field select,
+  .smart-itinerary-main strong,.smart-itinerary-time strong,
+  .smart-footer-actions .op-btn) {
+  font-size: 13px;
+  line-height: 1.45;
+}
+.mv-app :is(.travel-step,.travel-place-results button,
+  .mv-week-person button,.mv-week-cluster button,
+  .smart-footer-actions .op-btn) {
+  min-height: 42px;
+}
+.mv-app .travel-fields :is(input,select,textarea),
+.mv-app .smart-field :is(input,select),
+.mv-app .trainer-dialog-fields :is(input,select,textarea) {
+  min-height: 44px;
+  font-size: 14px;
+}
+/* Data and utility typography is functional, not decorative. */
+.mv-app :is(.fsa-agenda-date small,.fsa-today-item-copy small,
+  .fsa-today-followups small,.fsa-shortcuts small,
+  .fsa-first-step small,.fsa-hub-guide) {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mv-app :is(.op-card,.mv-week-overview,.mv-week-trainer,.travel-panel,.smart-panel) strong {
+  letter-spacing: -.01em;
+}
+.mv-app :is(.op-card,.mv-week-overview,.mv-week-trainer,.travel-panel,.smart-panel) button {
+  font-weight: 680;
+}
+/* Present all form errors and warnings without a faint-text penalty. */
+.mv-app :is(.op-warning,.travel-warning,.mv-week-warning,.atlas-nas-status-line) {
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+/* The toolbar and bottom navigation stay comfortable at real device widths. */
+@media (max-width:900px) {
+  .mv-app .mv-bottom-nav button {
+    font-family: var(--vice-font);
+    font-size: 12px;
+    font-weight: 690;
+  }
+  .mv-app .mv-mobile-drawer > button {
+    font-family: var(--vice-font);
+    font-size: 14px;
+  }
+}
+@media (max-width:620px) {
+  .mv-app .mv-region-us {
+    filter: none;
+  }
+  .mv-app .mv-airport-bubble {
+    filter: none;
+  }
+  .mv-app .mv-map-hint {
+    display: inline-flex;
+    align-items: center;
+    position: absolute;
+    z-index: 5;    top: 41px;
+    left: 9px;
+    right: auto;
+    bottom: auto;
+    padding: 6px 8px;
+    max-width: 60%;
+    border: 1px solid rgba(80,206,223,.6);
+    border-radius: 6px;
+    background: rgba(5,22,44,.83);
+    color: #e1f6fa;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    pointer-events: none;
+  }
+  .mv-app .mv-map-hint svg { width: 13px; height: 13px; }
+  .mv-app[data-theme='light'] .mv-map-hint {
+    background: rgba(255,253,248,.88);
+    color: #1b4c5b;
+    border-color: #8abfc5;
+  }
+  .mv-app .travel-fields label,
+  .mv-app .smart-field {
+    font-size: 12.5px;
+  }
+  .mv-app .travel-step {
+    min-height: 49px;
+  }
+  .mv-app .fsa-hub-tabs strong,
+  .mv-app .fsa-hub-tabs small {
+    font-size: 12px;
+  }
+}
+
+/* Full-width territory map after removing the permanent Field Command rail.
+ * Selected markets continue to open their real manager/airport inspector. */
+.mv-app .mv-map-page:not(.has-active-region):not(.atlas-focused) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'heading' 'telemetry' 'atlas' 'regions';
+}
+@media (min-width: 901px) {
+  .mv-app .mv-map-page:not(.has-active-region):not(.atlas-focused) .mv-map-frame {
+    height: clamp(440px, calc(100dvh - 320px), 660px);
+  }
+  .mv-app .mv-map-page:not(.has-active-region):not(.atlas-focused) .fsa-map-heading {
+    grid-template-columns: minmax(260px, 580px) minmax(0, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .mv-app .mv-map-page:not(.has-active-region):not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'heading' 'atlas' 'telemetry' 'regions';
+  }
+}

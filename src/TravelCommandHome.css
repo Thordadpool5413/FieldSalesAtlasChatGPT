@@ -1,0 +1,375 @@
+/* FIELD ATLAS: Travel Operations. Compact, editorial, and task-oriented.
+   Visual navigation, route canvas and two-trainer week replace decorative KPI cards. */
+.mv-app .fao {
+  --fao-ink: var(--at-text);
+  --fao-muted: var(--at-muted);
+  --fao-panel: var(--at-surface);
+  --fao-border: var(--at-border-soft);
+  --fao-cyan: #12dfe3;
+  --fao-pink: #ed54bb;
+  width: 100%;
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 4px 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  min-width: 0;
+  color: var(--fao-ink);
+  font-family: var(--atlas-font, 'Manrope', sans-serif);
+}
+.mv-app .fao button { font-family: inherit; cursor: pointer; }
+.mv-app .fao button:focus-visible { outline: 2px solid var(--fao-cyan); outline-offset: 3px; }
+.mv-app .fao-masthead {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 4px 1px 7px; min-width: 0;
+}
+.mv-app .fao-heading { min-width: 0; }
+.mv-app .fao-eyebrow {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  color: var(--at-cyan); font-size: 9px; font-weight: 850; letter-spacing: .15em;
+}
+.mv-app .fao-led {
+  width: 6px; height: 6px; border-radius: 50%; background: #20e7df;
+  box-shadow: 0 0 10px rgba(19, 231, 217, .8); flex: 0 0 auto;
+}
+.mv-app .fao-heading-rule { height: 10px; width: 1px; background: var(--fao-border); margin: 0 4px; }
+.mv-app .fao-heading h1 {
+  color: var(--fao-ink); font-size: clamp(23px, 2.3vw, 33px);
+  font-weight: 850; letter-spacing: -.055em; line-height: 1.1;
+  margin: 5px 0 4px;
+}
+.mv-app .fao-head-period { color: var(--fao-cyan); }
+.mv-app .fao-heading>p { color: var(--fao-muted); font-size: 11px; margin: 0; }
+.mv-app .fao-mast-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.mv-app .fao-trainer-tag {
+  color: var(--fao-muted); display: flex; align-items: center; gap: 7px;
+  padding: 0 9px; font-size: 10px; font-weight: 800;
+}
+.mv-app .fao-trainer-tag svg { color: var(--at-cyan); }
+.mv-app .fao-mast-action {
+  border-radius: 9px; border: 1px solid var(--fao-border); min-height: 43px;
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+  color: var(--fao-ink); background: var(--fao-panel); font-size: 12px; font-weight: 800;
+}
+.mv-app .fao-mast-action>svg:first-child { color: var(--at-cyan); }
+.mv-app .fao-mast-primary { color: #052133; background: #20e1e6; border-color: #20e1e6; }
+.mv-app .fao-mast-primary>svg:first-child { color: #052133; }
+.mv-app .fao-mast-primary:hover { background: #8af8f8; }
+
+.mv-app .fao-feature-grid {
+  display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(400px, .88fr);
+  gap: 13px; min-width: 0; align-items: stretch;
+}
+.mv-app .fao-routeboard {
+  position: relative; isolation: isolate; overflow: hidden; min-width: 0;
+  border: 1px solid rgba(29, 216, 230, .33); border-radius: 14px;
+  min-height: 332px; display: flex; flex-direction: column;
+  background:
+    radial-gradient(ellipse at 85% 96%, rgba(12, 187, 206, .27), transparent 46%),
+    radial-gradient(ellipse at 88% 0%, rgba(235, 60, 169, .19), transparent 41%),
+    linear-gradient(118deg, #071a2e 6%, #0a2942 57%, #101d3f 100%);
+  box-shadow: inset 0 1px 0 rgba(123, 243, 245, .08), 0 15px 42px rgba(2, 5, 24, .09);
+}
+.mv-app .fao-routeboard:before {
+  content: ''; z-index: -1; pointer-events: none; position: absolute; inset: 0;
+  background:
+    linear-gradient(135deg, transparent 44%, rgba(37, 230, 229, .05) 44.1%, transparent 44.4%),
+    repeating-linear-gradient(0deg, transparent 0 29px, rgba(27, 180, 198, .035) 30px 31px);
+  opacity: .85;
+}
+.mv-app .fao-routeboard:after {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  height: 520px; width: 520px; right: -175px; top: -150px;
+  border: 1px solid rgba(66, 236, 237, .13); border-radius: 50%;
+  box-shadow: 0 0 0 50px rgba(36, 200, 216, .025), 0 0 0 110px rgba(236, 69, 180, .018);
+}
+.mv-app .fao-route-glow {
+  position: absolute; right: -22px; bottom: -120px; height: 230px; width: 230px;
+  background: radial-gradient(circle, rgba(14, 231, 228, .22), transparent 65%);
+  pointer-events: none;
+}
+.mv-app .fao-panel-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 15px 20px 0; color: #74d0df; font-size: 9px; font-weight: 900; letter-spacing: .15em;
+}
+.mv-app .fao-numeral { color: #f76bc9; }
+.mv-app .fao-panel-meta { font-size: 8px; color: #89aec2; letter-spacing: .07em; }
+.mv-app .fao-route-heading { padding: 15px 20px 2px; position: relative; z-index: 1; }
+.mv-app .fao-route-status {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 9px; letter-spacing: .14em; font-weight: 850; color: #62e8e6;
+}
+.mv-app .fao-status-line { height: 2px; width: 17px; background: #f16ac1; display: inline-block; }
+.mv-app .fao-route-heading h2 {
+  color: #fff; font-size: clamp(19px, 2.3vw, 31px);
+  line-height: 1.09; letter-spacing: -.055em;
+  margin: 9px 0 5px; max-width: 500px; font-weight: 850;
+}
+.mv-app .fao-route-heading>p {
+  color: #b4d1e2; font-size: 11px; line-height: 1.5; margin: 0;
+}
+.mv-app .fao-airway {
+  position: relative; z-index: 1; display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(64px, .6fr) minmax(0, 1fr);
+  align-items: stretch; gap: 0; padding: 20px 20px 14px; min-height: 126px;
+}
+.mv-app .fao-airway-node {
+  text-align: left; min-width: 0;
+  background: rgba(4, 27, 46, .48); border: 1px solid rgba(74, 195, 214, .26);
+  border-radius: 11px; padding: 10px 14px; display: flex;
+  flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px;
+  transition: background .2s, border-color .2s;
+}
+.mv-app .fao-airway-node:hover { background: rgba(23, 73, 95, .58); border-color: #21dbe3; }
+.mv-app .fao-airway-node>span {
+  font-size: 8.5px; color: #87bbd0; letter-spacing: .17em; font-weight: 900;
+}
+.mv-app .fao-airway-node strong {
+  font-size: clamp(23px, 2.9vw, 39px); line-height: 1.1;
+  letter-spacing: -.05em; color: #fff; font-weight: 800;
+}
+.mv-app .fao-airway-node small { font-size: 9.5px; color: #9ebfd3; }
+.mv-app .fao-airway-destination {
+  border-color: rgba(244, 91, 189, .35); background: rgba(40, 17, 58, .34);
+}
+.mv-app .fao-airway-destination strong { color: #f67ccc; }
+.mv-app .fao-airway-middle { position: relative; display: flex; align-items: center; justify-content: center; gap: 0; min-width: 0; }
+.mv-app .fao-track { height: 1px; flex: 1; background: repeating-linear-gradient(90deg, #16ece1 0 6px, transparent 6px 11px); opacity: .85; }
+.mv-app .fao-track-pink { background: repeating-linear-gradient(90deg, #f66fc9 0 6px, transparent 6px 11px); }
+.mv-app .fao-plane {
+  position: relative; flex: 0 0 29px; height: 29px; border-radius: 50%;
+  display: grid; place-items: center; color: #b8ffff; transform: rotate(45deg);
+  background: rgba(11, 110, 127, .34); border: 1px solid rgba(50, 231, 228, .28);
+  box-shadow: 0 0 14px rgba(19, 221, 232, .13);
+}
+.mv-app .fao-route-footer {
+  position: relative; z-index: 2; margin-top: auto; padding: 0 20px 17px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.mv-app .fao-route-primary {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  border: 0; border-radius: 8px; min-height: 44px; padding: 9px 16px;
+  background: #1ce1e6; color: #052033; font-size: 11.5px; font-weight: 900;
+}
+.mv-app .fao-route-primary:hover { background: #8af9f5; }
+.mv-app .fao-route-secondary {
+  display: flex; align-items: center; gap: 4px; border: 0;
+  background: transparent; padding: 10px; min-height: 44px;
+  color: #b9dbe8; font-size: 11px; font-weight: 800;
+}
+.mv-app .fao-route-watermark {
+  color: rgba(131, 214, 231, .42); margin-left: auto;
+  font-size: 9px; font-weight: 900; letter-spacing: .16em;
+}
+
+.mv-app .fao-weekboard {
+  overflow: hidden; min-width: 0; display: flex; flex-direction: column;
+  min-height: 332px; border: 1px solid var(--fao-border); border-radius: 14px;
+  background: var(--fao-panel);
+}
+.mv-app .fao-week-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 18px 18px 15px; background: linear-gradient(110deg, rgba(27, 222, 233, .07), transparent);
+  border-bottom: 1px solid var(--fao-border);
+}
+.mv-app .fao-section-kicker {
+  font-size: 9px; font-weight: 900; letter-spacing: .16em; color: var(--at-cyan);
+}
+.mv-app .fao-week-head h2 {
+  color: var(--fao-ink); margin: 7px 0 3px;
+  font-size: clamp(16px, 1.45vw, 20px); letter-spacing: -.04em; line-height: 1.19;
+}
+.mv-app .fao-week-head p { margin: 0; color: var(--fao-muted); font-size: 11px; }
+.mv-app .fao-open-week {
+  flex: 0 0 43px; width: 43px; height: 43px;
+  display: grid; place-items: center; background: var(--at-field);
+  border: 1px solid var(--fao-border); border-radius: 10px; color: var(--at-cyan);
+}
+.mv-app .fao-open-week:hover { border-color: var(--at-cyan); }
+.mv-app .fao-week-scroll {
+  overflow-x: auto; max-width: 100%; scrollbar-width: thin;
+  padding: 17px 10px 11px;
+}
+.mv-app .fao-week-table {
+  display: grid; grid-template-columns: 84px repeat(7, minmax(44px, 1fr));
+  gap: 4px; min-width: 410px; align-items: stretch;
+}
+.mv-app .fao-week-legend {
+  display: flex; align-items: center; color: var(--fao-muted);
+  font-size: 8px; letter-spacing: .09em; font-weight: 850;
+}
+.mv-app .fao-day-header {
+  min-height: 41px; display: flex; align-items: center; flex-direction: column;
+  gap: 2px; color: var(--fao-muted); font-size: 9px; font-weight: 800;
+}
+.mv-app .fao-day-header strong { font-size: 16px; color: var(--fao-ink); font-weight: 850; }
+.mv-app .fao-day-header.today strong { color: var(--at-cyan); }
+.mv-app .fao-day-header.today:after { content: ''; height: 2px; width: 14px; background: var(--at-cyan); border-radius: 4px; }
+.mv-app .fao-week-row { display: contents; }
+.mv-app .fao-trainer-name {
+  display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 2px;
+}
+.mv-app .fao-trainer-name strong {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--fao-ink); font-size: 10px; font-weight: 750;
+}
+.mv-app .fao-trainer-indicator {
+  width: 6px; height: 6px; flex: 0 0 6px;
+  background: var(--fao-cyan); border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 226, 236, .25);
+}
+.mv-app .fao-trainer-name.pink .fao-trainer-indicator,
+.mv-app .fao-trainer-indicator.pink { background: var(--fao-pink); box-shadow: 0 0 8px rgba(236, 74, 184, .32); }
+.mv-app .fao-week-cell {
+  min-width: 0; min-height: 47px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  border-radius: 6px; border: 1px solid var(--fao-border); background: var(--at-field);
+  color: var(--fao-muted); transition: background .17s, border-color .17s;
+  padding: 2px;
+}
+.mv-app .fao-week-cell:hover { border-color: var(--at-cyan); }
+.mv-app .fao-week-cell.today { background: rgba(25, 212, 229, .075); }
+.mv-app .fao-week-cell.occupied.aqua { border-color: rgba(24, 215, 221, .5); background: rgba(11, 216, 221, .13); }
+.mv-app .fao-week-cell.occupied.pink { border-color: rgba(235, 81, 181, .5); background: rgba(237, 79, 182, .12); }
+.mv-app .fao-week-cell>strong { font-size: 9px; font-weight: 900; color: var(--fao-ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.mv-app .fao-booking-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--fao-cyan); }
+.mv-app .fao-week-cell.pink .fao-booking-dot { background: var(--fao-pink); }
+.mv-app .fao-empty-day { font-size: 15px; opacity: .34; }
+.mv-app .fao-week-foot {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  align-items: center; padding: 10px 16px; margin-top: auto;
+  border-top: 1px solid var(--fao-border);
+  font-size: 9px; color: var(--fao-muted);
+}
+.mv-app .fao-week-signal { display: flex; align-items: center; gap: 6px; }
+.mv-app .fao-week-bottom {
+  width: 100%; min-height: 45px; padding: 10px 15px;
+  border: 0; border-top: 1px solid var(--fao-border); background: transparent;
+  color: var(--fao-ink); display: flex; justify-content: space-between; align-items: center;
+  text-align: left; gap: 8px; font-size: 11px; font-weight: 750;
+}
+.mv-app .fao-week-bottom>span { display: flex; align-items: center; gap: 8px; }
+.mv-app .fao-week-bottom svg { color: var(--at-cyan); flex: 0 0 auto; }
+.mv-app .fao-week-bottom:hover { background: var(--at-field); }
+
+.mv-app .fao-lower-grid {
+  display: grid; grid-template-columns: minmax(0, 1.32fr) minmax(300px, .68fr);
+  gap: 14px; min-width: 0; align-items: stretch;
+}
+.mv-app .fao-shortcuts, .mv-app .fao-readiness { min-width: 0; }
+.mv-app .fao-lower-title {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 10px; margin: 3px 0 9px; padding: 0 1px;
+}
+.mv-app .fao-lower-title>div>span, .mv-app .fao-lower-title>small {
+  font-size: 8.5px; color: var(--at-cyan); font-weight: 850; letter-spacing: .12em;
+}
+.mv-app .fao-lower-title h2 {
+  color: var(--fao-ink); font-size: 18px; font-weight: 850;
+  margin: 4px 0 0; line-height: 1.16; letter-spacing: -.03em;
+}
+.mv-app .fao-lower-title>small { color: var(--fao-muted); }
+.mv-app .fao-toolrail {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--fao-border); border-radius: 11px;
+  background: var(--fao-panel); overflow: hidden;
+}
+.mv-app .fao-toolrail button {
+  min-width: 0; min-height: 126px; display: flex; flex-direction: column;
+  align-items: flex-start; text-align: left; gap: 9px;
+  padding: 15px; border: 0; border-right: 1px solid var(--fao-border);
+  background: transparent; color: var(--fao-ink);
+}
+.mv-app .fao-toolrail button:last-child { border-right: 0; }
+.mv-app .fao-toolrail button:hover { background: var(--at-field); }
+.mv-app .fao-toolicon {
+  display: grid; place-items: center; width: 33px; height: 33px; border-radius: 9px;
+  background: rgba(19, 224, 222, .11); color: #1fdce5;
+}
+.mv-app .fao-toolicon.pink { color: #ed62bb; background: rgba(241, 68, 172, .12); }
+.mv-app .fao-toolicon.violet { color: #b59aff; background: rgba(153, 116, 241, .14); }
+.mv-app .fao-toolrail button>span:nth-child(2) { display: grid; gap: 4px; }
+.mv-app .fao-toolrail button strong { font-size: 12px; color: var(--fao-ink); }
+.mv-app .fao-toolrail button small { font-size: 10px; color: var(--fao-muted); line-height: 1.35; }
+.mv-app .fao-toolrail button>svg:last-child { color: var(--at-cyan); align-self: flex-end; margin: auto 0 0 auto; }
+.mv-app .fao-readiness-progress {
+  color: var(--at-cyan); font-size: 9px; font-weight: 850;
+  letter-spacing: .1em; padding-bottom: 2px; white-space: nowrap;
+}
+.mv-app .fao-readiness-list {
+  border: 1px solid var(--fao-border); border-radius: 11px;
+  overflow: hidden; background: var(--fao-panel);
+}
+.mv-app .fao-readiness-list button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 13px; min-height: 45px; text-align: left;
+  border: 0; border-bottom: 1px solid var(--fao-border);
+  background: transparent; color: var(--fao-ink);
+}
+.mv-app .fao-readiness-list button:last-child { border-bottom: 0; }
+.mv-app .fao-readiness-list button:hover { background: var(--at-field); }
+.mv-app .fao-step-icon {
+  flex: 0 0 26px; width: 26px; height: 26px; display: grid; place-items: center;
+  border-radius: 7px; background: var(--at-field); color: var(--fao-muted);
+  border: 1px solid var(--fao-border); font-size: 9px; font-weight: 900;
+}
+.mv-app .fao-step-icon.complete { color: #0ae0db; background: rgba(18, 221, 220, .1); border-color: rgba(18, 221, 220, .27); }
+.mv-app .fao-step-copy { min-width: 0; flex: 1; display: grid; gap: 3px; }
+.mv-app .fao-step-copy strong { font-size: 10.5px; font-weight: 850; color: var(--fao-ink); }
+.mv-app .fao-step-copy small { color: var(--fao-muted); font-size: 9.5px; overflow-wrap: anywhere; }
+.mv-app .fao-readiness-list button>svg:last-child { color: var(--at-cyan); }
+.mv-app .fao-foot {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px;
+  color: var(--fao-muted); padding: 2px; font-size: 9.5px; line-height: 1.45;
+}
+.mv-app .fao-foot>span { display: flex; align-items: center; gap: 7px; }
+.mv-app .fao-foot svg { color: var(--at-cyan); flex: 0 0 auto; }
+
+@media(max-width:1280px) {
+  .mv-app .fao-feature-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, .92fr); }
+  .mv-app .fao-airway { grid-template-columns: minmax(0, 1fr) minmax(43px, .4fr) minmax(0, 1fr); }
+  .mv-app .fao-panel-meta { display: none; }
+}
+@media(max-width:1100px) {
+  .mv-app .fao-feature-grid, .mv-app .fao-lower-grid { grid-template-columns: 1fr; }
+  .mv-app .fao-routeboard, .mv-app .fao-weekboard { min-height: 0; }
+  .mv-app .fao-week-table { min-width: 500px; }
+}
+@media(max-width:700px) {
+  .mv-app .fao { gap: 12px; padding: 0 0 20px; }
+  .mv-app .fao-masthead { align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+  .mv-app .fao-heading h1 { font-size: 27px; }
+  .mv-app .fao-mast-actions { width: 100%; justify-content: flex-start; }
+  .mv-app .fao-trainer-tag { padding-left: 0; }
+  .mv-app .fao-mast-action { min-height: 44px; font-size: 11px; }
+  .mv-app .fao-route-heading h2 { font-size: 24px; }
+  .mv-app .fao-routeboard { border-radius: 12px; }
+  .mv-app .fao-airway { grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); padding: 16px 14px; min-height: 110px; }
+  .mv-app .fao-airway-node { padding: 9px; }
+  .mv-app .fao-airway-node strong { font-size: 28px; }
+  .mv-app .fao-airway-node small { font-size: 8.5px; }
+  .mv-app .fao-panel-top { padding: 15px 14px 0; }
+  .mv-app .fao-route-heading { padding: 15px 14px 0; }
+  .mv-app .fao-route-footer { padding: 0 14px 15px; }
+  .mv-app .fao-route-watermark { display: none; }
+  .mv-app .fao-weekboard { border-radius: 12px; }
+  .mv-app .fao-week-table { min-width: 490px; }
+  .mv-app .fao-toolrail { grid-template-columns: 1fr; }
+  .mv-app .fao-toolrail button {
+    min-height: 70px; flex-direction: row; align-items: center;
+    padding: 12px; border-right: 0; border-bottom: 1px solid var(--fao-border);
+  }
+  .mv-app .fao-toolrail button:last-child { border-bottom: 0; }
+  .mv-app .fao-toolrail button>svg:last-child { align-self: center; margin: 0 0 0 auto; }
+  .mv-app .fao-lower-title>small { display: none; }
+  .mv-app .fao-lower-title h2 { font-size: 17px; }
+  .mv-app .fao-foot { flex-direction: column; }
+}
+@media(max-width:350px) {
+  .mv-app .fao-airway { grid-template-columns: minmax(0, 1fr) 35px minmax(0, 1fr); }
+  .mv-app .fao-airway-node strong { font-size: 23px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app .fao * { scroll-behavior: auto; transition-duration: .01ms !important; }
+}

@@ -1,0 +1,118 @@
+html[data-field-atlas-theme='dark'],
+.mv-app[data-theme='dark'] {
+  color-scheme: dark;
+  --at-bg: #07192B;
+  --at-rail: #0A2031;
+  --at-stage: #102E41;
+  --at-surface: #133649;
+  --at-raised: #1C4255;
+  --at-field: #0F2A3C;
+  --at-text: #F4FAFD;
+  --at-muted: #BCD4DF;
+  --at-subtle: #A5C3D1;
+  --at-border: #426375;
+  --at-border-soft: #315568;
+  --at-cyan: #64E3DF;
+  --at-rose: #FF80B4;
+  --at-accent: #FFC49B;
+  --at-aqua-soft: #184650;
+  --at-rose-soft: #472D47;
+  --at-action: #FF80B4;
+  --at-action-fg: #25152E;
+  --at-action-hover: #FF9FC8;
+  --at-map-water: #0D354B;
+  --at-map-land: #2C627C;
+  --at-map-assigned: #3A909D;
+  --at-map-stroke: #82B5C2;
+  --at-map-label: #F4FAFD;
+  --at-map-outline: #194359;
+  --vice-map-canada: #38445D;
+  --vice-map-active: #B35B91;
+  --at-shadow: 0 10px 30px rgb(2 10 25 / 18%);
+}
+html[data-field-atlas-theme='light'],
+.mv-app[data-theme='light'] {
+  color-scheme: light;
+  --at-bg: #FAF8F3;
+  --at-rail: #E9F3EF;
+  --at-stage: #FFFFFF;
+  --at-surface: #FFFDFB;
+  --at-raised: #EFF5F2;
+  --at-field: #F8FBF9;
+  --at-text: #173B4C;
+  --at-muted: #526A78;
+  --at-subtle: #5D7684;
+  --at-border: #BDD2D6;
+  --at-border-soft: #DFE9E9;
+  --at-cyan: #087F86;
+  --at-rose: #B82E77;
+  --at-accent: #C06D48;
+  --at-aqua-soft: #D8F1EB;
+  --at-rose-soft: #FAE6EF;
+  --at-action: #B82E77;
+  --at-action-fg: #FFFFFF;
+  --at-action-hover: #962360;
+  --at-map-water: #C7E7E8;
+  --at-map-land: #ADDAD6;
+  --at-map-assigned: #76C3BE;
+  --at-map-stroke: #5E919E;
+  --at-map-label: #173E4F;
+  --at-map-outline: #F7FCFC;
+  --vice-map-canada: #E2DDE9;
+  --vice-map-active: #EFA7C9;
+  --at-shadow: 0 9px 28px rgb(29 64 78 / 9%);
+}
+html[data-field-atlas-theme], .mv-app {
+  --op-ink: var(--at-text);
+  --op-muted: var(--at-muted);
+  --op-line: var(--at-border);
+  --op-background: var(--at-bg);
+  --op-white: var(--at-surface);
+  --op-blue: var(--at-cyan);
+  --vice-bg: var(--at-bg);
+  --vice-surface: var(--at-surface);
+  --vice-field: var(--at-field);
+  --vice-text: var(--at-text);
+  --vice-muted: var(--at-muted);
+  --vice-border: var(--at-border);
+  --vice-cyan: var(--at-cyan);
+  --vice-magenta: var(--at-rose);
+  --vice-action: var(--at-action);
+  --atlas-font: 'DM Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  background: var(--at-bg);
+}
+.mv-app.op-root {
+  display: block;
+  min-height: 100dvh;
+  background: var(--at-bg);
+  color: var(--at-text);
+  font: 500 15px/1.5 var(--atlas-font);
+  font-variant-numeric: tabular-nums lining-nums;
+  -webkit-font-smoothing: antialiased;
+}
+.mv-app * { box-sizing: border-box; }
+.mv-app :is(button, input, select, textarea) { font: inherit; }
+.mv-app button { cursor: pointer; }
+.mv-app button:disabled { cursor: not-allowed; opacity: .55; }
+.mv-app :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--at-cyan);
+  outline-offset: 3px;
+}
+.mv-app input::placeholder, .mv-app textarea::placeholder {
+  color: var(--at-muted);
+  opacity: 1;
+}
+.mv-app select option { color: var(--at-text); background: var(--at-surface); }
+.mv-app :is(input[type='checkbox'], input[type='radio']) {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  accent-color: var(--at-cyan);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mv-app *, .mv-app *::before, .mv-app *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

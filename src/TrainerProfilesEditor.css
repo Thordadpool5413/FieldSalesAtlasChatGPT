@@ -1,0 +1,38 @@
+
+.trainer-dialog-backdrop{position:fixed;inset:0;z-index:110;background:rgba(12,27,47,.6);backdrop-filter:blur(3px);display:flex;justify-content:center;align-items:center;padding:18px}
+.trainer-dialog{width:min(750px,100%);max-height:min(880px,94dvh);display:flex;flex-direction:column;background:#fff;border:1px solid #d5e2f0;border-radius:17px;box-shadow:0 28px 80px rgba(8,24,47,.3);overflow:hidden;color:#23415e}
+.trainer-dialog-head{padding:23px 25px 17px;display:flex;gap:18px;justify-content:space-between;align-items:start}
+.trainer-dialog-head h2{font:800 23px/1.25 Manrope,sans-serif;letter-spacing:-.8px;margin:0 0 6px;color:#1b3857}
+.trainer-dialog-head p{font-size:12.5px;color:#7b91a7;margin:0;line-height:1.6}
+.trainer-dialog-close{border:1px solid #dce6f1;border-radius:9px;background:white;color:#5f7791;min-width:36px;min-height:36px;display:grid;place-items:center}
+.trainer-switch{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 25px 18px;border-bottom:1px solid #e9eef5}
+.trainer-switch button{display:grid;grid-template-columns:11px 1fr;grid-template-rows:auto auto;gap:3px 9px;align-items:center;text-align:left;background:#f7f9fc;padding:12px;border:1px solid #e1e8f0;border-radius:10px}
+.trainer-switch button.active{background:#edf5ff;border-color:#83acee;box-shadow:inset 0 -2px #3c7ce3}
+.trainer-switch-dot{width:10px;height:10px;border-radius:50%;grid-row:span 2}.trainer-switch-0{background:#2769dd}.trainer-switch-1{background:#169c8e}
+.trainer-switch strong{font-size:13px;color:#234c78}.trainer-switch small{font-size:10.5px;color:#7891aa}
+.trainer-dialog-body{padding:20px 25px;overflow-y:auto}
+.trainer-dialog-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.trainer-dialog-fields label,.trainer-airport-search label{display:flex;flex-direction:column;gap:7px;color:#536d87;font-size:12px;font-weight:750}
+.trainer-dialog-fields input,.trainer-dialog-fields select,.trainer-airport-search input{font-size:14px;min-height:44px;border:1px solid #d7e2ef;border-radius:9px;padding:10px 12px;color:#1e4267;background:#fff;width:100%}
+.trainer-dialog-section{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:21px 0 11px;padding-top:19px;border-top:1px solid #edf1f6;color:#6083ad}
+.trainer-dialog-section strong{font-size:14px;color:#244764;display:block}
+.trainer-dialog-section span{font-size:11px;color:#8aa0b6;display:block;margin-top:4px}
+.trainer-airport-list{display:flex;flex-direction:column;gap:7px}
+.trainer-airport-item{display:flex;align-items:center;gap:11px;border:1px solid #e3eaf3;border-radius:9px;padding:9px 10px}
+.trainer-airport-item>div{flex:1;min-width:0}.trainer-airport-item strong{font:800 13px Manrope,sans-serif;color:#2f609e}.trainer-airport-item>div span{display:block;font-size:10.5px;color:#879bb0;margin-top:3px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.trainer-airport-item label{display:flex;align-items:center;gap:6px;font-size:10px;color:#8398ac}
+.trainer-airport-item input{width:65px;padding:7px;border:1px solid #d6e2ef;border-radius:7px;font-size:12px;color:#456687}
+.trainer-airport-item button{border:0;background:transparent;color:#8294a8;padding:6px}
+.trainer-airport-search{margin-top:14px;position:relative}
+.trainer-airport-suggestions{position:absolute;top:100%;left:0;right:0;z-index:10;max-height:215px;overflow:auto;border:1px solid #d6e4f2;background:#fff;border-radius:9px;box-shadow:0 10px 20px #142e4b17}
+.trainer-airport-suggestions button{display:flex;gap:11px;align-items:center;width:100%;padding:10px 12px;text-align:left;border:0;background:transparent;color:#416588}
+.trainer-airport-suggestions button:hover{background:#f3f8ff}.trainer-airport-suggestions button strong{font-size:12px;color:#2d5f9b}.trainer-airport-suggestions button span{flex:1;font-size:11px}
+.trainer-airport-suggestions>span{display:block;padding:13px;color:#899eb3;font-size:11px}
+.trainer-no-airports{padding:12px 14px;border-radius:8px;background:#f5f8fc;color:#7d95ae;font-size:11px;margin:0}
+.trainer-prefer{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:750;color:#506f8d;margin-top:14px}
+.trainer-prefer input{accent-color:#2563d9}
+.trainer-error{display:flex;gap:8px;align-items:center;color:#a35c46;background:#fff4f0;border:1px solid #f4d6cd;padding:10px;border-radius:8px;font-size:12px;margin-top:13px}
+.trainer-saved{display:flex;gap:7px;align-items:center;color:#177766;font-size:12px;margin:12px 0 0}
+.trainer-dialog-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;border-top:1px solid #e8edf4;padding:13px 25px;background:#fbfcfe}
+.trainer-dialog-footer p{flex:1;margin:0;font-size:10.5px;color:#8b9eb2;line-height:1.55}
+@media(max-width:650px){.trainer-dialog-backdrop{padding:0;align-items:stretch}.trainer-dialog{width:100%;height:100%;max-height:none;border-radius:0}.trainer-dialog-head{padding:19px 16px}.trainer-dialog-head h2{font-size:20px}.trainer-switch{padding:0 16px 13px}.trainer-dialog-body{padding:16px}.trainer-dialog-footer{padding:13px 16px}.trainer-dialog-fields{grid-template-columns:1fr;gap:12px}.trainer-dialog-fields input,.trainer-dialog-fields select,.trainer-airport-search input{font-size:16px}.trainer-dialog-footer p{display:none}.trainer-switch strong{font-size:12px}}

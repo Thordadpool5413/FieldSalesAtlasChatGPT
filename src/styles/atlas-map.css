@@ -1,0 +1,218 @@
+/* Atlas page, geography, selection panel and field-day guidance. */
+.mv-app .mv-map-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 308px;
+  grid-template-areas: 'heading heading' 'atlas planner' 'regions regions';
+  align-items: start;
+  gap: 18px;
+  min-width: 0;
+  padding: 26px clamp(18px, 2.6vw, 36px) 32px;
+  background: var(--at-bg);
+}
+.mv-app .mv-map-page.has-active-region:not(.atlas-focused) {
+  grid-template-columns: minmax(0, 1fr) 308px;
+  grid-template-areas: 'heading heading' 'atlas planner' 'regions regions';
+}
+.mv-app .has-active-region:not(.atlas-focused) .atlas-journey { display: none; }
+.mv-app .fsa-home-head { grid-area: heading; display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 68px; padding: 0 0 4px; }
+.mv-app .fsa-home-title h1 { margin: 0 0 6px; color: var(--at-text); font: 850 clamp(26px, 2.6vw, 34px)/1.13 var(--atlas-font); letter-spacing: -1px; }
+.mv-app .fsa-home-title p { margin: 0; color: var(--at-muted); font-size: 14px; }
+.mv-app .fsa-head-actions { display: flex; align-items: center; gap: 10px; }
+.mv-app .fsa-head-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 10px 15px; border: 1px solid var(--at-action); border-radius: 10px; background: var(--at-action); color: var(--at-action-fg); font-size: 14px; font-weight: 850; }
+.mv-app .atlas-mission-layout { grid-area: atlas; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--at-border); border-radius: 16px; background: var(--at-surface); box-shadow: var(--at-shadow); }
+.mv-app .fsa-map-heading { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 18px; border-bottom: 1px solid var(--at-border-soft); }
+.mv-app .fsa-map-heading-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.mv-app .fsa-map-heading-text h2 { margin: 0; color: var(--at-text); font-size: 16px; font-weight: 850; letter-spacing: -.3px; }
+.mv-app .fsa-map-heading-text p { margin: 4px 0 0; color: var(--at-muted); font-size: 12px; }
+.mv-app .atlas-field.atlas-destination { min-width: 0; width: 100%; }
+.mv-app .atlas-destination > label { display: block; margin-bottom: 7px; color: var(--at-text); font-size: 13px; font-weight: 750; }
+.mv-app .atlas-search { position: relative; display: flex; align-items: center; gap: 10px; min-height: 48px; width: 100%; padding: 0 12px; border: 1px solid var(--at-border); border-radius: 11px; background: var(--at-field); color: var(--at-cyan); }
+.mv-app .atlas-search:focus-within { border-color: var(--at-cyan); box-shadow: 0 0 0 3px var(--at-aqua-soft); }
+.mv-app .atlas-search input { width: 100%; min-width: 0; flex: 1; height: 46px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--at-text); font-size: 15px; font-weight: 600; }
+.mv-app .atlas-clear { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border: 0; border-radius: 8px; background: var(--at-raised); color: var(--at-text); }
+.mv-app .mv-search-results { position: absolute; z-index: 70; top: calc(100% + 8px); left: 0; right: 0; display: flex; flex-direction: column; max-height: 330px; overflow-y: auto; padding: 6px; border: 1px solid var(--at-border); border-radius: 12px; background: var(--at-surface); box-shadow: 0 18px 40px rgb(0 8 25 / 25%); }
+.mv-app .mv-search-results > button { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px; border: 0; border-radius: 8px; background: transparent; color: var(--at-text); text-align: left; }
+.mv-app .mv-search-results > button span { flex: 1; min-width: 0; }
+.mv-app .mv-search-results strong { display: block; font-size: 14px; }
+.mv-app .mv-search-results small { display: block; margin-top: 3px; color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-search-results > button:is(:hover, .is-highlighted) { background: var(--at-aqua-soft); }
+.mv-app .mv-search-results p { padding: 12px; color: var(--at-muted); font-size: 14px; }
+.mv-app .atlas-utility { display: flex; align-items: center; justify-content: flex-end; margin: 0; padding: 0; border: 0; }
+.mv-app .atlas-context { display: none; }
+.mv-app .atlas-utility-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mv-app .atlas-utility-actions > select { min-height: 44px; max-width: 185px; padding: 9px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-field); color: var(--at-text); font-size: 12px; font-weight: 700; }
+.mv-app .atlas-utility-actions .atlas-mobile-region { display: block; }
+.mv-app .atlas-utility-actions > select[aria-label='Manager pin filter'] { display: none; }
+.mv-app .mv-layers-holder { position: relative; }
+.mv-app .mv-layers-button, .mv-app .atlas-focus { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 9px 10px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-field); color: var(--at-text); font-size: 12px; font-weight: 750; }
+.mv-app .mv-layers-popover { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; display: flex; flex-direction: column; gap: 12px; width: min(300px, 86vw); padding: 16px; border: 1px solid var(--at-border); border-radius: 12px; background: var(--at-surface); color: var(--at-text); box-shadow: var(--at-shadow); }
+.mv-app .mv-layers-popover > strong { font-size: 15px; }
+.mv-app .mv-layers-popover label { display: flex; align-items: center; gap: 9px; min-height: 32px; font-size: 13px; }
+.mv-app .mv-layer-subsection { display: flex; flex-direction: column; gap: 6px; }
+.mv-app .mv-layer-subsection > span { color: var(--at-muted); font-size: 12px; font-weight: 750; }
+.mv-app .mv-layers-popover :is(select, button) { min-height: 44px; padding: 9px; border: 1px solid var(--at-border); border-radius: 8px; background: var(--at-field); color: var(--at-text); font-size: 13px; }
+.mv-app .mv-map-body { position: relative; width: 100%; min-width: 0; }
+.mv-app .mv-map-body.with-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 350px); gap: 12px; align-items: stretch; padding: 12px; }
+.mv-app .mv-map-frame { position: relative; width: 100%; min-width: 0; height: clamp(360px, calc(100dvh - 390px), 540px); overflow: hidden; border-radius: 0 0 16px 16px; background: var(--at-map-water); }
+.mv-app .mv-map-body.with-details .mv-map-frame { border-radius: 11px; }
+.mv-app .mv-map-svg { display: block; width: 100%; height: 100%; user-select: none; }
+.mv-app .mv-water-start { stop-color: var(--at-map-water); }
+.mv-app .mv-water-middle { stop-color: var(--at-map-water); }
+.mv-app .mv-water-end { stop-color: color-mix(in srgb, var(--at-map-water) 72%, var(--at-rose)); }
+.mv-app .mv-halo-inner { stop-color: color-mix(in srgb, var(--at-rose) 15%, transparent); }
+.mv-app .mv-halo-outer { stop-color: transparent; }
+.mv-app .mv-map-halo { opacity: .5; pointer-events: none; }
+.mv-app .fsa-sunset { opacity: .14; }
+.mv-app .mv-map-grid-overlay { opacity: .07; pointer-events: none; }
+.mv-app .mv-map-grid-path { stroke: var(--at-cyan); opacity: .5; }
+.mv-app .mv-map-sunset { opacity: .1; stroke: var(--at-rose); }
+.mv-app .mv-country-base { fill: var(--at-map-land); stroke: var(--at-map-stroke); stroke-opacity: .35; }
+.mv-app .mv-country-canada, .mv-app .mv-region-canada { fill: var(--vice-map-canada); }
+.mv-app .mv-region { cursor: pointer; transition: fill .15s ease; }
+.mv-app .mv-region-us { fill: var(--at-map-land); stroke: var(--at-map-stroke); stroke-opacity: .85; stroke-width: 1.1; }
+.mv-app .mv-region-us.assigned { fill: var(--at-map-assigned); }
+.mv-app .mv-region-canada { stroke: var(--at-map-stroke); stroke-opacity: .45; }
+.mv-app .mv-region:is(.active, :hover, :focus-visible) { fill: var(--vice-map-active); stroke: var(--at-rose); stroke-width: 2.5; stroke-opacity: 1; }
+.mv-app .mv-state-label { fill: var(--at-map-label); stroke: var(--at-map-outline); stroke-width: 2.7px; paint-order: stroke; font: 800 12px var(--atlas-font); pointer-events: none; }
+.mv-app .mv-airport-mark, .mv-app .mv-manager-marker { cursor: pointer; }
+.mv-app .mv-airport-bubble { fill: var(--at-field); stroke: var(--at-cyan); stroke-width: 1.6; }
+.mv-app .mv-airport-mark.primary .mv-airport-bubble { fill: var(--at-cyan); stroke: var(--at-surface); }
+.mv-app .mv-airport-glyph { fill: var(--at-bg); pointer-events: none; }
+.mv-app .mv-airport-code, .mv-app .mv-arc-label { fill: var(--at-map-label); stroke: var(--at-map-outline); stroke-width: 3px; paint-order: stroke; font-weight: 800; }
+.mv-app .mv-travel-arc { stroke: var(--at-rose); stroke-width: 2; stroke-dasharray: 6 7; fill: none; }
+.mv-app .mv-arc-node { stroke: var(--at-surface); stroke-width: 2; }
+.mv-app .mv-arc-origin { fill: var(--at-cyan); }
+.mv-app .mv-arc-destination { fill: var(--at-rose); }
+.mv-app .mv-map-hint { display: none; }
+.mv-app .mv-map-legend { position: absolute; z-index: 4; left: 12px; bottom: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; max-width: calc(100% - 160px); padding: 9px 12px; border: 1px solid var(--at-border); border-radius: 10px; background: var(--at-surface); color: var(--at-text); }
+.mv-app .mv-map-legend > div { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; }
+.mv-app .mv-pin-dot { display: inline-block; flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; }
+.mv-app .mv-pin-0 { background: var(--at-cyan); }
+.mv-app .mv-pin-1 { background: var(--at-rose); }
+.mv-app .mv-plane-dot { color: var(--at-cyan); }
+.mv-app .mv-approx-pin-swatch { width: 10px; height: 10px; border: 2px dashed var(--at-muted); border-radius: 50%; }
+.mv-app .mv-map-tools { position: absolute; z-index: 4; right: 12px; bottom: 12px; display: flex; gap: 2px; padding: 3px; border: 1px solid var(--at-border); border-radius: 10px; background: var(--at-surface); }
+.mv-app .mv-map-tools button { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 0; border-radius: 7px; background: transparent; color: var(--at-text); font-size: 20px; font-weight: 850; }
+.mv-app .mv-map-tools button:hover { background: var(--at-raised); }
+.mv-app .mv-insets { position: absolute; left: 12px; bottom: 80px; display: flex; gap: 6px; z-index: 4; }
+.mv-app .mv-insets button { min-height: 44px; padding: 8px 10px; border: 1px solid var(--at-border); border-radius: 8px; background: var(--at-surface); color: var(--at-text); font-size: 12px; }
+.mv-app .mv-map-credit { position: absolute; right: 12px; bottom: 76px; padding: 4px 7px; border-radius: 5px; background: var(--at-surface); color: var(--at-muted); font-size: 10px; }
+.mv-app .mv-map-loading { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; height: 100%; padding: 24px; text-align: center; color: var(--at-text); }
+.mv-app .mv-map-loading span { max-width: 300px; color: var(--at-muted); font-size: 13px; }
+.mv-app .mv-map-toast, .mv-app .mv-map-warning, .mv-app .mv-route-guide-note { position: absolute; z-index: 8; top: 12px; left: 12px; display: flex; gap: 8px; align-items: center; max-width: calc(100% - 24px); padding: 10px 12px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-surface); color: var(--at-text); font-size: 12px; }
+.mv-app .mv-map-toast button { min-width: 32px; min-height: 32px; border: 0; background: transparent; color: var(--at-text); }
+.mv-app .mv-route-guide-note small { display: block; color: var(--at-muted); }
+.mv-app .atlas-journey { grid-area: planner; display: flex; flex-direction: column; gap: 20px; min-width: 0; padding: 22px; border: 1px solid var(--at-border); border-top: 3px solid var(--at-rose); border-radius: 16px; background: var(--at-surface); box-shadow: var(--at-shadow); }
+.mv-app .atlas-journey > * { min-width: 0; width: 100%; }
+.mv-app .atlas-origin { display: flex; flex-direction: column; gap: 9px; padding-top: 18px; border-top: 1px solid var(--at-border-soft); }
+.mv-app .atlas-origin > label { color: var(--at-muted); font-size: 12px; font-weight: 750; }
+.mv-app .atlas-origin > label span { font-weight: 500; }
+.mv-app .atlas-origin select, .mv-app .atlas-choose-home { width: 100%; min-height: 46px; padding: 10px 11px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-field); color: var(--at-text); font-size: 13px; font-weight: 700; }
+.mv-app .atlas-choose-home { display: flex; align-items: center; justify-content: center; gap: 7px; }
+.mv-app .next-move-label { margin: 0 0 14px; color: var(--at-cyan); font-size: 12px; font-weight: 800; }
+.mv-app .next-move h2 { margin: 0 0 12px; color: var(--at-text); font: 850 24px/1.16 var(--atlas-font); letter-spacing: -.8px; }
+.mv-app .next-move > p:not(.next-move-label):not(.next-move-note) { margin: 0 0 18px; color: var(--at-muted); font-size: 14px; line-height: 1.6; }
+.mv-app .next-move-symbol { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 18px; border-radius: 12px; background: var(--at-rose-soft); color: var(--at-rose); }
+.mv-app .next-move-location { display: flex; align-items: center; gap: 6px; }
+.mv-app .next-move-reason { display: flex; align-items: center; gap: 9px; margin: 17px 0 20px; padding: 12px; border: 1px solid var(--at-border-soft); border-radius: 10px; background: var(--at-raised); color: var(--at-text); font-size: 13px; font-weight: 700; }
+.mv-app .next-move-reason svg { color: var(--at-cyan); }
+.mv-app .atlas-primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; padding: 11px 13px; border: 1px solid var(--at-action); border-radius: 10px; background: var(--at-action); color: var(--at-action-fg); font-size: 14px; font-weight: 850; }
+.mv-app .atlas-primary:hover { background: var(--at-action-hover); }
+.mv-app .atlas-text-action { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 44px; margin-top: 8px; padding: 9px; border: 0; background: transparent; color: var(--at-cyan); font-size: 13px; font-weight: 750; }
+.mv-app .next-move-note { margin: 13px 0 0; color: var(--at-muted); font-size: 12px; line-height: 1.6; }
+.mv-app .mv-inspector { grid-area: planner; align-self: stretch; display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; max-height: 590px; overflow: hidden; border: 1px solid var(--at-border); border-radius: 12px; background: var(--at-surface); color: var(--at-text); }
+.mv-app .mv-inspector-art { position: relative; flex: 0 0 126px; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; border-bottom: 1px solid var(--at-border-soft); background: var(--at-raised); }
+.mv-app .mv-inspector-kicker { display: flex; align-items: center; gap: 7px; color: var(--at-cyan); font-size: 11px; font-weight: 800; }
+.mv-app .mv-inspector-close { position: absolute; top: 9px; right: 9px; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-surface); color: var(--at-text); }
+.mv-app .mv-inspector-cover { display: flex; flex-direction: column; gap: 7px; }
+.mv-app .mv-inspector-cover strong { font: 850 25px/1.1 var(--atlas-font); letter-spacing: -.7px; }
+.mv-app .mv-inspector-cover span { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-inspector-cover i { width: 3px; height: 3px; border-radius: 50%; background: var(--at-rose); }
+.mv-app .mv-inspector-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 0 0 54px; padding: 5px; border-bottom: 1px solid var(--at-border-soft); }
+.mv-app .mv-inspector-tabs button { min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--at-muted); font-size: 13px; font-weight: 750; }
+.mv-app .mv-inspector-tabs button.active { background: var(--at-aqua-soft); color: var(--at-text); box-shadow: inset 0 -2px var(--at-cyan); }
+.mv-app .mv-inspector-main { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; scrollbar-width: thin; }
+.mv-app .mv-inspector-search { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 9px 10px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-field); color: var(--at-cyan); }
+.mv-app .mv-inspector-search input { min-width: 0; width: 100%; border: 0; outline: none; background: transparent; color: var(--at-text); font-size: 13px; }
+.mv-app .mv-manager-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) 18px; gap: 8px; min-height: 112px; width: 100%; margin: 9px 0; padding: 13px; border: 1px solid var(--at-border-soft); border-radius: 11px; background: var(--at-field); color: var(--at-text); text-align: left; }
+.mv-app .mv-manager-row:is(:hover, .active) { border-color: var(--at-cyan); background: var(--at-aqua-soft); }
+.mv-app .mv-manager-circle { width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; }
+.mv-app .mv-manager-name strong { display: block; font-size: 14px; }
+.mv-app .mv-manager-name small { display: block; margin-top: 4px; color: var(--at-muted); font-size: 12px; line-height: 1.45; }
+.mv-app .mv-manager-name .mv-location-caveat { color: var(--at-rose); }
+.mv-app .mv-manager-chevron { color: var(--at-cyan); }
+.mv-app .mv-manager-timeline { grid-column: 2/4; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 8px; border-top: 1px solid var(--at-border-soft); }
+.mv-app .mv-manager-dates { display: flex; flex-direction: column; gap: 4px; }
+.mv-app .mv-manager-dates small { font-size: 10px; font-weight: 800; color: var(--at-muted); }
+.mv-app .mv-manager-dates strong { font-size: 12px; }
+.mv-app .mv-focus-summary { padding: 14px; border: 1px solid var(--at-border); border-radius: 10px; background: var(--at-raised); }
+.mv-app .mv-focus-summary strong { color: var(--at-text); font-size: 14px; }
+.mv-app .mv-focus-summary span { display: block; color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-focus-summary button { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 0; border: 0; background: transparent; color: var(--at-cyan); font-size: 13px; font-weight: 750; }
+.mv-app .mv-inspector-empty { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 24px 10px; color: var(--at-muted); text-align: center; }
+.mv-app .mv-inspector-empty strong { color: var(--at-text); font-size: 15px; }
+.mv-app .mv-inspector-empty p { margin: 0; font-size: 13px; line-height: 1.6; }
+.mv-app .mv-inspector-empty button, .mv-app .mv-coverage-add { display: flex; align-items: center; gap: 7px; min-height: 44px; padding: 9px 12px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-aqua-soft); color: var(--at-cyan); font-size: 13px; font-weight: 750; }
+.mv-app .fsa-airport-disclaimer { margin: 3px 0 14px; color: var(--at-muted); font-size: 12px; line-height: 1.6; }
+.mv-app .mv-airport-list .fsa-airport-choice { display: grid; grid-template-columns: 53px minmax(0, 1fr) 20px; align-items: center; gap: 9px; min-height: 80px; width: 100%; margin: 8px 0; padding: 11px; border: 1px solid var(--at-border-soft); border-radius: 10px; background: var(--at-field); color: var(--at-text); text-align: left; }
+.mv-app .mv-airport-list .fsa-airport-choice:hover { border-color: var(--at-cyan); background: var(--at-aqua-soft); }
+.mv-app .fsa-airport-code { display: grid; place-items: center; min-height: 48px; border-radius: 8px; background: var(--at-aqua-soft); color: var(--at-cyan); font-size: 15px; font-weight: 900; }
+.mv-app .fsa-airport-description { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mv-app .fsa-airport-description strong { font-size: 13px; line-height: 1.35; }
+.mv-app .fsa-airport-description small { font-size: 11px; color: var(--at-muted); }
+.mv-app .fsa-airport-arrow { color: var(--at-rose); }
+.mv-app .mv-coverage-row { display: flex; align-items: center; gap: 10px; min-height: 49px; border-bottom: 1px solid var(--at-border-soft); font-size: 13px; }
+.mv-app .mv-coverage-row > span:nth-child(2) { flex: 1; }
+.mv-app .mv-coverage-add { margin-top: 13px; }
+.mv-app .fsa-manager-next-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.mv-app .fsa-manager-next-actions button { display:inline-flex; align-items:center; gap:7px; min-height:44px; padding:8px 10px; border:1px solid var(--at-border); border-radius:9px; background:var(--at-surface); color:var(--at-text); font-size:12px; font-weight:800; }
+.mv-app .fsa-manager-next-actions button:last-child { background:var(--at-action); color:var(--at-action-fg); border-color:var(--at-action); }
+.mv-app .mv-inspector-trip { display: flex; align-items: center; justify-content: space-between; gap: 9px; flex: 0 0 auto; min-height: 49px; margin: 10px; padding: 11px 12px; border: 0; border-radius: 10px; background: var(--at-action); color: var(--at-action-fg); font-size: 14px; font-weight: 850; }
+.mv-app .mv-all-regions { grid-area: regions; padding: 10px 14px; border-top: 1px solid var(--at-border-soft); }
+.mv-app .mv-all-regions summary { display: flex; align-items: center; gap: 9px; min-height: 44px; color: var(--at-muted); font-size: 13px; cursor: pointer; }
+.mv-app .mv-all-regions > div { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 0; }
+.mv-app .mv-all-regions button { min-height: 44px; min-width: 44px; padding: 9px; border: 1px solid var(--at-border); border-radius: 8px; background: var(--at-field); color: var(--at-text); font-size: 13px; font-weight: 750; }
+.mv-app .mv-all-regions button.selected { border-color: var(--at-cyan); background: var(--at-aqua-soft); }
+.mv-app .mv-map-page.atlas-focused { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'atlas' 'regions'; }
+.mv-app .atlas-focused .fsa-home-head, .mv-app .atlas-focused .atlas-journey, .mv-app .atlas-focused > .mv-inspector { display: none; }
+.mv-app .atlas-focused .mv-map-frame { height: calc(100dvh - 260px); min-height: 430px; }
+@media (max-width: 1190px) {
+  .mv-app .mv-map-page, .mv-app .mv-map-page.has-active-region:not(.atlas-focused) { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'heading' 'atlas' 'planner' 'regions'; padding: 22px; }
+  .mv-app .atlas-journey { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 280px); align-items: start; }
+  .mv-app .atlas-origin { padding: 0 0 0 20px; border-top: 0; border-left: 1px solid var(--at-border-soft); }
+  .mv-app .mv-map-frame { height: 470px; }
+}
+@media (max-width: 900px) {
+  .mv-app .mv-map-page { padding: 22px 16px calc(95px + env(safe-area-inset-bottom)); }
+  .mv-app .fsa-home-head { align-items: flex-start; }
+  .mv-app .fsa-home-title h1 { font-size: 28px; }
+  .mv-app .fsa-home-title p { font-size: 13px; }
+  .mv-app .mv-map-body { display: block; }
+  .mv-app .mv-map-frame { height: clamp(340px, 64vw, 470px); }
+  .mv-app .mv-inspector { height: auto; max-height: none; }
+  .mv-app .mv-inspector-main { max-height: 380px; }
+}
+@media (max-width: 600px) {
+  .mv-app .mv-map-page { gap: 14px; padding: 18px 12px calc(95px + env(safe-area-inset-bottom)); }
+  .mv-app .fsa-home-head { gap: 12px; min-height: 60px; }
+  .mv-app .fsa-home-title h1 { font-size: 25px; }
+  .mv-app .fsa-home-title p { max-width: 220px; font-size: 12px; line-height: 1.5; }
+  .mv-app .fsa-head-actions button { padding: 10px; font-size: 12px; white-space: nowrap; }
+  .mv-app .fsa-head-actions button svg:last-child { display: none; }
+  .mv-app .fsa-map-heading { padding: 14px; gap: 12px; }
+  .mv-app .fsa-map-heading-top { flex-wrap: wrap; }
+  .mv-app .atlas-utility { width: 100%; justify-content: flex-start; }
+  .mv-app .atlas-utility-actions { width: 100%; gap: 6px; }
+  .mv-app .atlas-utility-actions .atlas-mobile-region { flex: 1; min-width: 0; max-width: none; font-size: 12px; }
+  .mv-app .atlas-search input { font-size: 16px; }
+  .mv-app .mv-map-frame { height: 340px; }
+  .mv-app .mv-map-tools { right: 8px; bottom: 8px; flex-direction: column; padding: 2px; }
+  .mv-app .mv-map-tools button { min-width: 44px; min-height: 44px; }
+  .mv-app .mv-map-legend { left: 8px; bottom: 8px; gap: 6px; max-width: calc(100% - 68px); padding: 8px; }
+  .mv-app .mv-map-legend > div { font-size: 10px; }
+  .mv-app .mv-map-credit { display: none; }
+  .mv-app .mv-insets { bottom: 64px; left: 8px; }
+  .mv-app .atlas-journey { display: flex; align-items: stretch; padding: 20px; }
+  .mv-app .atlas-origin { padding: 17px 0 0; border-left: 0; border-top: 1px solid var(--at-border-soft); }
+  .mv-app .next-move h2 { font-size: 24px; }
+}

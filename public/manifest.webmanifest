@@ -1,0 +1,92 @@
+{
+  "name": "Field Sales Atlas",
+  "short_name": "Field Atlas",
+  "description": "Interactive territory Atlas, airport intelligence, sales manager coverage, two-trainer travel planning and shared field coaching.",
+  "start_url": "/?page=home",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#071525",
+  "theme_color": "#071525",
+  "icons": [
+    {
+      "src": "/resources/app-icon.png",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/resources/apple-touch-icon.png",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/resources/field-sales-atlas-logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "2048x2048",
+      "purpose": "any"
+    }
+  ],
+  "id": "/",
+  "lang": "en-US",
+  "categories": [
+    "business",
+    "productivity",
+    "travel"
+  ],
+  "display_override": [
+    "standalone"
+  ],
+  "shortcuts": [
+    {
+      "name": "Territory Atlas",
+      "short_name": "Atlas",
+      "description": "Interactive U.S. and Canadian geography, team territories and airport intelligence",
+      "url": "/?page=home",
+      "icons": [
+        {
+          "src": "/resources/field-sales-atlas-logo.jpg",
+          "type": "image/jpeg",
+          "sizes": "2048x2048"
+        }
+      ]
+    },
+    {
+      "name": "Travel planning",
+      "short_name": "Travel",
+      "description": "Plan field visits and compare airport routes",
+      "url": "/?page=plan&tool=travel",
+      "icons": [
+        {
+          "src": "/resources/field-sales-atlas-logo.jpg",
+          "type": "image/jpeg",
+          "sizes": "2048x2048"
+        }
+      ]
+    },
+    {
+      "name": "Flight DNA",
+      "short_name": "Flights",
+      "description": "Public aviation research, historical reliability and airport conditions",
+      "url": "/?page=plan&tool=radar",
+      "icons": [
+        {
+          "src": "/resources/field-sales-atlas-logo.jpg",
+          "type": "image/jpeg",
+          "sizes": "2048x2048"
+        }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "description": "Shared trainer calendar and field commitments",
+      "url": "/?page=calendar",
+      "icons": [
+        {
+          "src": "/resources/field-sales-atlas-logo.jpg",
+          "type": "image/jpeg",
+          "sizes": "2048x2048"
+        }
+      ]
+    }
+  ]
+}

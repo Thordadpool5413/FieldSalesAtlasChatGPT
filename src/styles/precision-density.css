@@ -1,0 +1,1425 @@
+/* FIELD SALES ATLAS / PRECISION DENSITY
+ * Single owner of layout density after historical brand, PWA and feature layers.
+ * Preserve Miami Vice color, logo and map geometry. Do not globally scale fonts.
+ */
+.mv-app.atlas-design-v3.atlas-product-v4 {
+  --precision-corner: 11px;
+  --precision-gap: 11px;
+}
+
+/* Critical map fix: all direct children have a real named grid area.
+ * Previously a heading and owner legend flowed into implicit, narrow cells. */
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2,
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2:not(.has-active-region),
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'heading'
+    'atlas'
+    'legend'
+    'telemetry'
+    'regions';
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 12px clamp(12px, 1.6vw, 25px) 25px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .vice-atlas-intro {
+  grid-area: heading;
+  min-width: 0;
+  min-height: 83px;
+  padding: 12px 19px;
+  margin: 0;
+  border-radius: var(--precision-corner);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .vice-atlas-intro h1 {
+  font-size: clamp(21px, 2.2vw, 29px);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .vice-atlas-intro p {
+  font-size: 12px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-mission-layout {
+  grid-area: atlas;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--precision-corner);
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend {
+  grid-area: legend;
+  position: relative;
+  min-width: 0;
+  padding: 7px 12px;
+  gap: 8px 12px;
+  border: 1px solid var(--at-border-soft);
+  border-radius: 9px;
+  font-size: 12px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend span {
+  font-size: 11px;
+  line-height: 1.4;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-telemetry-strip {
+  grid-area: telemetry;
+  min-width: 0;
+  min-height: 40px;
+  padding: 5px 8px;
+  border: 1px solid var(--at-border-soft);
+  border-radius: 9px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-all-regions {
+  grid-area: regions;
+  min-width: 0;
+  width: 100%;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.atlas-focused {
+  grid-template-areas: 'atlas' 'legend' 'regions';
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .vice-atlas-intro,
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .atlas-telemetry-strip {
+  display: none;
+}
+
+/* Theme-neutral calendar repair. Never use white cells and white numbers
+ * together merely because the site is in night mode. */
+.mv-app.atlas-product-v4 .op-calendar-grid {
+  background: var(--at-surface);
+  border: 1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-weekday {
+  background: var(--at-raised);
+  color: var(--at-text);
+  border-right: 1px solid var(--at-border-soft);
+  border-bottom: 1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day {
+  background: var(--at-field);
+  color: var(--at-text);
+  border-right: 1px solid var(--at-border-soft);
+  border-bottom: 1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day.other {
+  background: var(--at-bg);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day .op-day-number {
+  color: var(--at-text);
+  background: transparent;
+  font-weight: 790;
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day.other .op-day-number {
+  color: var(--at-muted);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day.today .op-day-number {
+  color: var(--at-text);
+  background: var(--at-rose-soft);
+  border: 1px solid var(--at-rose);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day.selected {
+  background: var(--at-aqua-soft);
+  box-shadow: inset 0 0 0 2px var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day.selected .op-day-number {
+  color: var(--at-text);
+}
+.mv-app.atlas-product-v4 .op-calendar-grid .op-day :is(.atlas-day-unavailable-label,.op-calendar-event) {
+  max-width: 100%;
+}
+.mv-app.atlas-product-v4 .op-calendar-foot {
+  padding: 9px 14px;
+  gap: 12px;
+  color: var(--at-muted);
+}
+.mv-app.atlas-product-v4 .op-calendar-head {
+  padding: 11px 14px;
+  color: var(--at-text);
+}
+
+/* Larger tappable dates remain a mobile-only concern. */
+@media (min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-structure {
+    grid-template-columns: 178px minmax(0, 1fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-sidebar {
+    padding: 9px 8px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-sidebar-brand {
+    min-height: 0;
+    margin: 0 0 8px;
+    padding: 0 0 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-sidebar-brand .official-atlas-brand {
+    width: 79px;
+    height: 75px;
+    flex: 0 0 79px;
+    border-radius: 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-side-nav {
+    gap: 2px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-side-link {
+    min-height: 39px;
+    padding: 8px 9px;
+    gap: 9px;
+    font-size: 12.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-side-link svg {
+    width: 17px;
+    height: 17px;
+    flex-basis: 17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-sidebar-label {
+    font-size: 10px;
+    margin: 5px 7px 6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-sidebar-label-more {
+    margin-top: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-more-tools summary {
+    min-height: 39px;
+    padding: 8px;
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-more-tools nav button {
+    min-height: 36px;
+    padding: 7px 8px;
+    font-size: 11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-sidebar-bottom {
+    padding: 8px 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header {
+    min-height: 54px;
+    height: 54px;
+    padding: 7px 17px;
+    gap: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-header .fsa-crumb strong {
+    font-size: 14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-trainer-switch {
+    min-height: 38px;
+    padding: 5px 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-appearance-control button {
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-content-inner.op-content {
+    padding: 0 clamp(13px, 1.5vw, 23px) 28px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub .atlas-hub-banner {
+    min-height: 51px;
+    padding: 9px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub .fsa-hub-guide {
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub .fsa-hub-tabs {
+    padding: 6px 8px;
+    gap: 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs > button {
+    min-height: 41px;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs > button svg {
+    width: 16px;
+    height: 16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs strong {
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub-tabs small {
+    display: none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-head,
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-editorial-head {
+    padding-top: 14px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-head,.atlas-editorial-head) h1 {
+    font-size: clamp(24px, 2.4vw, 31px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-card-header,.op-card-body) h2 {
+    font-size: 16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-card-header {
+    padding: 13px 14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-card-body {
+    padding: 14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-geo-layout {
+    gap: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day {
+    min-height: 73px;
+    padding: 7px 7px 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day-number {
+    min-height: 27px;
+    min-width: 27px;
+    font-size: 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+    height: clamp(385px, 46cqw, 520px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2.atlas-focused .mv-map-frame {
+    height: max(480px, calc(100dvh - 155px));
+  }
+
+  /* Flight Guardian: keep the actual data entry, reduce the giant presentation. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page {
+    gap: 11px;
+    padding-bottom: 19px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero {
+    min-height: 170px;
+    padding: 20px 27px;
+    border-radius: 0 0 13px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero h1 {
+    font-size: clamp(27px, 2.65vw, 39px);
+    margin: 8px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero p {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero-tags {
+    gap: 7px;
+    margin-top: 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero-tags span {
+    font-size: 10px;
+    padding: 6px 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-layout {
+    grid-template-columns: minmax(0, 1.46fr) minmax(275px, .78fr);
+    gap: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-panel {
+    padding: 15px;
+    border-radius: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-side {
+    gap: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-number {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-step {
+    gap: 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-panel h2 {
+    font-size: 19px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-step p {
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-modes {
+    margin: 13px 0 8px;
+    padding: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-modes button {
+    min-height: 37px;
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-import-zone {
+    gap: 7px;
+    margin: 8px 0 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-import-zone textarea {
+    min-height: 91px;
+    padding: 10px 11px;
+    font-size: 12.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-primary {
+    min-height: 41px;
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-file-select {
+    min-height: 79px;
+    padding: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-privacy {
+    margin: 10px 0 12px;
+    padding: 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-review-top {
+    margin: 11px 0 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input {
+    min-height: 40px;
+    padding: 7px 9px;
+    font-size: 13.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input[type='date'],
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input[type='time'] {
+    font-size: 13.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-leg {
+    padding: 11px;
+    gap: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-legs {
+    gap: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-leg-head strong {
+    font-size: 14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-tertiary,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-add-leg,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-impact-actions button,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-leg-research {
+    min-height: 41px;
+  }
+
+  /* Security: compact workbench, not billboard-height photographic header. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-root {
+    padding: 15px;
+    gap: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-root .sh-head {
+    min-height: 90px;
+    padding: 14px 17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-root .sh-head h2 {
+    font-size: 20px;
+    margin: 4px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-root .sh-head p {
+    font-size: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-query input,
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-query select {
+    min-height: 41px;
+    padding: 7px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-run {
+    min-height: 41px;
+    padding: 8px 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-memory {
+    padding: 12px;
+    gap: 9px;
+  }
+
+  /* Compact common research hero, but never collapse touch modes. */
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero {
+    min-height: 220px;
+    padding: 23px 27px 47px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-hero.fs-ref-hero h1 {
+    font-size: clamp(34px, 3.4vw, 48px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-builder.fs-ref-route {
+    margin-top: -30px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-visual-guide {
+    min-height: 138px;
+  }
+}
+
+@media (max-width: 900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2:not(.has-active-region),
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-map-page.atlas-v2.has-active-region:not(.atlas-focused) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'heading' 'atlas' 'legend' 'telemetry' 'regions';
+    gap: 9px;
+    padding: 10px 9px calc(96px + env(safe-area-inset-bottom));
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+    height: clamp(335px, 57svh, 470px) !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .vice-atlas-intro {
+    min-height: 80px;
+    padding: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .vice-atlas-intro h1 {
+    font-size: 22px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-ownership-legend {
+    padding: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-calendar-grid .op-day {
+    min-height: 63px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-panel {
+    border-radius: 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero {
+    border-radius: 0 0 13px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input[type='date'],
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input[type='time'] {
+    font-size: 16px;
+  }
+}
+@media (max-width: 560px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero {
+    min-height: 220px;
+    padding: 21px 17px 27px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-hero h1 {
+    font-size: 31px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-modes button {
+    min-height: 45px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-primary,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-tertiary,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-leg-research {
+    min-height: 46px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-fields input {
+    min-height: 46px;
+    font-size: 16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-root .sh-head {
+    min-height: 102px;
+  }
+}
+
+
+/* Precision density v2: remove legacy billboard sizing and give functional
+   workspace components precedence over scenic background framing. */
+@media (min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-editorial-head,
+  .mv-app.atlas-design-v3.atlas-product-v4 .travel-command-head {
+    min-height: 94px;
+    padding: 15px 19px;
+    margin: 10px 0 11px;
+    border-radius: 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-editorial-head h1,
+  .mv-app.atlas-design-v3.atlas-product-v4 .travel-command-head h1 {
+    font-size: clamp(23px, 2.3vw, 30px);
+    margin: 4px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-hub {
+    padding: 12px clamp(13px, 1.5vw, 21px) 25px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub.fs-flight-focused {
+    padding: 0 !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(.op-card,.travel-panel) {
+    border-radius: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-toolbar {
+    gap: 9px;
+    margin-bottom: 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .op-geo-layout {
+    grid-template-columns: minmax(0, 1.62fr) minmax(260px, .74fr);
+    gap: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-brief {
+    min-height: 71px;
+    padding: 9px 12px;
+    border-radius: 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-inner {
+    min-height: 164px;
+    border-radius: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-inner {
+    padding: 11px 10px;
+    gap: 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card strong {
+    font-size: clamp(13px, 1.04vw, 15px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card p {
+    font-size: 10.5px;
+    min-height: 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-kicker {
+    font-size: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-card-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary {
+    padding: 12px;
+    border-radius: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-summary-heading h2 {
+    font-size: 17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsc-map-panel .fn-head {
+    min-height: 55px;
+    padding: 9px 12px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-card,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-source-list {
+    padding: 14px;
+    border-radius: 11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-week-trainer-head {
+    padding: 10px 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-week-clusters,
+  .mv-app.atlas-design-v3.atlas-product-v4 .mv-week-safety {
+    padding: 12px;
+  }
+}
+
+/* Dropdowns on the map cannot be clipped by their canvas's decorative frame. */
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-mission-layout {
+  overflow: visible;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-body {
+  min-width: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-map-frame {
+  overflow: hidden;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .fsa-map-heading {
+  z-index: 27;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-holder {
+  z-index: 35;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-popover {
+  z-index: 60;
+  max-height: min(70vh, 570px);
+  overflow-y: auto;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .atlas-search {
+  min-width: 0;
+}
+
+/* Selected-state layout is owned by atlas-map-premiere.css.
+   This file retains only compact inspector typography on desktop. */
+@media (min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector-art {
+    flex-basis: 86px;
+    padding: 11px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-inspector-cover strong {
+    font-size: 19px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-manager-row {
+    min-height: 67px;
+    margin: 6px 0;
+    padding: 8px;
+  }
+}
+
+/* Keep small phones usable instead of shrinking touch controls or names. */
+@media (max-width: 900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub:not(.fs-flight-focused) .fsa-hub-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    grid-template-columns: none;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    padding: 5px;
+    margin: 9px 0 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub:not(.fs-flight-focused) .fsa-hub-tabs > button {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 103px;
+    min-height: 46px;
+    padding: 9px 11px;
+    flex-direction: row;
+    gap: 7px;
+    scroll-snap-align: center;
+    white-space: nowrap;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fsa-plan-hub:not(.fs-flight-focused) .fsa-hub-tabs strong {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .atlas-v2 .mv-layers-popover {
+    max-height: min(62dvh, 530px);
+  }
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source strong {
+  display: block;
+  font-size: 13px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source p {
+  margin: 5px 0 4px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source small {
+  font-size: 11px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source a {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  border: 1px solid var(--at-border);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--at-cyan);
+  text-decoration: none;
+}
+@media (max-width: 560px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .sh-empty-source a {
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+
+/* v9 | APP-WIDE DESKTOP/LAPTOP COMPACT SYSTEM
+   Shared typography, aligned controls and functional sections take priority.
+   "Comfortable" remains user-selectable. On touch, keep 44px targets. */
+@media (min-width:901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-detail-toggle {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    min-height:39px;
+    padding:7px 10px;
+    margin:0;
+    border:1px solid var(--at-border-soft);
+    border-radius:9px;
+    background:var(--at-field);
+    color:var(--at-text);
+    font-size:12px;
+    font-weight:750;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-detail-toggle svg:first-child {
+    color:var(--at-cyan);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-mobile-detail-toggle svg:last-child {
+    margin-left:auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-deep-open .fr-mobile-detail-toggle svg:last-child {
+    transform:rotate(180deg);
+  }
+
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] {
+    --workspace-gap:9px;
+    --workspace-radius:10px;
+    font-size:13.5px;
+    line-height:1.4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-structure {
+    grid-template-columns:160px minmax(0,1fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar {
+    padding:8px 7px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar-brand {
+    min-height:0;
+    margin:0 0 6px;
+    padding:0 0 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar-brand .official-atlas-brand {
+    width:61px;
+    height:60px;
+    flex:0 0 61px;
+    border-radius:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-side-nav {
+    gap:2px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar-label {
+    margin:5px 6px;
+    font-size:9.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar-label-more {
+    margin-top:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-side-link {
+    min-height:35px;
+    padding:6px 8px;
+    gap:8px;
+    border-radius:8px;
+    font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-side-link svg {
+    width:17px;
+    height:17px;
+    flex-basis:17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-more-tools summary {
+    min-height:36px;
+    padding:7px 8px;
+    font-size:11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-more-tools nav button {
+    min-height:34px;
+    padding:6px 8px;
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar-bottom {
+    padding:8px 5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-sidebar-bottom p {
+    font-size:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-header {
+    min-height:45px;
+    height:45px;
+    padding:5px 13px;
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-crumb {
+    font-size:11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-header .fsa-crumb strong {
+    font-size:12.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .atlas-trainer-switch {
+    min-height:34px;
+    padding:4px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-appearance-control button {
+    min-height:33px;
+    font-size:11px;
+    padding:5px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-header-settings {
+    min-width:36px;
+    min-height:36px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-content-inner.op-content {
+    padding:8px clamp(10px,1.25vw,19px) 25px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-hub {
+    padding:7px 10px 18px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-plan-hub.fs-flight-focused {
+    padding:0!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .fsa-hub-head,.atlas-hub-banner,.travel-command-head,.atlas-editorial-head,.op-head
+  ) {
+    min-height:0;
+    padding:10px 13px;
+    margin:3px 0 9px;
+    border-radius:10px;
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .atlas-editorial-head h1,.op-head h1,.travel-command-head h1,
+    .mv-week-header h1,.coord-hero h1
+  ) {
+    font-size:clamp(20px,2.05vw,26px);
+    line-height:1.16;
+    margin:3px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-subtitle,.fsa-hub-guide,.travel-command-intro>p
+  ) {
+    font-size:11.5px;
+    line-height:1.4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-hub-tabs {
+    margin:0 0 8px;
+    padding:4px 5px;
+    gap:3px;
+    border-radius:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-hub-tabs>button {
+    min-height:36px;
+    padding:6px 8px;
+    gap:5px;
+    border-radius:7px;
+    font-size:11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-hub-tabs>button svg {
+    width:15px;
+    height:15px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-hub-tabs strong {
+    font-size:11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-hub-tabs small {
+    display:none;
+  }
+
+  /* Flight DNA: maximum information before scroll, one decisive action. */
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-page {
+    max-width:1500px;
+    gap:9px;
+    padding-bottom:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero {
+    min-height:129px;
+    padding:13px 18px;
+    margin:0;
+    align-items:center;
+    border-radius:11px;
+    box-shadow:0 6px 23px rgba(1,9,28,.16);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero .fr-hero-copy {
+    width:min(74%,710px);
+    max-width:710px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero h1 {
+    font-size:clamp(25px,2.7vw,34px);
+    margin:4px 0 5px;
+    line-height:1.1;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero .fr-eyebrow {
+    font-size:9px;
+    letter-spacing:.09em;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero p {
+    max-width:580px;
+    margin:2px 0 0;
+    font-size:11px;
+    line-height:1.35;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero .fs-guardian-launch {
+    min-height:32px;
+    margin:7px 0 0;
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder.fs-ref-route {
+    margin:0!important;
+    padding:10px 11px!important;
+    border-radius:10px!important;
+    box-shadow:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary {
+    display:grid;
+    grid-template-columns:minmax(116px,1fr) 36px minmax(116px,1fr) minmax(145px,.88fr) minmax(130px,.7fr)!important;
+    gap:7px!important;
+    align-items:end;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary>label {
+    gap:4px;
+    min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary>label>span {
+    font-size:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary>label>span svg {
+    width:14px;
+    height:14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary input {
+    width:100%;
+    min-height:37px!important;
+    height:37px!important;
+    padding:7px 9px!important;
+    font:800 14px/1.2 var(--atlas-font)!important;
+    border-radius:8px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary input[type='date'] {
+    font-size:12px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary .fs-route-swap {
+    width:36px;
+    min-height:37px;
+    height:37px;
+    border-radius:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary .fr-check-button {
+    grid-column:auto!important;
+    width:100%;
+    min-height:37px!important;
+    height:37px!important;
+    padding:6px 7px;
+    font:800 11px/1.2 var(--atlas-font)!important;
+    border-radius:8px!important;
+    box-shadow:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-utilities {
+    align-items:center;
+    margin:5px 0 0;
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-advanced-toggle {
+    min-height:31px;
+    padding:5px 0;
+    font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-offline-tools {
+    margin:1px 0 0;
+    border-top:1px solid var(--at-border-soft);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-offline-tools>summary {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    min-height:30px;
+    padding:4px 0;
+    cursor:pointer;
+    list-style:none;
+    color:var(--at-muted);
+    font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-offline-tools>summary::-webkit-details-marker {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-offline-tools>summary svg:last-child {
+    margin-left:auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-advanced-fields {
+    gap:8px;
+    padding-top:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-advanced-fields input {
+    min-height:37px;
+    padding:7px 9px;
+    font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-guardian-handoff {
+    min-height:46px;
+    padding:7px 10px;
+    gap:8px;
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quick-result {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 11px;
+    border:1px solid var(--at-border-soft);
+    border-radius:10px;
+    background:var(--at-surface);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quick-result-icon {
+    flex:0 0 30px;
+    display:grid;
+    place-items:center;
+    width:30px;
+    height:30px;
+    color:var(--at-cyan);
+    background:var(--at-aqua-soft);
+    border-radius:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quick-result-copy {
+    flex:1;
+    display:grid;
+    gap:3px;
+    min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quick-result-copy strong {
+    font-size:12.5px;
+    line-height:1.3;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quick-result-copy small {
+    color:var(--at-muted);
+    font-size:10.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quick-result>button {
+    display:flex;
+    align-items:center;
+    gap:5px;
+    flex:0 0 auto;
+    min-height:36px;
+    padding:6px 9px;
+    background:var(--at-aqua-soft);
+    border:1px solid var(--at-border);
+    border-radius:8px;
+    color:var(--at-cyan);
+    font-size:11px;
+    font-weight:750;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-deep-collapsed :is(.fsc-brief,.fsc-below-fold) {
+    display:none!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-root {
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-cards {
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card,
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card-inner {
+    min-height:98px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card-inner {
+    padding:9px;
+    gap:4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card strong {
+    font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card p,
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card-kicker {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsc-card-value {
+    font-size:10px;
+  }
+
+  /* The full records remain accessible only when deliberately expanded. */
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-research-title {
+    margin:3px 0;
+    padding:10px 12px;
+    border-radius:10px;
+    scroll-margin-top:60px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fs-research-title h2 {
+    font-size:17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(.fs-research-title p,.fs-evidence-basis) {
+    font-size:11px;
+    line-height:1.4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quiet {
+    min-height:75px;
+    padding:12px;
+    gap:5px;
+    border-radius:10px;
+    background:var(--at-field)!important;
+    text-align:left;
+    align-items:flex-start;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quiet strong {
+    color:var(--at-text);
+    font-size:12.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quiet p {
+    color:var(--at-muted);
+    font-size:11px;
+    max-width:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-quiet button {
+    margin-top:0;
+    min-height:32px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-findings {
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-insights {
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-insights-head {
+    margin-bottom:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-insights-head strong {
+    font-size:14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-insight {
+    padding:6px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-insight p {
+    font-size:11.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-airports {
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-airport {
+    padding:10px 12px;
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-airport::before {
+    margin:-10px -12px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-airport h3 {
+    margin:6px 0 8px;
+    font-size:12.5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-evidence {
+    padding:8px 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-code {
+    font-size:22px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(.fdb-root,.fd-root,.sh-root,.fn-root) {
+    padding:11px;
+    gap:9px;
+    border-radius:10px;
+    box-shadow:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(.fd-head,.sh-head,.fn-head) {
+    min-height:63px;
+    padding:9px 11px;
+    gap:7px;
+    border-radius:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .fdb-head h2,.fd-head h2,.sh-head h2,.fn-head h2
+  ) {
+    margin:4px 0;
+    font-size:18px;
+    line-height:1.2;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(.fd-head,.sh-head,.fn-head) p {
+    font-size:11px;
+    line-height:1.4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fd-head-icon {
+    width:37px;
+    height:37px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fdb-status {
+    gap:5px;
+    padding:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fdb-status strong {
+    font-size:17px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fdb-main,
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fdb-actions {
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fdb-actions>div {
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fd-controls,
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .sh-query {
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .fd-controls input,.fd-cta,.sh-query input,.sh-query select,.sh-run
+  ) {
+    min-height:38px;
+    padding:7px 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .sh-memory {
+    padding:10px;
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .sh-memory-overview>div {
+    padding:8px;
+  }
+
+  /* Shared screens: Calendar, Atlas, People, Plans, Reports, Coordination. */
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-card,.smart-panel,.travel-panel,.coord-panel,.studio-panel,.mv-week-trainer,.fg-panel
+  ) {
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-card-header,.op-card-body,.op-side-pane,.fg-panel,
+    .coord-panel,.travel-form-block,.studio-panel-header
+  ) {
+    padding:10px 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-card-header h2,.travel-section-line h2,.coord-section-head h2,
+    .studio-panel-header h2,.fg-panel h2
+  ) {
+    font-size:15.5px;
+    line-height:1.22;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-toolbar,.op-head-actions,.op-grid-two,.op-geo-layout,.fg-layout,
+    .coord-layout,.fsa-report-columns
+  ) {
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-btn,.travel-gateway,.fg-primary,.fg-tertiary
+  ) {
+    min-height:36px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .op-toolbar select,.op-form input,.op-form select,
+    .fg-fields input,.fg-review-top select,.travel-fields input,.travel-fields select
+  ) {
+    min-height:37px;
+    padding:7px 9px;
+    font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .op-calendar-grid .op-day {
+    min-height:62px;
+    padding:5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .op-calendar-grid .op-day-number {
+    min-height:26px;
+    min-width:26px;
+    font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .op-calendar-head {
+    min-height:40px;
+    padding:7px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-agenda-day {
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-agenda-empty {
+    padding:16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-manager-cards {
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-manager-card {
+    min-height:0;
+    padding:9px 11px;
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-reports .op-metric {
+    padding:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-reports .op-metric strong {
+    font-size:21px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .travel-command-head {
+    padding:10px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .travel-step {
+    min-height:43px;
+    padding:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .travel-gateway {
+    min-height:52px;
+    padding:8px 10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-week-header,
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .coord-hero {
+    min-height:0;
+    padding:11px 13px;
+    gap:8px;
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-week-overview>div,
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .coord-metrics>div {
+    padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] :is(
+    .mv-week-overview strong,.coord-metrics strong
+  ) {
+    font-size:20px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-command {
+    padding:12px 0 23px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-spotlight {
+    min-height:130px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-spotlight-copy {
+    padding:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-spotlight h2 {
+    font-size:23px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-metrics {
+    margin:9px 0;
+    gap:7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-metric {
+    padding:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .studio-metric strong {
+    font-size:20px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-page {
+    gap:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-hero {
+    min-height:119px;
+    padding:13px 18px;
+    border-radius:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-hero h1 {
+    margin:5px 0;
+    font-size:clamp(24px,2.45vw,30px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-hero p {
+    font-size:11px;
+    line-height:1.3;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-hero-tags {
+    gap:5px;
+    margin-top:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-hero-tags span {
+    font-size:9.5px;
+    padding:4px 7px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-side {
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-modes {
+    margin:8px 0;
+    gap:5px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-import-zone textarea {
+    min-height:95px;
+    padding:10px;
+    font-size:13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-privacy {
+    margin:8px 0;
+    padding:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-step {
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fg-number {
+    flex-basis:29px;
+    width:29px;
+    height:29px;
+    border-radius:9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .atlas-v2 .mv-map-frame {
+    height:clamp(320px,42dvh,470px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .atlas-v2 .vice-atlas-intro {
+    min-height:0;
+    padding:9px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .atlas-v2 .vice-atlas-intro h1 {
+    font-size:23px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .atlas-v2 .atlas-telemetry-item {
+    min-height:0;
+    padding:7px;
+  }
+}
+
+@media (min-width:901px) and (max-width:1120px) {
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fsa-structure {
+    grid-template-columns:146px minmax(0,1fr);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .mv-header {
+    padding-inline:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-builder .fs-route-primary {
+    grid-template-columns:minmax(95px,1fr) 34px minmax(95px,1fr) minmax(135px,.85fr) minmax(116px,.75fr)!important;
+    gap:5px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4[data-density='compact'] .fr-hero.fs-ref-hero h1 {
+    font-size:27px;
+  }
+}
+
+@media (min-width:901px) and (pointer:coarse) {
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(
+    .fsa-side-link,.fsa-hub-tabs>button,.op-btn,.travel-gateway,
+    .fr-check-button,.fs-route-swap,.fr-mobile-detail-toggle,
+    .fg-primary,.fg-modes button
+  ) {
+    min-height:44px!important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4 :is(input,select,textarea) {
+    min-height:44px!important;
+    font-size:16px!important;
+  }
+}
