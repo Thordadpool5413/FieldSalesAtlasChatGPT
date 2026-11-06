@@ -201,23 +201,44 @@ async function checkPreviewConfiguration() {
   );
 }
 
-async function main() {
-  await checkPreviewConfiguration();
-  const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "atlas-api-smoke-"));
-  const port = await availablePort();
-  const baseUrl = `http://127.0.0.1:${port}`;
+function startBuiltApi(port, dataDirectory, runtimeDirectory) {
   const child = spawn(process.execPath, ["--enable-source-maps", builtEntryPoint], {
     cwd: workspaceRoot,
     env: {
       ...process.env,
       NODE_ENV: "production",
       PORT: String(port),
-      ATLAS_DATA_DIR: path.join(temporaryDirectory, "workspace-data"),
-      ATLAS_RUNTIME_ROOT: path.join(temporaryDirectory, "runtime"),
+      ATLAS_DATA_DIR: dataDirectory,
+      ATLAS_RUNTIME_ROOT: runtimeDirectory,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  const output = collectOutput(child);
+  return { child, output: collectOutput(child) };
+}
+
+async function stopBuiltApi(child) {
+  if (child.exitCode !== null) return;
+
+  const exited = new Promise((resolve) => child.once("exit", resolve));
+  child.kill("SIGTERM");
+  const stoppedCleanly = await Promise.race([
+    exited.then(() => true),
+    delay(5_500).then(() => false),
+  ]);
+  if (!stoppedCleanly && child.exitCode === null) {
+    child.kill("SIGKILL");
+    await exited;
+  }
+}
+
+async function main() {
+  await checkPreviewConfiguration();
+  const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "atlas-api-smoke-"));
+  const port = await availablePort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const dataDirectory = path.join(temporaryDirectory, "workspace-data");
+  const runtimeDirectory = path.join(temporaryDirectory, "runtime");
+  let { child, output } = startBuiltApi(port, dataDirectory, runtimeDirectory);
   const eventControllers = [];
 
   try {
@@ -309,6 +330,40 @@ async function main() {
       operationsB.data?.activity?.every(({ summary }) => !summary.includes("Workspace A isolation marker")),
       "Workspace B activity must not contain workspace A records",
     );
+
+    for (const controller of eventControllers) controller.abort();
+    eventControllers.length = 0;
+    await stopBuiltApi(child);
+    ({ child, output } = startBuiltApi(port, dataDirectory, runtimeDirectory));
+    await waitForServer(child, baseUrl, output);
+
+    const restartedOperations = await Promise.all(
+      workspaces.map((workspace) => apiRequest(baseUrl, "GET", "/api/operations", {
+        workspaceKey: workspace.key,
+      })),
+    );
+    for (const [index, operations] of restartedOperations.entries()) {
+      const workspace = workspaces[index];
+      const ownMarker = `Workspace ${index === 0 ? "A" : "B"} isolation marker`;
+      const otherMarker = `Workspace ${index === 0 ? "B" : "A"} isolation marker`;
+      const expectedManager = index === 0 ? createdManagerA : createdManagerB;
+
+      assert.equal(operations.data?.team?.id, workspace.id,
+        `Guest workspace ${index + 1} must retain its identity after restart`);
+      assert.deepEqual(
+        operations.data?.managers?.map(({ id, name }) => ({ id, name })),
+        [{ id: expectedManager.data?.manager?.id, name: ownMarker }],
+        `Guest workspace ${index + 1} must retain only its own manager after restart`,
+      );
+      assert.ok(
+        operations.data?.activity?.some(({ summary }) => summary.includes(ownMarker)),
+        `Guest workspace ${index + 1} activity must retain its own manager record after restart`,
+      );
+      assert.ok(
+        operations.data?.activity?.every(({ summary }) => !summary.includes(otherMarker)),
+        `Guest workspace ${index + 1} activity must not include the other workspace after restart`,
+      );
+    }
 
     const ownerKey = workspaces[0].key;
     const invitations = await Promise.all([
@@ -541,12 +596,7 @@ async function main() {
     console.log("API smoke check passed: isolated storage, guest workspace separation, owner/trainer access boundaries, revocation, and live subscription cleanup.");
   } finally {
     for (const controller of eventControllers) controller.abort();
-    child.kill("SIGTERM");
-    await Promise.race([
-      new Promise((resolve) => child.once("exit", resolve)),
-      delay(5_500),
-    ]);
-    if (child.exitCode === null) child.kill("SIGKILL");
+    await stopBuiltApi(child);
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
 }
