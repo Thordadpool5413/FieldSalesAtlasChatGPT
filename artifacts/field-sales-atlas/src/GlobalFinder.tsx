@@ -35,7 +35,8 @@ const TOOL_CATALOG:Array<{page:Page;label:string;detail:string;terms:string}> = 
 ];
 const LAUNCH_TOOLS:Page[]=['home','mission','radar','coordinate','overview','calendar'];
 
-export default function GlobalFinder(){
+type Props = { enableKeyboardShortcut?: boolean };
+export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
   const ctx=useOp();
   const [open,setOpen]=useState(false);
   const [query,setQuery]=useState('');
@@ -66,6 +67,7 @@ export default function GlobalFinder(){
   const field=useRef<HTMLInputElement>(null);
   const dialogRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{
+    if(!enableKeyboardShortcut)return;
     function onKey(event:KeyboardEvent){
       if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){
         event.preventDefault();setOpen(v=>!v);
@@ -73,7 +75,7 @@ export default function GlobalFinder(){
     }
     window.addEventListener('keydown',onKey);
     return ()=>window.removeEventListener('keydown',onKey);
-  },[]);
+  },[enableKeyboardShortcut]);
   useEffect(()=>{
     if(!open)return;
     const old=document.activeElement as HTMLElement|null;

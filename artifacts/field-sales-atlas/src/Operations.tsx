@@ -195,7 +195,6 @@ function Product(){
   const [quickAddOpen,setQuickAddOpen]=useState(false);
   const [pwaOpen,setPwaOpen]=useState(false);
   const [setupOpen,setSetupOpen]=useState(false);
-  const [moreOpen,setMoreOpen]=useState(false);
   const moreSheetTouchY=useRef<number|null>(null);
   const quickSheetTouchY=useRef<number|null>(null);
   const [focusedWorkspace,setFocusedWorkspace]=useState(()=>{
@@ -518,7 +517,6 @@ function Product(){
     setView(target);
     setMenuOpen(false);
     setQuickAddOpen(false);
-    setMoreOpen(false);
     setModal(null);
     setError('');
     setNotice('');
@@ -550,7 +548,6 @@ function Product(){
       setPeopleSection(initialPeopleTool());
       setMenuOpen(false);
       setQuickAddOpen(false);
-      setMoreOpen(false);
       setModal(null);
       window.scrollTo(0,0);
     };
@@ -639,6 +636,9 @@ function Product(){
           <button className="fsa-sidebar-brand" type="button" onClick={()=>go('home')} aria-label="Open Field Sales Atlas home">
             <OfficialFieldAtlasLogo/>
           </button>
+          <div className="fsa-sidebar-search">
+            <GlobalFinder/>
+          </div>
           <div className="fsa-sidebar-label">YOUR WORKSPACE</div>
           <nav className="fsa-side-nav" aria-label="Main sections">
             {MIAMI_NAV.map(item=>{
@@ -658,7 +658,7 @@ function Product(){
           </button>
           <div className="fsa-sidebar-label fsa-sidebar-label-tools">FIELD INTELLIGENCE</div>
           <nav className="fsa-side-nav fsa-side-tools" aria-label="Field intelligence tools">
-            <button type="button" className="fsa-side-link fsa-tool-link" onClick={()=>{setSetupOpen(true);setMoreOpen(false);setMenuOpen(false);}}><Compass size={17}/><span>Workspace setup</span></button>
+            <button type="button" className="fsa-side-link fsa-tool-link" onClick={()=>{setSetupOpen(true);setMenuOpen(false);}}><Compass size={17}/><span>Workspace setup</span></button>
               {FIELD_SHORTCUTS.map(item=>{
               const Icon=item.icon;
               const active=item.id==='mission' ? view==='mission' : item.id==='coaching'
@@ -682,17 +682,71 @@ function Product(){
                 return <button key={item.id} type="button" onClick={()=>go(item.id)}
                   className={view===item.id?'active':''}><Icon size={16}/><span>{item.label}</span></button>;
               })}
-              <button type="button" onClick={()=>setTrainerProfilesOpen(true)}>
-                <Settings size={16}/><span>Trainer profiles</span>
-              </button>
             </nav>
           </details>
           </div>
           <div className="fsa-sidebar-bottom">
-            <button type="button" className="vice-rail-settings" onClick={()=>setTrainerProfilesOpen(true)}><Settings size={19}/><span>Trainer settings</span></button>
+            <div className={'fsa-sidebar-sync atlas-sync-'+syncStatus} role="status">
+              <span className="atlas-sync-dot" aria-hidden="true"/>
+              <span>{syncStatus==='live'||syncStatus==='updated'?'Live sync':syncStatus==='connecting'?'Connecting':'Sync offline'}</span>
+            </div>
+            <details className="fsa-sidebar-controls" onKeyDown={event=>{
+              if(event.key==='Escape'){
+                event.currentTarget.open=false;
+                event.currentTarget.querySelector('summary')?.focus();
+              }
+            }} onClick={event=>{
+              if((event.target as Element).closest('button')){
+                event.currentTarget.open=false;
+                event.currentTarget.querySelector('summary')?.focus();
+              }
+            }}>
+              <summary><Settings size={17}/><span>Workspace controls</span><ChevronDown size={15}/></summary>
+              <div className="fsa-sidebar-control-body">
+                <label className={'fsa-sidebar-trainer '+(activeTrainerId==='trainer_b'?'trainer-b':'trainer-a')}>
+                  <span>Planning as</span>
+                  <select value={activeTrainerId} aria-label="Switch field sales trainer"
+                    onChange={e=>setActiveTrainerId(e.target.value==='trainer_b'?'trainer_b':'trainer_a')}>
+                    {trainerProfiles.map(profile=><option key={profile.id} value={profile.id}>{profile.name}</option>)}
+                  </select>
+                </label>
+                <div className="fsa-sidebar-appearance">
+                  <span>Appearance</span>
+                  <div className="mv-appearance-control" role="group" aria-label="Appearance">
+                    <button type="button" className={theme==='light'?'active':''} onClick={()=>setTheme('light')}
+                      aria-pressed={theme==='light'} title="Miami Vice Light"><Sun size={16}/><span>Light</span></button>
+                    <button type="button" className={theme==='dark'?'active':''} onClick={()=>setTheme('dark')}
+                      aria-pressed={theme==='dark'} title="Miami Vice Dark"><Moon size={16}/><span>Dark</span></button>
+                  </div>
+                </div>
+                <button type="button" onClick={toggleFocus}>
+                  {focusedWorkspace?<PanelLeftOpen size={16}/>:<PanelLeftClose size={16}/>}
+                  <span>{focusedWorkspace?'Show navigation':'Focus workspace'}</span>
+                </button>
+                <button type="button" onClick={toggleDensity}>
+                  <LayoutDashboard size={16}/>
+                  <span>{density==='compact'?'Comfortable spacing':'Compact spacing'}</span>
+                </button>
+                <button type="button" onClick={()=>setPwaOpen(true)}>
+                  <Smartphone size={16}/><span>Install & offline settings</span>
+                </button>
+                <button type="button" onClick={copyWorkspaceLink}>
+                  <Share2 size={16}/><span>Copy workspace link</span>
+                </button>
+                <button type="button" onClick={()=>reload().catch(e=>setError(errorText(e)))}>
+                  <RefreshCw size={16}/><span>Refresh shared records</span>
+                </button>
+                <button type="button" onClick={()=>setTrainerProfilesOpen(true)}>
+                  <Settings size={16}/><span>Trainer profiles</span>
+                </button>
+              </div>
+            </details>
           </div>
         </aside>
         <div className="fsa-stage">
+      {focusedWorkspace&&<button type="button" className="fsa-focus-restore" onClick={toggleFocus}>
+        <PanelLeftOpen size={17}/><span>Show navigation</span>
+      </button>}
       <header className={'mv-header'+(hasIosBack?' ios-has-back':'')}>
         {hasIosBack&&<button type="button" className="ios-back-button"
           onClick={iosGoBack} aria-label="Back to previous workspace section">
@@ -701,84 +755,7 @@ function Product(){
         <button className="mv-brand" onClick={()=>go('home')} aria-label="Open the Field Sales Atlas map home">
           <OfficialFieldAtlasLogo/>
         </button>
-        <div className="fsa-crumb"><span>FIELD ATLAS</span><i aria-hidden="true"/><strong>{MIAMI_NAV.find(x=>x.id===view)?.label||FIELD_SHORTCUTS.find(x=>x.id===view)?.label||MIAMI_MORE.find(x=>x.id===view)?.label||'Territory Atlas'}</strong></div>
-        <div className="ios-nav-title" aria-live="polite">
-          <span>FIELD SALES ATLAS</span>
-          <strong>{MIAMI_NAV.find(x=>x.id===view)?.label||FIELD_SHORTCUTS.find(x=>x.id===view)?.label||MIAMI_MORE.find(x=>x.id===view)?.label||'Atlas'}</strong>
-        </div>
-        <GlobalFinder/>
-        <button className="atlas-focus-workspace" type="button" onClick={toggleFocus}
-          title={focusedWorkspace?'Restore workspace sidebar':'Enter distraction-free workspace'}
-          aria-label={focusedWorkspace?'Show workspace sidebar':'Expand workspace content'}
-          aria-pressed={focusedWorkspace}>
-          {focusedWorkspace?<PanelLeftOpen size={18}/>:<PanelLeftClose size={18}/>}
-          <span>{focusedWorkspace?'Navigation':'Focus'}</span>
-        </button>
-        <span className={'atlas-sync-indicator atlas-sync-'+syncStatus} role="status"
-          title={syncStatus==='offline'?'Realtime unavailable. Use Refresh shared records.':'Workspace changes sync automatically between open trainer sessions.'}>
-          <span className="atlas-sync-dot" aria-hidden="true"/>
-          <span>{syncStatus==='live'||syncStatus==='updated'?'Live sync':syncStatus==='connecting'?'Connecting':'Sync offline'}</span>
-        </span>
-        <nav className="mv-main-nav" aria-label="Main pages">
-          {MIAMI_NAV.map(item=>{
-            const Icon=item.icon;
-            return <button key={item.id} className={'mv-nav-item'+(view===item.id?' active':'')}
-              aria-current={view===item.id?'page':undefined} aria-label={item.label} title={item.label} onClick={()=>go(item.id)}>
-              <Icon size={22} strokeWidth={view===item.id?2.2:1.9}/><span>{item.label}</span>
-            </button>;
-          })}
-        </nav>
-        <div className="mv-header-trainers">
-          <label className={'atlas-trainer-switch '+(activeTrainerId==='trainer_b'?'trainer-b':'trainer-a')}>
-            <span className="atlas-trainer-dot"/>
-            <span className="atlas-trainer-description"><small>PLANNING AS</small>
-              <select value={activeTrainerId} aria-label="Switch field sales trainer"
-                onChange={e=>setActiveTrainerId(e.target.value==='trainer_b'?'trainer_b':'trainer_a')}>
-                {trainerProfiles.map(profile=><option key={profile.id} value={profile.id}>{profile.name}</option>)}
-              </select>
-            </span>
-            <ChevronDown size={14} aria-hidden="true"/>
-          </label>
-          <div className="mv-appearance-control" role="group" aria-label="Appearance">
-            <button type="button" className={theme==='light'?'active':''} onClick={()=>setTheme('light')}
-              aria-pressed={theme==='light'} title="Miami Vice Light"><Sun size={17}/><span>Light</span></button>
-            <button type="button" className={theme==='dark'?'active':''} onClick={()=>setTheme('dark')}
-              aria-pressed={theme==='dark'} title="Miami Vice Dark"><Moon size={17}/><span>Dark</span></button>
-          </div>
-          <div className="mv-more-holder">
-            <button className="mv-header-settings" aria-label="Open workspace settings and tools"
-              aria-expanded={moreOpen} onClick={()=>setMoreOpen(!moreOpen)}>
-              <Settings size={19}/><span>Tools</span><ChevronDown size={15}/>
-            </button>
-            {moreOpen&&<div className="mv-more-menu">
-              <button type="button" onClick={()=>{setSetupOpen(true);setMoreOpen(false);}}><Compass size={17}/> Workspace setup</button>
-              <button type="button" className="mv-more-create" onClick={()=>{setQuickAddOpen(true);setMoreOpen(false);}}>
-                <Plus size={17}/> Create field record
-              </button>
-              <button className="mv-more-title" onClick={()=>{setTrainerProfilesOpen(true);setMoreOpen(false);}}>
-                <Settings size={17}/> Edit trainer profiles
-              </button>
-              {FIELD_SHORTCUTS.map(item=>{
-                const Icon=item.icon;
-                return <button key={item.id} onClick={()=>go(item.id)}><Icon size={16}/>{item.label}</button>;
-              })}
-              {MIAMI_MORE.map(item=>{
-                const Icon=item.icon;
-                return <button key={item.id} onClick={()=>go(item.id)}><Icon size={16}/>{item.label}</button>;
-              })}
-              <button type="button" onClick={()=>{toggleFocus();setMoreOpen(false);}}>
-                {focusedWorkspace?<PanelLeftOpen size={16}/>:<PanelLeftClose size={16}/>}
-                {focusedWorkspace?'Show workspace navigation':'Expand workspace content'}
-              </button>
-              <button type="button" onClick={()=>{toggleDensity();setMoreOpen(false);}}>
-                <LayoutDashboard size={16}/>{density==='compact'?'Comfortable spacing':'Compact spacing'}
-              </button>
-              <button type="button" onClick={()=>{setPwaOpen(true);setMoreOpen(false);}}><Smartphone size={16}/> Install & offline settings</button>
-              <button onClick={()=>{copyWorkspaceLink();setMoreOpen(false);}}><Users size={16}/> Copy workspace link</button>
-              <button onClick={()=>{reload().catch(e=>setError(errorText(e)));setMoreOpen(false);}}><RefreshCw size={16}/> Refresh shared records</button>
-            </div>}
-          </div>
-        </div>
+        <GlobalFinder enableKeyboardShortcut={false}/>
         <div className="mv-mobile-trainer">
           <span className={'mv-mobile-trainer-dot '+(activeTrainerId==='trainer_b'?'trainer-b':'trainer-a')}/>
           <select aria-label="Choose active field sales trainer" value={activeTrainerId}

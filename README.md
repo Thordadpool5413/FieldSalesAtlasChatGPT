@@ -4,7 +4,7 @@ A shared field-sales workspace for territories, coaching visits, calendars, and 
 
 ## Update the existing Replit workspace
 
-GitHub `main` now includes both the original application history and the recovered Replit history ending at `0ecbdd2`. The Replit app keeps its pnpm workspace and separate web/API services. The recovery branch `replit-recovery-0ecbdd2` remains available as a backup.
+GitHub `main` includes the original application history and the recovered Replit work. The Replit app keeps its pnpm workspace and separate web/API services. Both recovery snapshots, `replit-recovery-0ecbdd2` and `replit-recovery-startup`, remain available as backups.
 
 Stop the current Run process, then use the Replit Shell:
 
@@ -20,7 +20,7 @@ Pulling or running does not publish the app. The published `.replit.app` address
 
 ## Local development
 
-Use Node 24.10+ within Node 24, Python 3.12, and pnpm 10.28.2 (pinned in `package.json`). Enable Corepack if pnpm is not installed:
+Use Node 24.10+ within Node 24, Python 3.12, and pnpm 10.26.1 (pinned in `package.json` to match Replit). Enable Corepack if pnpm is not installed:
 
 ```bash
 corepack enable
