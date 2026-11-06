@@ -1,0 +1,16 @@
+# One server serves the application, API and shared workspace events.
+modules = ["nodejs-24", "python-3.12"]
+run = "npm run replit"
+entrypoint = "server/index.ts"
+
+[env]
+HOST = "0.0.0.0"
+PORT = "5173"
+
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+[deployment]
+build = ["sh", "-c", "npm ci --include=dev && npm run setup:optimizer && npm run build"]
+run = ["sh", "-c", "HOST=0.0.0.0 npm start"]

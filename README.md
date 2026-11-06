@@ -74,6 +74,32 @@ Keep one application instance per SQLite database. Live connections are held in 
 
 GitHub hosts the source and CI; **GitHub Pages alone cannot run this backend or persist shared records**. Publishing this repository does not create a hosted app or transfer records from an existing AppDeploy deployment. To migrate existing records, export a backup there and use Sharing & recovery here to restore it into a separate workspace.
 
+## Replit: pull source, rebuild, then review the app
+
+The GitHub source is `https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT`, branch `main`. Import or connect that repository in Replit. The tracked `.replit` file selects Node 24 and Python 3.12, binds the single application server to `0.0.0.0:5173`, and maps it to the web preview. The Run command is `npm run replit`.
+
+After a successful pull, stop the previous Run process and press **Run**. This installs the locked dependencies, prepares the existing travel optimizer, and creates a fresh production build before starting the server. It does not pull or push Git, publish the app, change workspace records, or remove the `data/` directory. Allow setup and compilation to finish before checking the preview.
+
+To identify the checkout and pull in Replit's Shell:
+
+```sh
+git branch --show-current
+git log -1 --oneline
+git status --short
+git fetch origin main
+git pull --ff-only origin main
+```
+
+Use `main` as the working branch. A pull blocked by local changes or divergent history must be resolved before the Run command can build the intended revision. Keep the exact Git error when troubleshooting; a successful GitHub push alone does not prove that Replit's checkout has updated.
+
+If Git specifically reports that an **untracked `.replit` file** would be overwritten, preserve Replit's generated configuration by renaming that file to `.replit.local-backup`, then retry the pull and merge any custom settings into the tracked configuration. Tracked edits and other merge conflicts require their own review in Replit's Git tool.
+
+Every production build writes `/build-info.json`. Open that path on the preview or published address to see `revision`, `builtAt` and `sourceModified`. `revision` is `null` when the deployment does not include Git metadata; `sourceModified` records edits to tracked files. This public file contains no workspace data or credentials and is served with `Cache-Control: no-cache`. Compare the served revision with `git log -1` in Replit to distinguish old compiled files from an old checkout. The readiness path is `/api/_healthcheck`.
+
+Replit's `.replit.app` address serves a **published snapshot**, separate from the workspace preview. Pulling and pressing Run do not update that snapshot. The deployment configuration supplies install/build/run commands for a future publication; it does not publish automatically. If Replit itself returns “This app isn't live yet,” check the project's Publishing status and assigned address. Use a persistent writable volume for the existing SQLite database and keep one instance per database, as described above.
+
+Configuration reference: [Replit app configuration](https://docs.replit.com/replit-workspace/configuring-repl). Snapshot behavior: [Replit Publishing](https://docs.replit.com/cloud-services/deployments/about-deployments).
+
 ## Collaboration and data
 
 - Shareable workspace links are bearer capabilities: anyone who has the owner link can view and edit its records and manage trainer invitations. Keep links private. Access keys stay in URL fragments/browser storage and are sent only to same-origin API requests; they are not written to Git.
