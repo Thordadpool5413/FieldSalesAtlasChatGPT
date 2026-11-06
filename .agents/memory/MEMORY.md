@@ -1,2 +1,3 @@
 - [Python toolchain rebuilds](python-toolchain-rebuilds.md) — Python module changes can leave managed workflows waiting indefinitely for an environment rebuild.
 - [Trainer-seat authorization](trainer-seat-authorization.md) — Any API selector for trainer-owned data must be checked against the seat bound to the bearer link.
+- [Managed web preview bootstrapping](managed-web-preview-bootstrapping.md) — A failed package-manager bootstrap can occur before Vite starts; validate the app build separately before changing source code.
