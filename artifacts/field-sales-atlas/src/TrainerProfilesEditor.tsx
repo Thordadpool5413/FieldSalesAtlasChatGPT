@@ -5,14 +5,14 @@ import type { Airport,TrainerProfile } from './opsModels';
 import './TrainerProfilesEditor.css';
 import { api } from './workspaceApi';
 
-type Props={profiles:TrainerProfile[];airports:Airport[];onClose:()=>void;onSaved:()=>Promise<void>};
+type Props={profiles:TrainerProfile[];airports:Airport[];accessSeat?:'trainer_a'|'trainer_b';onClose:()=>void;onSaved:()=>Promise<void>};
 const names=['trainer_a','trainer_b'] as const;
 function base(slot:'trainer_a'|'trainer_b'):TrainerProfile{
   return {id:slot,name:slot==='trainer_a'?'Trainer 1':'Trainer 2',homeCity:'',homeAirports:[],
     homeDriveMinutes:{},preferredAirlines:'',preferNonstop:true,maxConnections:1,notes:''};
 }
-export default function TrainerProfilesEditor({profiles,airports,onClose,onSaved}:Props){
-  const [slot,setSlot]=useState<'trainer_a'|'trainer_b'>('trainer_a');
+export default function TrainerProfilesEditor({profiles,airports,accessSeat,onClose,onSaved}:Props){
+  const [slot,setSlot]=useState<'trainer_a'|'trainer_b'>(accessSeat||'trainer_a');
   const [forms,setForms]=useState<Record<'trainer_a'|'trainer_b',TrainerProfile>>({
     trainer_a:{...base('trainer_a'),...profiles.find(p=>p.id==='trainer_a')},
     trainer_b:{...base('trainer_b'),...profiles.find(p=>p.id==='trainer_b')},
@@ -67,10 +67,12 @@ export default function TrainerProfilesEditor({profiles,airports,onClose,onSaved
         <button className="trainer-dialog-close" onClick={onClose} disabled={busy} aria-label="Close trainer settings"><X size={21}/></button>
       </div>
       <div className="trainer-switch">
-        {names.map((value,i)=><button key={value} className={slot===value?'active':''} onClick={()=>{setSlot(value);setError('');setAirportSearch('');}}>
+        {names.filter(value=>!accessSeat||value===accessSeat).map(value=>{
+          const i=names.indexOf(value);
+          return <button key={value} className={slot===value?'active':''} onClick={()=>{setSlot(value);setError('');setAirportSearch('');}}>
           <span className={'trainer-switch-dot trainer-switch-'+i}/><strong>{forms[value].name||'Trainer '+(i+1)}</strong>
           <small>{forms[value].homeAirports.join(' · ')||'No home airport yet'}</small>
-        </button>)}
+        </button>;})}
       </div>
       <div className="trainer-dialog-body">
         <div className="trainer-dialog-fields">

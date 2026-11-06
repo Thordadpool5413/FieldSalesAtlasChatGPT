@@ -58,9 +58,12 @@ async function waitForServer(child, baseUrl, output) {
   );
 }
 
-async function apiRequest(baseUrl, method, route, { workspaceKey, body } = {}) {
+async function apiRequest(baseUrl, method, route, { workspaceKey, body, query, allowError = false } = {}) {
   const url = new URL(route, baseUrl);
   if (workspaceKey) url.searchParams.set("workspaceKey", workspaceKey);
+  for (const [name, value] of Object.entries(query || {})) {
+    url.searchParams.set(name, value);
+  }
 
   let response;
   try {
@@ -86,7 +89,7 @@ async function apiRequest(baseUrl, method, route, { workspaceKey, body } = {}) {
   } catch {
     data = null;
   }
-  if (!response.ok) {
+  if (!response.ok && !allowError) {
     const unavailable = response.status === 404
       ? `Required API route is unavailable: ${method} ${url.pathname} returned HTTP 404`
       : `${method} ${url.pathname} returned HTTP ${response.status}`;
@@ -113,7 +116,13 @@ function createSseMessageReader(reader) {
         continue;
       }
 
-      const { value, done } = await reader.read();
+      let chunk;
+      try {
+        chunk = await reader.read();
+      } catch {
+        return { type: "connection.closed" };
+      }
+      const { value, done } = chunk;
       if (done) throw new Error("The API event stream closed before the expected event arrived.");
       buffered += decoder.decode(value, { stream: true });
     }
@@ -300,7 +309,236 @@ async function main() {
       operationsB.data?.activity?.every(({ summary }) => !summary.includes("Workspace A isolation marker")),
       "Workspace B activity must not contain workspace A records",
     );
-    console.log("API smoke check passed: built startup, temporary storage, two-guest operations isolation, and workspace-scoped SSE updates.");
+
+    const ownerKey = workspaces[0].key;
+    const invitations = await Promise.all([
+      apiRequest(baseUrl, "POST", "/api/workspace/trainer-links", {
+        workspaceKey: ownerKey,
+        body: { seat: "trainer_a" },
+      }),
+      apiRequest(baseUrl, "POST", "/api/workspace/trainer-links", {
+        workspaceKey: ownerKey,
+        body: { seat: "trainer_b" },
+      }),
+    ]);
+    const [trainerA, trainerB] = invitations.map((invitation, index) => {
+      assert.equal(invitation.response.status, 201, `Owner must issue trainer ${index === 0 ? "A" : "B"} access`);
+      assert.match(invitation.data?.workspaceKey || "", /^[0-9a-f]{64}$/i);
+      assert.match(invitation.data?.linkId || "", /^[0-9a-f]{64}$/i);
+      return { key: invitation.data.workspaceKey, linkId: invitation.data.linkId };
+    });
+    assert.notEqual(trainerA.key, trainerB.key, "Trainer links must be distinct bearer capabilities");
+
+    const ownerLinks = await apiRequest(baseUrl, "GET", "/api/workspace/trainer-links", {
+      workspaceKey: ownerKey,
+    });
+    assert.deepEqual(
+      ownerLinks.data?.links?.filter(({ id }) => [trainerA.linkId, trainerB.linkId].includes(id))
+        .map(({ id, seat, status }) => ({ id, seat, status }))
+        .sort((left, right) => left.seat.localeCompare(right.seat)),
+      [
+        { id: trainerA.linkId, seat: "trainer_a", status: "active" },
+        { id: trainerB.linkId, seat: "trainer_b", status: "active" },
+      ].sort((left, right) => left.seat.localeCompare(right.seat)),
+      "Owner must see both active trainer invitations",
+    );
+
+    const [trainerAOperations, trainerBOperations] = await Promise.all([
+      apiRequest(baseUrl, "GET", "/api/operations", {
+        workspaceKey: trainerA.key,
+        query: { trainerId: "trainer_b" },
+      }),
+      apiRequest(baseUrl, "GET", "/api/operations", {
+        workspaceKey: trainerB.key,
+        query: { trainerId: "trainer_a" },
+      }),
+    ]);
+    assert.equal(trainerAOperations.data?.team?.id, workspaces[0].id);
+    assert.equal(trainerAOperations.data?.team?.role, "member");
+    assert.equal(trainerAOperations.data?.accessSeat, "trainer_a",
+      "Trainer A's link must not be able to claim Trainer B's seat");
+    assert.equal(trainerBOperations.data?.team?.id, workspaces[0].id);
+    assert.equal(trainerBOperations.data?.team?.role, "member");
+    assert.equal(trainerBOperations.data?.accessSeat, "trainer_b",
+      "Trainer B's link must not be able to claim Trainer A's seat");
+
+    await apiRequest(baseUrl, "PUT", "/api/travel/preferences", {
+      workspaceKey: trainerA.key,
+      query: { slot: "trainer_a" },
+      body: { hotelPerNight: 175 },
+    });
+    await apiRequest(baseUrl, "PUT", "/api/travel/preferences", {
+      workspaceKey: trainerB.key,
+      query: { slot: "trainer_b" },
+      body: { hotelPerNight: 260 },
+    });
+    const [ownerReadsTrainerA, ownerReadsTrainerB] = await Promise.all([
+      apiRequest(baseUrl, "GET", "/api/travel/preferences", {
+        workspaceKey: ownerKey,
+        query: { slot: "trainer_a" },
+      }),
+      apiRequest(baseUrl, "GET", "/api/travel/preferences", {
+        workspaceKey: ownerKey,
+        query: { slot: "trainer_b" },
+      }),
+    ]);
+    assert.equal(ownerReadsTrainerA.data?.preferences?.hotelPerNight, 175);
+    assert.equal(ownerReadsTrainerB.data?.preferences?.hotelPerNight, 260);
+    for (const [label, key, otherSeat] of [
+      ["Trainer A", trainerA.key, "trainer_b"],
+      ["Trainer B", trainerB.key, "trainer_a"],
+    ]) {
+      const crossSeatRead = await apiRequest(baseUrl, "GET", "/api/travel/preferences", {
+        workspaceKey: key,
+        query: { slot: otherSeat },
+        allowError: true,
+      });
+      assert.equal(crossSeatRead.response.status, 403, `${label} must not read the other trainer's preferences`);
+      const crossSeatWrite = await apiRequest(baseUrl, "PUT", "/api/travel/preferences", {
+        workspaceKey: key,
+        query: { slot: otherSeat },
+        body: { hotelPerNight: 999 },
+        allowError: true,
+      });
+      assert.equal(crossSeatWrite.response.status, 403, `${label} must not change the other trainer's preferences`);
+    }
+    const trainerBPreferences = await apiRequest(baseUrl, "GET", "/api/travel/preferences", {
+      workspaceKey: trainerB.key,
+      query: { slot: "trainer_b" },
+    });
+    assert.equal(trainerBPreferences.data?.preferences?.hotelPerNight, 260,
+      "A denied cross-seat write must not alter Trainer B's saved preferences");
+
+    const profilePayloads = {
+      trainer_a: {
+        id: "trainer_a", name: "Trainer 1", homeCity: "A-only base", homeAirports: [],
+        homeDriveMinutes: {}, preferredAirlines: "", preferNonstop: true, maxConnections: 1, notes: "",
+      },
+      trainer_b: {
+        id: "trainer_b", name: "Trainer 2", homeCity: "B-only base", homeAirports: [],
+        homeDriveMinutes: {}, preferredAirlines: "", preferNonstop: true, maxConnections: 1, notes: "",
+      },
+    };
+    const [trainerAProfileSave, trainerBProfileSave] = await Promise.all([
+      apiRequest(baseUrl, "PUT", "/api/trainer-profiles/trainer_a", {
+        workspaceKey: trainerA.key,
+        body: profilePayloads.trainer_a,
+      }),
+      apiRequest(baseUrl, "PUT", "/api/trainer-profiles/trainer_b", {
+        workspaceKey: trainerB.key,
+        body: profilePayloads.trainer_b,
+      }),
+    ]);
+    assert.equal(trainerAProfileSave.response.status, 200, "Trainer A may update its own profile");
+    assert.equal(trainerBProfileSave.response.status, 200, "Trainer B may update its own profile");
+    const [trainerAProfileDenied, trainerBProfileDenied] = await Promise.all([
+      apiRequest(baseUrl, "PUT", "/api/trainer-profiles/trainer_b", {
+        workspaceKey: trainerA.key,
+        body: { ...profilePayloads.trainer_b, homeCity: "Unauthorized edit" },
+        allowError: true,
+      }),
+      apiRequest(baseUrl, "PUT", "/api/trainer-profiles/trainer_a", {
+        workspaceKey: trainerB.key,
+        body: { ...profilePayloads.trainer_a, homeCity: "Unauthorized edit" },
+        allowError: true,
+      }),
+    ]);
+    assert.equal(trainerAProfileDenied.response.status, 403, "Trainer A must not change Trainer B's profile");
+    assert.equal(trainerBProfileDenied.response.status, 403, "Trainer B must not change Trainer A's profile");
+    const ownerProfiles = await apiRequest(baseUrl, "GET", "/api/trainer-profiles", {
+      workspaceKey: ownerKey,
+    });
+    assert.equal(
+      ownerProfiles.data?.profiles?.find(({ id }) => id === "trainer_a")?.homeCity,
+      "A-only base",
+      "Denied cross-seat writes must leave Trainer A's profile unchanged",
+    );
+    assert.equal(
+      ownerProfiles.data?.profiles?.find(({ id }) => id === "trainer_b")?.homeCity,
+      "B-only base",
+      "Denied cross-seat writes must leave Trainer B's profile unchanged",
+    );
+
+    for (const [label, key] of [["Trainer A", trainerA.key], ["Trainer B", trainerB.key]]) {
+      const deniedList = await apiRequest(baseUrl, "GET", "/api/workspace/trainer-links", {
+        workspaceKey: key,
+        allowError: true,
+      });
+      assert.equal(deniedList.response.status, 403, `${label} must not list or manage invitations`);
+      const deniedIssue = await apiRequest(baseUrl, "POST", "/api/workspace/trainer-links", {
+        workspaceKey: key,
+        body: { seat: "trainer_a" },
+        allowError: true,
+      });
+      assert.equal(deniedIssue.response.status, 403, `${label} must not issue trainer invitations`);
+    }
+    const deniedRevoke = await apiRequest(
+      baseUrl,
+      "DELETE",
+      `/api/workspace/trainer-links/${trainerA.linkId}`,
+      { workspaceKey: trainerB.key, allowError: true },
+    );
+    assert.equal(deniedRevoke.response.status, 403, "Trainer B must not revoke Trainer A's access");
+
+    const trainerAEvents = await openWorkspaceEventStream(
+      baseUrl, trainerA.key, workspaces[0].id, eventControllers,
+    );
+    const trainerBEvents = await openWorkspaceEventStream(
+      baseUrl, trainerB.key, workspaces[0].id, eventControllers,
+    );
+    const revoked = await apiRequest(
+      baseUrl,
+      "DELETE",
+      `/api/workspace/trainer-links/${trainerA.linkId}`,
+      { workspaceKey: ownerKey },
+    );
+    assert.equal(revoked.data?.revoked, true, "Owner must revoke Trainer A's link");
+
+    const revokedAccess = await apiRequest(baseUrl, "GET", "/api/operations", {
+      workspaceKey: trainerA.key,
+      allowError: true,
+    });
+    assert.equal(revokedAccess.response.status, 403, "Revoked trainer links must fail subsequent API requests");
+    const revokedMetadata = await apiRequest(baseUrl, "GET", "/api/workspace/trainer-links", {
+      workspaceKey: ownerKey,
+    });
+    assert.equal(
+      revokedMetadata.data?.links?.find(({ id }) => id === trainerA.linkId)?.status,
+      "revoked",
+      "Owner must see the trainer link's revoked status",
+    );
+
+    const pendingTrainerAAfterRevocation = trainerAEvents();
+    const trainerBRevocationNotice = await expectSseMessage(
+      trainerBEvents,
+      "Trainer B's notification about Trainer A's revocation",
+    );
+    assert.equal(trainerBRevocationNotice?.action, "revoked");
+    assert.equal(trainerBRevocationNotice?.entity, "trainer invitation");
+    await assertNoSseMessageDuring(
+      pendingTrainerAAfterRevocation,
+      "Trainer A after its link was revoked",
+      500,
+    );
+
+    const pendingTrainerBUpdate = trainerBEvents();
+    const postRevocationManager = await apiRequest(baseUrl, "POST", "/api/managers", {
+      workspaceKey: ownerKey,
+      body: { name: "Post-revocation live update" },
+    });
+    assert.equal(postRevocationManager.response.status, 201);
+    const trainerBUpdate = await expectSseMessage(
+      () => pendingTrainerBUpdate,
+      "Trainer B's authorized workspace update after revocation",
+    );
+    assert.equal(trainerBUpdate?.entity, "manager");
+    await assertNoSseMessageDuring(
+      pendingTrainerAAfterRevocation,
+      "Trainer A after another workspace update",
+      500,
+    );
+
+    console.log("API smoke check passed: isolated storage, guest workspace separation, owner/trainer access boundaries, revocation, and live subscription cleanup.");
   } finally {
     for (const controller of eventControllers) controller.abort();
     child.kill("SIGTERM");

@@ -944,6 +944,7 @@ function Product(){
         onOpenRecovery={()=>{setPwaOpen(false);go('team');}}/>
 
       {trainerProfilesOpen&&<TrainerProfilesEditor profiles={trainerProfiles} airports={airports}
+        accessSeat={board.accessSeat}
         onClose={()=>setTrainerProfilesOpen(false)}
         onSaved={async()=>{await reload();setNotice('Trainer profile updated.');}}/>}
     </div>

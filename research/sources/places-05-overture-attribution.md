@@ -1,0 +1,464 @@
+Source: https://docs.overturemaps.org/attribution/
+Title: Attribution and Licensing | Overture Documentation
+Fetched: 2026-11-06T05:56:12.247Z
+
+[Skip to main content](https://docs.overturemaps.org/attribution/#__docusaurus_skipToContent_fallback)
+
+On this page
+
+If you are the author of a publication or research report that uses Overture data, you may choose to add the following citation, including the date the data were accessed: `Overture Maps Foundation, overturemaps.org`.
+
+Some of the data sources we use in Overture datasets require their own attribution, according to their licenses. For example, our [Explore tool](https://explore.overturemaps.org/) displays several datasets that are made wholly or in part from OpenStreetMap data, so we added the following line of attribution to adhere to the requirements of the [Open Database License](https://opendatacommons.org/licenses/odbl/):
+`© OpenStreetMap contributors, Overture Maps Foundation`.
+
+![Explore screenshot](https://docs.overturemaps.org/assets/images/explore-attribution-58cf1daf66848815654d35fcdfc9ecd0.jpg)
+
+### Addresses [​](https://docs.overturemaps.org/attribution/\#addresses "Direct link to Addresses")
+
+**License for theme:** The addresses data comes from a variety of sources. All carry permissive open licenses. Some have special terms or require attribution. These terms are outlined below.
+
+#### Australia [​](https://docs.overturemaps.org/attribution/\#australia "Direct link to Australia")
+
+- G-NAF © [Geoscape Australia](https://geoscape.com.au/) licensed by the Commonwealth of Australia. Available under the [Open Geo-coded National Address File End User Licence Agreement](https://geoscape.com.au/wp-content/uploads/2024/08/EULA-G-NAF-Core-1.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Austria [​](https://docs.overturemaps.org/attribution/\#austria "Direct link to Austria")
+
+- © [Austrian Address Register](https://geometadatensuche.inspire.gv.at/metadatensuche/srv/ger/catalog.search#/metadata/bd28c2b0-4ea5-41c2-8847-b7e8711a6512). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Belgium [​](https://docs.overturemaps.org/attribution/\#belgium "Direct link to Belgium")
+
+- Wallonia data from [ICAR](https://opendata.bosa.be/index.fr.html). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Accessed: 2026-10-15.
+- Flanders data from [AR (Adressenregister)](https://opendata.bosa.be/index.fr.html). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Accessed: 2026-10-15.
+- Brussels data from [UrbiS](https://opendata.bosa.be/index.fr.html). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Accessed: 2026-10-15.
+
+#### Brazil [​](https://docs.overturemaps.org/attribution/\#brazil "Direct link to Brazil")
+
+- [IBGE (Instituto Brasileiro de Geografia e Estatística)](https://www.ibge.gov.br/). Available under [CC0](https://creativecommons.org/public-domain/cc0/). Distributed by AddressForAll. Accessed: 2024-10-13
+
+#### Canada [​](https://docs.overturemaps.org/attribution/\#canada "Direct link to Canada")
+
+- [Statistics Canada, National Address Register](https://www150.statcan.gc.ca/n1/pub/46-26-0002/462600022022001-eng.htm), 2024\. Reproduced and distributed on an "as is" basis with the permission of Statistics Canada. Available under [OGL - Statistics Canada Open Licence](https://www.statcan.gc.ca/en/reference/licence). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Yukon data from [Government of Yukon](https://map-data.service.yukon.ca/GeoYukon/People_and_Structures/Civic_Address_Point/). Available under [Open Government Licence - Yukon](https://open.yukon.ca/open-government-licence-yukon). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Quebec data from [Government of Le ministère des Ressources naturelles et des Forêts](https://mrnf.gouv.qc.ca/repertoire-geographique/adresses-referentiel-quebecois-adresses/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Chile [​](https://docs.overturemaps.org/attribution/\#chile "Direct link to Chile")
+
+- © [Instituto Nacional de Estadísticas](https://www.ine.es/). Available under CC BY 4.0. Distributed by AddressForAll. Accessed: 2026-10-15.
+
+#### Colombia [​](https://docs.overturemaps.org/attribution/\#colombia "Direct link to Colombia")
+
+- [Departamento Administrativo Nacional de Estadística (DANE)](https://www.dane.gov.co/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Croatia [​](https://docs.overturemaps.org/attribution/\#croatia "Direct link to Croatia")
+
+- [Državna geodetska uprava](https://inspire-geoportal.ec.europa.eu/srv/eng/catalog.search#/datasetdetails?resourceId=d3104048-688a-4305-9471-77288cc6e350). Available under an [Open License](https://data.gov.hr/otvorena-dozvola). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Czechia [​](https://docs.overturemaps.org/attribution/\#czechia "Direct link to Czechia")
+
+- Contains data from [Český úřad zeměměřický a katastrální (ČÚZK)](https://vdp.cuzk.cz/). Available under [CC BY 4.0](https://cuzk.gov.cz/Predpisy/Podminky-poskytovani-prostor-dat-a-sitovych-sluzeb/Podminky-poskytovani-prostorovych-dat-CUZK.aspx). Accessed: 2026-10-15.
+
+#### Denmark [​](https://docs.overturemaps.org/attribution/\#denmark "Direct link to Denmark")
+
+- Contains data from the [Danish Agency for Data Supply and Infrastructure](https://dawadocs.dataforsyningen.dk/). [Terms of use for free geographic data](https://dataforsyningen.dk/asset/PDF/rettigheder_vilkaar/Vilk%C3%A5r%20for%20brug%20af%20frie%20geografiske%20data.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Estonia [​](https://docs.overturemaps.org/attribution/\#estonia "Direct link to Estonia")
+
+- Data courtesy of [Estonian Land Board (MAA-AMET)](https://geoportaal.maaamet.ee/eng/). Available under [CC0](https://creativecommons.org/public-domain/cc0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Faroe Islands [​](https://docs.overturemaps.org/attribution/\#faroe-islands "Direct link to Faroe Islands")
+
+- [The Faroese Environment Agency, Umhvørvisstovan](https://www.foroyakort.fo/vevtaenastur). Available under [Terms and conditions](https://www.foroyakort.fo/um-foeroyakort/terms-and-conditions-in-english). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Finland [​](https://docs.overturemaps.org/attribution/\#finland "Direct link to Finland")
+
+- [Syke](https://www.syke.fi/en/environmental-data/open-web-services/web-map-services#addresses). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### France [​](https://docs.overturemaps.org/attribution/\#france "Direct link to France")
+
+- Data from [The national address site of the French Republic](https://adresse.data.gouv.fr/). Available under [LICENCE OUVERTE / OPEN LICENCE V2 - Etalab 2.0](https://www.etalab.gouv.fr/wp-content/uploads/2017/04/ETALAB-Licence-Ouverte-v2.0.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### French Polynesia [​](https://docs.overturemaps.org/attribution/\#french-polynesia "Direct link to French Polynesia")
+
+- [Gouvernement de la Polynésie Française](https://www.tefenua.data.gov.pf/datasets/80277e532b6c4628ac9e36e1bbbce28a_0/). Available under [Licence Ouverte / Open Licence Etalab 2.0](https://alliance.numerique.gouv.fr/licence-ouverte-open-licence/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Germany [​](https://docs.overturemaps.org/attribution/\#germany "Direct link to Germany")
+
+- Baden-Württemberg data from [LGL](https://www.lgl-bw.de/Produkte/Liegenschaftskataster/Hauskoordinaten/). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Berlin data from [Geoportal Berlin](https://gdi.berlin.de/geonetwork/srv/eng/catalog.search#/metadata/796582aa-dbfc-3fa5-9aa6-2846306fc185). [DL-DE->Zero-2.0](https://www.govdata.de/dl-de/zero-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Brandenburg data from [GeoBasis-DE/LGB](https://geobasis-bb.de/lgb/de/geodaten/liegenschaftskataster/georeferenzierte-adresse/). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Bremen data from [Landesamt GeoInformation Bremen](https://www.geo.bremen.de/produkte/katasterprodukte/auszuege-aus-dem-liegenschaftskataster-12272). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Hamburg data from [Freie und Hansestadt Hamburg, Landesbetrieb Geoinformation und Vermessung](http://suche.transparenz.hamburg.de/dataset/alkis-adressen-hamburg6). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Hesse data from [Hessischen Verwaltung für Bodenmanagement und Geoinformation](https://gds.hessen.de/INTERSHOP/web/WFS/HLBG-Geodaten-Site/de_DE/-/EUR/ViewDownloadcenter-Start?path=Liegenschaftskataster/Hauskoordinaten%20ohne%20Postalische%20Angaben%20(txt)). Available under [DL-DE->Zero-2.0](https://www.govdata.de/dl-de/zero-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Mecklenburg data from [Landesamt für innere Verwaltung Mecklenburg-Vorpommern](https://laiv.geodaten-mv.de/afgvk/Liegenschaftskataster/Beschreibung?produkt=ALKIS). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Niedersachsen data from [Landesamt für Geoinformation und Landesvermessung Niedersachsen](https://ni-lgln-opengeodata.hub.arcgis.com/apps/lgln-opengeodata::alkis/about). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- North Rhine-Westphalia data from [Geobasis NRW](https://www.opengeodata.nrw.de/produkte/geobasis/lk/akt/gebref_txt/). Available under [DL-DE->Zero-2.0](https://www.govdata.de/dl-de/zero-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Rhineland-Palatinate data from [GeoBasis-DE/LVermGeo RP](https://lvermgeo.rlp.de/geodaten-geoshop/open-data). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Saarland data from [GeoBasis-DE/LVermGeo SL](https://geoportal.saarland.de/mapbender/php/mod_iso19139ToHtml.php?url=https%3A%2F%2Fgeoportal.saarland.de%2Fmapbender%2Fphp%2Fmod_dataISOMetadata.php%3FoutputFormat%3Diso19139%26id%3Dcfc63fce-d914-4486-8f4f-c3c0973ddb64). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Saxony data from [Staatsbetrieb Geobasisinformation und Vermessung Sachsen](https://www.geodaten.sachsen.de/downloadbereich-hauskoordinaten-4172.html). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Saxony-Anhalt data from [GeoBasis-DE/LVermGeo ST](https://www.lvermgeo.sachsen-anhalt.de/de/gdp-open-data.html). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Schleswig-Holstein data from [©GeoBasis-DE/LVermGeo SH](https://geodaten.schleswig-holstein.de/gaialight-sh/_apps/dladownload/lizenz.html). Available under [CC BY 4.0](https://geodaten.schleswig-holstein.de/gaialight-sh/_apps/dladownload/lizenz.html). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Thuringia data from [Freistaat Thüringen](https://geoportal.thueringen.de/gdi-th/download-offene-geodaten). Available under [DL-DE->BY-2.0](https://www.govdata.de/dl-de/by-2-0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Greenland [​](https://docs.overturemaps.org/attribution/\#greenland "Direct link to Greenland")
+
+- Contains data from [Asiaq, Greenland Survey](https://www.asiaq.gl/). Available under [TERMS OF USE FOR ASIAQ GEODATA](https://kortforsyning.asiaq.gl/Downloads/EN_Terms%20of%20use.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Hong Kong [​](https://docs.overturemaps.org/attribution/\#hong-kong "Direct link to Hong Kong")
+
+- [Hong Kong Digital Policy Office](https://portal.csdi.gov.hk/geoportal/#metadataInfoPanel). Available under [Terms and Conditions of Use](https://portal.csdi.gov.hk/csdi-webpage/doc/TNC). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Iceland [​](https://docs.overturemaps.org/attribution/\#iceland "Direct link to Iceland")
+
+- [Stadfangaskra/Byggðastofnun](https://fasteignaskra.is/). Available under [Guidelines regarding the reuse of public information](https://web.archive.org/web/20241116140612/https://opingogn.is/pages/notkunarleidbeiningar). Accessed: 2026-10-15.
+
+#### Italy [​](https://docs.overturemaps.org/attribution/\#italy "Direct link to Italy")
+
+- [Archivio Nazionale dei Numeri Civici delle Strade Urbane (ANNCSU)](https://www.anncsu.gov.it/it/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Japan [​](https://docs.overturemaps.org/attribution/\#japan "Direct link to Japan")
+
+- [Japanese Ministry of Land, Infrastructure and Transport](https://nlftp.mlit.go.jp/isj/index.html). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Latvia [​](https://docs.overturemaps.org/attribution/\#latvia "Direct link to Latvia")
+
+- [Valsts zemes dienests](https://data.gov.lv/dati/eng/dataset/adreses-inspire/resource/22e0163f-b107-4f5b-9588-26a065f01c45). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Liechtenstein [​](https://docs.overturemaps.org/attribution/\#liechtenstein "Direct link to Liechtenstein")
+
+- Contains data from [Liechtensteinische Landesverwaltung](https://service.geo.llv.li/download//getfile.php?theme=officialAdress). Available under [OGD v2](https://service.geo.llv.li/download//officialAdress/AbiOGDLizenz.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Lithuania [​](https://docs.overturemaps.org/attribution/\#lithuania "Direct link to Lithuania")
+
+- [State Enterprise Centre of Registers](https://www.registrucentras.lt/en/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Luxembourg [​](https://docs.overturemaps.org/attribution/\#luxembourg "Direct link to Luxembourg")
+
+- [The Luxembourg open data platform](https://data.public.lu/fr/). Available under [CC0](https://creativecommons.org/public-domain/cc0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Mexico [​](https://docs.overturemaps.org/attribution/\#mexico "Direct link to Mexico")
+
+- [INEGI, Censos Económicos](https://en.www.inegi.org.mx/default.html). [TÉRMINOS DE LIBRE USO DE LA INFORMACIÓN DEL INEGI](https://www.inegi.org.mx/contenidos/inegi/doc/terminos_info.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Netherlands [​](https://docs.overturemaps.org/attribution/\#netherlands "Direct link to Netherlands")
+
+- BAG (Basisregistratie Adressen en Gebouwen) from [PDOK (Publieke Dienstverlening Op de Kaart)](https://www.pdok.nl/), sourced from Kadaster. Available under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.nl). Accessed: 2026-10-15.
+
+#### New Caledonia [​](https://docs.overturemaps.org/attribution/\#new-caledonia "Direct link to New Caledonia")
+
+- [Gouvernement de la Nouvelle-Calédonie](https://data.gouv.nc/explore/dataset/adresses_nouvelle_caledonie/). Available under [Licence Ouverte / Open Licence Etalab 2.0](https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### New Zealand [​](https://docs.overturemaps.org/attribution/\#new-zealand "Direct link to New Zealand")
+
+- [Land Information New Zealand (LINZ)](https://www.linz.govt.nz/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Norway [​](https://docs.overturemaps.org/attribution/\#norway "Direct link to Norway")
+
+- [Kartverket](https://kartkatalog.geonorge.no/metadata/matrikkelen-adresse-leilighetsnivaa/365b0591-b536-42a6-a20d-22e404fbfe55). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Accessed: 2026-10-15.
+
+#### Poland [​](https://docs.overturemaps.org/attribution/\#poland "Direct link to Poland")
+
+- Poland data from [Polish Law on Geodesy and Cartography](https://inspire-geoportal.ec.europa.eu/srv/eng/catalog.search#/datasetdetails?resourceId=a3990e57-5f0f-4bd6-94c9-47d46b692087). Available under [No conditions to access and use](https://inspire.ec.europa.eu/metadata-codelist/ConditionsApplyingToAccessAndUse/noConditionsApply). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Portugal [​](https://docs.overturemaps.org/attribution/\#portugal "Direct link to Portugal")
+
+- [Instituto Nacional de Estatística](https://www.ine.pt/xportal/xmain?xpgid=ine_main&xpid=INE). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Serbia [​](https://docs.overturemaps.org/attribution/\#serbia "Direct link to Serbia")
+
+- [Republički geodetski zavod](https://data.gov.rs/sl/datasets/adresni-registar/). Available under [Terms of use](https://data.gov.rs/sr/terms/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Singapore [​](https://docs.overturemaps.org/attribution/\#singapore "Direct link to Singapore")
+
+- Singapore data from [Singapore Land Authority](https://www.onemap.gov.sg/). Available under [Singapore Open Data Licence](https://www.onemap.gov.sg/legal/opendatalicence.html). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Slovenia [​](https://docs.overturemaps.org/attribution/\#slovenia "Direct link to Slovenia")
+
+- [GURS](https://ipi.eprostor.gov.si/jgp/data). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Accessed: 2026-10-15.
+
+#### Slovakia [​](https://docs.overturemaps.org/attribution/\#slovakia "Direct link to Slovakia")
+
+- [Ministerstvo vnútra Slovenskej republiky / Ministry of Interior of the Slovak Republic](https://data.gov.sk/dataset/register-adries-register-vchodov). Available under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Spain [​](https://docs.overturemaps.org/attribution/\#spain "Direct link to Spain")
+
+- [scne.es](https://centrodedescargas.cnig.es/CentroDescargas/buscadorCatalogo.do). Available under [CC BY 4.0](http://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Switzerland [​](https://docs.overturemaps.org/attribution/\#switzerland "Direct link to Switzerland")
+
+- [SwissTopo](https://www.swisstopo.admin.ch/). [Terms of use for free geodata](https://www.swisstopo.admin.ch/de/nutzungsbedingungen-kostenlose-geodaten-und-geodienste). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Taiwan [​](https://docs.overturemaps.org/attribution/\#taiwan "Direct link to Taiwan")
+
+- [Changhua County Government Civil Affairs Office](https://data.gov.tw/dataset/170727). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Chiayi County Government](https://data.gov.tw/dataset/172873). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-09-23.
+- [Hsinchu City Civil Affairs Office](https://data.gov.tw/dataset/157547). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Hsinchu County Civil Affairs Office](https://data.gov.tw/dataset/172380). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Hualien County Government](https://data.gov.tw/dataset/175221). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-09-23.
+- [Kaohsiung City Government Civil Affairs Bureau](https://data.gov.tw/dataset/172400). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-09-23.
+- [Keelung City Government Civil Affairs Bureau](https://www.klcg.gov.tw/tw/civil/2209-292163.html). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Kinmen County Civil Affairs Office](https://data.gov.tw/dataset/171571). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Miaoli Civil Affairs Office](https://opendata.miaoli.gov.tw/OpenDataDetail.aspx?n=9404&sms=0&s=1955). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-09-23.
+- [New Taipei City Government Civil Affairs Bureau](https://data.gov.tw/dataset/168887). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Penghu County Government](https://data.gov.tw/dataset/170852). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Pingtung County Government](https://data.gov.tw/dataset/170847). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Taichung City Government Civil Affairs Bureau](https://data.gov.tw/dataset/172808). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-09-23.
+- [Tainan City Government Civil Affairs Bureau](https://data.gov.tw/dataset/120044). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Taipei City Government Civil Affairs Bureau](https://data.gov.tw/dataset/155472). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Taitung County Government](https://data.gov.tw/dataset/165619). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-09-23.
+- [Taoyuan City Government Civil Affairs Bureau](https://data.gov.tw/dataset/157689). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Yunlin County Government](https://data.gov.tw/dataset/166201). Available under [CC BY 4.0](https://data.gov.tw/license). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### United States [​](https://docs.overturemaps.org/attribution/\#united-states "Direct link to United States")
+
+- [National Address Database (NAD)](https://www.transportation.gov/gis/national-address-database) from the U.S. Department of Transportation and the individual states that contribute to the database. [National Address Database (NAD) Disclaimer](https://www.transportation.gov/mission/open/gis/national-address-database/national-address-database-nad-disclaimer). The National Address Database is licensed under the National Address Database Access and Usage License. Accessed: 2026-10-15.
+
+##### California [​](https://docs.overturemaps.org/attribution/\#california "Direct link to California")
+
+- [Alameda County](https://data.acgov.org/datasets/4610acbf49364583986d45ee4106cc3f_0/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Amador County](https://services9.arcgis.com/Z65sx307Hunxj6eq/ArcGIS/rest/services/ParcelData_Public/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Butte County](https://gisportal.buttecounty.net/portal/home/item.html?id=9144daa8e8744ebe80e587d859c0a0fe). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Calaveras County](https://gisportal.calaverascounty.gov/server/rest/services/Hosted/ADDRESSING_DATA_ADDRESSING_POINTS/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [City and County of San Francisco](https://data.sfgov.org/api/views/ramy-di5m/rows.csv?accessType=DOWNLOAD&api_foundry=true). Available under [Public Domain Dedication and License (PDDL) v1.0](https://opendatacommons.org/licenses/pddl/1-0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Colusa County](https://www.countyofcolusa.org/index.aspx?NID=710). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Contra Costa County](https://www.contracosta.ca.gov/1818/GIS). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Del Norte County](https://www.co.del-norte.ca.us/departments/information-technology/geographic-information-services-gis). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [El Dorado County](https://www.edcgov.us/Government/Surveyor/FAQs/G_I_S__FAQs.aspx). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Fresno County](https://datasharing-cofgisonline.hub.arcgis.com/datasets/aec096ac4c1543c0bb3598523634db33_1/explore). Available under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Glenn County](https://gis.gcppwa.net/arcgis/rest/services/Districts/GCDistricts/MapServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Humboldt County](https://cty-gis-web.co.humboldt.ca.us/server/rest/services/Parcels/Parcels_no_labels/MapServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Imperial County](https://services7.arcgis.com/RomaVqqozKczDNgd/ArcGIS/rest/services/Parcels_Oct_2023/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Inyo County](https://inyocounty.us/gis/GISPage_Data.htm). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Kern County](https://maps.co.kern.ca.us/arcgis/rest/services/Accela_Base/MapServer/5). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Kings County](https://services3.arcgis.com/24gLq1DBBzDfd0cZ/ArcGIS/rest/services/Address_Kings_County/FeatureServer/4). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Lake County](https://gis.co.lake.ca.us/). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Lassen County](https://lassencounty.org/govt/dept/assessor/default.asp). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Los Angeles County](https://lacounty.maps.arcgis.com/sharing/rest/content/items/fa47b95a2f704df094cc19b834f4fb07/data). Available under [CC0](https://creativecommons.org/public-domain/cc0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Madera County](https://www.maderacounty.com/government/geographic-information-system-gis). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Marin County](https://gisopendata.marincounty.gov/datasets/marincounty::situs-address-points/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Mariposa County](https://services2.arcgis.com/wEula7SYiezXcdRv/ArcGIS/rest/services/Address_Points/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Mendocino County](https://gis.mendocinocounty.org/). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Merced County](https://geostack-mercedcounty.opendata.arcgis.com/datasets/MercedCounty::merced-county-site-address-points/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Modoc County](https://gis2.cdfa.ca.gov/server/rest/services/Parcel_DM/MapServer/24/). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Mono County](https://gis-monomammoth.opendata.arcgis.com/datasets/MonoMammoth::address-points/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Monterey County](https://gis-montereyco.opendata.arcgis.com/datasets/MontereyCo::addresses/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OikpenAddresses. Accessed: 2026-10-15.
+- [Napa County](https://gisdata.countyofnapa.org/datasets/napacounty::addresses-all/about). Available under [Public Domain Dedication and License (PDDL) v1.0](https://opendatacommons.org/licenses/pddl/1-0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Nevada County](https://maps-nevcounty.opendata.arcgis.com/datasets/nevcounty::parcel-situs-address/about). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Orange County](https://www.ocgis.com/arcpub/rest/services/Map_Layers/Address_Point_Final_Planning_Addressing/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Placer County](https://services6.arcgis.com/PArfeTGcwA9RGNzN/ArcGIS/rest/services/Address_Points/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Plumas County](https://plumascounty.us/2199/Interactive-GIS-Data-to-Download-Page). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Riverside County](https://gisopendata-countyofriverside.opendata.arcgis.com/datasets/CountyofRiverside::address-points/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Sacramento County](https://services1.arcgis.com/5NARefyPVtAeuJPU/ArcGIS/rest/services/Address/FeatureServer/0). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [San Benito County](https://cosb.maps.arcgis.com/home/item.html?id=f7dd7210ee114965aeeac18e9886daec). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [San Bernardino County](https://open.sbcounty.gov/datasets/sbcounty::countywide-parcels/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [San Diego County](https://geo.sandag.org/portal/home/item.html?id=b1c2fd749f6847ccae6040cf0f803647). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [San Joaquin County](https://sjmap.org/GISDataDownload.htm). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [San Luis Obispo County](https://opendata.slocounty.ca.gov/datasets/SLOCounty::address-points/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [San Mateo County](https://gis.smcgov.org/maps/rest/services/Common/SMC_GIS/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Santa Barbara County](https://services8.arcgis.com/s7n9cRiugyMCsR0U/ArcGIS/rest/services/Parcel_layers_ArcGISonline_LUZO/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Santa Clara County](https://data.sccgov.org/Government/AddressPoint/k4vk-5ggi). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Santa Cruz County](https://www.santacruzcountyca.gov/departments/geographicinformationsystems(gis).aspx). Available under [CC0 (assumed)](https://creativecommons.org/public-domain/cc0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Shasta County](https://data-shasta.opendata.arcgis.com/datasets/Shasta::addresspoints-2/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Sierra County](https://www.sierracounty.ca.gov/249/Geographic-Information-System-GIS-Map). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Siskiyou County](https://siskiyou.maps.arcgis.com/home/item.html?id=710e1a6aa9c949b0ab110b88b1647bc1). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Solano County](https://solanocountygis.com/portal/home/item.html?id=e6dda522cedd4544940baf0c98bfa0ca). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Sonoma County](https://gis-sonomacounty.hub.arcgis.com/datasets/sonomacounty::addresses/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Stanislaus County](https://gis2.stancounty.com/portal/home/item.html?id=2d32837e108940fca1be9c20993e2d75). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Sutter County](https://www.co.sutter.ca.us/doc/government/depts/cs/ps/cs_planning_services). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Tehama County](https://tehamartpa.org/gis/). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Trinity County](https://services2.arcgis.com/32siQkg0O6da8zFF/ArcGIS/rest/services/Address_Locations/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Tulare County](https://services2.arcgis.com/bYBANhmQGwSSLC0l/ArcGIS/rest/services/Tulare_County_Address_Points/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Tuolumne County](https://services3.arcgis.com/afQpMaliVrwHS7Ud/ArcGIS/rest/services/Parcels_WithSiteAddress_View/FeatureServer/0). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Ventura County](https://venturacountydatadownloads-vcitsgis.hub.arcgis.com/datasets/vcitsgis::master-address-points/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Yolo County](https://yodata-yolo.opendata.arcgis.com/datasets/47a04e578bbe4d738569e335749d15ba_0/about). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Yuba County](https://www.yuba.org/departments/information_technology/geographic_information_systems_(gis)/gis_data_catalog.php). Available under [Public domain by judicial interpretation of the Public Records Act](https://casetext.com/case/county-of-santa-clara-v-superior-court-10). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Colorado [​](https://docs.overturemaps.org/attribution/\#colorado "Direct link to Colorado")
+
+- [Governor's Office of Information Technology](https://geodata.colorado.gov/datasets/b6e244650e7c472ba53667f19ee01181/about). Available under public data. Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Florida [​](https://docs.overturemaps.org/attribution/\#florida "Direct link to Florida")
+
+- [Alachua County](https://services1.arcgis.com/MiBZ4u97DWldovjI/ArcGIS/rest/services/AddressPoints/FeatureServer/0). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Baker County](https://services6.arcgis.com/HSWu3dhzHf7nZfIa/ArcGIS/rest/services/911_Addresses_Website2/FeatureServer/0). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Bay County](https://gis.baycountyfl.gov/bayview/). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Bradford County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Brevard County](https://www.bcpao.us/PublicData.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Broward County](https://geohub-bcgis.opendata.arcgis.com/datasets/40a2da92e1fc48a3a86984be0238764f_0/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Calhoun County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Charlotte County](https://www.charlottecountyfl.gov/services/gis/Pages/Shapefile-Gallery.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Citrus County](https://gis.citrusbocc.com/data-downloads.html). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Clay County](https://ccpao.com/certified-data/). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Collier County](https://hub-collierbcc.opendata.arcgis.com/datasets/CollierBCC::address-points/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Columbia County](https://gis.columbiacountyfla.com/hosting/rest/services/Addresses/FeatureServer/1). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Desoto County](https://skyview.hornershifrin.com/DesotoCoFL/). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Dixie County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Duval County](https://maps.coj.net/coj/rest/services/ERAT/EratDashboard_3000/MapServer/41). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Escambia County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Flagler County](https://data-fcmaps.opendata.arcgis.com/datasets/FCMAPS::flagler-county-address-points/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Franklin County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Gadsden County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Gilchrist County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Glades County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Gulf County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Hamilton County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Hardee County](https://gis.hardeecounty.net/arcgis/rest/services/Addressing/MapServer/3). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Hendry County](https://gis.hendryfla.net/datasets/a84275b4f69d468a883d4715c98c29bc/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Hernando County](https://server.hernandopa-fl.us/server/rest/services/Basemap/MapServer/1). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Highlands County](https://hcbcc.maps.arcgis.com/home/item.html?id=f20fc360487d4b73a55bf5930a988c53). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Hillsborough County](https://gis2017-01-10t133755357z-hillsborough.opendata.arcgis.com/datasets/hillsborough::siteaddresspoint/about). Available under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Holmes County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Indian River County](https://gisportal.ircgov.com/server3/rest/services/Addressing/IRC_Address_Points_woLabels_MS/MapServer/0). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Jackson County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Jefferson County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Lafayette County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Lake County](https://gis.lakecountyfl.gov/gisweb/). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Lee County](https://maps.leegov.com/datasets/ng911-address-points-file-geodatabase/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Leon County](https://geodata-tlcgis.opendata.arcgis.com/datasets/tlcgis::site-address-points-tallahassee-leon-county/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Levy County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Liberty County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Madison County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Manatee County](https://public-manateegis.opendata.arcgis.com/datasets/manateegis::address-points-1/about). Available under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Marion County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Martin County](https://geoweb.martin.fl.us/arcgis/rest/services/geocoding/address_points/MapServer/0). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Miami-Dade County](https://gis-mdc.opendata.arcgis.com/datasets/MDC::address-1/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Monroe County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Nassau County](https://maps.nassauflpa.com/ncflpa_arcgis/rest/services/nassau/TaxMap4_CitrixV2/MapServer/231). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Okaloosa County](https://myokaloosa.com/gis_data). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Okeechobee County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Orange County](https://ocgis-datahub-ocfl.hub.arcgis.com/datasets/ocfl::address-point/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Osceola County](https://gis.osceola.org/hosting/rest/services/Address_Points/FeatureServer/0). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Palm Beach County](https://opendata2-pbcgov.opendata.arcgis.com/datasets/situs-addresses/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Pasco County](https://services6.arcgis.com/Mo4MddfRHpFwT7UF/ArcGIS/rest/services/Addressing/FeatureServer/16). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Pinellas County](https://new-pinellas-egis.opendata.arcgis.com/maps/site-address-points-911/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Polk County](https://gis.polk-county.net/hosting/rest/services/Accela/APO_Layer_Map/MapServer/6). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Putnam County](https://putnam-pcgis.hub.arcgis.com/datasets/6006770008e44a56ac751f042043b8d2_0/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Santa Rosa County](https://data1-santarosagis.opendata.arcgis.com/datasets/structures). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Sarasota County](https://data-sarco.opendata.arcgis.com/datasets/sarco::addresspoint/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Seminole County](https://www.seminolecountyfl.gov/departments-services/information-services/gis-geographic-information-systems/gis-data.stml). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [St. Johns County](https://data-sjcfl.hub.arcgis.com/datasets/5c6b300e4fda4964ac0694f7a266be08_0/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [St. Lucie County](https://data-slc.opendata.arcgis.com/datasets/slc::addressmaster/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Sumter County](https://sumtercountyfl.gov/105/GIS). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Suwannee County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Taylor County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Union County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Volusia County](https://opendata-volusiacountyfl.hub.arcgis.com/datasets/VolusiaCountyFL::address-situs/about). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Wakulla County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Walton County](https://www.co.walton.fl.us/910/GIS-Data). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- Washington County data from [Florida Department of Revenue](https://pointmatch.floridarevenue.com/General/AddressFiles.aspx). Available under [Public domain by judicial decision](https://www.myfloridalegal.com/ag-opinions/records-license-agreements-for-county-maps). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Georgia [​](https://docs.overturemaps.org/attribution/\#georgia "Direct link to Georgia")
+
+- Clarke County data from [Athens-Clarke County GIS](https://data-athensclarke.opendata.arcgis.com/datasets/AthensClarke::acc-address-point/about). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [DeKalb County](https://dekalbinsights-dekalbgis.opendata.arcgis.com/datasets/DeKalbGIS::address-6/about). Available under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Idaho [​](https://docs.overturemaps.org/attribution/\#idaho "Direct link to Idaho")
+
+- [City of Boise](https://city-of-boise.opendata.arcgis.com/search?q=addresses). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Louisiana [​](https://docs.overturemaps.org/attribution/\#louisiana "Direct link to Louisiana")
+
+- [City of New Orleans](https://data.nola.gov/Public-Safety-and-Preparedness/Site-Address-Point/hfvu-md72). Available under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Massachusetts [​](https://docs.overturemaps.org/attribution/\#massachusetts "Direct link to Massachusetts")
+
+- [MassGIS](https://arcgisserver.digital.mass.gov/arcgisserver/rest/services/AGOL/MassGIS_Master_Address_Points/MapServer/0). Available under [Public Domain](https://creativecommons.org/public-domain/cc0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Michigan [​](https://docs.overturemaps.org/attribution/\#michigan "Direct link to Michigan")
+
+- [Reproduced with permission granted by the County of Allegan, Michigan. Some information has been provided subject to a non-exclusive, limited, and revocable license granted by the County of Allegan, Michigan](https://www.allegancounty.org/online-services/gis). Available under [ALLEGAN COUNTY GEOSPATIAL DATA LICENSE AGREEMENT](https://www.allegancounty.org/home/showpublisheddocument/402/637684270478730000). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Reproduced with permission granted by the County of Kent, Michigan. Some information has been provided subject to a non-exclusive, limited, and revocable license granted by the County of Kent, Michigan.](https://gis.kentcountymi.gov/agisportal/apps/sites/#/kent-county-open-data-hub). Available under [KENT COUNTY GEOSPATIAL DATA LICENSE AGREEMENT](https://www.kentcountymi.gov/DocumentCenter/View/6837/Terms-and-Conditions-of-Use-PDF). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Reproduced with permission granted Muskegon County, Michigan. Some information has been provided subject to a non-exclusive, limited, and revocable license granted by Muskegon County, Michigan.](https://maps.muskegoncountygis.com/portal/apps/sites/#/gis-home). Available under [DATA DOWNLOAD / USE AGREEMENT](https://maps.muskegoncountygis.com/open_data/documents/MCGIS_Data_Download_Use_Agreement.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Oakland County](https://accessoakland.oakgov.com/datasets/oakgov::oc-site-address/about). Available under [Open Data](https://accessoakland.oakgov.com/datasets/oakgov::oc-site-address/about). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Minnesota [​](https://docs.overturemaps.org/attribution/\#minnesota "Direct link to Minnesota")
+
+- [Department of Public Safety](https://dps.mn.gov/divisions/ecn/contact-ecn/submit-ecn-data-request). Available under public data. Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Mississippi [​](https://docs.overturemaps.org/attribution/\#mississippi "Direct link to Mississippi")
+
+- [MARIS](https://maris.mississippi.edu/HTML/DATA/Cadastral.html#gsc.tab=0). Available under [Open Data](https://maris.mississippi.edu/HTML/DATA/data_Cadastral/DataDisclaimer.pdf). Distributed by OpenAddresses. Accessed: 2026-10-15.
+- [Desoto County](https://desotocounty-dcms-gis.hub.arcgis.com/datasets/DCMS-GIS::addresses/about). Available with no commercial usage restrictions or attribution requirements. Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Nevada [​](https://docs.overturemaps.org/attribution/\#nevada "Direct link to Nevada")
+
+- [Carson City, NV](https://data-carsoncity.opendata.arcgis.com/datasets/CarsonCity::address-points/about). Available under [License](https://data-carsoncity.opendata.arcgis.com/datasets/CarsonCity::address-points/about). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### New York [​](https://docs.overturemaps.org/attribution/\#new-york "Direct link to New York")
+
+- [Open Data Terms of Use](https://opendata.cityofnewyork.us/overview/) for NYC Open Data. Address data from the NYC Department of City Planning. Accessed: 2026-10-15.
+
+##### Oregon [​](https://docs.overturemaps.org/attribution/\#oregon "Direct link to Oregon")
+
+- Statewide data from [Oregon GeoHub](https://geohub.oregon.gov/pages/terms-of-use). No usage restrictions; credits and caveats are included in the metadata. Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Pennsylvania [​](https://docs.overturemaps.org/attribution/\#pennsylvania "Direct link to Pennsylvania")
+
+- Lackawanna County data from [City of Scranton GIS](https://scranton-open-data-scrantonplanning.hub.arcgis.com/datasets/6eb6dbd15aef44a0a2c2b388d893f906/about). Available under [PDDL 1.0](https://opendatacommons.org/licenses/pddl/summary/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+##### Wisconsin [​](https://docs.overturemaps.org/attribution/\#wisconsin "Direct link to Wisconsin")
+
+- [Waupaca County](https://public1.co.waupaca.wi.us/arcgis/rest/services/Public/OpenData/MapServer/24). Available under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Distributed by OpenAddresses. Accessed: 2026-10-15.
+
+#### Uruguay [​](https://docs.overturemaps.org/attribution/\#uruguay "Direct link to Uruguay")
+
+- Contains data from [IDE (Infraestructura de Datos Espaciales – Presidencia de la República de Uruguay)](https://catalogodatos.gub.uy/dataset/ide-direcciones-geograficas-del-uruguay), published by department (Artigas, Canelones, Cerro Largo, Colonia, Durazno, Flores, Florida, Lavalleja, Maldonado, Montevideo, Paysandú, Río Negro, Rivera, Rocha, Salto, San José, Soriano, Tacuarembó, Treinta y Tres). Available under the [Licencia de Datos Abiertos – Uruguay](https://www.gub.uy/agencia-gobierno-electronico-sociedad-informacion-conocimiento/sites/agencia-gobierno-electronico-sociedad-informacion-conocimiento/files/documentos/publicaciones/licencia_de_datos_abiertos_0.pdf). Distributed by OpenAddresses. Accessed: 2026-09-30.
+
+### Base [​](https://docs.overturemaps.org/attribution/\#base "Direct link to Base")
+
+**License for theme:** [ODbL](https://opendatacommons.org/licenses/odbl/)
+
+- © OpenStreetMap contributors. Available under the [Open Database License](https://www.openstreetmap.org/copyright).
+- Data from the [Daylight Map Distribution](https://daylightmap.org/)
+- [ESA WorldCover](https://esa-worldcover.org/en/data-access). © ESA WorldCover project 2020 / Contains modified Copernicus Sentinel data (2020) processed by ESA WorldCover consortium. Available under [CC BY 4.0 DEED](https://creativecommons.org/licenses/by/4.0/).
+- Data products from [ETOPO1](https://www.ncei.noaa.gov/products/etopo-global-relief-model). Available under [Open Data Commons Public Domain Dedication and License](https://www.nature.com/articles/s41597-022-01132-9).
+- Data from [GLOBathy](https://www.nature.com/articles/s41597-022-01132-9). Available under [CC0 1.0 (assumed)](https://www.nature.com/articles/s41597-022-01132-9).
+
+### Buildings [​](https://docs.overturemaps.org/attribution/\#buildings "Direct link to Buildings")
+
+**License for theme:** [ODbL](https://opendatacommons.org/licenses/odbl/)
+
+- © OpenStreetMap contributors. Available under the [Open Database License](https://www.openstreetmap.org/copyright).
+- [Esri Community Maps contributors](https://communitymaps.arcgis.com/home/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- [Global ML Building Footprints](https://github.com/microsoft/GlobalMLBuildingFootprints). Licensed by Microsoft under the [Open Database License](https://opendatacommons.org/licenses/odbl/).
+- [Google Open Buildings](https://arxiv.org/abs/2107.12283). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- [USGS 3D Elevation Program Digital Elevation Program](https://www.usgs.gov/3d-elevation-program).
+- Qian Shi, et al. A First High-quality Vector Data of Buildings in East Asian Countries Based on a Comprehensive Large-scale Mapping Framework. Zenodo, 22 July 2023, [doi:10.5281/zenodo.8174931](https://doi.org/10.5281/zenodo.8174931). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- Work derived from BTN 2024 [ign.es](https://www.ign.es/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+### Divisions [​](https://docs.overturemaps.org/attribution/\#divisions "Direct link to Divisions")
+
+**License for theme:** [ODbL](https://opendatacommons.org/licenses/odbl/)
+
+- © OpenStreetMap contributors. Available under the [Open Database License](https://www.openstreetmap.org/copyright).
+- [geoBoundaries](https://www.geoboundaries.org/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- [Esri Community Maps contributors](https://communitymaps.arcgis.com/home/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- [Land Information New Zealand (LINZ)](https://www.linz.govt.nz/). Available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+### Places [​](https://docs.overturemaps.org/attribution/\#places "Direct link to Places")
+
+- Data from [Meta](https://about.meta.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [Microsoft](https://www.microsoft.com/en-us/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [PinMeTo](https://www.pinmeto.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [Krick](https://www.krick.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [RenderSEO](https://www.renderseo.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [DAC](https://www.dacgroup.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [BrightQuery](https://brightquery.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [Birdeye](https://birdeye.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [Uberall](https://uberall.com/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [OpenTravel Alliance](https://opentravel.org/). Available under [CDLA Permissive 2.0](https://cdla.dev/permissive-2-0/).
+- Data from [Foursquare](https://foursquare.com/). Copyright 2024 Foursquare Labs, Inc. All rights reserved. Available under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0). Foursquare data was transformed to the Overture schema. Changed: 2026-03-18. [NOTICE.txt](https://opensource.foursquare.com/places-notice-txt/).
+- Data from [AllThePlaces](https://alltheplaces.xyz/). Available under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.en).
+
+### Transportation [​](https://docs.overturemaps.org/attribution/\#transportation "Direct link to Transportation")
+
+**License for theme:** [ODbL](https://opendatacommons.org/licenses/odbl/)
+
+- © OpenStreetMap contributors. Available under the [Open Database License](https://www.openstreetmap.org/copyright).
+- Data from [TomTom](https://www.tomtom.com/).
+
+- [Addresses](https://docs.overturemaps.org/attribution/#addresses)
+- [Base](https://docs.overturemaps.org/attribution/#base)
+- [Buildings](https://docs.overturemaps.org/attribution/#buildings)
+- [Divisions](https://docs.overturemaps.org/attribution/#divisions)
+- [Places](https://docs.overturemaps.org/attribution/#places)
+- [Transportation](https://docs.overturemaps.org/attribution/#transportation)

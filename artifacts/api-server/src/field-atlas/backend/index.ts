@@ -1928,7 +1928,12 @@ export const handler = router({
 
   'GET /api/travel/preferences': [workspaceAccess, async ctx=>{
     const m=await member(ctx.user!.userId);if(!m)return error('Team required.',403);
-    const slot=String(ctx.query?.slot||'');
+    const requestedSlot=String(ctx.query?.slot||'');
+    const accessSeat=ctx.user!.scope.includes('trainer:trainer_a')?'trainer_a':
+      ctx.user!.scope.includes('trainer:trainer_b')?'trainer_b':undefined;
+    if(accessSeat&&requestedSlot&&requestedSlot!==accessSeat)
+      return error('A trainer link can only access its assigned travel preferences.',403);
+    const slot=accessSeat||requestedSlot;
     const key=slot==='trainer_a'||slot==='trainer_b'?slot:ctx.user!.userId;
     const [preferences]=await db.get(extraTables(m.workspaceId).travelPrefs,[key],{consistent:true});
     // Preserve the old common workspace preference record as an initial fallback for Trainer 1.
@@ -1942,7 +1947,12 @@ export const handler = router({
     const m=await member(ctx.user!.userId);if(!m)return error('Team required.',403);
     const prefs=cleanTravelPrefs(bodyOf(ctx.body));
     const table=extraTables(m.workspaceId).travelPrefs;
-    const slot=String(ctx.query?.slot||'');
+    const requestedSlot=String(ctx.query?.slot||'');
+    const accessSeat=ctx.user!.scope.includes('trainer:trainer_a')?'trainer_a':
+      ctx.user!.scope.includes('trainer:trainer_b')?'trainer_b':undefined;
+    if(accessSeat&&requestedSlot&&requestedSlot!==accessSeat)
+      return error('A trainer link can only access its assigned travel preferences.',403);
+    const slot=accessSeat||requestedSlot;
     const key=slot==='trainer_a'||slot==='trainer_b'?slot:ctx.user!.userId;
     const [existing]=await db.get(table,[key],{consistent:true});
     if(existing){
@@ -2172,6 +2182,10 @@ export const handler = router({
     if(!m)return error('Workspace unavailable.',403);
     const slot=String(ctx.params.slot||'');
     if(slot!=='trainer_a'&&slot!=='trainer_b')return error('Unknown trainer profile.',400);
+    const accessSeat=ctx.user!.scope.includes('trainer:trainer_a')?'trainer_a':
+      ctx.user!.scope.includes('trainer:trainer_b')?'trainer_b':undefined;
+    if(accessSeat&&slot!==accessSeat)
+      return error('A trainer link can only update its assigned trainer profile.',403);
     const next=validTrainerBody(ctx.body,slot);
     if(!next)return error('Trainer name must contain at least two characters.',400);
     const current=await trainerProfilesFor(m.workspaceId);
