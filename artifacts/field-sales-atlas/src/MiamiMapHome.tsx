@@ -734,7 +734,8 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
          </div>
        </div>
        <div className="atlas-map-view-switch" role="group" aria-label="Choose map or list display">
-         <span>View</span>
+         {airportLayer!=='none'&&<span className="atlas-reference-note"><Plane size={13}/> Public airport points, not saved territories</span>}
+         <span className="atlas-view-label">View</span>
          <button type="button" data-testid="map-view-map" className={viewMode==='map'?'active':''}
            aria-pressed={viewMode==='map'} onClick={()=>setViewMode('map')}>
            <MapIcon size={16}/> Map

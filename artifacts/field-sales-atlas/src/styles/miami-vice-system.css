@@ -615,9 +615,10 @@ html[data-field-atlas-theme='light'],
 
 /* Clearer workspace groups, freshness details, and accessible mobile browsing. */
 .mv-app.atlas-command-v5.vice-product .fsa-sidebar-group {margin:4px 0 8px;}
-.mv-app.atlas-command-v5.vice-product .fsa-sidebar-group .fsa-sidebar-label {
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-group .fsa-sidebar-label {
+  display:block;
   margin:12px 9px 5px;
-  color:var(--at-subtle);
+  color:var(--at-muted);
   font-size:9px;
   letter-spacing:.13em;
 }
@@ -879,13 +880,25 @@ html[data-field-atlas-theme='light'],
     color:var(--at-muted);
     font-size:10px;
   }
+  .mv-app.atlas-command-v5.vice-product .atlas-reference-note {
+    display:flex;
+    align-items:center;
+    gap:4px;
+    min-width:0;
+    margin-right:auto;
+    color:var(--at-muted);
+    font-size:9px;
+    line-height:1.2;
+  }
+  .mv-app.atlas-command-v5.vice-product .atlas-reference-note svg {flex:0 0 13px;color:var(--at-cyan);}
+  .mv-app.atlas-command-v5.vice-product .atlas-view-label {font-size:9px;}
   .mv-app.atlas-command-v5.vice-product .atlas-map-view-switch button {
     display:flex;
     align-items:center;
     justify-content:center;
     gap:5px;
-    min-height:38px;
-    padding:6px 10px;
+    min-height:34px;
+    padding:5px 8px;
     border:1px solid var(--at-border);
     border-radius:7px;
     background:var(--at-surface);
@@ -898,7 +911,8 @@ html[data-field-atlas-theme='light'],
     background:var(--at-aqua-soft);
     color:var(--at-cyan);
   }
-  .mv-app.atlas-command-v5.vice-product .atlas-data-sources {margin:7px 14px 0;}
+  .mv-app.atlas-command-v5.vice-product .atlas-data-sources {margin:4px 14px 0;}
+  .mv-app.atlas-command-v5.vice-product .atlas-data-sources>summary {min-height:34px;padding-block:5px;}
   .mv-app.atlas-command-v5.vice-product .atlas-data-source-list {grid-template-columns:minmax(0,1fr);}
   .mv-app.atlas-command-v5.vice-product .atlas-readable-list {
     gap:8px;
@@ -932,26 +946,54 @@ html[data-field-atlas-theme='light'],
   .mv-app.atlas-command-v5.vice-product .mv-header .fsa-command-trigger span,
   .mv-app.atlas-command-v5.vice-product .mv-header .fsa-command-trigger kbd {display:none!important;}
   .mv-app.atlas-command-v5.vice-product .mv-header .fsa-command-trigger svg {width:18px;height:18px;}
-  .mv-app.atlas-command-v5.vice-product .mv-map-page>.vice-masthead {
-    min-height:132px;
-    margin-bottom:10px;
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead {
+    min-height:112px;
+    margin:0 -16px 7px;
   }
-  .mv-app.atlas-command-v5.vice-product .mv-map-page>.vice-masthead .vice-masthead-content {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead .vice-masthead-content {
     grid-template-columns:minmax(0,1fr) auto;
-    gap:7px;
-    padding:12px 18px;
+    gap:4px 8px;
+    width:100%;
+    max-width:none;
+    padding:8px 16px;
   }
-  .mv-app.atlas-command-v5.vice-product .mv-map-page>.vice-masthead h1 {font-size:clamp(25px,7vw,31px);}
-  .mv-app.atlas-command-v5.vice-product .mv-map-page>.vice-masthead p {max-width:240px;margin:0;font-size:10px;}
-  .mv-app.atlas-command-v5.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead {
-    min-height:94px;
-    margin-bottom:8px;
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead h1 {
+    grid-column:1;
+    grid-row:1;
+    max-width:none;
+    margin:0;
+    font-size:clamp(21px,6vw,26px);
+    line-height:1;
   }
-  .mv-app.atlas-command-v5.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead .vice-masthead-content {
-    padding:9px 16px;
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead p {
+    grid-column:1;
+    grid-row:2;
+    max-width:260px;
+    margin:0;
+    font-size:10px;
+    line-height:1.2;
   }
-  .mv-app.atlas-command-v5.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead h1 {font-size:clamp(22px,6vw,27px);}
-  .mv-app.atlas-command-v5.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead p {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead .vice-primary {
+    grid-column:2;
+    grid-row:1 / span 2;
+    align-self:center;
+    min-height:36px;
+    padding:6px 8px;
+    gap:5px;
+    font-size:12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead {
+    min-height:78px;
+    margin-bottom:6px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead .vice-masthead-content {padding-block:6px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead h1 {font-size:clamp(21px,6vw,25px);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead p {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading {padding:10px 12px 0;gap:8px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text h2 {font-size:24px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses {min-height:38px;margin-top:2px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>button {min-height:38px;padding-block:6px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-body {margin:4px;}
   .mv-app.atlas-command-v5.vice-product .atlas-setup.is-minimized {
     margin:5px 12px 7px;
     padding:0;
@@ -975,4 +1017,13 @@ html[data-field-atlas-theme='light'],
 }
 @media(min-width:801px) {
   .mv-app.atlas-command-v5.vice-product .atlas-list-mode .atlas-map-view-switch {display:flex;justify-content:flex-end;margin:8px 14px 0;}
+}
+@media(min-width:801px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead {
+    min-height:140px;
+    margin-bottom:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead .vice-masthead-content {
+    padding-block:16px;
+  }
 }

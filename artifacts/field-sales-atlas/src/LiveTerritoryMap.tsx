@@ -221,8 +221,9 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
     minZoom:1.7,maxZoom:13,dragRotate:false,cooperativeGestures:false
    });
    map.current=instance;
-   instance.setMissingStyleImageResolver(async imageId=>{
-    if(imageId!=='circle-11'||instance.hasImage(imageId))return;
+   const mapInstance=instance;
+   mapInstance.setMissingStyleImageResolver(async imageId=>{
+    if(imageId!=='circle-11'||mapInstance.hasImage(imageId))return;
     const data=new Uint8Array(11*11*4);
     for(let y=0;y<11;y++)for(let x=0;x<11;x++){
      const distance=Math.hypot(x-5,y-5);
@@ -234,7 +235,7 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
      data[offset+2]=border?255:185;
      data[offset+3]=255;
     }
-    instance.addImage(imageId,{width:11,height:11,data});
+    mapInstance.addImage(imageId,{width:11,height:11,data});
    });
    instance.addControl(new AttributionControl({compact:true}),'bottom-right');
    instance.touchZoomRotate.disableRotation();

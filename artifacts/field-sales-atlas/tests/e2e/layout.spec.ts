@@ -127,6 +127,14 @@ test('phone keyboard search opens one visible dialog with the desktop rail hidde
 test('phone users can browse an accessible, searchable map list with source details', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+  const setupChip = page.getByTestId('setup-open');
+  await expect(setupChip).toBeVisible();
+  await setupChip.click();
+  await expect(page.getByRole('button', { name: 'Add first manager' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Collapse', exact: true }).click();
+  await page.getByRole('button', { name: 'Minimize setup reminder' }).click();
+  await expect(setupChip).toBeVisible();
+
   const listSwitch = page.getByTestId('map-view-list');
   await expect(listSwitch).toBeVisible();
   await listSwitch.click();
@@ -135,8 +143,9 @@ test('phone users can browse an accessible, searchable map list with source deta
   await expect(page.getByRole('heading', { name: 'Browse map data as a list' })).toBeVisible();
 
   const filter = page.getByTestId('map-list-filter');
-  await filter.fill('Boston');
-  await expect(filter).toHaveValue('Boston');
+  await filter.fill('California');
+  await expect(filter).toHaveValue('California');
+  await expect(page.getByTestId('region-row-CA')).toBeVisible();
 
   const sources = page.getByTestId('data-sources');
   await sources.locator('summary').click();
