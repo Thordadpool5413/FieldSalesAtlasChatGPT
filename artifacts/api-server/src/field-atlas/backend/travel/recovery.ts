@@ -1,3 +1,4 @@
+import { journeyReadiness } from './readiness';
 import { z } from 'zod';
 import { createHash, randomUUID } from 'node:crypto';
 import { db, AppDatabaseError } from '../runtime/sdk';
@@ -51,7 +52,7 @@ export async function changedContext(context: PlanContext, change: FlightChange)
   let flights = [...context.input.flights];
   const matched = flights.findIndex(flight => flightKey(flight) === flightKey(change.originalLeg));
   if (matched >= 0) flights.splice(matched, 1);
-  if (change.replacementLeg) flights.push({ ...change.replacementLeg, providedAt: change.checkedAt });
+  if (change.replacementLeg) flights.push({ ...change.replacementLeg, review: undefined, providedAt: change.checkedAt });
   const airports = await lookupAirports([...flights.flatMap(flight => [flight.origin, flight.destination]), change.originalLeg.origin, change.originalLeg.destination]);
   const original = normalizeFlights([change.originalLeg], airports)[0];
   const baseline = normalizeFlights(context.input.flights, airports).filter(flight => flight.trainerId === change.originalLeg.trainerId);
@@ -132,12 +133,20 @@ export async function buildRecovery(workspaceId: string, changeId: string, board
         changed: before.trainer !== trainer.name || before.date !== visit.date || before.startTime !== visit.startTime || before.endTime !== visit.endTime };
     });
     const evidence = [...report.evidence, change.evidence, workEvidence, policy, matrix.evidence].filter((item, index, all) => all.findIndex(other => other.id === item.id) === index);
-    const option: RecoveryOption = { id: randomUUID(), label: variant.label, scenario, report: { ...report, evidence }, evidence, differences,
+    const optionInput = differences.some(item => item.changed) && variant.input.requirements ? {
+      ...variant.input, requirements: { trainers: variant.input.requirements.trainers.map(item => ({
+        ...item, transport: item.transport === 'shared-arranged' ? 'shared-needs-review' as const : item.transport,
+        equipment: item.equipment === 'shared-arranged' ? 'shared-needs-review' as const : item.equipment,
+      })) },
+    } : variant.input;
+    const readiness = await journeyReadiness(optionInput, changed.board, scenario.visits);
+    for (const item of readiness.evidence) if (!evidence.some(existing => existing.id === item.id)) evidence.push(item);
+    const option: RecoveryOption = { id: randomUUID(), label: variant.label, scenario, readiness: readiness.readiness, report: { ...report, evidence }, evidence, differences,
       consequences: board.trainerProfiles.map(profile => `${profile.name}: ${context.pending.filter(visit => visit.trainer === profile.name || visit.trainerId === profile.id).length} pending visits before; ${scenario.visits.filter(visit => visit.trainerId === profile.id).length} in this option.`) };
     option.consequences.push(`${differences.filter(item => item.changed).length} appointments change trainer, date or local time. Completed visits remain unchanged. Manager ownership is preserved.`);
     if (changed.unavailable) option.consequences.push('The disrupted trainer is reserved as unavailable until flight access is resolved. No replacement flight has been invented.');
     if (!scenario.feasible) option.consequences.push(`${scenario.unplaced.length} visits could not be placed. This option cannot update the calendar.`);
-    inputs[option.id] = variant.input; options.push(option);
+    inputs[option.id] = optionInput; options.push(option);
   }
   const now = new Date().toISOString();
   const preview: StoredRecovery = { id: randomUUID(), changeId, reportId: change.reportId, workspaceRevision: revision, createdAt: now,
@@ -155,6 +164,7 @@ export async function approveRecovery(workspaceId: string, previewId: string, op
   if (preview.receipt) { if (preview.receipt.optionId !== optionId) throw new Error('Another option from this preview is already applied.'); return { ...preview.receipt, replayed: true }; }
   const option = preview.options.find(item => item.id === optionId);
   if (!option?.scenario.feasible || !acknowledge) throw new Error('Review the consequences and select a complete recovery option before approving.');
+  if (option.readiness?.constraints.some(step => step.marginMinutes !== null && step.marginMinutes < 0)) throw new Error('A supplied journey requirement is missed. Resolve the timing or pickup requirement and rebuild recovery.');
   if (Date.parse(preview.expiresAt) <= Date.now() || option.evidence.some(item => item.state === 'current' && evidenceState(item) !== 'current')) throw new Error('Recovery evidence or preview expired. Build fresh options.');
   const context = await planContext(workspaceId, preview.reportId, board);
   if (context.pendingChange?.id !== preview.changeId) throw new Error('The reported flight change was resolved or replaced. Refresh before approving.');

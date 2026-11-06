@@ -1,3 +1,4 @@
+import { connectionConstraints, flightInstants, type FlightReview, type ConnectionRequirements } from '../shared/travel/readiness';
 import type { Airport,Board,TrainerProfile } from './opsModels';
 
 export type BookedLeg = {
@@ -10,13 +11,17 @@ export type BookedLeg = {
   departTime: string;
   arriveDate: string;
   arriveTime: string;
+  departureZone?: string; arrivalZone?: string; connection?: ConnectionRequirements;
 };
 
 export type BookedFlight = {
   id: string;
   trainerId: 'trainer_a'|'trainer_b';
   legs: BookedLeg[];
-  verified: boolean;
+  verified: boolean; // Legacy field means user-reviewed fields only, never airline verification.
+  review?: FlightReview;
+  revision?: number;
+  changes?: Array<{ at: string; fields: string[] }>;
   source: 'pasted text'|'file'|'manual';
   createdAt: string;
   updatedAt: string;
@@ -207,19 +212,44 @@ export function parseBookedText(raw:string,knownAirportCodes:string[]):ParseResu
 export function legValid(leg:BookedLeg):boolean{
   return IATA.test(leg.origin)&&IATA.test(leg.destination)&&
     leg.origin!==leg.destination&&dateValid(leg.departDate)&&
-    (!leg.arriveDate||(dateValid(leg.arriveDate)&&leg.arriveDate>=leg.departDate))&&
+    (!leg.arriveDate||dateValid(leg.arriveDate))&&
     (!leg.departTime||HMS.test(leg.departTime))&&
     (!leg.arriveTime||HMS.test(leg.arriveTime))&&
     (!leg.carrier||/^[A-Z0-9]{2}$/.test(leg.carrier))&&
     (!leg.flightNumber||/^\d{1,4}$/.test(leg.flightNumber));
 }
 export function itineraryValid(legs:BookedLeg[]):boolean {
-  return legs.length>0&&legs.length<=8&&legs.every(legValid)&&
-    legs.every((leg,index)=>{
-      if(index===0)return true;
-      const previous=legs[index-1];
-      return leg.departDate>=previous.departDate;
-    });
+  if(!legs.length||legs.length>8||!legs.every(legValid))return false;
+  try {
+    let previous: ReturnType<typeof flightInstants> = null;
+    for(const leg of legs){
+      const current=flightInstants(leg);
+      if(current&&previous&&Date.parse(current.departure)<Date.parse(previous.arrival))return false;
+      previous=current;
+    }
+    return true;
+  }catch{return false;}
+}
+function safeStamp(value:unknown):string|undefined{
+  if(typeof value!=='string')return undefined;
+  const ms=Date.parse(value);
+  return Number.isFinite(ms)&&ms<=Date.now()+300000?new Date(ms).toISOString():undefined;
+}
+export function safeReview(value:unknown):FlightReview|undefined{
+  if(!value||typeof value!=='object')return undefined;
+  const row=value as Record<string,unknown>;
+  return {fieldsReviewedAt:safeStamp(row.fieldsReviewedAt),ticketingConfirmedAt:safeStamp(row.ticketingConfirmedAt),airlineCheckedAt:safeStamp(row.airlineCheckedAt)};
+}
+export function changedBookingFields(before:BookedLeg[],after:BookedLeg[]):string[]{
+  const fields:Array<keyof BookedLeg>=['carrier','flightNumber','origin','destination','departDate','departTime','arriveDate','arriveTime','departureZone','arrivalZone'];
+  const changes:string[]=[];
+  for(let i=0;i<Math.max(before.length,after.length);i++){
+    if(!before[i]){changes.push('Leg '+(i+1)+' added');continue;}
+    if(!after[i]){changes.push('Leg '+(i+1)+' removed');continue;}
+    for(const field of fields)if((before[i][field]||'')!==(after[i][field]||''))changes.push('Leg '+(i+1)+' '+field+': '+(before[i][field]||'unknown')+' → '+(after[i][field]||'unknown'));
+    if(JSON.stringify(before[i].connection)!==JSON.stringify(after[i].connection))changes.push('Leg '+(i+1)+' connection requirements changed');
+  }
+  return changes;
 }
 function safeLeg(candidate:unknown):BookedLeg|null {
   if(!candidate||typeof candidate!=='object')return null;
@@ -232,8 +262,15 @@ function safeLeg(candidate:unknown):BookedLeg|null {
     origin:normalizeAirport(s('origin',6)),
     destination:normalizeAirport(s('destination',6)),
     departDate:s('departDate',10),departTime:s('departTime',5),
-    arriveDate:s('arriveDate',10),arriveTime:s('arriveTime',5)
+    arriveDate:s('arriveDate',10),arriveTime:s('arriveTime',5),
+    departureZone:s('departureZone',80)||undefined,arrivalZone:s('arrivalZone',80)||undefined
   };
+  const connection=leg.connection;
+  if(connection&&typeof connection==='object'){
+    const c=connection as Record<string,unknown>, n=(key:string,max:number)=>typeof c[key]==='number'&&Number.isInteger(c[key])&&c[key]>=0&&c[key]<=max?c[key] as number:undefined;
+    record.connection={transferMinutes:n('transferMinutes',720),boardingCutoffMinutes:n('boardingCutoffMinutes',180),
+      ticketRelation:['unknown','same-ticket-reported','separate-tickets'].includes(String(c.ticketRelation))?c.ticketRelation as ConnectionRequirements['ticketRelation']:'unknown'};
+  }
   return legValid(record)?record:null;
 }
 function safeFlight(input:unknown):BookedFlight|null{
@@ -247,7 +284,13 @@ function safeFlight(input:unknown):BookedFlight|null{
   return {
     id:s('id',70)||crypto.randomUUID(),
     trainerId:item.trainerId,
-    legs,verified:item.verified===true,
+    legs,verified:item.verified===true,review:safeReview(item.review),
+    revision:typeof item.revision==='number'&&Number.isInteger(item.revision)&&item.revision>0?item.revision:1,
+    changes:Array.isArray(item.changes)?item.changes.slice(-10).flatMap((entry:unknown)=>{
+      if(!entry||typeof entry!=='object')return [];
+      const e=entry as Record<string,unknown>,at=safeStamp(e.at);
+      return at&&Array.isArray(e.fields)?[{at,fields:e.fields.filter((field:unknown)=>typeof field==='string'&&/^Leg \d+ /.test(field)).slice(0,60).map((field:string)=>field.slice(0,240))}]:[];
+    }):[],
     source:item.source==='file'||item.source==='pasted text'?item.source:'manual',
     createdAt:s('createdAt',40),updatedAt:s('updatedAt',40),
     ...(s('sharedTripId',70)?{sharedTripId:s('sharedTripId',70)}:{})
@@ -267,36 +310,13 @@ export function storeBookedFlights(items:BookedFlight[]):void{
   const records=items.slice(0,30).map(safeFlight).filter((r: BookedFlight | null):r is BookedFlight=>!!r);
   localStorage.setItem(KEY,JSON.stringify({version:1,records}));
 }
-function sameAirportInterval(first:BookedLeg,second:BookedLeg):number|null{
-  if(first.destination!==second.origin||
-    !first.arriveDate||!first.arriveTime||!second.departDate||!second.departTime)return null;
-  // These are both local clock times at the SAME connecting airport.
-  // It is not valid to do the same arithmetic across different timezones.
-  const a=Date.parse(first.arriveDate+'T'+first.arriveTime+':00Z');
-  const b=Date.parse(second.departDate+'T'+second.departTime+':00Z');
-  const minutes=(b-a)/60000;
-  return Number.isFinite(minutes)&&minutes>=0&&minutes<=1440?minutes:null;
-}
 export function connectionReviews(legs:BookedLeg[]):FlightImpact[]{
-  const findings:FlightImpact[]=[];
-  for(let i=0;i<legs.length-1;i++){
-    const first=legs[i],next=legs[i+1];
-    if(first.destination!==next.origin)continue;
-    const minutes=sameAirportInterval(first,next);
-    if(minutes===null){
-      findings.push({level:'context',title:'Connection time needs review',
-        explanation:'Both legs use '+first.destination+
-          ', but complete local arrival/departure times were not available. Airline minimum connection times remain unverified.',
-        source:'Imported schedule fields'});
-    }else{
-      findings.push({level:minutes<70?'attention':minutes<105?'review':'context',
-        title:minutes+'-minute scheduled connection at '+first.destination,
-        explanation:minutes<70?'This is a planning flag, not a missed-connection prediction. Check boarding cutoffs, gates, and whether tickets are protected.':
-          'The margin is scheduled local time at the same airport. Incoming delays, airline rules and terminal changes remain unknown.',
-        date:next.departDate,source:'User-reviewed itinerary; same-airport local-clock arithmetic'});
-    }
-  }
-  return findings;
+  return connectionConstraints(legs).map(step=>({
+    level:step.marginMinutes!==null&&step.marginMinutes<0?'attention':step.missing.length?'review':'context',
+    title:step.label+(step.marginMinutes===null?' needs review':': '+step.marginMinutes+' minutes of remaining margin'),
+    explanation:step.basis+' '+step.missing.join(' '),
+    source:'Reviewed itinerary and supplied connection requirements; airline minimum connection times remain unverified'
+  }));
 }
 function dayInRange(day:string,start:string,end:string){
   return day>=start&&day<=end;
@@ -315,7 +335,7 @@ export function coachingExposure(
   trainers:TrainerProfile[],
   airports:Airport[]
 ):FlightImpact[]{
-  const result=connectionReviews(flight.legs);
+  const result:FlightImpact[]=[];
   const profile=trainers.find(t=>t.id===flight.trainerId);
   if(!profile)return result;
   const onFlightDays=daySet(flight.legs);

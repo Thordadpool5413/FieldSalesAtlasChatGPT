@@ -1,3 +1,4 @@
+import { itineraryVersion } from './readiness';
 import { createHash, randomUUID } from 'node:crypto';
 import { db, AppDatabaseError } from '../runtime/sdk';
 import { scenarioInput, normalizeFlights, type ScenarioBoard } from './scenarios';
@@ -37,16 +38,23 @@ export async function adoptSavedTrips(workspaceId: string, tripIds: string[], bo
   const [created] = await db.tx.add(reportTable(workspaceId), [saved]);
   return { reportId: report.id, reused: !created };
 }
-export async function attachItinerary(workspaceId: string, reportId: string, flights: FlightInput[], board: ScenarioBoard) {
+export async function attachItinerary(workspaceId: string, reportId: string, flights: FlightInput[], board: ScenarioBoard, expectedItineraryVersion?: string) {
   const revision = board.revision ?? db.workspaceRevision(workspaceId), context = await planContext(workspaceId, reportId, board);
+  if (expectedItineraryVersion !== undefined && expectedItineraryVersion !== itineraryVersion(context.input.flights)) throw new Error('Itinerary changed. Refresh before replacing flight fields.');
   if (context.pendingChange) throw new Error('Resolve or retract the pending flight change before replacing booking fields.');
   if (flights.some(flight => !context.input.trainerIds.includes(flight.trainerId))) throw new Error('Booking legs must belong to this plan’s trainers.');
   normalizeFlights(flights, await lookupAirports(flights.flatMap(flight => [flight.origin, flight.destination])));
-  const input = { ...context.input, flights: flights.map(flight => ({ ...flight, providedAt: flight.providedAt || new Date().toISOString() })) };
+  const schedule = (legs: FlightInput[]) => JSON.stringify(legs.map(({trainerId,carrier,flightNumber,origin,destination,departDate,departTime,arriveDate,arriveTime,departureZone,arrivalZone}) => ({trainerId,carrier,flightNumber,origin,destination,departDate,departTime,arriveDate,arriveTime,departureZone,arrivalZone})));
+  const changedTrainers = context.input.trainerIds.filter(id => schedule(context.input.flights.filter(leg => leg.trainerId === id)) !== schedule(flights.filter(leg => leg.trainerId === id)));
+  const requirements = context.input.requirements ? { trainers: context.input.requirements.trainers.map(item => changedTrainers.includes(item.trainerId) ? {
+    ...item, transport: item.transport.startsWith('shared-') ? 'shared-needs-review' as const : 'unknown' as const,
+    equipment: item.equipment.startsWith('shared-') ? 'shared-needs-review' as const : 'unknown' as const,
+  } : item) } : undefined;
+  const input = { ...context.input, requirements, flights: flights.map(flight => ({ ...flight, providedAt: flight.providedAt || new Date().toISOString() })) };
   const update = context.saved.currentPlan ? { currentPlan: { ...context.saved.currentPlan, input } } : { input };
   await db.transact([db.tx.update(reportTable(workspaceId), [{ id: reportId, record: update }], { patch: true }),
-    db.tx.add('atlas_itinerary_updates_' + workspaceId, [{ id: randomUUID(), reportId, at: new Date().toISOString(), legCount: flights.length }])], () => {
+    db.tx.add('atlas_itinerary_updates_' + workspaceId, [{ id: randomUUID(), reportId, at: new Date().toISOString(), legCount: flights.length, previousVersion: itineraryVersion(context.input.flights), version: itineraryVersion(input.flights) }])], () => {
       if (db.workspaceRevision(workspaceId) !== revision) throw new AppDatabaseError('AppDatabaseConflict', 'Plan changed while attaching the itinerary.');
     });
-  return { attached: flights.length };
+  return { attached: flights.length, itineraryVersion: itineraryVersion(input.flights) };
 }

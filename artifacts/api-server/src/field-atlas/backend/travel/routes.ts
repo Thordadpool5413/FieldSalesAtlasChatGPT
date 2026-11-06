@@ -1,3 +1,7 @@
+import { analyzeFlightReadiness, itineraryVersion, journeyReadiness } from './readiness';
+import { journeyRequirementsSchema } from './readinessSchema';
+import { changedContext } from './recovery';
+import { zonedInstant } from '../../shared/travel/time';
 import { randomUUID } from 'node:crypto';
 import { db, json, error, AppDatabaseError, type RouterMiddleware, type RouterRoutes } from '../runtime/sdk';
 import { buildScenarios, scenarioInput, flightInput, type ScenarioBoard } from './scenarios';
@@ -36,10 +40,47 @@ export function makeTravelRoutes(deps: {
       const m = await deps.member(ctx.user!.userId); if (!m) return error('Workspace required.', 403);
       const parsed = flightInput.array().min(1).max(32).safeParse((ctx.body as { flights?: unknown } | null)?.flights);
       if (!parsed.success) return error('Supply one to 32 complete booking legs.', 400);
-      try { const result = await attachItinerary(m.workspaceId, ctx.params.id, parsed.data, await deps.load(m.workspaceId));
+      try { const result = await attachItinerary(m.workspaceId, ctx.params.id, parsed.data, await deps.load(m.workspaceId), (ctx.body as { expectedItineraryVersion?: string }).expectedItineraryVersion);
         await deps.activityLog(m.workspaceId, ctx.query.trainerId || 'trainer_a', 'updated', 'itinerary-evidence', 'Supplied flight fields connected; appointments unchanged');
         return json(result);
       } catch (failure) { return error(failure instanceof Error ? failure.message : 'Could not attach this itinerary.', 409); }
+    }],
+    'POST /api/travel/itinerary/readiness': [access, async ctx => {
+      const m = await deps.member(ctx.user!.userId); if (!m) return error('Workspace required.', 403);
+      const parsed = flightInput.array().min(1).max(32).safeParse((ctx.body as { flights?: unknown } | null)?.flights);
+      if (!parsed.success) return error('Supply complete flight dates, times, airport codes and valid optional review/connection fields.', 400);
+      try { return json(await analyzeFlightReadiness(parsed.data, (await deps.load(m.workspaceId)).trainerProfiles)); }
+      catch (failure) { return error(failure instanceof Error ? failure.message : 'Readiness could not be calculated.', 422); }
+    }],
+    'GET /api/travel/journeys/:id/readiness': [access, async ctx => {
+      const m = await deps.member(ctx.user!.userId); if (!m) return error('Workspace required.', 403);
+      try {
+        const board = await deps.load(m.workspaceId), context = await planContext(m.workspaceId, ctx.params.id, board);
+        const effective = context.pendingChange ? await changedContext(context, context.pendingChange) : { input: context.input, board: context.analysisBoard };
+        const result = await journeyReadiness(effective.input, effective.board, context.pending);
+        if (db.workspaceRevision(m.workspaceId) !== board.revision) return error('Calendar changed. Refresh the readiness report.', 409);
+        return json({ ...result, itineraryVersion: itineraryVersion(context.input.flights), workspaceRevision: board.revision, requirements: context.input.requirements || { trainers: [] } });
+      } catch (failure) { return error(failure instanceof Error ? failure.message : 'Readiness could not be calculated.', 422); }
+    }],
+    'PUT /api/travel/journeys/:id/requirements': [access, async ctx => {
+      const m = await deps.member(ctx.user!.userId); if (!m) return error('Workspace required.', 403);
+      const parsed = journeyRequirementsSchema.safeParse((ctx.body as { requirements?: unknown } | null)?.requirements);
+      if (!parsed.success) return error('Supply unique trainer IDs and valid resource/pickup requirements.', 400);
+      try {
+        const board = await deps.load(m.workspaceId), context = await planContext(m.workspaceId, ctx.params.id, board);
+        const expected = (ctx.body as { expectedItineraryVersion?: string }).expectedItineraryVersion;
+        if ((ctx.body as { expectedWorkspaceRevision?: number }).expectedWorkspaceRevision !== board.revision) return error('Workspace changed. Refresh before saving requirements.', 409);
+        if (expected !== itineraryVersion(context.input.flights)) return error('Itinerary changed. Refresh before saving requirements.', 409);
+        if (parsed.data.trainers.some(row => !context.input.trainerIds.includes(row.trainerId))) return error('Requirements must belong to this plan’s trainers.', 400);
+        for (const row of parsed.data.trainers) if (row.pickup) zonedInstant(row.pickup.date, row.pickup.time, row.pickup.timeZone);
+        const input = { ...context.input, requirements: parsed.data };
+        const update = context.saved.currentPlan ? { currentPlan: { ...context.saved.currentPlan, input } } : { input };
+        await db.transact([db.tx.update(reportTable(m.workspaceId), [{ id: ctx.params.id, record: update }], { patch: true }), db.tx.add('atlas_itinerary_updates_' + m.workspaceId, [{ id: randomUUID(), reportId: ctx.params.id, at: new Date().toISOString(), purpose: 'requirements-reviewed' }])], () => {
+          if (db.workspaceRevision(m.workspaceId) !== board.revision) throw new AppDatabaseError('AppDatabaseConflict', 'Calendar changed.');
+        });
+        await deps.activityLog(m.workspaceId, ctx.query.trainerId || 'trainer_a', 'updated', 'journey-requirements', 'Transport, equipment and pickup requirements reviewed; appointments unchanged');
+        return json({ saved: true });
+      } catch (failure) { return error(failure instanceof Error ? failure.message : 'Requirements could not be saved.', 409); }
     }],
     'GET /api/travel/connections': [access, async () => json(await connectionStatus())],
     'POST /api/travel/connections/check': [access, async ctx => {
@@ -58,7 +99,7 @@ export function makeTravelRoutes(deps: {
           const plan = await planContext(m.workspaceId, item.id, board);
           if (!(board.trips || []).some(trip => plan.tripIds.includes(trip.id) && trip.status === 'Planned')) continue;
           plans.push({ id: item.id, title: plan.scenario.title, startDate: plan.input.startDate, endDate: plan.input.endDate, arrivalAirport: plan.input.arrivalAirport,
-            trainerNames: board.trainerProfiles.filter(profile => plan.input.trainerIds.includes(profile.id)).map(profile => profile.name),
+            trainerIds: plan.input.trainerIds, itineraryVersion: itineraryVersion(plan.input.flights), requirements: plan.input.requirements, trainerNames: board.trainerProfiles.filter(profile => plan.input.trainerIds.includes(profile.id)).map(profile => profile.name),
             flightLegs: plan.input.flights, tripIds: plan.tripIds, pendingChange: plan.pendingChange });
         } catch (failure) { issues.push({ id: item.id, reason: failure instanceof Error ? failure.message : 'Saved plan context is incomplete.' }); }
       }

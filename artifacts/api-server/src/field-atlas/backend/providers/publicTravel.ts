@@ -63,19 +63,29 @@ export function nws(lat: number, lon: number) {
     },
   });
 }
+export function parseCanadianObservations(value: unknown, now = Date.now()) {
+  const root = object(value);
+  if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
+  const rows = root.features.map(v => object(object(v).properties)).flatMap(row => {
+    const at = dated(row.obs_date_tm || row['date_tm-value'] || row.datetime);
+    const time = at ? Date.parse(at) : NaN;
+    return at && Number.isFinite(time) && time <= now + 300000 && now - time <= 2 * 3600000 ? [{ row, at }] : [];
+  });
+  if (!rows.length) throw new Error('No recent Canadian observation with validated source timestamps.');
+  return {
+    data: rows.map(({ row, at }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + at })),
+    observedAt: rows.map(item => item.at).sort()[0],
+    limitation: 'Nearby Canadian surface stations, not necessarily the airport. Each observation keeps its source time. Weather warnings and forecasts are separate products.',
+  };
+}
 export function canadianObservations(lat: number, lon: number) {
   const subject = lat.toFixed(2) + ',' + lon.toFixed(2);
   const bbox = [lon - .75, lat - .75, lon + .75, lat + .75].map(v => v.toFixed(3)).join(',');
-  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url: `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${bbox}&limit=5&f=json`,
-    kind: 'observation', scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-1',
-    parse(value) {
-      const root = object(value);
-      if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-      const rows = root.features.map(v => object(object(v).properties));
-      const times = rows.map(row => dated(row.datetime || row.date_tm || row.obs_date)).filter((v): v is string => !!v).sort();
-      if (!rows.length || !times.length) throw new Error('Canadian observation product/timestamps could not be validated.');
-      return { data: rows.map(row => ({ title: text(row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + (dated(row.datetime || row.date_tm || row.obs_date) || 'unknown time') })), observedAt: times.at(-1), limitation: 'Product-specific live schema/access must validate before use; weather warnings and forecasts are separate products.' };
-    },
+  const since = new Date(Math.floor(Date.now() / 3600000) * 3600000 - 2 * 3600000).toISOString();
+  const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?bbox=' + bbox + '&datetime=' + encodeURIComponent(since + '/..') + '&sortby=-obs_date_tm&limit=5&f=json';
+  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url, kind: 'observation',
+    scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
+    parse: parseCanadianObservations,
   });
 }
 
@@ -99,7 +109,7 @@ export function nwsForecast(lat: number, lon: number) {
 
 export async function publicAirportEvidence(airport: { iata: string; icao?: string; lat?: number; lon?: number; state?: string; country?: string }): Promise<Array<SourceResult<TravelSignal[]>>> {
   const work: Array<Promise<SourceResult<TravelSignal[]>>> = [];
-  const canadian = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].includes(airport.state || '');
+  const canadian = airport.country ? airport.country === 'CA' : ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].includes(airport.state || '');
   const us = airport.country ? airport.country === 'US' : !canadian;
   if (us) work.push(faa(airport.iata));
   if (airport.icao) work.push(metar(airport.icao), taf(airport.icao));

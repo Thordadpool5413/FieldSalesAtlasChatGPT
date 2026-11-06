@@ -1,3 +1,5 @@
+import { connectionConstraints } from '../../shared/travel/readiness';
+import { flightReviewSchema, connectionSchema, journeyRequirementsSchema } from './readinessSchema';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import type { Board, Manager, TrainerProfile } from '../../src/opsModels';
@@ -16,7 +18,7 @@ const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const iata = z.string().regex(/^[A-Z]{3}$/);
 const trainerId = z.enum(['trainer_a', 'trainer_b']);
 export const flightInput = z.object({ trainerId, carrier: z.string().max(3).default(''), flightNumber: z.string().max(5).default(''), origin: iata, destination: iata,
-  departDate: date, departTime: clock, arriveDate: date, arriveTime: clock, departureZone: z.string().max(80).optional(), arrivalZone: z.string().max(80).optional(), fare: z.number().min(0).max(50000).nullable().optional(), providedAt: z.iso.datetime().optional() });
+  departDate: date, departTime: clock, arriveDate: date, arriveTime: clock, departureZone: z.string().max(80).optional(), arrivalZone: z.string().max(80).optional(), fare: z.number().min(0).max(50000).nullable().optional(), providedAt: z.iso.datetime().optional(), review: flightReviewSchema.optional(), connection: connectionSchema.optional() });
 export const scenarioInput = z.object({
   managerIds: z.array(z.string().min(1).max(90)).min(1).max(12), trainerIds: z.array(trainerId).min(1).max(2),
   startDate: date, endDate: date, arrivalAirport: iata,
@@ -24,7 +26,7 @@ export const scenarioInput = z.object({
   breakMinutes: z.number().int().min(0).max(120).default(30), includeWeekends: z.boolean().default(false), allowHandoffs: z.boolean().default(false),
   checkinMinutes: z.number().int().min(30).max(240).default(105), arrivalMinutes: z.number().int().min(15).max(240).default(60), returnMinutes: z.number().int().min(0).max(180).default(45),
   hotelPerNight: z.number().min(0).max(1500).default(160), mealsPerDay: z.number().min(0).max(500).default(65), rentalPerDay: z.number().min(0).max(1000).default(68),
-  checkPublicSources: z.boolean().default(false),
+  checkPublicSources: z.boolean().default(false), requirements: journeyRequirementsSchema.optional(),
   flights: z.array(flightInput).max(32).default([]),
 });
 export type ScenarioInput = z.infer<typeof scenarioInput>;
@@ -70,6 +72,11 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
     if (arrivals[0] && departures[0] && departures[0].departure <= arrivals[0].arrival) throw new Error('The field-airport return departure must follow the arrival.');
     if (arrivals[0] && own.some(flight => flight.departure > arrivals[0].arrival && (!departures[0] || flight.departure < departures[0].departure))) throw new Error('An intervening flight interrupts the field circuit. Split it into separate previews.');
   }
+  for (const profile of trainers) {
+    for (const step of connectionConstraints(flights.filter(flight => flight.trainerId === profile.id), input.arrivalAirport)) {
+      if (step.marginMinutes !== null && step.marginMinutes < 0) throw new Error(profile.name + ': ' + step.label + ' does not fit the supplied transfer and boarding allowances.');
+    }
+  }
   const base = Date.parse(input.startDate + 'T00:00:00Z') - 86400000;
   const minutesAt = (instant: string) => Math.round((Date.parse(instant) - base) / 60000);
   const instantAt = (minutes: number) => new Date(base + minutes * 60000).toISOString();
@@ -114,6 +121,14 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
       evidence.push({ id, provider: 'Traveler-provided itinerary', subject: `${flight.origin}–${flight.destination}`, sourceUrl: '', kind: 'traveler', state: 'reference', retrievedAt: flight.providedAt || '', version: 'imported-2', scope: 'User-supplied booking fields. The supplied/retrieval time describes the import, not an airline status check.', limitation: 'Subsequent airline changes, gates and operating-carrier identity have not been independently checked. An absent import timestamp means evidence age is unknown.' });
       flightLegs.push({ kind: 'flight', label: `${profile.name}: ${flight.origin} → ${flight.destination}`, minutes: elapsedMinutes(flight.departure, flight.arrival), start: flight.departure, end: flight.arrival, timeZone: flight.arrivalZone, basis: 'Imported local times converted with explicit IANA zones.', evidenceIds: [id] });
     }
+    for (const step of connectionConstraints(own, input.arrivalAirport)) {
+      if (step.missing.length) gaps.push(profile.name + ': ' + step.label + ': ' + step.missing.join(' '));
+    }
+    if (input.allowHandoffs) {
+      const resource = input.requirements?.trainers.find(item => item.trainerId === profile.id);
+      if (!resource || ['unknown','shared-needs-review'].includes(resource.transport) || ['unknown','shared-needs-review'].includes(resource.equipment))
+        gaps.push(profile.name + ': transport and training-equipment access need review before a handoff.');
+    }
     const first = own.at(0);
     const fieldArrival = own.find(flight => flight.destination === airport.iata);
     if (fieldArrival) flightLegs.push({ kind: 'arrival-processing', label: `${profile.name}: arrival / baggage / rental buffer`, minutes: input.arrivalMinutes, start: fieldArrival.arrival, end: addMinutes(fieldArrival.arrival, input.arrivalMinutes), timeZone: hubZone, basis: 'Editable allowance; baggage, customs and rental times are not measured.', evidenceIds: [] });
@@ -133,7 +148,6 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
         const connection = elapsedMinutes(previous.arrival, current.departure);
         if (connection < 0) throw new Error('Imported legs overlap in real elapsed time.');
         if (connection < 12 * 60 && previous.destination !== current.origin) gaps.push(`${profile.name}: transfer between ${previous.destination} and ${current.origin} has not been routed.`);
-        if (connection >= 0 && connection < 90) gaps.push(`${profile.name}: a ${Math.round(connection)}-minute connection needs airline/terminal/baggage review; 90 minutes is a planning prompt, not an authoritative minimum connection time.`);
       }
     }
   }

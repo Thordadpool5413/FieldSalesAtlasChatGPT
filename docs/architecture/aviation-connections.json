@@ -1087,5 +1087,22 @@
     "Commercial offer search remains disabled; no paid service is activated.",
     "Planespotters photos and metadata are excluded from AI/ML datasets, training and evaluation.",
     "Provider failure does not become a normal/clear airport or successful trip conclusion."
-  ]
+  ],
+  "implementedCapabilities": {
+    "guidePath": "docs/architecture/JOURNEY_READINESS.md",
+    "scope": "Booking/journey readiness, not activation of proposed aviation sources",
+    "routes": [
+      "POST /api/travel/itinerary/readiness",
+      "GET /api/travel/journeys/:id/readiness",
+      "PUT /api/travel/journeys/:id/requirements"
+    ],
+    "canonicalCalculation": "artifacts/api-server/src/field-atlas/shared/travel/readiness.ts",
+    "surfaceIds": [
+      "booked-flights",
+      "assistant",
+      "recovery"
+    ],
+    "ecccSchemaRecencyRepaired": true,
+    "sharedContractCopiesReplacedByReexports": true
+  }
 }

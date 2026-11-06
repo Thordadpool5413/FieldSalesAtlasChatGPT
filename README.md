@@ -45,6 +45,10 @@ The web app uses port 24397; the API uses port 8080. `PORT` and `ATLAS_API_PORT`
 
 The post-merge hook installs dependencies only. It does not run a database schema push, copy a database, or delete saved records. Publishing or autoscaling still needs durable storage for SQLite; Git synchronization does not provide persistent storage across deployment instances.
 
+## Journey readiness
+
+[Journey readiness is implemented](docs/architecture/JOURNEY_READINESS.md): explicit booking checks, connection and appointment margins, per-trainer delay tests, reviewed transport/equipment requirements and guarded itinerary updates. It is available in Booked flights, Travel assistant and recovery. The guide maps the routes, calculations and remaining limits.
+
 ## Aviation integration blueprint
 
 The [aviation connection map](docs/architecture/AVIATION_DATA_CONNECTIONS.md) maps aircraft reference, airport operations, aviation hazards, historical airline data and optional tracking into the existing map, flight details, planner, assistant, recovery and mobile views. It identifies current code owners, proposed API contracts, evidence and identity rules, refresh policies, dependencies and acceptance checks.

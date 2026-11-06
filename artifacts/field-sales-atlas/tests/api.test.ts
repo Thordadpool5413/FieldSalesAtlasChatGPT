@@ -312,6 +312,10 @@ test('reported cancellation compares handoffs and atomically updates pending vis
   assert.equal(recovery.status, 201, JSON.stringify(recovery.data)); assert.equal(recovery.data.options.length, 2);
   assert.ok(recovery.data.impacts.some((impact: { level: string }) => impact.level === 'affected'));
   const keep = recovery.data.options[0], share = recovery.data.options[1];
+  for(const option of recovery.data.options){
+    const ids=new Set(option.evidence.map((item:{id:string})=>item.id));
+    assert.ok(option.readiness.constraints.every((step:{evidenceIds:string[]})=>step.evidenceIds.every(id=>ids.has(id))));
+  }
   assert.equal(keep.scenario.feasible, false); assert.equal(share.scenario.feasible, true);
   assert.ok(share.scenario.visits.every((visit: { trainerId: string }) => visit.trainerId === 'trainer_b'));
   const path = '/api/travel/recovery/' + recovery.data.id + '/approve';
@@ -413,4 +417,78 @@ test('recovery preserves completed coaching history when only the remaining visi
   assert.equal(approval.status, 201, JSON.stringify(approval.data));
   const after = (await request('GET', '/api/operations', key)).data.visits.find((visit: { id: string }) => visit.id === completed.id);
   assert.deepEqual(after, before);
+});
+
+test('journey readiness uses both trainers and saves resource checks without editing appointments; stale updates fail', async () => {
+  const {key,report,board}=await approvedAirPlan();
+  const path='/api/travel/journeys/'+report.id;
+  const before=await request('GET',path+'/readiness',key);
+  assert.equal(before.status,200,JSON.stringify(before.data));
+  assert.equal(before.data.readiness.trainers.length,2);
+  assert.ok(before.data.readiness.constraints.some((item:{kind:string})=>item.kind==='visit'));
+  assert.ok(before.data.readiness.constraints.some((item:{kind:string})=>item.kind==='departure'));
+  assert.equal(before.data.readiness.verdict,'needs-information');
+  const requirements={trainers:[
+    {trainerId:'trainer_a',transport:'shared-needs-review',equipment:'ready',pickup:{date:'2026-12-07',time:'08:00',timeZone:'America/New_York',processingMinutes:90}},
+    {trainerId:'trainer_b',transport:'independent',equipment:'ready'},
+  ]};
+  const body={requirements,expectedItineraryVersion:before.data.itineraryVersion,expectedWorkspaceRevision:before.data.workspaceRevision};
+  assert.equal((await request('PUT',path+'/requirements',key,body)).status,200);
+  const after=await request('GET',path+'/readiness',key);
+  assert.equal(after.status,200,JSON.stringify(after.data));
+  assert.equal(after.data.readiness.verdict,'attention');
+  assert.equal(after.data.readiness.constraints.find((item:{kind:string})=>item.kind==='pickup').marginMinutes,-30);
+  assert.ok(after.data.readiness.checks.some((item:{state:string;label:string})=>item.state==='attention'&&item.label==='Ground transport access'));
+  const current=(await request('GET','/api/operations',key)).data;
+  assert.deepEqual(current.visits,board.visits);
+  assert.equal((await request('PUT',path+'/requirements',key,body)).status,409);
+  const second=await workspace();
+  assert.notEqual((await request('GET',path+'/readiness',second)).status,200);
+  assert.equal((await request('GET',path+'/readiness')).status,403);
+  const journeys=(await request('GET','/api/travel/journeys',key)).data.plans;
+  assert.deepEqual(journeys.find((item:{id:string})=>item.id===report.id).requirements,requirements);
+  const legs=journeys.find((item:{id:string})=>item.id===report.id).flightLegs;
+  const replacement=legs.map((leg:{trainerId:string})=>leg.trainerId==='trainer_a'?{...leg,departTime:'05:30'}:leg);
+  assert.equal((await request('POST',path+'/itinerary',key,{flights:replacement,expectedItineraryVersion:after.data.itineraryVersion})).status,200);
+  const revised=(await request('GET',path+'/readiness',key)).data;
+  assert.equal(revised.requirements.trainers[0].equipment,'unknown');
+  assert.equal(revised.requirements.trainers[0].transport,'shared-needs-review');
+  assert.equal(revised.requirements.trainers[1].transport,'independent');
+});
+
+test('readiness input rejects future verification, uses exact zones and guards replacement against stale itinerary versions', async () => {
+  const {key,report,flights}=await approvedAirPlan();
+  const invalid=await request('POST','/api/travel/itinerary/readiness',key,{flights:[{...flights[0],review:{airlineCheckedAt:'2099-01-01T00:00:00Z'}}]});
+  assert.equal(invalid.status,400);
+  const dated={...flights[0],origin:'NRT',destination:'HNL',departDate:'2026-12-08',departTime:'00:30',arriveDate:'2026-12-07',arriveTime:'13:30',departureZone:'Asia/Tokyo',arrivalZone:'Pacific/Honolulu'};
+  const result=await request('POST','/api/travel/itinerary/readiness',key,{flights:[dated]});
+  assert.equal(result.status,200,JSON.stringify(result.data));assert.equal(result.data.flights[0].arrivalZone,'Pacific/Honolulu');
+  const path='/api/travel/journeys/'+report.id;
+  const snapshot=(await request('GET',path+'/readiness',key)).data;
+  const updated=flights.map((flight:Record<string,unknown>,index:number)=>({...flight,...(index===0?{departTime:'05:30'}:{})}));
+  assert.equal((await request('POST',path+'/itinerary',key,{flights:updated,expectedItineraryVersion:snapshot.itineraryVersion})).status,200);
+  assert.equal((await request('POST',path+'/itinerary',key,{flights,expectedItineraryVersion:snapshot.itineraryVersion})).status,409);
+});
+
+test('Canadian observations use actual GeoMet fields, reject old/future times and preserve the oldest included observation', async () => {
+  const {parseCanadianObservations}=await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+  const now=Date.parse('2026-11-06T12:00:00Z');
+  const feature=(time:string,name:string)=>({properties:{obs_date_tm:time,'stn_nam-value':name}});
+  const data=parseCanadianObservations({features:[feature('2026-11-06T11:50:00Z','Toronto'),feature('2026-11-06T11:40:00Z','Nearby'),feature('2020-01-01T00:00:00Z','Old'),feature('2026-11-06T13:00:00Z','Future')]},now);
+  assert.equal(data.data.length,2);assert.equal(data.data[0].title,'Toronto');assert.equal(data.observedAt,'2026-11-06T11:40:00.000Z');
+  assert.throws(()=>parseCanadianObservations({features:[feature('2020-01-01T00:00:00Z','Old')]},now),/No recent/);
+});
+
+test('recovery refuses a known missed pickup deadline and preserves the calendar',async()=>{
+  const {key,report,flights}=await approvedAirPlan(),path='/api/travel/journeys/'+report.id;
+  const initial=(await request('GET',path+'/readiness',key)).data;
+  assert.equal((await request('PUT',path+'/requirements',key,{expectedItineraryVersion:initial.itineraryVersion,expectedWorkspaceRevision:initial.workspaceRevision,requirements:{trainers:[{trainerId:'trainer_a',transport:'independent',equipment:'ready',pickup:{date:'2026-12-07',time:'08:00',timeZone:'America/New_York',processingMinutes:90}}]}})).status,200);
+  const before=(await request('GET','/api/operations',key)).data;
+  const change=await request('POST','/api/travel/changes',key,{id:randomUUID(),reportId:report.id,originalLeg:flights[1],replacementLeg:{...flights[1],departTime:'20:00',arriveTime:'21:00'},status:'delayed',checkedAt:new Date().toISOString(),notes:''});
+  assert.equal(change.status,201,JSON.stringify(change.data));
+  const preview=await request('POST','/api/travel/recovery',key,{changeId:change.data.id,includeHandoffs:false});
+  assert.equal(preview.status,201,JSON.stringify(preview.data));assert.equal(preview.data.options[0].scenario.feasible,true);
+  const approve=await request('POST','/api/travel/recovery/'+preview.data.id+'/approve',key,{optionId:preview.data.options[0].id,acknowledgeConsequences:true});
+  assert.equal(approve.status,409);assert.match(approve.data.error,/journey requirement/);
+  assert.deepEqual((await request('GET','/api/operations',key)).data.visits,before.visits);
 });

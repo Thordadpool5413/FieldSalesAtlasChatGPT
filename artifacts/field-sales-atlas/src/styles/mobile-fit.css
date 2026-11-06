@@ -951,9 +951,9 @@ html[data-atlas-keyboard='open'] .mv-app.atlas-product-v4 .ios-tab-bar {
 /* Native mobile disclosure and action continuation.
    Selected saved flight opens its review, not a second import screen. */
 @media (max-width:900px) {
-  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import>.fg-step:first-child,
-  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import>.fg-modes,
-  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import>.fg-import-zone {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected:not(.fg-updating) .fg-import>.fg-step:first-child,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected:not(.fg-updating) .fg-import>.fg-modes,
+  .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected:not(.fg-updating) .fg-import>.fg-import-zone {
     display:none!important;
   }
   .mv-app.atlas-design-v3.atlas-product-v4 .fg-page.fg-selected .fg-import {

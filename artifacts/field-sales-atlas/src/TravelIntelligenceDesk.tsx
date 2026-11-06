@@ -1,3 +1,5 @@
+import JourneyReadiness from './JourneyReadiness';
+import JourneyReadinessController from './JourneyReadinessController';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, CircleHelp, Link2, Plane, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import { useOp } from './Operations';
@@ -17,20 +19,21 @@ type Connections = { checkedAt: string; airports: null | { count: number; retrie
 const blankFlight = (trainerId: FlightInput['trainerId']): FlightInput => ({ trainerId, carrier: '', flightNumber: '', origin: '', destination: '', departDate: '', departTime: '', arriveDate: '', arriveTime: '' });
 function FlightFields({ value, onChange, prefix, trainers }: { value: FlightInput; onChange: (flight: FlightInput) => void; prefix: string; trainers: ReturnType<typeof useOp>['trainerProfiles'] }) {
   return <fieldset className="travel-flight-fields"><legend>{prefix} flight fields</legend><div className="journey-fields">
-    <label>{prefix} trainer<select disabled={prefix === 'Changed'} value={value.trainerId} onChange={event => onChange({ ...value, trainerId: event.target.value as FlightInput['trainerId'] })}>{trainers.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></label>
-    <label>{prefix} carrier<input maxLength={3} value={value.carrier} onChange={event => onChange({ ...value, carrier: event.target.value.toUpperCase() })}/></label>
-    <label>{prefix} flight number<input maxLength={5} value={value.flightNumber} onChange={event => onChange({ ...value, flightNumber: event.target.value })}/></label>
-    <label>{prefix} origin<input required maxLength={3} pattern="[A-Z]{3}" value={value.origin} onChange={event => onChange({ ...value, origin: event.target.value.toUpperCase() })}/></label>
-    <label>{prefix} destination<input required maxLength={3} pattern="[A-Z]{3}" value={value.destination} onChange={event => onChange({ ...value, destination: event.target.value.toUpperCase() })}/></label>
-    <label>{prefix} departure date<input required type="date" value={value.departDate} onChange={event => onChange({ ...value, departDate: event.target.value })}/></label>
-    <label>{prefix} departure time<input required type="time" value={value.departTime} onChange={event => onChange({ ...value, departTime: event.target.value })}/></label>
-    <label>{prefix} arrival date<input required type="date" value={value.arriveDate} onChange={event => onChange({ ...value, arriveDate: event.target.value })}/></label>
-    <label>{prefix} arrival time<input required type="time" value={value.arriveTime} onChange={event => onChange({ ...value, arriveTime: event.target.value })}/></label>
+    <label>{prefix} trainer<select disabled={prefix === 'Changed'} value={value.trainerId} onChange={event => onChange({ ...value, review: undefined, trainerId: event.target.value as FlightInput['trainerId'] })}>{trainers.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></label>
+    <label>{prefix} carrier<input maxLength={3} value={value.carrier} onChange={event => onChange({ ...value, review: undefined, carrier: event.target.value.toUpperCase() })}/></label>
+    <label>{prefix} flight number<input maxLength={5} value={value.flightNumber} onChange={event => onChange({ ...value, review: undefined, flightNumber: event.target.value })}/></label>
+    <label>{prefix} origin<input required maxLength={3} pattern="[A-Z]{3}" value={value.origin} onChange={event => onChange({ ...value, review: undefined, origin: event.target.value.toUpperCase() })}/></label>
+    <label>{prefix} destination<input required maxLength={3} pattern="[A-Z]{3}" value={value.destination} onChange={event => onChange({ ...value, review: undefined, destination: event.target.value.toUpperCase() })}/></label>
+    <label>{prefix} departure date<input required type="date" value={value.departDate} onChange={event => onChange({ ...value, review: undefined, departDate: event.target.value })}/></label>
+    <label>{prefix} departure time<input required type="time" value={value.departTime} onChange={event => onChange({ ...value, review: undefined, departTime: event.target.value })}/></label>
+    <label>{prefix} arrival date<input required type="date" value={value.arriveDate} onChange={event => onChange({ ...value, review: undefined, arriveDate: event.target.value })}/></label>
+    <label>{prefix} arrival time<input required type="time" value={value.arriveTime} onChange={event => onChange({ ...value, review: undefined, arriveTime: event.target.value })}/></label>
   </div><p>Dates and times are local to each airport. Time zones are resolved from the airport reference; ambiguous clock-change times require correction.</p></fieldset>;
 }
 
 export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; onBack: () => void }) {
   const ctx = useOp();
+  const [bookingSelection,setBookingSelection]=useState<Record<string,string>>({});
   const [plans, setPlans] = useState<PlanSummary[]>([]), [planId, setPlanId] = useState(''), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
   const [question, setQuestion] = useState('Can we finish these visits and get home Thursday?');
@@ -70,12 +73,15 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
     try { await work(); } catch (failure) { setError(failure instanceof Error ? failure.message : 'The request could not complete.'); }
     finally { requestBusy.current = false; setBusy(false); }
   }
+  const localBookings=readBookedFlights().filter(booking=>booking.verified&&plan&&(plan.trainerIds?plan.trainerIds.includes(booking.trainerId):ctx.trainerProfiles.some(profile=>profile.id===booking.trainerId&&plan.trainerNames.includes(profile.name)))&&booking.legs.some(leg=>leg.departDate>=plan.startDate&&leg.departDate<=plan.endDate));
   async function shareFlights() {
     if (!plan) return;
-    const bookings = readBookedFlights().filter(booking => ctx.trainerProfiles.some(profile => profile.id === booking.trainerId && plan.trainerNames.includes(profile.name)) && booking.legs.some(leg => leg.departDate >= plan.startDate && leg.departDate <= plan.endDate));
-    const flights = bookings.flatMap(booking => booking.legs.map(leg => ({ ...leg, trainerId: booking.trainerId, providedAt: booking.updatedAt })));
+    const bookings=localBookings.filter(booking=>bookingSelection[booking.trainerId]===booking.id);
+    const replaced=new Set(bookings.map(booking=>booking.trainerId));
+    const flights=[...plan.flightLegs.filter(leg=>!replaced.has(leg.trainerId)),...bookings.flatMap(booking=>booking.legs.map(leg=>({...leg,trainerId:booking.trainerId,review:booking.review,providedAt:booking.updatedAt})))];
+    if(!bookings.length)throw new Error('Select a reviewed booking for at least one trainer. Other trainers’ legs will be preserved.');
     if (!flights.length) throw new Error('No matching saved booking legs are available on this device. Add them in Booked Flights first.');
-    await api.post(`/api/travel/journeys/${plan.id}/itinerary`, { flights }); await loadPlans(plan.id); await ctx.reload();
+    await api.post(`/api/travel/journeys/${plan.id}/itinerary`, { flights, expectedItineraryVersion: plan.itineraryVersion }); setBookingSelection({}); await loadPlans(plan.id); await ctx.reload();
     setMessage('Booking fields shared with this plan. Your calendar and airline booking are unchanged.');
   }
   const allEvidence = connections?.results?.flatMap(result => result.checks.map(check => check.evidence)) || [];
@@ -86,9 +92,12 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
       {loading && <p role="status">Opening saved travel context…</p>}
       {mode !== 'connections' && <>
         <label className="travel-context-label">Saved travel plan<select value={planId} disabled={busy || !plans.length} onChange={event => { setPlanId(event.target.value); setLegIndex('0'); }}><option value="">Choose a plan</option>{plans.map(plan => <option key={plan.id} value={plan.id}>{plan.title} · {plan.startDate}–{plan.endDate}</option>)}</select></label>
-        {plan && <div className="travel-plan-context"><strong>{plan.arrivalAirport} · {plan.trainerNames.join(' & ')}</strong><p>{plan.startDate} — {plan.endDate} · {plan.flightLegs.length} supplied flight legs</p><details className="journey-details"><summary>Connect booking fields from this device</summary><p>Share parsed flight airports, local dates/times, carrier and flight numbers with this workspace. Confirmation codes and booking documents are excluded. Only matching saved bookings are included.</p><button className="op-btn" disabled={busy} onClick={() => void action(shareFlights)}>Share saved flight fields with this plan</button></details></div>}
+        {plan && <div className="travel-plan-context"><strong>{plan.arrivalAirport} · {plan.trainerNames.join(' & ')}</strong><p>{plan.startDate} — {plan.endDate} · {plan.flightLegs.length} supplied flight legs</p><details className="journey-details"><summary>Connect booking fields from this device</summary><p>Share parsed flight airports, local dates/times, carrier and flight numbers with this workspace. Confirmation codes and booking documents are excluded. Choose one reviewed booking per trainer. This replaces only that trainer’s supplied legs; the other trainer’s legs are preserved.</p>
+          {ctx.trainerProfiles.filter(profile=>plan.trainerIds?.includes(profile.id)||(!plan.trainerIds&&plan.trainerNames.includes(profile.name))).map(profile=><label className="travel-context-label" key={profile.id}>{profile.name} booking to attach<select value={bookingSelection[profile.id]||''} onChange={event=>setBookingSelection(current=>({...current,[profile.id]:event.target.value}))}><option value="">Keep current shared flight fields</option>{localBookings.filter(booking=>booking.trainerId===profile.id).map(booking=><option key={booking.id} value={booking.id}>{booking.legs[0]?.origin} → {booking.legs.at(-1)?.destination} · {booking.legs[0]?.departDate} · revision {booking.revision||1}</option>)}</select></label>)}
+          <button className="op-btn" disabled={busy} onClick={() => void action(shareFlights)}>Share saved flight fields with this plan</button></details></div>}
         <details className="journey-details" open={!plans.length && !loading}><summary>Connect existing saved trips</summary><p>Use one or two trips with a shared field airport and linked pending visits. This creates analysis context; appointments are unchanged.</p><div className="travel-trip-choices">{(ctx.board.trips || []).filter(trip => trip.status === 'Planned').map(trip => <label className="journey-check" key={trip.id}><input type="checkbox" checked={selectedTrips.includes(trip.id)} disabled={busy || (!selectedTrips.includes(trip.id) && selectedTrips.length >= 2)} onChange={() => setSelectedTrips(selectedTrips.includes(trip.id) ? selectedTrips.filter(id => id !== trip.id) : [...selectedTrips, trip.id])}/>{trip.title} · {trip.trainer}</label>)}</div><button className="op-btn" disabled={busy || !selectedTrips.length} onClick={() => void action(async () => { const result = await api.post('/api/travel/journeys/adopt', { tripIds: selectedTrips }); await loadPlans(result.data.reportId); setMessage('Saved trips connected for analysis. No appointments changed.'); })}>Connect selected trips</button>{!(ctx.board.trips || []).length && <p>Save a trip and its proposed visits in the planner first.</p>}</details>
       </>}
+      {plan&&mode!=='connections'&&<JourneyReadinessController plan={plan} revision={ctx.board.revision} names={Object.fromEntries(ctx.trainerProfiles.map(profile=>[profile.id,profile.name]))} onSaved={async()=>{await loadPlans(plan.id);await ctx.reload();}}/>}
       {mode === 'assistant' && <>
         <form onSubmit={event => { event.preventDefault(); if (!plan) return; void action(async () => { const result = await api.post('/api/travel/assistant', { reportId: plan.id, question, allowHandoffs: handoffs, ...(deadlineDate ? { deadlineDate } : {}), ...(deadlineTime ? { deadlineTime } : {}) }); setAnswer(result.data); }); }}>
           <label className="travel-question-label">Your travel question<textarea required maxLength={600} rows={3} value={question} onChange={event => setQuestion(event.target.value)}/></label><p className="travel-question-help">Ask about finishing visits and returning home by a weekday or date. An answer proposes no calendar or booking changes.</p>
@@ -101,7 +110,7 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
           {!!answer.trainers.length && <div className="travel-trainer-results">{answer.trainers.map(trainer => <article className="journey-source" key={trainer.id}><strong>{trainer.name}</strong><p>{trainer.visitCount} proposed visits · {trainer.homeLocal ? 'Estimated home: ' + trainer.homeLocal : 'Home arrival unresolved'}</p><small>{trainer.timeZone}</small><span className="journey-state">{trainer.meetsDeadline === null ? 'Needs return evidence' : trainer.meetsDeadline ? 'Within supplied timing' : 'After requested deadline'}</span></article>)}</div>}
           {!!answer.missing.length && <div className="journey-gaps"><h3><CircleHelp size={18}/> What is still missing</h3><ul>{answer.missing.map(item => <li key={item}>{item}</li>)}</ul></div>}
           <details className="journey-details"><summary>Assumptions used</summary><ul>{answer.assumptions.map(item => <li key={item}>{item}</li>)}</ul></details>
-          <h3>Useful next steps</h3><ul>{answer.followups.map(item => <li key={item}>{item}</li>)}</ul><details className="journey-details"><summary><ShieldCheck size={17}/> Evidence behind the answer ({answer.evidence.length})</summary><TravelEvidence evidence={answer.evidence}/></details>
+          {answer.readiness&&<JourneyReadiness report={answer.readiness} title="Remaining margin for this answer"/>}<h3>Useful next steps</h3><ul>{answer.followups.map(item => <li key={item}>{item}</li>)}</ul><details className="journey-details"><summary><ShieldCheck size={17}/> Evidence behind the answer ({answer.evidence.length})</summary><TravelEvidence evidence={answer.evidence}/></details>
         </section>}
       </>}
       {mode === 'recovery' && <>
@@ -115,11 +124,11 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
         </form>}
         {preview && option && <section className="travel-recovery-results"><h2 tabIndex={-1} ref={resultHeading}>What changes for both trainers</h2><div className="travel-impact-list">{preview.impacts.map(impact => <article className="journey-source" key={impact.managerId}><div><strong>{impact.managerName}</strong><span className="journey-state">{impact.level}</span></div><p>{impact.trainerName} · {impact.date} · {impact.localTime} · {impact.timeZone}</p><p>{impact.reason} <EvidenceLinks ids={impact.evidenceIds} evidence={option.evidence}/></p></article>)}</div>
           <div className="travel-recovery-options" role="radiogroup" aria-label="Recovery options">{preview.options.map(candidate => <label key={candidate.id}><input type="radio" name="recovery-option" checked={candidate.id === optionId} onChange={() => { setOptionId(candidate.id); setAcknowledged(false); }}/><span><strong>{candidate.label}</strong><small>{candidate.scenario.visits.length} placed · {candidate.scenario.unplaced.length} unplaced · {candidate.scenario.feasible ? 'Provisional complete schedule' : 'Cannot apply'}</small></span></label>)}</div>
-          <div className="journey-gaps"><h3>Consequences of this option</h3><ul>{option.consequences.map(item => <li key={item}>{item}</li>)}</ul></div>
+          {option.readiness&&<JourneyReadiness report={option.readiness} title="Remaining margin for this option"/>}<div className="journey-gaps"><h3>Consequences of this option</h3><ul>{option.consequences.map(item => <li key={item}>{item}</li>)}</ul></div>
           <div className="travel-differences">{option.differences.map(item => <article key={item.managerId}><strong>{item.managerName}</strong><span>{item.from.trainer} · {item.from.date} · {item.from.time}</span><ArrowRight size={15}/><span>{item.to.trainer} · {item.to.date} · {item.to.time}</span><small>{item.changed ? 'Appointment changes' : 'Same appointment'}</small></article>)}</div>
           <details className="journey-details"><summary>Estimates, evidence gaps and limits</summary><ul>{[...option.scenario.gaps, ...preview.limitations].map((item, index) => <li key={index}>{item}</li>)}</ul></details>
           <label className="journey-check"><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)}/> I reviewed the changes for both trainers and the unverified flight details.</label><label className="journey-check"><input type="checkbox" checked={monitor} onChange={event => setMonitor(event.target.checked)}/> Keep public airport and weather reviews enabled for the recovered plan</label>
-          <button className="op-btn primary" disabled={busy || !acknowledged || !option.scenario.feasible} onClick={() => void action(async () => { const result = await api.post(`/api/travel/recovery/${preview.id}/approve`, { optionId, acknowledgeConsequences: acknowledged, monitor }); await ctx.reload(); ctx.setNotice(`${result.data.updatedVisits} pending visits updated after recovery review. Airline bookings are unchanged.`); ctx.go('calendar'); })}>Apply reviewed calendar changes</button>
+          <button className="op-btn primary" disabled={busy || !acknowledged || !option.scenario.feasible || option.readiness?.constraints.some(step=>step.marginMinutes!==null&&step.marginMinutes<0)} onClick={() => void action(async () => { const result = await api.post(`/api/travel/recovery/${preview.id}/approve`, { optionId, acknowledgeConsequences: acknowledged, monitor }); await ctx.reload(); ctx.setNotice(`${result.data.updatedVisits} pending visits updated after recovery review. Airline bookings are unchanged.`); ctx.go('calendar'); })}>Apply reviewed calendar changes</button>
           <details className="journey-details"><summary>Evidence for this option ({option.evidence.length})</summary><TravelEvidence evidence={option.evidence}/></details>
         </section>}
       </>}

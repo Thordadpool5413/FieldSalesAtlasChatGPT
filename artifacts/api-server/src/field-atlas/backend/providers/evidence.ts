@@ -8,6 +8,14 @@ type SourceRequest<T> = {
   provider: string; subject: string; url: string; kind: Evidence['kind']; scope: string;
   ttlMs: number; maxAgeMs: number; version: string; parse: (value: unknown) => Parsed<T> | Promise<Parsed<T>>;
 };
+class ProviderFailure extends Error {
+  constructor(readonly code: Evidence['failureCode'], message: string) { super(message); }
+}
+function failureDetail(failure: unknown): { code: Evidence['failureCode']; message: string } {
+  if (failure instanceof ProviderFailure) return { code: failure.code, message: failure.message };
+  if (failure instanceof Error && ['TimeoutError', 'AbortError'].includes(failure.name)) return { code: 'timeout', message: 'Provider request timed out.' };
+  return { code: 'schema', message: 'Provider response did not pass data or timestamp validation.' };
+}
 const pending = new Map<string, Promise<SourceResult<unknown>>>();
 const table = 'atlas_public_evidence_v1';
 
@@ -25,8 +33,11 @@ export function evidenceState(evidence: Evidence, now = Date.now()): Evidence['s
 }
 const inFlightJson = new Map<string, Promise<unknown>>();
 async function fetchJson(url: string): Promise<unknown> {
-  const response = await fetch(url, { headers: { Accept: 'application/json, application/geo+json', 'User-Agent': 'FieldSalesAtlas/2.0 (https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT)' }, signal: AbortSignal.timeout(8500) });
-  if (!response.ok) throw new Error('Provider returned HTTP ' + response.status);
+  const response = await fetch(url, { headers: { Accept: 'application/json, application/geo+json', 'User-Agent': 'FieldSalesAtlas/2.0 (https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT)' }, signal: AbortSignal.timeout(8500) }).catch((failure: unknown) => {
+    const timeout = failure instanceof Error && ['TimeoutError', 'AbortError'].includes(failure.name);
+    throw new ProviderFailure(timeout ? 'timeout' : 'network', timeout ? 'Provider request timed out.' : 'Provider network request failed.');
+  });
+  if (!response.ok) throw new ProviderFailure([401,403].includes(response.status) ? 'access-denied' : response.status === 429 ? 'rate-limited' : 'http', 'Provider returned HTTP ' + response.status + '.');
   if (Number(response.headers.get('content-length')) > 2_000_000) throw new Error('Provider response exceeds limit.');
   const text = await response.text();
   if (text.length > 2_000_000) throw new Error('Provider response exceeds limit.');
@@ -59,11 +70,12 @@ export async function source<T>(request: SourceRequest<T>): Promise<SourceResult
         version: request.version, scope: request.scope, limitation: parsed.limitation || (!parsed.observedAt ? 'The source did not provide a usable issue/observation time.' : '') };
       evidence.state = evidenceState(evidence);
       result = { data: parsed.data, evidence };
-    } catch {
-      result = saved?.result.data ? { data: saved.result.data, evidence: { ...saved.result.evidence, state: 'stale', limitation: 'Provider unavailable or returned an invalid response. Showing the last validated snapshot.' } } : {
+    } catch (failure) {
+      const detail = failureDetail(failure);
+      result = saved?.result.data ? { data: saved.result.data, evidence: { ...saved.result.evidence, state: 'stale', failureCode: detail.code, limitation: saved.result.evidence.limitation + ' ' + detail.message + ' Showing the last validated snapshot.' } } : {
         data: null, evidence: { id, provider: request.provider, subject: request.subject, sourceUrl: request.url, kind: request.kind,
-          state: 'unavailable', retrievedAt: now, version: request.version, scope: request.scope,
-          limitation: 'Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available.' },
+          state: 'unavailable', failureCode: detail.code, retrievedAt: now, version: request.version, scope: request.scope,
+          limitation: detail.message + ' No current-data conclusion is available.' },
       };
     }
     const retryMs = result.evidence.state === 'current' ? request.ttlMs : 60000;

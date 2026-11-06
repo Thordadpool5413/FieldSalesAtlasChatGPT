@@ -4,6 +4,8 @@ Status: **implementation blueprint, not activated integrations**. Reviewed Novem
 
 Read the [aviation research](../research/AVIATION_DATA_AND_AI_RESEARCH_2026-11-06.md) and [28-source catalog](../research/aviation-source-catalog.csv) for source evidence and restrictions. The [machine-readable connection map](aviation-connections.json) records existing owners, proposed routes, source-to-screen connections, dependencies and activation blockers. It is a planning artifact, not runtime configuration. Earlier [travel implementation notes](../../artifacts/field-sales-atlas/docs/TRAVEL_INTELLIGENCE_IMPLEMENTATION.md) describe the existing foundation; this document specifies its aviation expansion.
 
+The subsequent [journey-readiness implementation](JOURNEY_READINESS.md) ships the shared calculation, review states, resource checks and update guards. Its actual routes are documented there; the wider source integrations below retain their proposed status.
+
 ## 1. End-to-end connection map
 
 ```mermaid
