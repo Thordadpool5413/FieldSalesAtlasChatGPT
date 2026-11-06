@@ -243,8 +243,8 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   }
   const trainers=useMemo(()=>[...new Set([...trainerProfiles.map(p=>p.name),...managers.map(m=>m.trainer).filter(Boolean)])],[trainerProfiles,managers]);
   const colors=useMemo(()=>Object.fromEntries(trainers.map((name)=>[
-    name,trainerProfiles[0]?.name===name?'#78e5da':trainerProfiles[1]?.name===name?'#ff8eab':'#8093ad'
-  ])),[trainers,trainerProfiles]);
+    name,trainerProfiles[0]?.name===name?(theme==='dark'?'#5ceaf5':'#087887'):trainerProfiles[1]?.name===name?(theme==='dark'?'#ff5bc8':'#b42b7b'):'#8093ad'
+   ])),[trainers,trainerProfiles,theme]);
   function managerSummary(m:Manager){
     const history=visits.filter(v=>v.managerId===m.id&&v.status==='Completed').map(v=>v.date).sort();
     const future=visits.filter(v=>v.managerId===m.id&&['Planned','Rescheduled'].includes(v.status)&&v.date>=today()).map(v=>v.date).sort();

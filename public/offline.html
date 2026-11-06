@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#091519"/>
+  <meta name="theme-color" content="#081226"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Field Sales Atlas | Reconnect</title>
   <style>
     :root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
     *{box-sizing:border-box}html,body{min-height:100%;margin:0}
-    body{display:grid;place-items:center;min-height:100dvh;padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));color:#f4f3ee;background:#091519}
-    .card{width:min(100%,460px);border:1px solid #3c5960;border-radius:12px;overflow:hidden;padding:28px;background:#102329;box-shadow:0 24px 80px #0003}
+    body{display:grid;place-items:center;min-height:100dvh;padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));color:#f4f3ee;background:#081226}
+    .card{width:min(100%,460px);border:1px solid #3a5675;border-radius:12px;overflow:hidden;padding:28px;background:#101f35;box-shadow:0 24px 80px #0003}
     .card:before{content:'';display:block;height:150px;margin:-28px -28px 28px;background:url('/resources/vice/ocean-drive-dusk-small.webp') 70% center/cover}
     .brand{display:flex;align-items:center;gap:14px}.brand img{width:48px;height:48px;border-radius:9px;object-fit:contain}
-    .brand span{display:block;font-size:10px;letter-spacing:.12em;color:#78e5da}.brand strong{display:block;font-size:18px;margin-top:5px}
-    .horizon{height:1px;background:#3c5960;margin:24px 0}.signal{display:flex;align-items:center;gap:8px;font-size:11px;color:#ff8eab;letter-spacing:.08em}.signal i{width:7px;height:7px;border-radius:50%;background:#ff8eab}
-    h1{font-size:32px;line-height:1.12;letter-spacing:-.03em;margin:18px 0 14px}h1 em{color:#ff8eab;font-style:normal}p{font-size:14px;line-height:1.65;color:#adc2c5;margin:0}
-    button{width:100%;min-height:48px;margin-top:24px;padding:12px 16px;background:#78e5da;color:#082023;border:0;border-radius:7px;font:600 14px inherit;cursor:pointer}button:focus-visible{outline:3px solid #ff8eab;outline-offset:4px}
-    .saved{display:none;margin:18px 0;padding:16px;background:#0b1c22;border:1px solid #284047;border-radius:7px}.saved strong{display:block;margin:8px 0;font-size:24px;color:#78e5da}.saved span,.saved li{font-size:12px;color:#adc2c5;line-height:1.6}.saved ul{list-style:none;padding:0;margin:12px 0}.saved li{padding:10px 0;border-bottom:1px solid #284047}.saved h2{font-size:13px;color:#f4f3ee}.saved small{margin-top:8px}
-    .note{display:flex;gap:10px;margin-top:18px;padding:14px;border:1px solid #284047;border-radius:7px;color:#adc2c5;font-size:12px;line-height:1.6}.note svg{flex:0 0 18px;color:#78e5da}small{display:block;color:#adc2c5;font-size:11px;line-height:1.6;margin-top:20px}
-    @media(prefers-color-scheme:light){:root{color-scheme:light}body{background:#edf6f4;color:#17383d}.card{background:#fff;border-color:#a0bfbe}.brand span,.saved strong{color:#126d6b}h1 em,.signal{color:#ad315c}p,small,.note,.saved span,.saved li{color:#506d71}.saved,.note{background:#f5faf9;border-color:#d0e1de}.saved h2{color:#17383d}}
+    .brand span{display:block;font-size:10px;letter-spacing:.12em;color:#5ceaf5}.brand strong{display:block;font-size:18px;margin-top:5px}
+    .horizon{height:1px;background:#3a5675;margin:24px 0}.signal{display:flex;align-items:center;gap:8px;font-size:11px;color:#ff5bc8;letter-spacing:.08em}.signal i{width:7px;height:7px;border-radius:50%;background:#ff5bc8}
+    h1{font-size:32px;line-height:1.12;letter-spacing:-.03em;margin:18px 0 14px}h1 em{color:#ff5bc8;font-style:normal}p{font-size:14px;line-height:1.65;color:#b2c5df;margin:0}
+    button{width:100%;min-height:48px;margin-top:24px;padding:12px 16px;background:#5ceaf5;color:#07192c;border:0;border-radius:7px;font:600 14px inherit;cursor:pointer}button:focus-visible{outline:3px solid #ff5bc8;outline-offset:4px}
+    .saved{display:none;margin:18px 0;padding:16px;background:#0b1930;border:1px solid #263c59;border-radius:7px}.saved strong{display:block;margin:8px 0;font-size:24px;color:#5ceaf5}.saved span,.saved li{font-size:12px;color:#b2c5df;line-height:1.6}.saved ul{list-style:none;padding:0;margin:12px 0}.saved li{padding:10px 0;border-bottom:1px solid #263c59}.saved h2{font-size:13px;color:#f4f3ee}.saved small{margin-top:8px}
+    .note{display:flex;gap:10px;margin-top:18px;padding:14px;border:1px solid #263c59;border-radius:7px;color:#b2c5df;font-size:12px;line-height:1.6}.note svg{flex:0 0 18px;color:#5ceaf5}small{display:block;color:#b2c5df;font-size:11px;line-height:1.6;margin-top:20px}
+    @media(prefers-color-scheme:light){:root{color-scheme:light}body{background:#f2f6ff;color:#152c4b}.card{background:#fff;border-color:#a2b8d6}.brand span,.saved strong{color:#087887}h1 em,.signal{color:#b42b7b}p,small,.note,.saved span,.saved li{color:#4b6381}.saved,.note{background:#f6f9ff;border-color:#d4dfef}.saved h2{color:#152c4b}}
   </style>
 </head>
 <body>

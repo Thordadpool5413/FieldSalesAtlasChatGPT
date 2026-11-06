@@ -226,7 +226,7 @@ function Product(){
   });
   useEffect(()=>{
     const themeMeta=document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    themeMeta?.setAttribute('content',theme==='dark'?'#091519':'#edf6f4');
+    themeMeta?.setAttribute('content',theme==='dark'?'#081226':'#f2f6ff');
     document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]')
       ?.setAttribute('content',theme==='dark'?'black-translucent':'default');
     document.documentElement.setAttribute('data-field-atlas-theme',theme);
