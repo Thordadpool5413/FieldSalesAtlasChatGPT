@@ -56,7 +56,7 @@ export async function runTravelReviews(now = Date.now()) {
         const signals = await publicAirportEvidence(airport);
         const evidence = signals.map(result => result.evidence);
         const incomplete = evidence.some(item => item.state !== 'current');
-        const notices = signals.filter(result => ['FAA NAS', 'NWS alerts'].includes(result.evidence.provider)).flatMap(result => result.data || []);
+        const notices = signals.filter(result => ['FAA NAS', 'NWS alerts', 'ECCC Weather Alerts'].includes(result.evidence.provider)).flatMap(result => result.data || []);
         const message = incomplete ? 'Some public sources could not be verified. Open your airline and official airport updates before acting.' : notices.length ? 'Public notices changed. Review the evidence and your itinerary; flight impact has not been confirmed.' : 'Current airport and weather snapshots checked. Individual flight status remains unverified.';
         const fingerprint = createHash('sha256').update(JSON.stringify({ states: evidence.map(item => [item.id, item.state]), notices })).digest('hex');
         const attempts = incomplete ? watch.attempts + 1 : 0;

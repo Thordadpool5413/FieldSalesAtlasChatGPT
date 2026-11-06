@@ -31,5 +31,5 @@ export type ScenarioReport = {
   startDate: string; endDate: string; arrivalAirport: string;
   scenarios: Scenario[]; evidence: Evidence[]; notes: string[];
   optimizer: string; sourceStatus: string;
-  signals?: Array<{ sourceId: string; title: string; detail: string; validFrom?: string; validTo?: string }>;
+  signals?: Array<{ sourceId: string; kind?: Evidence['kind']; title: string; detail: string; validFrom?: string; validTo?: string }>;
 };

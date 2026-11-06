@@ -287,6 +287,146 @@ test('Canadian GeoMet observations validate the live field schema and keep empty
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test('ECCC city forecasts use the nearest published city and keep missing or stale forecast coverage unknown', async () => {
+  const { canadianForecast } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+  const originalFetch = globalThis.fetch;
+  const now = Date.now();
+  let mode: 'fresh' | 'empty' | 'stale' | 'malformed' = 'fresh';
+  let requestedUrl = '';
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    requestedUrl = String(input);
+    if (mode === 'malformed') return new Response(JSON.stringify({ type: 'FeatureCollection', features: {} }));
+    if (mode === 'empty') return new Response(JSON.stringify({ type: 'FeatureCollection', features: [] }));
+    const timestamp = new Date(now - (mode === 'stale' ? 13 * 3600000 : 60000)).toISOString();
+    const city = (name: string, coordinates: number[]) => ({
+      type: 'Feature', geometry: { type: 'Point', coordinates }, properties: {
+        name: { en: name }, lastUpdated: timestamp, forecastGroup: {
+          timestamp: { en: timestamp },
+          forecasts: [{ period: { textForecastName: { en: 'Today' } }, textSummary: { en: `${name} forecast fixture.` } }],
+        },
+      },
+    });
+    return new Response(JSON.stringify({ type: 'FeatureCollection', features: [
+      city('KING CITY', [-79.526, 43.928]),
+      city('FARTHER CITY', [-78.9, 44.3]),
+    ] }));
+  }) as typeof fetch;
+  const lat = 43.6777, lon = -79.6248;
+  try {
+    const fresh = await canadianForecast(lat, lon);
+    assert.equal(fresh.evidence.provider, 'ECCC City Page Weather');
+    assert.equal(fresh.evidence.kind, 'forecast');
+    assert.equal(fresh.evidence.state, 'current');
+    assert.equal(fresh.evidence.observedAt, new Date(now - 60000).toISOString());
+    assert.match(fresh.data?.[0]?.detail || '', /KING CITY regional forecast/);
+    assert.doesNotMatch(fresh.data?.[0]?.detail || '', /FARTHER CITY/);
+    assert.match(new URL(requestedUrl).pathname, /citypageweather-realtime/);
+    assert.match(fresh.evidence.scope, /regional forecast/i);
+    assert.match(fresh.evidence.limitation, /period validity timestamps/i);
+
+    mode = 'empty';
+    const empty = await canadianForecast(lat + .01, lon);
+    assert.equal(empty.evidence.state, 'partial');
+    assert.deepEqual(empty.data, []);
+    assert.match(empty.evidence.limitation, /coverage is unknown/i);
+
+    mode = 'stale';
+    const stale = await canadianForecast(lat + .02, lon);
+    assert.equal(stale.evidence.state, 'stale');
+    assert.match(stale.evidence.limitation, /current status is unknown/i);
+
+    mode = 'malformed';
+    const malformed = await canadianForecast(lat + .03, lon);
+    assert.equal(malformed.evidence.state, 'unavailable');
+    assert.equal(malformed.data, null);
+    assert.match(malformed.evidence.limitation, /status is unknown/i);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test('ECCC warning results include only unexpired active warnings and never imply an all-clear', async () => {
+  const { canadianWarnings } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+  const originalFetch = globalThis.fetch;
+  const now = Date.now();
+  let mode: 'active' | 'empty' | 'stale' | 'malformed' = 'active';
+  let requestedUrl = '';
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    requestedUrl = String(input);
+    if (mode === 'malformed') return new Response(JSON.stringify({ type: 'FeatureCollection', features: {} }));
+    const timestamp = new Date(now - (mode === 'stale' ? 3 * 3600000 : 60000)).toISOString();
+    if (mode === 'empty') return new Response(JSON.stringify({ type: 'FeatureCollection', features: [], timeStamp: timestamp }));
+    const alert = (overrides: Record<string, unknown> = {}) => ({
+      type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-64, 44], [-63, 44], [-63, 45], [-64, 44]]] }, properties: {
+        alert_type: 'warning', status_en: 'active', alert_name_en: 'Heavy rainfall warning',
+        feature_name_en: 'Example County', alert_text_en: 'Heavy rainfall is possible.',
+        publication_datetime: timestamp,
+        validity_datetime: new Date(now - 60000).toISOString(),
+        event_end_datetime: new Date(now + 4 * 3600000).toISOString(),
+        expiration_datetime: new Date(now + 3 * 3600000).toISOString(),
+        ...overrides,
+      },
+    });
+    return new Response(JSON.stringify({ type: 'FeatureCollection', timeStamp: timestamp, features: [
+      alert(),
+      alert({ alert_name_en: 'Expired warning', expiration_datetime: new Date(now - 1000).toISOString() }),
+      alert({ alert_name_en: 'Ended warning', status_en: 'ended' }),
+      alert({ alert_name_en: 'Watch, not warning', alert_type: 'watch' }),
+    ] }));
+  }) as typeof fetch;
+  const lat = 44.2, lon = -63.6;
+  try {
+    const fresh = await canadianWarnings(lat, lon);
+    assert.equal(fresh.evidence.provider, 'ECCC Weather Alerts');
+    assert.equal(fresh.evidence.kind, 'observation');
+    assert.equal(fresh.evidence.state, 'current');
+    assert.equal(fresh.evidence.observedAt, new Date(now - 60000).toISOString());
+    assert.equal(fresh.data?.length, 1);
+    assert.match(fresh.data?.[0]?.title || '', /Example County/);
+    assert.match(new URL(requestedUrl).pathname, /weather-alerts/);
+    assert.equal(new URL(requestedUrl).searchParams.get('limit'), '100');
+    assert.match(fresh.evidence.scope, /regional/i);
+
+    mode = 'empty';
+    const empty = await canadianWarnings(lat + .01, lon);
+    assert.equal(empty.evidence.state, 'current');
+    assert.deepEqual(empty.data, []);
+    assert.match(empty.evidence.limitation, /not an all-clear/i);
+
+    mode = 'stale';
+    const stale = await canadianWarnings(lat + .02, lon);
+    assert.equal(stale.evidence.state, 'stale');
+    assert.match(stale.evidence.limitation, /current status is unknown/i);
+
+    mode = 'malformed';
+    const malformed = await canadianWarnings(lat + .03, lon);
+    assert.equal(malformed.evidence.state, 'unavailable');
+    assert.equal(malformed.data, null);
+    assert.match(malformed.evidence.limitation, /status is unknown/i);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test('Canadian airports request ECCC forecasts and warnings even when only the country is known', async () => {
+  const { publicAirportEvidence } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+  const originalFetch = globalThis.fetch;
+  const requested: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requested.push(url);
+    if (url.includes('/swob-realtime/')) return new Response(JSON.stringify({ type: 'FeatureCollection', features: [] }));
+    if (url.includes('/citypageweather-realtime/')) return new Response(JSON.stringify({ type: 'FeatureCollection', features: [] }));
+    if (url.includes('/weather-alerts/')) return new Response(JSON.stringify({ type: 'FeatureCollection', features: [], timeStamp: new Date().toISOString() }));
+    throw new Error('Unexpected provider URL: ' + url);
+  }) as typeof fetch;
+  const unique = Number.parseInt(randomUUID().replaceAll('-', '').slice(0, 8), 16) / 0xffffffff;
+  const lat = 45.4 + unique / 100, lon = -75.7 - unique / 100;
+  try {
+    const results = await publicAirportEvidence({ iata: 'FIX', lat, lon, country: 'CA' });
+    assert.deepEqual(results.map(result => result.evidence.provider).sort(), ['ECCC City Page Weather', 'ECCC GeoMet', 'ECCC Weather Alerts']);
+    assert.ok(requested.some(url => url.includes('citypageweather-realtime')));
+    assert.ok(requested.some(url => url.includes('weather-alerts')));
+    assert.ok(requested.every(url => url.includes('api.weather.gc.ca')));
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test('road matrices preserve unreachable pairs and failed providers fall back with an explicit warning', async () => {
   const { roadMatrix } = await import('../../api-server/src/field-atlas/backend/providers/routing');
   const originalFetch = globalThis.fetch, originalRouting = process.env.ATLAS_ROUTING_URL;
