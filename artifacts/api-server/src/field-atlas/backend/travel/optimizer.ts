@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
-import { existsSync } from 'node:fs';
 import { workspacePath } from '../runtime/paths';
 
 export type OptimizerInput = {
@@ -38,18 +37,21 @@ export async function optimize(input: OptimizerInput): Promise<{ engine: string;
   running++;
   try {
   const root = workspacePath(process.env.ATLAS_RUNTIME_ROOT || 'artifacts/api-server/src/field-atlas');
-  const localPython = resolve(root, '.venv/bin/python');
-  const python = process.env.ATLAS_PYTHON || (existsSync(localPython) ? localPython : 'python3');
+  const python = process.env.ATLAS_PYTHON || 'python3';
+  const pythonUserBase = process.env.ATLAS_PYTHONUSERBASE || resolve(process.env.HOME || '.', '.local');
   return await new Promise<{ engine: string; solutions: OptimizerSolution[] }>((resolveResult, reject) => {
-    const child = spawn(python, [resolve(root, 'services/optimizer/solve.py')], { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(python, [resolve(root, 'services/optimizer/solve.py')], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, PYTHONUSERBASE: pythonUserBase },
+    });
     let output = '', errors = '';
     const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('Optimization exceeded its time budget.')); }, 15000);
     child.stdout.on('data', chunk => { output += chunk.toString(); if (output.length > 1_000_000) child.kill('SIGKILL'); });
     child.stderr.on('data', chunk => { if (errors.length < 8000) errors += chunk.toString(); });
-    child.on('error', () => { clearTimeout(timer); reject(new Error('Optimizer runtime unavailable. Run npm run setup:optimizer.')); });
+    child.on('error', () => { clearTimeout(timer); reject(new Error('Optimizer runtime unavailable. Configure Python 3.12 and install the pinned optimizer requirements.')); });
     child.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) { reject(new Error(errors.includes('ModuleNotFoundError') ? 'Optimizer dependencies are missing. Run npm run setup:optimizer.' : 'Optimization failed. Review the planning inputs.')); return; }
+      if (code !== 0) { reject(new Error(errors.includes('ModuleNotFoundError') ? 'Optimizer dependencies are missing. Install services/optimizer/requirements.lock.txt.' : 'Optimization failed. Review the planning inputs.')); return; }
       try {
         const result = JSON.parse(output) as { engine: string; solutions: OptimizerSolution[] };
         if (!Array.isArray(result.solutions) || result.solutions.length !== 3) throw new Error('Invalid optimizer response.');
