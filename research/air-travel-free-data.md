@@ -23,7 +23,7 @@ The free tiers of some commercial flight APIs are explicitly personal/non-commer
 
 The current backend already has OurAirports airport reference data, FAA airport-wide status notices, NOAA METAR/TAF weather, NWS alerts/forecasts, a direct BTS history import path, FlyerIntel historical BTS-derived aggregates, a third-party airport-wait archive, and optional OSRM routing. These are visible in `artifacts/api-server/src/field-atlas/backend/providers/publicTravel.ts`, `flightHistory.ts`, `securityHistory.ts`, `providers/bts.ts`, and `providers/airports.ts`.
 
-The app already distinguishes airport-wide information and historical estimates from flight-specific confirmation. Keep that distinction. The repository’s November 6 source check reports outbound 403 failures for FAA and BTS downloads along with other existing live sources, so test access from the actual app environment before building new integrations. See `artifacts/field-sales-atlas/docs/TRAVEL_SOURCE_CHECK.json`.
+The app already distinguishes airport-wide information and historical estimates from flight-specific confirmation. Keep that distinction. A fresh check on November 6, 2026 at 20:17 UTC found NOAA METAR/TAF current for MCO and YYZ and an NWS MCO point forecast current. FAA omitted MCO (unknown), NWS alerts were partial because no observation timestamp was returned, and ECCC GeoMet was unavailable for the YYZ-area sample. BTS August 2026 imported successfully as historical data; routing and flight-specific status remain unconfigured. This sample does not guarantee future availability; see `artifacts/field-sales-atlas/docs/TRAVEL_SOURCE_CHECK.json`.
 
 ## Best new sources
 
@@ -100,7 +100,7 @@ The highest-value product intelligence may come from combining these public sour
 - Commercial-use terms differ sharply between public data and vendor free tiers.
 - FAA API and SWIM access requires a key or agreement for some services; verify each service’s terms.
 - ADSB.lol is an experimental option, not an SLA-backed dependency; its ODbL and production-contact conditions require review.
-- The app’s saved source check reports 403 outbound failures for several current aviation sources, including BTS/FAA. New feeds must be tested from the actual API workflow before implementation.
+- The latest source check shows mixed availability rather than a blanket outage: current NOAA observations/forecasts, a partial FAA result, and unavailable ECCC; the August BTS history import succeeded. New feeds still need a current probe through the actual app path, plus freshness, license, and commercial-use checks before implementation.
 
 ## Sources
 
