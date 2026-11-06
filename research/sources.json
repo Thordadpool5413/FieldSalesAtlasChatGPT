@@ -1,0 +1,226 @@
+[
+  {
+    "key": "census-cbp-api",
+    "title": "County Business Patterns (CBP) APIs",
+    "url": "https://www.census.gov/data/developers/data-sets/cbp-zbp/cbp-api.html",
+    "publishedDate": "2025-06-26",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-01-census-cbp-api.md"
+  },
+  {
+    "key": "census-acs-api",
+    "title": "American Community Survey 5-Year Data (2009–2024)",
+    "url": "https://www.census.gov/data/developers/data-sets/acs-5year.2022.html",
+    "publishedDate": "2026-01-29",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-02-census-acs-5year-api.md"
+  },
+  {
+    "key": "census-cbp-release",
+    "title": "County Business Patterns Data",
+    "url": "https://www.census.gov/programs-surveys/cbp/data.html",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-05-cbp-release-status.md"
+  },
+  {
+    "key": "census-api-guide",
+    "title": "Census Data API User Guide",
+    "url": "https://www.census.gov/content/dam/Census/data/developers/api-user-guide/api-user-guide.pdf",
+    "publishedDate": "2026-05-12",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-08-census-api-user-guide.md"
+  },
+  {
+    "key": "census-api-training",
+    "title": "Getting Started with the Census API — Transcript",
+    "url": "https://www2.census.gov/about/training-workshops/2026/2026-02-19-getting-started-with-census-api-transcript.pdf",
+    "publishedDate": "2026-02-19",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-07-census-api-training.md"
+  },
+  {
+    "key": "statcan-business-counts",
+    "title": "Canadian Business Counts, December 2025",
+    "url": "https://www150.statcan.gc.ca/n1/daily-quotidien/260213/dq260213c-eng.htm",
+    "publishedDate": "2026-02-13 (reference date December 2025)",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-03-statcan-business-counts.md"
+  },
+  {
+    "key": "statcan-business-products",
+    "title": "Business Register Data Products",
+    "url": "https://www.statcan.gc.ca/en/statistical-programs/document/1105_D16_V4",
+    "publishedDate": "2024-06-12",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-06-statcan-business-register-products.md"
+  },
+  {
+    "key": "statcan-open-license",
+    "title": "Statistics Canada Open Licence FAQ",
+    "url": "https://www.statcan.gc.ca/en/terms-conditions/open-licence-faq",
+    "publishedDate": "2013-01-25; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-snippets.md"
+  },
+  {
+    "key": "statcan-wds",
+    "title": "Statistics Canada Web Data Service API",
+    "url": "https://www.statcan.gc.ca/en/microdata/api",
+    "publishedDate": "2022-08-12; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/territory-snippets.md"
+  },
+  {
+    "key": "overture-places",
+    "title": "Overture Maps Places Guide",
+    "url": "https://docs.overturemaps.org/guides/places",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/places-01-overture-places.md"
+  },
+  {
+    "key": "overture-attribution",
+    "title": "Overture Maps Attribution and Licensing",
+    "url": "https://docs.overturemaps.org/attribution/",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/places-05-overture-attribution.md"
+  },
+  {
+    "key": "osm-attribution",
+    "title": "OpenStreetMap Foundation Attribution Guidelines",
+    "url": "https://osmfoundation.org/wiki/Licence/Attribution_Guidelines",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/places-04-osm-attribution.md"
+  },
+  {
+    "key": "osm-license-faq",
+    "title": "OpenStreetMap Foundation Licence and Legal FAQ",
+    "url": "https://osmfoundation.org/wiki/Licence/Licence_and_Legal_FAQ",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/places-snippets.md"
+  },
+  {
+    "key": "overpass-api",
+    "title": "Overpass API",
+    "url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 3",
+    "evidencePath": "research/sources/places-snippets.md"
+  },
+  {
+    "key": "vancouver-business-licenses",
+    "title": "City of Vancouver Business Licences",
+    "url": "https://opendata.vancouver.ca/explore/dataset/business-licences/map?disjunctive.businesssubtype&disjunctive.status&location=12%2C49.26904%2C-123.13494",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/places-03-vancouver-business-licences.md"
+  },
+  {
+    "key": "511-sf-bay",
+    "title": "511 SF Bay Traffic Data API",
+    "url": "https://511.org/open-data/traffic",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/ground-travel-01-511-sf-bay-traffic.md"
+  },
+  {
+    "key": "nws-api",
+    "title": "NWS API Web Service Documentation",
+    "url": "https://www.weather.gov/documentation/services-web-api",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/ground-travel-02-nws-api.md"
+  },
+  {
+    "key": "open-meteo-terms",
+    "title": "Open-Meteo Terms of Use",
+    "url": "https://open-meteo.com/en/terms",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/ground-travel-03-open-meteo-terms.md"
+  },
+  {
+    "key": "osrm-policy",
+    "title": "OSRM API Usage Policy",
+    "url": "https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/ground-travel-snippets.md"
+  },
+  {
+    "key": "faa-nas",
+    "title": "FAA National Airspace System Status",
+    "url": "https://nasstatus.faa.gov/",
+    "publishedDate": "Dynamic; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-01-faa-nas-status.md"
+  },
+  {
+    "key": "bts-on-time",
+    "title": "BTS Airline On-Time Statistics",
+    "url": "https://www.transtats.bts.gov/ontime/",
+    "publishedDate": "Dynamic; data through 2026-08 as displayed on 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-02-bts-on-time.md"
+  },
+  {
+    "key": "opensky-terms",
+    "title": "OpenSky Network Terms of Use",
+    "url": "https://opensky-network.org/about/terms-of-use",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-03-opensky-terms.md"
+  },
+  {
+    "key": "cbp-airport-wait-times",
+    "title": "Airport Wait Times: Customs and Border Protection",
+    "url": "https://awt.cbp.gov/Specs",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-04-cbp-airport-wait-times.md"
+  },
+  {
+    "key": "current-hf-airport-wait",
+    "title": "US Airport Security & Immigration Wait Times",
+    "url": "https://huggingface.co/datasets/digitalhen/us-airport-wait-times",
+    "publishedDate": "Dataset snapshot dated 2026-11-05; accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/current-hf-airport-wait-times.md"
+  },
+  {
+    "key": "current-flyerintel",
+    "title": "FlyerIntel Data Sources",
+    "url": "https://flyerintel.com/data-sources",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/current-flyerintel-data-sources.md"
+  },
+  {
+    "key": "usda-nass",
+    "title": "USDA NASS Quick Stats API",
+    "url": "https://quickstats.nass.usda.gov/api",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/verticals-01-usda-nass-quickstats-api.md"
+  },
+  {
+    "key": "epa-echo",
+    "title": "EPA ECHO Web Services",
+    "url": "https://echo.epa.gov/tools/web-services",
+    "publishedDate": "Not stated; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/verticals-02-epa-echo-web-services.md"
+  },
+  {
+    "key": "statcan-odhf",
+    "title": "Statistics Canada Open Database of Healthcare Facilities",
+    "url": "https://www.statcan.gc.ca/en/lode/databases/odhf",
+    "publishedDate": "Issue 2020001; data version 1.1 sourced through 2020",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/verticals-03-statcan-healthcare-facilities.md"
+  }
+]
