@@ -225,11 +225,65 @@ test('public-source freshness uses observation time, quarantines schema failures
     const old = await source(spec); assert.equal(old.evidence.state, 'stale');
     mode = 'current'; const freshSpec = { ...spec, subject: randomUUID() };
     const fresh = await source(freshSpec); assert.equal(fresh.evidence.state, 'current'); assert.equal(fresh.data, 'validated observation');
+    const cachedSpec = { ...spec, subject: randomUUID() };
+    const cached = await source(cachedSpec);
+    await db.tx.update('atlas_public_evidence_v1', [{ id: cached.evidence.id, record: {
+      retryAfter: new Date(Date.now() + 60000).toISOString(),
+      result: { ...cached, evidence: { ...cached.evidence, expiresAt: '2000-01-01T00:00:00Z' } },
+    } }], { patch: true });
+    const expiredCache = await source(cachedSpec);
+    assert.equal(expiredCache.evidence.state, 'stale');
+    assert.match(expiredCache.evidence.limitation, /current status is unknown/i);
     mode = 'offline';
     // Expire the retry cache without modifying the validated observation timestamp.
     await db.tx.update('atlas_public_evidence_v1', [{ id: fresh.evidence.id, record: { retryAfter: '2000-01-01T00:00:00Z' } }], { patch: true });
     const outage = await source(freshSpec); assert.equal(outage.evidence.state, 'stale'); assert.equal(outage.evidence.observedAt, fresh.evidence.observedAt); assert.equal(outage.data, fresh.data);
     mode = 'invalid'; const invalid = await source({ ...spec, subject: randomUUID() }); assert.equal(invalid.evidence.state, 'unavailable'); assert.equal(invalid.data, null);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test('Canadian GeoMet observations validate the live field schema and keep empty, stale, and invalid results distinct', async () => {
+  const { canadianObservations } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+  const originalFetch = globalThis.fetch;
+  const now = Date.now();
+  let mode: 'fresh' | 'empty' | 'stale' | 'malformed' = 'fresh';
+  let requestedUrl = '';
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    requestedUrl = String(input);
+    if (mode === 'malformed') return new Response(JSON.stringify({ type: 'FeatureCollection', features: {} }));
+    if (mode === 'empty') return new Response(JSON.stringify({ type: 'FeatureCollection', features: [] }));
+    const observedAt = new Date(now - (mode === 'stale' ? 3 * 3600000 : 60000)).toISOString();
+    return new Response(JSON.stringify({ type: 'FeatureCollection', features: [{
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [-79.574133, 43.963525] },
+      properties: { obs_date_tm: observedAt, 'date_tm-value': observedAt, 'stn_nam-value': 'KING CITY NORTH', air_temp: 9.4 },
+    }] }));
+  }) as typeof fetch;
+  const lat = 43.6777, lon = -79.6248;
+  try {
+    const fresh = await canadianObservations(lat, lon);
+    assert.equal(fresh.evidence.provider, 'ECCC GeoMet');
+    assert.equal(fresh.evidence.state, 'current');
+    assert.equal(fresh.evidence.observedAt, new Date(now - 60000).toISOString());
+    assert.match(fresh.data?.[0]?.title || '', /KING CITY NORTH/);
+    assert.match(new URL(requestedUrl).searchParams.get('sortby') || '', /^-/);
+
+    mode = 'empty';
+    const empty = await canadianObservations(lat + .01, lon);
+    assert.equal(empty.evidence.state, 'partial');
+    assert.deepEqual(empty.data, []);
+    assert.match(empty.evidence.limitation, /status is unknown/i);
+
+    mode = 'stale';
+    const stale = await canadianObservations(lat + .02, lon);
+    assert.equal(stale.evidence.state, 'stale');
+    assert.match(stale.evidence.limitation, /current status is unknown/i);
+
+    mode = 'malformed';
+    const malformed = await canadianObservations(lat + .03, lon);
+    assert.equal(malformed.evidence.state, 'unavailable');
+    assert.equal(malformed.data, null);
+    assert.match(malformed.evidence.limitation, /status is unknown/i);
   } finally { globalThis.fetch = originalFetch; }
 });
 

@@ -66,15 +66,19 @@ export function nws(lat: number, lon: number) {
 export function canadianObservations(lat: number, lon: number) {
   const subject = lat.toFixed(2) + ',' + lon.toFixed(2);
   const bbox = [lon - .75, lat - .75, lon + .75, lat + .75].map(v => v.toFixed(3)).join(',');
-  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url: `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${bbox}&limit=5&f=json`,
-    kind: 'observation', scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-1',
+  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url: `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${bbox}&limit=5&sortby=-obs_date_tm&f=json`,
+    kind: 'observation', scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-      const rows = root.features.map(v => object(object(v).properties));
-      const times = rows.map(row => dated(row.datetime || row.date_tm || row.obs_date)).filter((v): v is string => !!v).sort();
-      if (!rows.length || !times.length) throw new Error('Canadian observation product/timestamps could not be validated.');
-      return { data: rows.map(row => ({ title: text(row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + (dated(row.datetime || row.date_tm || row.obs_date) || 'unknown time') })), observedAt: times.at(-1), limitation: 'Product-specific live schema/access must validate before use; weather warnings and forecasts are separate products.' };
+      if (!root.features.length) return { data: [], limitation: 'No nearby surface observations were returned; current Canadian weather status is unknown.' };
+      const rows = root.features.map(v => object(object(v).properties)).map(row => ({
+        row,
+        observedAt: [row.obs_date_tm, row['date_tm-value'], row.date_tm, row.datetime, row.obs_date].map(dated).find((value): value is string => !!value),
+      })).filter((entry): entry is { row: Record<string, unknown>; observedAt: string } => !!entry.observedAt);
+      if (!rows.length) throw new Error('Canadian observation timestamps could not be validated.');
+      const times = rows.map(entry => entry.observedAt).sort();
+      return { data: rows.map(({ row, observedAt }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + observedAt })), observedAt: times.at(-1), limitation: 'Nearby surface observations are not airport-specific warnings or forecasts.' };
     },
   });
 }
