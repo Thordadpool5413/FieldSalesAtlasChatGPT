@@ -1,0 +1,161 @@
+/* Territory Pulse / embedded, keyboard-accessible data visualization. */
+.mv-app .fsa-pulse {
+  --pulse-radius:18px;
+  position:relative;isolation:isolate;min-width:0;overflow:hidden;
+  margin:18px 0 20px;
+  border:1px solid color-mix(in srgb,var(--at-cyan) 46%,var(--at-border-soft));
+  border-radius:var(--pulse-radius);
+  color:var(--at-text);
+  background:
+    radial-gradient(ellipse 480px 300px at 96% -32%,color-mix(in srgb,var(--at-rose) 13%,transparent),transparent 80%),
+    radial-gradient(ellipse 540px 270px at -5% 115%,color-mix(in srgb,var(--at-cyan) 10%,transparent),transparent 80%),
+    var(--at-surface);
+  box-shadow:0 16px 60px rgba(0,7,29,.13);
+}
+.mv-app .fsa-pulse::before {
+  content:'';position:absolute;pointer-events:none;inset:0 0 auto;height:2px;
+  background:linear-gradient(90deg,var(--at-cyan) 8%,var(--at-rose) 60%,transparent 100%);
+}
+.mv-app .fsa-pulse-head {
+  display:flex;align-items:end;justify-content:space-between;gap:20px;
+  padding:clamp(18px,2.3vw,30px);
+  border-bottom:1px solid var(--at-border-soft);
+}
+.mv-app .fsa-pulse-heading {min-width:0;max-width:740px;}
+.mv-app .fsa-pulse-kicker {display:inline-flex;align-items:center;gap:9px;color:var(--at-cyan);font-size:11px;font-weight:850;letter-spacing:.12em;}
+.mv-app .fsa-pulse-heading h2 {font:830 clamp(25px,2.45vw,38px)/1.07 'Outfit','DM Sans',system-ui,sans-serif;margin:9px 0;letter-spacing:-.045em;color:var(--at-text);}
+.mv-app .fsa-pulse-heading h2 span {color:var(--at-rose);}
+.mv-app .fsa-pulse-heading p {margin:0;color:var(--at-muted);font-size:13.5px;line-height:1.5;}
+.mv-app .fsa-pulse-modes {
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px;
+  border:1px solid var(--at-border-soft);border-radius:12px;
+  padding:4px;background:var(--at-field);
+}
+.mv-app .fsa-pulse-modes button {
+  border:1px solid transparent;border-radius:9px;
+  color:var(--at-muted);background:transparent;
+  min-height:44px;padding:9px 13px;font-size:12.5px;font-weight:760;white-space:nowrap;
+}
+.mv-app .fsa-pulse-modes button.is-active {
+  background:var(--at-aqua-soft);color:var(--at-text);
+  border-color:var(--at-cyan);box-shadow:0 3px 14px rgba(1,11,29,.13);
+}
+.mv-app .fsa-pulse-modes button:hover:not(.is-active) {color:var(--at-text);background:var(--at-raised);}
+.mv-app .fsa-pulse-body {display:grid;grid-template-columns:minmax(200px,.78fr) minmax(0,2fr);gap:0;}
+.mv-app .fsa-pulse-summary {
+  padding:21px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  border-right:1px solid var(--at-border-soft);
+  background:color-mix(in srgb,var(--at-field) 62%,transparent);
+}
+.mv-app .fsa-pulse-summary>div {display:flex;flex-direction:column;gap:5px;min-width:0;padding:15px;border-radius:12px;border:1px solid var(--at-border-soft);background:var(--at-surface);}
+.mv-app .fsa-pulse-summary small {font-size:10px;letter-spacing:.07em;font-weight:800;color:var(--at-muted);line-height:1.3;}
+.mv-app .fsa-pulse-summary strong {font:840 clamp(27px,2.5vw,39px)/1.05 'Outfit','DM Sans',system-ui,sans-serif;letter-spacing:-.055em;color:var(--at-text);font-variant-numeric:tabular-nums;}
+.mv-app .fsa-pulse-summary>div:nth-child(3) strong {color:var(--at-rose);}
+.mv-app .fsa-pulse-summary>div:nth-child(4) strong {color:var(--at-cyan);}
+.mv-app .fsa-pulse-summary span {font-size:11px;line-height:1.35;color:var(--at-muted);}
+.mv-app .fsa-pulse-distribution {padding:20px 22px;min-width:0;}
+.mv-app .fsa-pulse-column-head {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.mv-app .fsa-pulse-column-head strong {font-size:10.5px;letter-spacing:.105em;color:var(--at-cyan);}
+.mv-app .fsa-pulse-column-head span {font-size:11px;color:var(--at-muted);}
+.mv-app .fsa-pulse-rows {display:flex;flex-direction:column;gap:4px;}
+.mv-app .fsa-pulse-row {
+  width:100%;min-width:0;min-height:54px;
+  display:grid;grid-template-columns:45px minmax(0,1fr) 22px;
+  gap:11px;align-items:center;text-align:left;
+  border:1px solid transparent;border-radius:10px;
+  padding:6px 9px 6px 7px;background:transparent;
+  color:var(--at-text);
+  transition:border-color .18s ease,background .18s ease,transform .18s ease;
+}
+.mv-app .fsa-pulse-row:hover {
+  background:color-mix(in srgb,var(--at-cyan) 8%,var(--at-surface));
+  border-color:color-mix(in srgb,var(--at-cyan) 35%,var(--at-border));
+  transform:translateX(3px);
+}
+.mv-app .fsa-pulse-row:focus-visible,.mv-app .fsa-pulse-modes button:focus-visible,
+.mv-app .fsa-pulse-expand:focus-visible,.mv-app .fsa-pulse-empty button:focus-visible {
+  outline:3px solid var(--at-cyan);outline-offset:2px;
+}
+.mv-app .fsa-pulse-code {
+  display:grid;place-items:center;height:38px;width:43px;
+  border:1px solid var(--at-border-soft);
+  background:var(--at-field);border-radius:9px;
+  color:var(--at-text);font-size:12px;font-weight:850;letter-spacing:.035em;
+}
+.mv-app .fsa-pulse-details {min-width:0;display:flex;flex-direction:column;gap:8px;}
+.mv-app .fsa-pulse-details-top {display:flex;justify-content:space-between;align-items:baseline;gap:7px;}
+.mv-app .fsa-pulse-details-top strong {font-size:13px;font-weight:750;color:var(--at-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mv-app .fsa-pulse-details-top small {font-size:11px;color:var(--at-muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.mv-app .fsa-pulse-track {height:7px;display:block;width:100%;border-radius:999px;background:var(--at-raised);overflow:hidden;}
+.mv-app .fsa-pulse-stack {height:100%;display:flex;overflow:hidden;border-radius:999px;min-width:0;}
+.mv-app .fsa-pulse-stack i {height:100%;display:block;min-width:0;}
+.mv-app .fsa-pulse-stack i.a {background:var(--at-cyan);}
+.mv-app .fsa-pulse-stack i.b {background:var(--at-rose);}
+.mv-app .fsa-pulse-stack i.unassigned {background:#9C86DD;}
+.mv-app .fsa-pulse-fill {display:block;height:100%;border-radius:999px;transition:width .2s ease;}
+.mv-app .fsa-pulse-fill.coaching {background:linear-gradient(90deg,#D44C92,#FF92C4);}
+.mv-app .fsa-pulse-fill.visits {background:linear-gradient(90deg,#188D9D,#52DDED);}
+.mv-app .fsa-pulse-arrow {color:var(--at-muted);}
+.mv-app .fsa-pulse-row:hover .fsa-pulse-arrow {color:var(--at-cyan);}
+.mv-app .fsa-pulse-expand {display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:1px solid var(--at-border-soft);border-radius:9px;padding:9px 15px;background:var(--at-field);color:var(--at-text);font-size:12.5px;font-weight:760;margin-top:8px;}
+.mv-app .fsa-pulse-empty {padding:25px;display:flex;align-items:start;flex-direction:column;gap:10px;color:var(--at-muted);}
+.mv-app .fsa-pulse-empty strong {color:var(--at-text);font-size:16px;}
+.mv-app .fsa-pulse-empty p {font-size:13px;line-height:1.5;max-width:410px;margin:0;}
+.mv-app .fsa-pulse-empty button {display:flex;align-items:center;gap:8px;min-height:44px;padding:9px 15px;background:var(--at-action);color:var(--at-action-fg);border:0;border-radius:10px;font-weight:750;}
+.mv-app .fsa-pulse-footer {border-top:1px solid var(--at-border-soft);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:color-mix(in srgb,var(--at-field) 55%,transparent);}
+.mv-app .fsa-pulse-footer>span {display:inline-flex;align-items:center;gap:7px;font-size:10.8px;line-height:1.4;color:var(--at-muted);}
+.mv-app .fsa-pulse-legend {display:flex;gap:15px;flex-wrap:wrap;}
+.mv-app .fsa-pulse-legend span {display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--at-muted);}
+.mv-app .fsa-pulse-legend i {width:8px;height:8px;border-radius:50%;display:inline-block;background:#9C86DD;}
+.mv-app .fsa-pulse-legend i.a {background:var(--at-cyan);}
+.mv-app .fsa-pulse-legend i.b,.mv-app .fsa-pulse-legend i.coaching {background:var(--at-rose);}
+.mv-app .fsa-pulse-legend i.visits {background:#52DDED;}
+@media(max-width:1050px) {
+  .mv-app .fsa-pulse-head {flex-direction:column;align-items:stretch;gap:13px;}
+  .mv-app .fsa-pulse-modes {align-self:flex-start;}
+  .mv-app .fsa-pulse-body {grid-template-columns:minmax(0,1fr);}
+  .mv-app .fsa-pulse-summary {grid-template-columns:repeat(4,minmax(0,1fr));border-right:0;border-bottom:1px solid var(--at-border-soft);padding:12px;}
+}
+@media(max-width:620px) {
+  .mv-app .fsa-pulse {margin:12px 0 16px;border-radius:14px;}
+  .mv-app .fsa-pulse-head {padding:16px 14px;}
+  .mv-app .fsa-pulse-heading h2 {font-size:27px;}
+  .mv-app .fsa-pulse-heading p {font-size:12.5px;}
+  .mv-app .fsa-pulse-modes {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-self:stretch;}
+  .mv-app .fsa-pulse-modes button {font-size:11.5px;padding:8px 5px;white-space:normal;min-width:0;}
+  .mv-app .fsa-pulse-summary {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .mv-app .fsa-pulse-summary>div {min-height:100px;padding:13px;}
+  .mv-app .fsa-pulse-distribution {padding:13px;}
+  .mv-app .fsa-pulse-column-head {flex-direction:column;align-items:flex-start;gap:3px;}
+  .mv-app .fsa-pulse-details-top strong {font-size:12px;}
+  .mv-app .fsa-pulse-details-top small {font-size:10.5px;}
+  .mv-app .fsa-pulse-row {grid-template-columns:38px minmax(0,1fr) 18px;gap:8px;padding-inline:3px;}
+  .mv-app .fsa-pulse-code {width:38px;height:38px;}
+  .mv-app .fsa-pulse-footer {padding:12px 14px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app .fsa-pulse-row,.mv-app .fsa-pulse-fill {transition:none;}
+  .mv-app .fsa-pulse-row:hover {transform:none;}
+}
+
+
+/* Shared visual treatment: the report is a decision tool, not a decorative bar chart. */
+.mv-app.atlas-command-v5 .fsa-pulse {
+  border-color:color-mix(in srgb,var(--at-cyan) 50%,var(--at-border));
+  box-shadow:0 19px 57px rgba(0,9,30,.15);
+  border-radius:18px;
+}
+.mv-app.atlas-command-v5 .fsa-pulse-column-head strong {font-size:11.5px;}
+.mv-app.atlas-command-v5 .fsa-pulse-summary>div {
+  background:var(--at-surface);
+  border-color:color-mix(in srgb,var(--at-cyan) 18%,var(--at-border-soft));
+}
+.mv-app.atlas-command-v5 .fsa-pulse-row:hover {
+  background:color-mix(in srgb,var(--at-cyan) 8%,var(--at-surface));
+  border-color:var(--at-cyan);
+}
+.mv-app.atlas-command-v5 .fsa-pulse-track {height:9px;}
+.mv-app.atlas-command-v5 .fsa-pulse-modes button {min-height:44px;}
+.mv-app.atlas-command-v5 .fsa-pulse-modes button.is-active {
+  border-color:var(--at-cyan);background:var(--at-aqua-soft);
+}

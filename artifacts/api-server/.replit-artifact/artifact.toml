@@ -30,3 +30,7 @@ NODE_ENV = "production"
 
 [services.production.health.startup]
 path = "/api/healthz"
+
+[services.env]
+ATLAS_DATA_DIR = "artifacts/field-sales-atlas/data"
+ATLAS_RUNTIME_ROOT = "artifacts/api-server/src/field-atlas"

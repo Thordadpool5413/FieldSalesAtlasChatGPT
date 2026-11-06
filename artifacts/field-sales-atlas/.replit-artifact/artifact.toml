@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Field Sales Atlas"
+description = "A map-first workspace for territory managers to organize field teams, coaching, shared calendars, territories, and coordinated travel planning across the U.S. and Canada."
+version = "1.0.0"
+id = "artifacts/field-sales-atlas"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24397
+
+[services.development]
+run = "pnpm --filter @workspace/field-sales-atlas run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/field-sales-atlas", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/field-sales-atlas/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24397"
+BASE_PATH = "/"

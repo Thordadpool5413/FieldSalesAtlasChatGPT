@@ -1,0 +1,45 @@
+/* Read-only integrity and source reliability: Miami Vice Precision */
+.mv-app .fsa-backend-health{margin:24px 0;border:1px solid color-mix(in srgb,var(--at-cyan) 30%,var(--at-border));border-radius:17px;padding:clamp(14px,2vw,22px);background:var(--at-surface);box-shadow:0 14px 34px rgba(0,0,0,.09);color:var(--at-text)}
+.mv-app .fsa-backend-health>header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.mv-app .fsa-health-header-icon{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border:1px solid var(--at-cyan);border-radius:13px;color:var(--at-cyan);background:var(--at-aqua-soft)}
+.mv-app .fsa-health-eyebrow{font-size:10px;font-weight:830;color:var(--at-cyan);letter-spacing:.095em}
+.mv-app .fsa-backend-health h2{margin:4px 0;color:var(--at-text);font:810 clamp(23px,2.5vw,33px)/1.13 'Outfit',system-ui,sans-serif;letter-spacing:-.043em}
+.mv-app .fsa-backend-health>header p{color:var(--at-muted);font-size:13px;line-height:1.5;margin:4px 0}
+.mv-app .fsa-health-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mv-app .fsa-health-panel{min-width:0;border:1px solid var(--at-border-soft);border-radius:13px;padding:15px;background:var(--at-field)}
+.mv-app .fsa-health-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:13px}
+.mv-app .fsa-health-panel-head h3{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--at-text);margin:0;font-weight:800}
+.mv-app .fsa-health-panel-head h3 svg{color:var(--at-cyan)}
+.mv-app .fsa-health-panel-head button{min-height:42px;display:flex;align-items:center;gap:6px}
+.mv-app .fsa-health-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;border:1px solid var(--at-border);border-radius:10px;background:var(--at-surface)}
+.mv-app .fsa-health-status.good{border-color:var(--at-cyan)}
+.mv-app .fsa-health-status.warn{border-color:var(--at-rose)}
+.mv-app .fsa-health-status.bad{border-color:var(--at-rose)}
+.mv-app .fsa-health-status strong{font-size:12px;font-weight:800}
+.mv-app .fsa-health-status small{font-size:10px;color:var(--at-muted)}
+.mv-app .fsa-health-status svg{color:var(--at-cyan)}
+.mv-app .fsa-health-status:is(.bad,.warn) svg{color:var(--at-rose)}
+.mv-app .fsa-health-counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:7px;margin:12px 0}
+.mv-app .fsa-health-counts>div{min-width:0;display:grid;gap:3px;border:1px solid var(--at-border-soft);border-radius:10px;padding:10px;background:var(--at-surface)}
+.mv-app .fsa-health-counts b{font:810 22px/1.1 'Outfit',sans-serif;color:var(--at-text);font-variant-numeric:tabular-nums}
+.mv-app .fsa-health-counts span{font-size:10px;color:var(--at-muted)}
+.mv-app .fsa-health-issues{list-style:none;margin:11px 0;padding:0;display:grid;gap:8px}
+.mv-app .fsa-health-issues li{display:flex;align-items:flex-start;gap:7px;border-left:3px solid var(--at-rose);background:var(--at-rose-soft);border-radius:8px;padding:10px}
+.mv-app .fsa-health-issues li svg{flex:0 0 15px;color:var(--at-rose)}
+.mv-app .fsa-health-issues li span{display:grid;gap:3px;min-width:0}
+.mv-app .fsa-health-issues strong{font-size:12px;color:var(--at-text);text-transform:capitalize}
+.mv-app .fsa-health-issues small{font-size:11px;line-height:1.4;color:var(--at-muted)}
+.mv-app .fsa-health-disclaimer{font-size:11px;line-height:1.6;color:var(--at-muted);margin:10px 0}
+.mv-app .fsa-health-sources{display:grid;gap:8px}
+.mv-app .fsa-health-source{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--at-border-soft);border-radius:10px;padding:9px;background:var(--at-surface)}
+.mv-app .fsa-health-source>svg{flex:0 0 16px;margin-top:2px}
+.mv-app .fsa-health-source>svg.working{color:var(--at-cyan)}
+.mv-app .fsa-health-source>svg.unavailable{color:var(--at-rose)}
+.mv-app .fsa-health-source>div{display:grid;gap:3px;min-width:0}
+.mv-app .fsa-health-source strong{font-size:12px;color:var(--at-text)}
+.mv-app .fsa-health-source span,.mv-app .fsa-health-source small{font-size:11px;line-height:1.4;color:var(--at-muted)}
+.mv-app .fsa-health-panel h4{margin:13px 0 7px;font-size:12px;color:var(--at-text)}
+.mv-app .fsa-health-missing{margin:0;padding:0 0 0 17px;display:grid;gap:6px;font-size:11px;line-height:1.45;color:var(--at-muted)}
+.mv-app .fsa-health-error{border:1px solid var(--at-rose);background:var(--at-rose-soft);border-radius:9px;padding:10px;color:var(--at-text);font-size:12px}
+@media(max-width:850px){.mv-app .fsa-health-grid{grid-template-columns:1fr}.mv-app .fsa-backend-health{margin:15px 0;padding:12px}.mv-app .fsa-health-panel{padding:12px}.mv-app .fsa-health-counts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:390px){.mv-app .fsa-health-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}

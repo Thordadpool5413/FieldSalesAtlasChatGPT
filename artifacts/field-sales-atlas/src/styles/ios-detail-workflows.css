@@ -1,0 +1,201 @@
+/* Calendar: iPhone month gestures and inspectable event detail sheet. */
+.mv-app.atlas-product-v4 .ios-calendar-dots{display:none}
+.mv-app.atlas-product-v4 .ios-calendar-backdrop{
+ position:fixed;inset:0;z-index:500;
+ display:flex;align-items:flex-end;justify-content:center;
+ background:rgba(0,11,28,.63);backdrop-filter:blur(6px);
+}
+.mv-app.atlas-product-v4 .ios-calendar-day-sheet{
+ width:min(100%,540px);max-height:min(83dvh,var(--atlas-visual-height,83dvh));
+ display:flex;flex-direction:column;overflow:hidden;
+ background:var(--at-surface);color:var(--at-text);
+ border:1px solid var(--at-border);border-bottom:0;
+ border-radius:25px 25px 0 0;
+ box-shadow:0 -16px 64px rgba(0,12,28,.39);
+ padding:3px 0 calc(14px + env(safe-area-inset-bottom));
+}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-header{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;
+ padding:5px 19px 17px;border-bottom:1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-header>div>span{
+ display:block;font-size:10.5px;font-weight:850;letter-spacing:.12em;color:var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-header h2{
+ font-size:22px;letter-spacing:-.045em;line-height:1.2;margin:5px 0;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-header p{
+ font-size:12.5px;color:var(--at-muted);margin:0;
+}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-close{
+ flex:0 0 43px;width:43px;height:43px;display:grid;place-items:center;border-radius:50%;
+ border:1px solid var(--at-border);color:var(--at-text);background:var(--at-field);
+}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-content{
+ flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:9px 15px;
+}
+.mv-app.atlas-product-v4 .ios-calendar-event-row{
+ display:flex;align-items:center;gap:12px;text-align:left;
+ width:100%;min-height:73px;padding:12px 5px;
+ border:0;border-bottom:1px solid var(--at-border-soft);
+ background:transparent;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-calendar-event-row>span:first-child{
+ width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
+ border-radius:11px;background:var(--at-aqua-soft);color:var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .ios-calendar-event-row>span:first-child.is-trip{
+ background:var(--at-rose-soft);color:var(--at-rose);
+}
+.mv-app.atlas-product-v4 .ios-calendar-event-row>span:nth-child(2){flex:1;min-width:0}
+.mv-app.atlas-product-v4 .ios-calendar-event-row strong{
+ display:block;font-size:15px;font-weight:800;line-height:1.35;
+}
+.mv-app.atlas-product-v4 .ios-calendar-event-row small{
+ display:block;font-size:12.5px;margin-top:4px;line-height:1.45;color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .ios-calendar-event-row>svg{color:var(--at-cyan);flex-shrink:0}
+.mv-app.atlas-product-v4 .ios-calendar-warnings{
+ display:flex;gap:10px;align-items:flex-start;
+ padding:11px;margin:5px 0 9px;border-radius:11px;
+ border:1px solid var(--at-rose);background:var(--at-rose-soft);
+ font-size:13px;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-calendar-warnings>svg{flex:0 0 18px;color:var(--at-rose)}
+.mv-app.atlas-product-v4 .ios-calendar-warnings strong{font-size:13.5px}
+.mv-app.atlas-product-v4 .ios-calendar-warnings p{font-size:12.5px;margin:5px 0;color:var(--at-muted)}
+.mv-app.atlas-product-v4 .ios-calendar-empty-day{
+ display:flex;align-items:center;flex-direction:column;padding:38px 14px;
+ text-align:center;gap:8px;color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .ios-calendar-empty-day svg{color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .ios-calendar-empty-day strong{font-size:16px;color:var(--at-text)}
+.mv-app.atlas-product-v4 .ios-calendar-empty-day p{font-size:13.5px;margin:0}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-footer{padding:11px 17px 0;border-top:1px solid var(--at-border-soft)}
+.mv-app.atlas-product-v4 .ios-calendar-sheet-footer button{
+ display:flex;align-items:center;justify-content:center;gap:8px;
+ min-height:51px;width:100%;font-size:14px;font-weight:800;
+ border:1px solid var(--at-action);border-radius:12px;
+ background:var(--at-action);color:var(--at-action-fg);
+}
+@media(max-width:900px){
+ .mv-app.atlas-product-v4 .ios-calendar-day-sheet{width:100%;max-width:100%}
+ .mv-app.atlas-product-v4 .ios-calendar-day-sheet .ios-sheet-grab{
+  display:flex;align-items:center;justify-content:center;
+  height:27px;min-height:27px;margin:0;background:transparent;border:0;
+ }
+ .mv-app.atlas-product-v4 .ios-calendar-day-sheet .ios-sheet-grab>span{
+  width:37px;height:5px;border-radius:4px;background:var(--at-subtle);opacity:.55;
+ }
+ .mv-app.atlas-product-v4 .ios-calendar-desktop-details{display:none}
+ .mv-app.atlas-product-v4 .op-calendar-grid{touch-action:pan-y}
+ .mv-app.atlas-product-v4 .op-calendar-grid .op-day{
+  position:relative;min-height:69px;padding:4px 3px 12px;border-color:var(--at-border-soft);
+ }
+ .mv-app.atlas-product-v4 .op-calendar-grid .op-day-number{
+  display:grid;place-items:center;min-width:38px!important;min-height:38px;
+  width:100%;padding:6px!important;text-align:center;
+  font-size:15px;font-weight:750;color:var(--at-text);border-radius:10px;
+ }
+ .mv-app.atlas-product-v4 .op-calendar-grid .op-day.today .op-day-number{
+  background:var(--at-rose-soft);color:var(--at-rose);
+ }
+ .mv-app.atlas-product-v4 .op-calendar-grid .op-day.selected .op-day-number{
+  background:var(--at-aqua-soft);color:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .op-calendar-grid .op-calendar-event{display:none}
+ .mv-app.atlas-product-v4 .ios-calendar-dots{
+  display:flex;align-items:center;justify-content:center;
+  gap:3px;width:100%;height:9px;pointer-events:none;
+ }
+ .mv-app.atlas-product-v4 .ios-calendar-dots i{
+  flex:0 0 5px;width:5px;height:5px;border-radius:50%;background:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .ios-calendar-dots i.trip{background:var(--at-rose)}
+ .mv-app.atlas-product-v4 .ios-calendar-dots i.conflict{background:#FFAD4C}
+}
+@media(prefers-reduced-motion:reduce){
+ .mv-app.atlas-product-v4 .ios-calendar-day-sheet{animation:none!important}
+}
+
+/* Manager edit form: essentials visible; optional coaching details one tap away. */
+.mv-app.atlas-product-v4 .ios-form-intro{grid-column:1 / -1;padding:4px 2px 3px}
+.mv-app.atlas-product-v4 .ios-form-intro strong{
+ display:block;font-size:17px;font-weight:850;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-form-intro p{
+ margin:5px 0 0;font-size:12.5px;line-height:1.5;color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced{
+ grid-column:1 / -1;border:1px solid var(--at-border-soft);
+ border-radius:12px;background:var(--at-field);overflow:hidden;margin-top:8px;
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced>summary{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ min-height:55px;padding:12px 14px;cursor:pointer;list-style:none;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced>summary::-webkit-details-marker{display:none}
+.mv-app.atlas-product-v4 .ios-manager-advanced>summary>span:first-child{
+ display:flex;flex-direction:column;gap:3px;
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced>summary strong{
+ font-size:14px;font-weight:850;
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced>summary small{
+ font-size:11.5px;color:var(--at-muted);line-height:1.35;
+}
+.mv-app.atlas-product-v4 .ios-details-chevron{
+ display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;
+ border-radius:50%;background:var(--at-raised);font-size:19px;font-weight:700;
+ transition:transform .15s ease;
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced[open] .ios-details-chevron{
+ transform:rotate(180deg);
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:13px;padding:16px 14px;border-top:1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .ios-manager-advanced-grid label.full{grid-column:1 / -1}
+.mv-app.atlas-product-v4 .ios-manager-advanced-grid label{min-width:0}
+@media(max-width:900px){
+ .mv-app.atlas-product-v4 :is(.op-form,.trainer-dialog-fields){
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+ .mv-app.atlas-product-v4 .ios-manager-advanced-grid{
+  grid-template-columns:minmax(0,1fr);
+ }
+ .mv-app.atlas-product-v4 .ios-manager-form label{
+  font-size:13.5px;line-height:1.4;
+ }
+ .mv-app.atlas-product-v4 .ios-manager-form :is(input,select,textarea){
+  font-size:16px!important;min-height:49px;
+ }
+ .mv-app.atlas-product-v4 .ios-manager-form textarea{min-height:94px}
+ .mv-app.atlas-product-v4 .ios-manager-form label small{
+  display:block;font-size:11.5px;line-height:1.5;margin-top:6px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .mv-app.atlas-product-v4 .ios-details-chevron{transition:none!important}
+}
+
+/* Small native back navigation with full room for readable page title. */
+.mv-app.atlas-product-v4 .ios-back-button{display:none}
+.mv-app.atlas-product-v4 .ios-pwa-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){
+ .mv-app.atlas-product-v4 .ios-has-back .mv-brand{display:none!important}
+ .mv-app.atlas-product-v4 .ios-back-button{
+  display:flex;align-items:center;gap:1px;flex:0 0 auto;
+  min-height:45px;padding:5px 6px 5px 0;
+  color:var(--at-cyan);background:transparent;border:0;
+  font-size:14px;font-weight:750;
+ }
+ .mv-app.atlas-product-v4 .ios-back-button svg{margin-left:-6px}
+ .mv-app.atlas-product-v4 .ios-has-back .ios-nav-title>span{display:none}
+ .mv-app.atlas-product-v4 .ios-has-back .ios-nav-title>strong{font-size:16px}
+ .mv-app.atlas-product-v4 .ios-pwa-actions{grid-template-columns:minmax(0,1fr)}
+ .mv-app.atlas-product-v4 .ios-pwa-actions button{
+  min-height:49px;font-size:13.5px;justify-content:flex-start;padding:12px 14px;
+ }
+}

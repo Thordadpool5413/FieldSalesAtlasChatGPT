@@ -1,0 +1,89 @@
+
+/* Professional FAA disruption briefing, aligned with the Miami Vice system. */
+.mv-app .atlas-nas-monitor{border:1px solid var(--at-border);border-radius:12px;overflow:hidden}
+.mv-app .atlas-nas-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 19px;border-bottom:1px solid var(--at-border);background:var(--at-surface)}
+.mv-app .atlas-nas-head-title{display:flex;gap:12px;align-items:center;min-width:0}
+.mv-app .atlas-nas-symbol{display:grid;place-items:center;width:37px;height:37px;flex:0 0 37px;border:1px solid var(--at-border);border-radius:11px;background:var(--at-aqua-soft);color:var(--at-cyan)}
+.mv-app .atlas-nas-head h3{font-size:16px;line-height:1.24;color:var(--at-text);margin:0;font-weight:800;letter-spacing:-.35px}
+.mv-app .atlas-nas-head p{font-size:11.5px;color:var(--at-muted);margin:4px 0 0;line-height:1.45}
+.mv-app .atlas-nas-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.mv-app .atlas-nas-actions button{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;border:1px solid var(--at-border);background:var(--at-field);color:var(--at-text)}
+.mv-app .atlas-nas-actions button:hover{border-color:var(--at-cyan)}
+.mv-app .atlas-nas-actions button:disabled{opacity:.55}
+.mv-app .atlas-nas-live{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:750;color:var(--at-muted)}
+.mv-app .atlas-nas-live-dot{width:7px;height:7px;border-radius:50%;background:#1fba90;box-shadow:0 0 0 3px rgba(31,186,144,.08)}
+.mv-app .atlas-nas-live.is-offline .atlas-nas-live-dot{background:#cc8850}
+.mv-app .atlas-nas-content{padding:17px 18px;background:var(--at-surface);color:var(--at-text)}
+.mv-app .atlas-nas-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mv-app .atlas-nas-airport{padding:13px 14px;border:1px solid var(--at-border);border-radius:9px;background:var(--at-raised);min-width:0}
+.mv-app .atlas-nas-airport.atlas-nas-critical{border-left:3px solid #e2659c}
+.mv-app .atlas-nas-airport.atlas-nas-caution{border-left:3px solid #cfa052}
+.mv-app .atlas-nas-airport.atlas-nas-none{border-left:3px solid #249f9f}
+.mv-app .atlas-nas-airport-top{display:flex;gap:7px;justify-content:space-between;align-items:center}
+.mv-app .atlas-nas-airport-top strong{color:var(--at-text);font-size:17px;letter-spacing:.2px}
+.mv-app .atlas-nas-airport-top span{color:var(--at-muted);font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+.mv-app .atlas-nas-status-line{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:11px;font-weight:800;color:var(--at-text)}
+.mv-app .atlas-nas-critical .atlas-nas-status-line svg{color:var(--at-rose)}
+.mv-app .atlas-nas-caution .atlas-nas-status-line svg{color:#d9a357}
+.mv-app .atlas-nas-none .atlas-nas-status-line svg{color:var(--at-cyan)}
+.mv-app .atlas-nas-airport p{font-size:11px;line-height:1.4;color:var(--at-muted);margin:7px 0 0}
+.mv-app .atlas-nas-changed{display:block;color:var(--at-rose);font-size:10.5px;margin-top:8px;font-weight:800}
+.mv-app .atlas-nas-brief{display:flex;gap:8px;align-items:start;font-size:12px;line-height:1.45;color:var(--at-rose);margin:13px 0 0}
+.mv-app .atlas-nas-brief svg{flex:0 0 16px}
+.mv-app .atlas-nas-backups{margin-top:15px;border-top:1px solid var(--at-border);padding-top:15px}
+.mv-app .atlas-nas-backup-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mv-app .atlas-nas-backup-heading strong{font-size:14px;color:var(--at-text)}
+.mv-app .atlas-nas-backup-heading p{margin:3px 0 0;color:var(--at-muted);line-height:1.4;font-size:11.5px}
+.mv-app .atlas-nas-backup-heading svg{color:var(--at-rose)}
+.mv-app .atlas-nas-backup{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--at-border-soft)}
+.mv-app .atlas-nas-backup>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mv-app .atlas-nas-backup strong{font-size:14px;color:var(--at-text)}
+.mv-app .atlas-nas-backup span{font-size:11.5px;color:var(--at-text)}
+.mv-app .atlas-nas-backup small{font-size:10.5px;color:var(--at-muted);line-height:1.35}
+.mv-app .atlas-nas-backup button{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-height:39px;border:1px solid var(--at-border);border-radius:8px;background:var(--at-aqua-soft);color:var(--at-cyan);padding:8px 10px;font-size:11px;font-weight:800}
+.mv-app .atlas-nas-backup button:hover{border-color:var(--at-cyan)}
+.mv-app .atlas-nas-muted{font-size:11px;color:var(--at-muted);line-height:1.5;margin:9px 0}
+.mv-app .atlas-nas-foot{display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10.5px;color:var(--at-muted);margin-top:14px}
+.mv-app .atlas-nas-foot a{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;color:var(--at-cyan);font-weight:800}
+.mv-app .atlas-nas-disclaimer{padding:12px 18px;border-top:1px solid var(--at-border);background:var(--at-raised);color:var(--at-muted);font-size:10.5px;line-height:1.5}
+.mv-app .atlas-nas-unavailable{display:flex;gap:8px;margin:16px;border:1px solid var(--at-border);background:var(--at-rose-soft);border-radius:8px;padding:13px;color:var(--at-rose);font-size:12px;line-height:1.5}
+.mv-app .atlas-nas-unavailable svg{flex:0 0 17px}
+@keyframes atlas-nas-spin{to{transform:rotate(360deg)}}
+.mv-app .atlas-spinning{animation:atlas-nas-spin 1s linear infinite}
+@media(max-width:880px){.mv-app .atlas-nas-status-grid{grid-template-columns:1fr}.mv-app .atlas-nas-live{font-size:10px}}
+@media(max-width:580px){.mv-app .atlas-nas-head{flex-wrap:wrap;gap:12px}.mv-app .atlas-nas-actions{width:100%;justify-content:space-between}.mv-app .atlas-nas-content{padding:13px}.mv-app .atlas-nas-backup{align-items:flex-start;flex-direction:column}.mv-app .atlas-nas-backup button{min-height:43px}.mv-app .atlas-nas-foot{flex-wrap:wrap;align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.mv-app .atlas-spinning{animation:none}}
+
+/* FAA alternate-airport preview. Recommendations never alter booked travel. */
+.mv-app .atlas-nas-proposal{margin:14px 0;padding:18px;border:1px solid var(--at-cyan);border-radius:12px;background:var(--at-aqua-soft);color:var(--at-text)}
+.mv-app .atlas-nas-proposal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.mv-app .atlas-nas-proposal-top>div>span{font-size:10px;letter-spacing:1px;font-weight:900;color:var(--at-rose)}
+.mv-app .atlas-nas-proposal h4{display:flex;align-items:center;gap:10px;font-size:22px;line-height:1.25;margin:9px 0 3px;color:var(--at-text)}
+.mv-app .atlas-nas-proposal h4 svg{color:var(--at-rose)}
+.mv-app .atlas-nas-proposal-top p{color:var(--at-muted);font-size:12px;margin:0}
+.mv-app .atlas-nas-proposal-dismiss{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;font-size:22px;background:var(--at-surface);color:var(--at-text);border:1px solid var(--at-border);border-radius:8px}
+.mv-app .atlas-nas-proposal-comparison{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:17px 0}
+.mv-app .atlas-nas-proposal-comparison>div{display:flex;flex-direction:column;gap:8px;padding:11px;border:1px solid var(--at-border);background:var(--at-surface);border-radius:9px}
+.mv-app .atlas-nas-proposal-comparison small{color:var(--at-muted);font-size:11px;line-height:1.4}
+.mv-app .atlas-nas-proposal-comparison strong{color:var(--at-text);font-size:17px}
+.mv-app .atlas-nas-proposal-note{color:var(--at-muted);font-size:12px;line-height:1.65;margin:0 0 15px}
+.mv-app .atlas-nas-proposal-actions{display:flex;gap:8px;flex-wrap:wrap}
+.mv-app .atlas-nas-proposal-actions button{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 13px;min-height:45px;border:1px solid var(--at-border);background:var(--at-surface);color:var(--at-text);border-radius:9px;font-size:12px;font-weight:850}
+.mv-app .atlas-nas-proposal-actions button.is-primary{background:var(--at-action);color:var(--at-action-fg);border-color:var(--at-action)}
+@media(max-width:650px){.mv-app .atlas-nas-proposal-comparison{grid-template-columns:1fr}.mv-app .atlas-nas-proposal-actions button{flex:1 1 100%}}
+
+.mv-app .atlas-nas-airport.atlas-nas-unknown{border-left:3px dashed var(--at-muted)}
+.mv-app .atlas-nas-unknown .atlas-nas-status-line svg{color:var(--at-muted)}
+
+/* Proactive airport decisions: prominent but restrained; no invented fares. */
+.atlas-travel-decision{padding:12px 14px;border:1px solid var(--at-border);border-left:3px solid var(--at-cyan);
+ background:var(--at-aqua-soft);border-radius:9px;margin:0 0 13px;color:var(--at-text)}
+.atlas-travel-decision.is-action{border-left-color:var(--at-rose);background:var(--at-rose-soft)}
+.atlas-travel-decision>span{display:block;font-size:10px;font-weight:850;letter-spacing:.09em;color:var(--at-muted)}
+.atlas-travel-decision>strong{display:block;font-size:15px;line-height:1.35;margin:4px 0}
+.atlas-travel-decision>p{font-size:12px;color:var(--at-muted);margin:2px 0 0;line-height:1.45}
+.atlas-nas-time-cost{padding:8px 10px;background:var(--at-aqua-soft);border-radius:8px;border:1px solid var(--at-border-soft);font-size:11.5px;color:var(--at-text);margin:9px 0}
+.atlas-nas-brief button{display:inline-flex;align-items:center;gap:5px;min-height:34px;margin-left:5px;padding:5px 9px;border:1px solid var(--at-rose);border-radius:8px;background:var(--at-rose-soft);color:var(--at-text);font-size:11px;font-weight:750}
+.atlas-sync-conflict{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--at-rose);border-left:3px solid var(--at-rose);border-radius:9px;background:var(--at-rose-soft);color:var(--at-text);font-size:12px}
+.atlas-sync-conflict>span{flex:1}
+.atlas-sync-conflict button{min-height:38px;padding:7px 10px;border:1px solid var(--at-rose);border-radius:8px;background:var(--at-surface);color:var(--at-text);font-weight:800}

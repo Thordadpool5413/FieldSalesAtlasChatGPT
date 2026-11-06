@@ -1,0 +1,47 @@
+/* NWS destination outlook in Flight DNA: same source as Travel Planner. */
+.mv-app .fr-future-forecast {
+  padding-block:15px;
+  border-top:1px solid color-mix(in srgb,var(--at-cyan) 29%,var(--at-border-soft));
+}
+.mv-app .fr-future-forecast>.fr-evidence-label {
+  color:var(--at-cyan);
+}
+.mv-app .fr-future-forecast>small {
+  color:var(--at-muted);
+  font-size:11px;
+  line-height:1.5;
+}
+.mv-app .fr-outlook-period-list {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(185px,1fr));
+  gap:8px;
+  margin-block:9px;
+}
+.mv-app .fr-outlook-period {
+  display:flex;flex-direction:column;gap:7px;
+  min-width:0;padding:13px;border-radius:11px;
+  background:var(--at-field);
+  border:1px solid var(--at-border-soft);
+}
+.mv-app .fr-outlook-period.has-weather-cues {
+  border-color:color-mix(in srgb,var(--at-rose) 54%,var(--at-border));
+  box-shadow:inset 0 3px 0 var(--at-rose);
+}
+.mv-app .fr-outlook-period>span {
+  font-size:10.5px;letter-spacing:.07em;font-weight:850;
+  color:var(--at-cyan);
+}
+.mv-app .fr-outlook-period strong {
+  color:var(--at-text);font-size:12px;line-height:1.5;
+}
+.mv-app .fr-outlook-period small {
+  color:var(--at-muted);font-size:11px;
+}
+.mv-app .fr-outlook-period small.fr-outlook-cue {
+  display:flex;align-items:flex-start;gap:6px;
+  color:var(--at-rose);font-weight:800;
+}
+.mv-app .fr-outlook-cue svg {flex:0 0 13px;}
+@media(max-width:720px){
+  .mv-app .fr-outlook-period-list {grid-template-columns:minmax(0,1fr);}
+}

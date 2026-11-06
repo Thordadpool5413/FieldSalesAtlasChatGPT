@@ -1,0 +1,230 @@
+{
+  "checkedAt": "2026-11-06T00:01:22.153Z",
+  "airports": {
+    "retrievedAt": "2026-11-05T22:03:40.247Z",
+    "checksum": "55bd82106c8ac1c9559cf5879ae9b69eb9c6e748df01514632dd5fbbb9e8b474",
+    "count": 4133,
+    "sourceUrl": "https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv",
+    "attribution": "OurAirports public reference data",
+    "id": "_head"
+  },
+  "history": {
+    "state": "unavailable",
+    "periods": [],
+    "limitation": "No direct BTS monthly dataset is installed. Historical reliability is unknown."
+  },
+  "historySync": {
+    "attemptedAt": "2026-11-05T23:43:54.001824+00:00",
+    "state": "unavailable",
+    "periods": [
+      {
+        "period": "2026-08",
+        "state": "unavailable",
+        "sourceUrl": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_2026_8.zip",
+        "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+      },
+      {
+        "period": "2026-07",
+        "state": "unavailable",
+        "sourceUrl": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_2026_7.zip",
+        "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+      },
+      {
+        "period": "2026-06",
+        "state": "unavailable",
+        "sourceUrl": "https://transtats.bts.gov/PREZIP/On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_2026_6.zip",
+        "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+      }
+    ]
+  },
+  "routing": {
+    "configured": false,
+    "graph": null,
+    "scope": "Road-network estimates; traffic, border queues and road closures are excluded.",
+    "limitation": "No road graph or maintained endpoint is configured."
+  },
+  "routingSetup": {
+    "state": "unavailable",
+    "region": "southeast",
+    "attemptedAt": "2026-11-05T23:49:09.760233+00:00",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  "providers": [
+    {
+      "name": "FAA NAS",
+      "purpose": "U.S. airport-wide operational notices",
+      "host": "nasstatus.faa.gov",
+      "limitation": "Not the status of an individual flight. Omitted airports remain unknown."
+    },
+    {
+      "name": "NOAA Aviation Weather",
+      "purpose": "METAR observations and published TAF periods",
+      "host": "aviationweather.gov",
+      "limitation": "Only the matched reporting station and published validity period."
+    },
+    {
+      "name": "NWS",
+      "purpose": "U.S. point forecasts and active alerts",
+      "host": "api.weather.gov",
+      "limitation": "Forecast horizons are bounded. Empty collections require usable publication metadata."
+    },
+    {
+      "name": "ECCC GeoMet",
+      "purpose": "Canadian surface observations",
+      "host": "api.weather.gc.ca",
+      "limitation": "The specific observation collection must pass live schema validation. Canadian warnings and forecasts are separate products."
+    }
+  ],
+  "flightStatus": {
+    "configured": false,
+    "limitation": "No flight-specific status provider is connected. Reported flight changes are traveler-supplied; airport/weather feeds do not confirm them."
+  },
+  "results": [
+    {
+      "airport": "MCO",
+      "checks": [
+        {
+          "data": null,
+          "evidence": {
+            "id": "0556dbb2824a285df48a35de481a2dbf3d837c214c57877a7ef5400730a659a5",
+            "provider": "FAA NAS",
+            "subject": "MCO",
+            "sourceUrl": "https://nasstatus.faa.gov/api/airport-events",
+            "kind": "observation",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.103Z",
+            "version": "faa-1",
+            "scope": "Airport-wide notices only. Not flight-specific status.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        },
+        {
+          "data": null,
+          "evidence": {
+            "id": "f40171a1d02fd083edf406684616466679703b67e7eb4ac88b7e0b5100ad2ef2",
+            "provider": "NOAA Aviation Weather",
+            "subject": "KMCO",
+            "sourceUrl": "https://aviationweather.gov/api/data/metar?ids=KMCO&format=json",
+            "kind": "observation",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.115Z",
+            "version": "metar-1",
+            "scope": "Aviation weather observation at this reporting airport.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        },
+        {
+          "data": null,
+          "evidence": {
+            "id": "9e1ba5557d5325bed24b33cbcfce6568897dfb6472621fe9d25b566afd816ca7",
+            "provider": "NOAA TAF",
+            "subject": "KMCO",
+            "sourceUrl": "https://aviationweather.gov/api/data/taf?ids=KMCO&format=json",
+            "kind": "forecast",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.115Z",
+            "version": "taf-1",
+            "scope": "Airport aviation forecast within its published valid period.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        },
+        {
+          "data": null,
+          "evidence": {
+            "id": "5feae6cdb1967ea33b1f5e346479db93a6e20bab89df9d7ed8669d5b11abe4cd",
+            "provider": "NWS alerts",
+            "subject": "28.429,-81.309",
+            "sourceUrl": "https://api.weather.gov/alerts/active?point=28.429,-81.309",
+            "kind": "observation",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.116Z",
+            "version": "nws-alerts-1",
+            "scope": "Active U.S. weather alerts for a single location.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        },
+        {
+          "data": null,
+          "evidence": {
+            "id": "81e8acaebc0a4b81b20115514dded7a7e1edf657ccaa4427f0069e354ff3ac25",
+            "provider": "NWS point forecast",
+            "subject": "28.429,-81.309",
+            "sourceUrl": "https://api.weather.gov/points/28.429,-81.309",
+            "kind": "forecast",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.116Z",
+            "version": "nws-forecast-1",
+            "scope": "Published U.S. point forecast; not an aviation forecast or airline-delay prediction.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        }
+      ]
+    },
+    {
+      "airport": "YYZ",
+      "checks": [
+        {
+          "data": null,
+          "evidence": {
+            "id": "0cfb0bedbbef45aea2b5c53688bed48caf00aa8dd6ca89b8c387b8cf82e8df51",
+            "provider": "NOAA Aviation Weather",
+            "subject": "CYYZ",
+            "sourceUrl": "https://aviationweather.gov/api/data/metar?ids=CYYZ&format=json",
+            "kind": "observation",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.117Z",
+            "version": "metar-1",
+            "scope": "Aviation weather observation at this reporting airport.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        },
+        {
+          "data": null,
+          "evidence": {
+            "id": "9a9d487b09dd63711e6389a382cb3227ca89a22d02a7d1dbbbea3df768dd50fe",
+            "provider": "NOAA TAF",
+            "subject": "CYYZ",
+            "sourceUrl": "https://aviationweather.gov/api/data/taf?ids=CYYZ&format=json",
+            "kind": "forecast",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.117Z",
+            "version": "taf-1",
+            "scope": "Airport aviation forecast within its published valid period.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        },
+        {
+          "data": null,
+          "evidence": {
+            "id": "fbcb90214b6e1b9de8b28f0b1fdde726f7605ef7d45957a985a2d218cdab82c7",
+            "provider": "ECCC GeoMet",
+            "subject": "43.68,-79.63",
+            "sourceUrl": "https://api.weather.gc.ca/collections/swob-realtime/items?bbox=-80.379,42.926,-78.879,44.426&limit=5&f=json",
+            "kind": "observation",
+            "state": "unavailable",
+            "retrievedAt": "2026-11-06T00:01:22.117Z",
+            "version": "eccc-swob-1",
+            "scope": "Nearby Canadian surface observations; not airport-specific warnings or forecasts.",
+            "limitation": "Provider unavailable, access restricted, or source schema could not be validated. No current-data conclusion is available."
+          }
+        }
+      ]
+    }
+  ],
+  "routingProbe": {
+    "roadBased": false,
+    "minutes": 15,
+    "evidence": {
+      "id": "da3e1de31e01ed94cef5d80e2a781bcb21ae50da3820697414d2d18c021eed3e",
+      "provider": "Geographic fallback",
+      "subject": "Journey transfers",
+      "sourceUrl": "",
+      "kind": "estimate",
+      "state": "partial",
+      "retrievedAt": "2026-11-06T00:01:22.153Z",
+      "version": "straight-line-1",
+      "scope": "Straight-line distance × 1.3 at an assumed 47 mph.",
+      "limitation": "No road-routing service is configured. Geographic estimates cannot establish drivable-route feasibility."
+    }
+  }
+}

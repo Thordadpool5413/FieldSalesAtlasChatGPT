@@ -1,0 +1,29 @@
+/* Functional lens controls. Palette and region fills belong to the theme. */
+.vice-atlas .atlas-v5-priority-legend,
+.vice-atlas .atlas-v5-priority-legend>span,
+.vice-atlas .atlas-visit-legend {display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
+.vice-atlas .atlas-v5-priority-legend i,
+.vice-atlas .atlas-visit-range-legend i {display:inline-block;width:8px;height:8px;border-radius:2px;}
+.vice-atlas .atlas-v5-priority-legend i.high {background:color-mix(in srgb,var(--at-rose) 65%,var(--at-map-land));}
+.vice-atlas .atlas-v5-priority-legend i.moderate {background:color-mix(in srgb,var(--at-accent) 58%,var(--at-map-land));}
+.vice-atlas .atlas-v5-priority-legend i.routine {background:var(--at-map-assigned);}
+.vice-atlas .atlas-v5-priority-legend i.none {background:var(--at-map-land);border:1px solid var(--at-map-stroke);}
+.vice-atlas .atlas-visit-timeline {display:flex;align-items:center;flex-wrap:wrap;gap:14px;padding:16px 20px;border-bottom:1px solid var(--at-border-soft);background:var(--at-field);}
+.vice-atlas .atlas-visit-timeline-heading {display:flex;align-items:center;gap:10px;flex:1 1 240px;}
+.vice-atlas .atlas-visit-timeline-heading>svg {color:var(--at-cyan);flex:0 0 20px;}
+.vice-atlas .atlas-visit-timeline-heading>span {display:grid;gap:4px;}
+.vice-atlas .atlas-visit-timeline-heading strong {font-size:13px;font-weight:600;}
+.vice-atlas .atlas-visit-timeline-heading small {font-size:10px;color:var(--at-muted);line-height:1.5;}
+.vice-atlas .atlas-visit-horizons {display:flex;align-items:center;gap:4px;border:1px solid var(--at-border);border-radius:6px;padding:3px;}
+.vice-atlas .atlas-visit-horizons button {min-height:44px;min-width:60px;padding:8px;border:0;border-radius:4px;background:transparent;color:var(--at-muted);font-size:12px;}
+.vice-atlas .atlas-visit-horizons button.selected {background:var(--at-aqua-soft);color:var(--at-cyan);}
+.vice-atlas .atlas-visit-range-legend {display:flex;align-items:center;gap:10px;font-size:10px;color:var(--at-muted);}
+.vice-atlas .atlas-visit-range-legend>span {display:flex;align-items:center;gap:5px;}
+.vice-atlas :is(.atlas-visit-open-calendar,.atlas-visit-legend button) {display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid var(--at-border);border-radius:6px;background:var(--at-surface);color:var(--at-text);font-size:12px;}
+.vice-atlas .atlas-visit-legend>span {display:flex;align-items:center;gap:6px;}
+@media(max-width:900px) {
+  .vice-atlas .atlas-visit-timeline {padding:14px;gap:12px;}
+  .vice-atlas .atlas-visit-range-legend {width:100%;}
+  .vice-atlas .atlas-visit-legend>span {font-size:9px;}
+  .vice-atlas .atlas-visit-legend button {display:none;}
+}

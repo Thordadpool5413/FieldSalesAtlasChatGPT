@@ -1,44 +1,50 @@
-# [Project name]
+# Field Sales Atlas
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A map-first workspace for territory managers to coordinate field teams, coaching, calendars, territories, and shared travel planning across the U.S. and Canada.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/field-sales-atlas run dev` — run the web app
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Local workspace data is stored in `artifacts/field-sales-atlas/data/` as SQLite.
+- Public-source travel information is best-effort and clearly labeled when unavailable.
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- pnpm workspaces, Node.js 24, TypeScript
+- Web: React + Vite, served as a root-path artifact
+- API: Express 5; Field Sales Atlas routes are adapted from the source repository and mounted under `/api`
+- Data: Node's built-in SQLite, stored in the Field Sales Atlas artifact directory
+- Build: Vite for the web app; esbuild for the API server
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/field-sales-atlas/src/` — map-first workspace, territory tools, calendar, coaching, and travel UI
+- `artifacts/field-sales-atlas/shared/` — shared travel types and date/time helpers
+- `artifacts/api-server/src/field-atlas/` — API, SQLite persistence, public-source adapters, and travel-planning logic
+- `artifacts/field-sales-atlas/docs/` — source-status, travel, and product reference documents
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Keep the upstream shareable-workspace model: access is through bearer links, not local passwords or accounts.
+- The app's own SQLite store remains the data source; do not migrate it to PostgreSQL without an explicit product decision.
+- Travel estimates and public data have known gaps; present them as provisional and do not imply airline inventory or verified road ETAs.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can explore territories, manage field teams and coaching visits, coordinate calendars, share a workspace, and plan travel for two trainers. Map, weather, airport, and historical data depend on public providers and may be unavailable.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+The user asked to turn the FieldSalesAtlasChatGPT repository into a web app.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The API workflow must be running for the web app's `/api` requests.
+- The two artifact workflows own their ports and preview routing; do not start duplicate workflows.
+- `artifacts/field-sales-atlas/server/index.ts` is preserved from the standalone source export; the Replit runtime uses the managed API Server artifact instead.
 
 ## Pointers
 

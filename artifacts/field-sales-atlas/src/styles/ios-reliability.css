@@ -1,0 +1,43 @@
+/* PWA reliability: no overscrolling a map into a refresh action. */
+.mv-app.atlas-product-v4 .ios-pull-refresh{
+ position:fixed;top:calc(70px + env(safe-area-inset-top));
+ left:50%;z-index:460;display:flex;align-items:center;gap:9px;
+ padding:10px 15px;border:1px solid var(--at-cyan);
+ border-radius:100px;background:var(--at-surface);
+ color:var(--at-text);font-size:12px;font-weight:800;
+ white-space:nowrap;box-shadow:0 9px 30px rgba(0,9,25,.25);
+ pointer-events:none;
+}
+.mv-app.atlas-product-v4 .ios-pull-refresh svg{color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .ios-pull-failed{border-color:var(--at-rose)}
+.mv-app.atlas-product-v4 .ios-pull-failed svg{color:var(--at-rose)}
+.mv-app.atlas-product-v4 .ios-spinning{animation:atlas-spin 1s linear infinite}
+@keyframes atlas-spin{to{transform:rotate(360deg)}}
+.mv-app.atlas-product-v4 .ios-recovery-banner{
+ position:fixed;top:calc(70px + env(safe-area-inset-top));
+ left:12px;right:12px;z-index:460;
+ display:flex;align-items:center;gap:10px;
+ max-width:570px;margin:auto;padding:11px 13px;
+ background:var(--at-surface);color:var(--at-text);
+ border:1px solid var(--at-cyan);
+ border-radius:12px;
+ box-shadow:0 9px 30px rgba(0,9,25,.25);
+ font-size:12.5px;line-height:1.4;font-weight:700;
+}
+.mv-app.atlas-product-v4 .ios-recovery-banner>span{flex:1}
+.mv-app.atlas-product-v4 .ios-recovery-banner>svg{flex-shrink:0;color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .ios-recovery-failed{border-color:var(--at-rose)}
+.mv-app.atlas-product-v4 .ios-recovery-failed svg{color:var(--at-rose)}
+.mv-app.atlas-product-v4 .ios-recovery-banner button{
+ min-height:38px;padding:8px 10px;
+ background:var(--at-aqua-soft);color:var(--at-text);
+ border:1px solid var(--at-cyan);border-radius:9px;font-weight:850;
+}
+@media(min-width:901px){
+ .mv-app.atlas-product-v4 .ios-pull-refresh{display:none}
+ .mv-app.atlas-product-v4 .ios-recovery-banner{top:85px}
+}
+@media(prefers-reduced-motion:reduce){
+ .mv-app.atlas-product-v4 .ios-spinning{animation:none!important}
+ .mv-app.atlas-product-v4 .ios-pull-refresh{transition:none!important}
+}
