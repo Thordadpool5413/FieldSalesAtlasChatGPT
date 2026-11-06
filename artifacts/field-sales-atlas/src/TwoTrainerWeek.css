@@ -1,0 +1,53 @@
+
+.mv-week-page{display:flex;flex-direction:column;gap:19px;max-width:1580px;margin:0 auto;color:#173955}
+.mv-week-header{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:22px 24px;border:1px solid #193c5f;border-radius:14px;background:linear-gradient(110deg,#092141,#0d3256);color:#fff}
+.mv-week-eyebrow{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1.5px;font-weight:800;color:#15cee9}
+.mv-week-header h1{font:850 30px Manrope,sans-serif;margin:8px 0}.mv-week-header p{font-size:12.5px;line-height:1.65;color:#b6d1e8;max-width:570px;margin:0}
+.mv-week-range{display:flex;align-items:flex-end;flex-direction:column;gap:7px}
+.mv-week-range label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:800;color:#b9e4f2}
+.mv-week-range input{min-height:42px;padding:9px;border:1px solid #4a7092;border-radius:8px;color:#173858;background:#fff;font-size:13px}
+.mv-week-range small{font-size:11px;color:#c9d7e6}
+.mv-week-calendar{display:flex;gap:7px;align-items:center;background:transparent;border:0;color:#20d4f0;font-size:11.5px;font-weight:800;padding:5px 0}
+.mv-week-overview{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #dfe7f0;border-radius:11px;background:#fff;overflow:hidden}
+.mv-week-overview>div{padding:17px 19px;border-right:1px solid #e5ebf3}.mv-week-overview>div:last-child{border:0}
+.mv-week-overview strong{display:block;font:850 27px Manrope,sans-serif;color:#18537e}.mv-week-overview span{font-size:11.5px;color:#718ba4}
+.mv-week-trainers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.mv-week-trainer{border:1px solid #dce6f0;border-radius:13px;background:#fff;overflow:hidden}
+.mv-week-trainer-head{display:flex;align-items:center;gap:11px;padding:19px;border-bottom:1px solid #e6edf5}
+.mv-week-trainer-0 .mv-week-trainer-head{box-shadow:inset 0 4px #0bc8ee}
+.mv-week-trainer-1 .mv-week-trainer-head{box-shadow:inset 0 4px #ef078d}
+.mv-week-trainer-dot{width:15px;height:15px;border-radius:50%;flex:0 0 15px;background:#06c9ef}
+.mv-week-trainer-1 .mv-week-trainer-dot{background:#ef078e}
+.mv-week-trainer-head>div{flex:1;min-width:0}.mv-week-trainer-head strong{font:800 16px Manrope,sans-serif;color:#254965;display:block}
+.mv-week-trainer-head small{font-size:10.5px;color:#849ab0;display:block;margin-top:6px}
+.mv-week-trainer-head button{font-size:11px;font-weight:800;color:#2c79a7;background:#f2fbff;border:1px solid #bfe3f1;padding:9px 11px;border-radius:8px;white-space:nowrap}
+.mv-week-trainer-summary{display:flex;gap:17px;border-bottom:1px solid #e5ecf3;padding:14px 19px}
+.mv-week-trainer-summary span{display:flex;gap:7px;align-items:center;color:#4f708e;font-size:11.5px}
+.mv-week-trainer-summary svg{color:#1883b0}
+.mv-week-subheading{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:18px 19px 9px}
+.mv-week-subheading strong{color:#284d70;font-size:12px}.mv-week-subheading span{font-size:10.5px;color:#899eb2}
+.mv-week-person{display:flex;align-items:center;gap:10px;padding:12px 19px;border-bottom:1px solid #edf1f6;min-height:67px}
+.mv-week-person>div{flex:1;min-width:0}.mv-week-person strong{font-size:12px;color:#355773;display:block}
+.mv-week-person small{display:flex;gap:5px;align-items:center;margin-top:7px;color:#849bb0;font-size:10.5px}
+.mv-week-person button{border:0;background:transparent;color:#087fb1;font-size:11px;font-weight:800;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.mv-week-priority{font-size:9px;font-weight:800;border-radius:15px;padding:3px 6px;color:#5c819f;background:#eff5fa;margin-left:5px}
+.mv-week-priority.high{color:#a65463;background:#fff0f4}.mv-week-priority.moderate{color:#936538;background:#fff5e5}
+.mv-week-empty{color:#849bb2;font-size:11.5px;line-height:1.6;padding:22px;text-align:center}
+.mv-week-empty button{display:block;margin:10px auto;background:#edfbff;border:1px solid #9ee1f0;border-radius:7px;padding:8px;color:#117d9e;font-weight:800}
+.mv-week-trainer-foot{font-size:10.5px;line-height:1.6;color:#92a4b5;padding:15px 19px;background:#fbfcff}
+.mv-week-show{padding:9px 19px;border:0;background:transparent;color:#0c84b5;font-size:11px;font-weight:800}
+.mv-week-lower{display:grid;grid-template-columns:1.16fr .84fr;gap:17px}
+.mv-week-clusters,.mv-week-safety{border:1px solid #dde6ef;border-radius:12px;background:#fff;padding:19px}
+.mv-week-section-head h2{font:800 16px Manrope,sans-serif;color:#315675;margin:0 0 5px}
+.mv-week-section-head p{font-size:11.5px;color:#8096aa;line-height:1.6;margin:0 0 16px}
+.mv-week-cluster{display:flex;gap:11px;align-items:center;padding:12px 0;border-bottom:1px solid #ecf1f6}
+.mv-week-cluster>span{display:grid;place-items:center;color:#1682b7;width:32px;height:32px;border:1px solid #d4e9f3;background:#f1fbff;border-radius:9px}
+.mv-week-cluster>div{flex:1}.mv-week-cluster strong{font-size:12px;color:#355c7b;display:block}.mv-week-cluster small{font-size:10.5px;color:#869bb0;margin-top:5px;display:block}
+.mv-week-cluster button{display:flex;align-items:center;gap:5px;background:transparent;border:0;color:#087aaf;font-size:11px;font-weight:800}
+.mv-week-warning{display:flex;gap:9px;margin:9px 0;padding:12px;background:#fff8ed;border:1px solid #f2e3cc;border-radius:8px;color:#ae793d}
+.mv-week-warning>div{display:flex;flex-direction:column;gap:5px}.mv-week-warning strong{font-size:11.5px;color:#95612e}.mv-week-warning span{font-size:11px;line-height:1.6}
+.mv-week-clear{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:23px;border-radius:9px;background:#f4faff;color:#6797ba;text-align:center}
+.mv-week-clear strong{font-size:12.5px;color:#315b7c}.mv-week-clear p{font-size:10.5px;line-height:1.6;color:#8298ac;max-width:270px}
+.mv-week-review{display:flex;justify-content:center;align-items:center;gap:8px;border:1px solid #b3d7e9;background:#eafaff;color:#137ea8;border-radius:8px;width:100%;padding:12px;margin-top:15px;font-size:11.5px;font-weight:800}
+@media(max-width:900px){.mv-week-trainers,.mv-week-lower{grid-template-columns:1fr}}
+@media(max-width:630px){.mv-week-header{flex-direction:column;align-items:stretch;padding:18px}.mv-week-header h1{font-size:24px}.mv-week-range{align-items:flex-start}.mv-week-overview{grid-template-columns:repeat(2,1fr)}.mv-week-overview>div{border-bottom:1px solid #edf1f5}.mv-week-trainer-head{padding:15px}.mv-week-person{padding:11px 13px}.mv-week-person small{flex-wrap:wrap}.mv-week-trainer-summary{gap:10px;flex-wrap:wrap}.mv-week-clusters,.mv-week-safety{padding:15px}.mv-week-cluster button{font-size:10px}}

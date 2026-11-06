@@ -1,0 +1,765 @@
+/* FIELD SALES ATLAS / iOS SURFACE v1
+   Mobile owns its app shell and touch interactions here. Desktop is unchanged.
+   This is iOS-inspired web UI, not native UIKit or an iOS app binary. */
+.mv-app.atlas-product-v4{
+ --ios-cyan:var(--at-cyan);
+ --ios-magenta:var(--at-rose);
+ --ios-tap:48px;
+ -webkit-tap-highlight-color:transparent;
+}
+.mv-app.atlas-product-v4 :is(button,select,summary,a){touch-action:manipulation}
+.mv-app.atlas-product-v4 .ios-nav-title,
+.mv-app.atlas-product-v4 .ios-mobile-add,
+.mv-app.atlas-product-v4 .ios-sheet-grab,
+.mv-app.atlas-product-v4 .ios-market-scrim,
+.mv-app.atlas-product-v4 .ios-layers-close{display:none}
+/* Standalone app state is a real browser mode and has its own safe-area chrome. */
+html[data-atlas-standalone='yes']{overscroll-behavior-y:contain}
+html[data-atlas-keyboard='open'] .mv-app .ios-tab-bar,
+html[data-atlas-keyboard='open'] .mv-app .ios-install-nudge{display:none!important}
+html[data-atlas-keyboard='open'] .mv-app .mv-content-inner.op-content{
+ padding-bottom:20px!important;
+}
+.mv-app.atlas-product-v4 .ios-pwa-backdrop{
+ position:fixed;inset:0;z-index:1100;
+ display:flex;align-items:flex-end;justify-content:center;
+ padding:12px 12px 0;background:rgba(0,12,28,.68);
+ -webkit-backdrop-filter:blur(13px);
+ backdrop-filter:blur(13px);
+}
+.mv-app.atlas-product-v4 .ios-pwa-sheet{
+ width:min(100%,530px);
+ max-height:min(88dvh,var(--atlas-visual-height,88dvh));
+ display:flex;flex-direction:column;overflow-y:auto;
+ overscroll-behavior:contain;
+ border-radius:26px 26px 0 0;
+ border:1px solid var(--at-border);
+ border-bottom:0;
+ background:var(--at-surface);
+ color:var(--at-text);
+ box-shadow:0 -22px 80px rgba(0,10,27,.38);
+ padding:0 0 calc(22px + env(safe-area-inset-bottom));
+}
+.mv-app.atlas-product-v4 .ios-pwa-header{
+ display:flex;gap:13px;align-items:center;
+ padding:8px 20px 19px;border-bottom:1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .ios-pwa-app-icon{
+ flex:0 0 57px;width:57px;height:57px;overflow:hidden;
+ border-radius:13px;background:var(--at-field);
+ border:1px solid var(--at-border);
+ box-shadow:0 4px 14px rgba(0,0,0,.14);
+}
+.mv-app.atlas-product-v4 .ios-pwa-app-icon img{width:100%;height:100%;object-fit:cover}
+.mv-app.atlas-product-v4 .ios-pwa-header>div:nth-child(2){flex:1;min-width:0}
+.mv-app.atlas-product-v4 .ios-pwa-header>div:nth-child(2)>span{
+ display:block;font-size:10px;font-weight:850;letter-spacing:.12em;color:var(--at-cyan);
+}
+.mv-app.atlas-product-v4 .ios-pwa-header h2{
+ font-size:21px;letter-spacing:-.04em;margin:2px 0 0;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-pwa-header p{font-size:12.5px;color:var(--at-muted);margin:3px 0 0}
+.mv-app.atlas-product-v4 .ios-pwa-close{
+ width:40px;height:40px;display:grid;place-items:center;
+ border:1px solid var(--at-border);border-radius:50%;
+ background:var(--at-field);color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-pwa-section{padding:19px 22px;border-bottom:1px solid var(--at-border-soft)}
+.mv-app.atlas-product-v4 .ios-pwa-section h3{
+ font-size:17px;letter-spacing:-.035em;margin:0 0 11px;color:var(--at-text);
+}
+.mv-app.atlas-product-v4 .ios-pwa-guidance,
+.mv-app.atlas-product-v4 .ios-pwa-section>p{
+ font-size:13.5px;color:var(--at-muted);line-height:1.55;margin:0 0 13px;
+}
+.mv-app.atlas-product-v4 .ios-install-steps{margin:0;padding:0;list-style:none;display:grid;gap:0}
+.mv-app.atlas-product-v4 .ios-install-steps li{
+ display:flex;align-items:center;gap:12px;
+ padding:13px 0;border-bottom:1px solid var(--at-border-soft);
+}
+.mv-app.atlas-product-v4 .ios-install-steps li:last-child{border-bottom:0}
+.mv-app.atlas-product-v4 .ios-install-steps li>span{
+ flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
+ border-radius:50%;font-size:13px;font-weight:850;
+ color:var(--at-text);background:var(--at-raised);border:1px solid var(--at-border);
+}
+.mv-app.atlas-product-v4 .ios-install-steps li>p{
+ flex:1;font-size:14px;line-height:1.45;color:var(--at-text);margin:0;
+}
+.mv-app.atlas-product-v4 .ios-install-steps li>svg{color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .ios-pwa-good{
+ display:flex;align-items:flex-start;gap:12px;padding:13px;
+ border-radius:12px;background:var(--at-aqua-soft);
+ color:var(--at-text);font-size:14px;line-height:1.5;
+}
+.mv-app.atlas-product-v4 .ios-pwa-good svg{flex-shrink:0;color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .ios-pwa-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mv-app.atlas-product-v4 .ios-pwa-actions button,
+.mv-app.atlas-product-v4 .ios-pwa-primary{
+ display:flex;align-items:center;justify-content:center;gap:8px;
+ min-height:49px;padding:11px 12px;border-radius:11px;
+ font-size:12.5px;font-weight:800;line-height:1.35;
+ background:var(--at-field);color:var(--at-text);
+ border:1px solid var(--at-border);
+}
+.mv-app.atlas-product-v4 .ios-pwa-primary{
+ width:100%;margin:0 0 19px;color:var(--at-action-fg);
+ border-color:var(--at-action);background:var(--at-action);
+}
+.mv-app.atlas-product-v4 .ios-pwa-message{
+ font-size:12.5px;color:var(--at-cyan);line-height:1.45;margin:12px 0 0!important;
+}
+.mv-app.atlas-product-v4 .ios-pwa-footer{
+ display:flex;align-items:flex-start;gap:10px;
+ padding:15px 22px 0;font-size:11.5px;
+ line-height:1.5;color:var(--at-muted);
+}
+.mv-app.atlas-product-v4 .ios-pwa-footer svg{flex:0 0 16px;color:var(--at-rose)}
+.mv-app.atlas-product-v4 .ios-connectivity-banner{
+ position:fixed;z-index:690;left:13px;right:13px;top:calc(7px + env(safe-area-inset-top));
+ display:flex;align-items:center;gap:9px;max-width:620px;margin:auto;
+ padding:11px 12px;border:1px solid var(--at-rose);
+ border-radius:11px;background:var(--at-rose-soft);
+ box-shadow:var(--at-shadow);color:var(--at-text);
+ font-size:12.5px;line-height:1.45;
+}
+.mv-app.atlas-product-v4 .ios-connectivity-banner>span{flex:1}
+.mv-app.atlas-product-v4 .ios-connectivity-banner>svg{color:var(--at-rose);flex-shrink:0}
+.mv-app.atlas-product-v4 .ios-connectivity-banner button{
+ min-height:36px;padding:7px 10px;border:1px solid var(--at-border);
+ border-radius:8px;color:var(--at-text);background:var(--at-surface);font-weight:800;
+}
+.mv-app.atlas-product-v4 .ios-update-banner{
+ position:fixed;z-index:610;left:12px;right:12px;
+ bottom:calc(86px + env(safe-area-inset-bottom));
+ max-width:640px;margin:auto;
+ display:flex;align-items:center;gap:10px;
+ padding:12px;border:1px solid var(--at-cyan);
+ border-radius:13px;background:var(--at-surface);
+ box-shadow:0 15px 45px rgba(1,10,23,.26);
+ color:var(--at-text);font-size:12.5px;line-height:1.35;
+}
+.mv-app.atlas-product-v4 .ios-update-banner>span{flex:1}
+.mv-app.atlas-product-v4 .ios-update-banner>svg{flex-shrink:0;color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .ios-update-banner button{
+ min-height:38px;padding:8px 10px;border:1px solid var(--at-cyan);
+ border-radius:8px;background:var(--at-aqua-soft);
+ color:var(--at-text);font-size:12.5px;font-weight:800;
+}
+.mv-app.atlas-product-v4 .ios-update-banner button:last-child{
+ width:35px;min-height:35px;border-color:var(--at-border);padding:5px;background:var(--at-field);
+}
+.mv-app.atlas-product-v4 .ios-install-nudge{display:none}
+@media(min-width:901px){
+ .mv-app.atlas-product-v4 .ios-pwa-backdrop{align-items:center;padding:20px}
+ .mv-app.atlas-product-v4 .ios-pwa-sheet{
+  max-height:min(90dvh,780px);border-radius:24px;
+  border-bottom:1px solid var(--at-border);
+  padding-bottom:20px;
+ }
+ .mv-app.atlas-product-v4 .ios-update-banner{bottom:18px}
+}
+@media(max-width:900px){
+ html,body,#root{min-width:320px}
+ body{overflow-x:hidden}
+ .mv-app.atlas-product-v4{min-width:0;overflow-x:clip}
+ .mv-app.atlas-product-v4 .fsa-structure{min-width:0}
+ .mv-app.atlas-product-v4 .fsa-stage{min-width:0;width:100%}
+ .mv-app.atlas-product-v4 .mv-shell{width:100%;min-width:0}
+ .mv-app.atlas-product-v4 .mv-header{
+  position:sticky;top:0;z-index:102;
+  display:flex;align-items:center;gap:7px;
+  min-height:calc(62px + env(safe-area-inset-top));
+  height:calc(62px + env(safe-area-inset-top));
+  padding:calc(7px + env(safe-area-inset-top)) 13px 7px;
+  box-shadow:0 1px 0 var(--at-border-soft);
+  background:color-mix(in srgb,var(--at-stage) 91%,transparent);
+  -webkit-backdrop-filter:blur(24px) saturate(1.35);
+  backdrop-filter:blur(24px) saturate(1.35);
+ }
+ .mv-app.atlas-product-v4 .mv-header .mv-brand{
+  display:flex;flex:0 0 39px;min-width:39px;width:39px;
+  margin:0;padding:0;align-items:center;justify-content:center;
+ }
+ .mv-app.atlas-product-v4 .mv-header .official-atlas-brand{
+  flex:0 0 37px;width:37px;height:37px;padding:1px;
+  border:1px solid var(--at-border);
+  border-radius:10px;
+ }
+ .mv-app.atlas-product-v4 .mv-header .official-atlas-brand img{object-fit:cover;border-radius:8px}
+ .mv-app.atlas-product-v4 .mv-header .official-atlas-lockup{display:none}
+ .mv-app.atlas-product-v4 .ios-nav-title{
+  display:flex;flex:1;flex-direction:column;justify-content:center;
+  min-width:0;gap:1px;max-width:100%;
+ }
+ .mv-app.atlas-product-v4 .ios-nav-title>span{
+  display:block;font-size:8.5px;font-weight:850;
+  line-height:1.2;letter-spacing:.10em;color:var(--at-cyan);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ }
+ .mv-app.atlas-product-v4 .ios-nav-title>strong{
+  display:block;font-size:18px;letter-spacing:-.045em;
+  font-weight:850;line-height:1.12;color:var(--at-text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ }
+ .mv-app.atlas-product-v4 .mv-header .fsa-crumb,
+ .mv-app.atlas-product-v4 .mv-header-trainers,
+ .mv-app.atlas-product-v4 .mv-mobile-trainer,
+ .mv-app.atlas-product-v4 .mv-theme-mobile{display:none!important}
+ .mv-app.atlas-product-v4 .fsa-command-trigger{
+  display:grid;place-items:center;flex:0 0 42px;
+  width:42px;height:44px;min-height:44px;padding:0;
+  margin:0;border:1px solid transparent;border-radius:11px;
+  background:transparent;box-shadow:none;
+ }
+ .mv-app.atlas-product-v4 .fsa-command-trigger>svg{
+  width:23px;height:23px;color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 .fsa-command-trigger :is(span,kbd){display:none}
+ .mv-app.atlas-product-v4 .fsa-command-trigger:active{background:var(--at-aqua-soft)}
+ .mv-app.atlas-product-v4 .ios-mobile-add{
+  display:grid;place-items:center;flex:0 0 43px;
+  width:43px;height:44px;min-height:44px;padding:0;
+  color:var(--at-action-fg);
+  border:1px solid var(--at-action);
+  border-radius:12px;background:var(--at-action);
+  box-shadow:0 3px 12px color-mix(in srgb,var(--at-rose) 17%,transparent);
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-menu-trigger{
+  display:grid;place-items:center;flex:0 0 43px;
+  width:43px;height:44px;min-height:44px;padding:0;
+  color:var(--at-text);
+  border:1px solid var(--at-border-soft);border-radius:12px;
+  background:var(--at-field);
+ }
+ .mv-app.atlas-product-v4 .mv-header :is(.ios-mobile-add,.mv-mobile-menu-trigger) svg{width:22px;height:22px}
+ .mv-app.atlas-product-v4 .atlas-sync-indicator{
+  display:none;
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar{
+  position:fixed;z-index:105;
+  left:0;right:0;bottom:0;
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;align-items:stretch;
+  padding:7px 6px calc(8px + env(safe-area-inset-bottom));
+  min-height:calc(69px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--at-stage) 93%,transparent);
+  -webkit-backdrop-filter:blur(28px) saturate(1.45);
+  backdrop-filter:blur(28px) saturate(1.45);
+  border-top:1px solid var(--at-border-soft);
+  box-shadow:0 -7px 30px rgba(0,10,29,.09);
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar button{
+  position:relative;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:3px;
+  width:100%;min-width:0;min-height:54px;padding:5px 1px;
+  border:0;border-radius:12px;background:transparent;
+  color:var(--at-muted);font-weight:750;font-size:10.5px;
+  line-height:1.15;letter-spacing:0;
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar button.active{
+  background:transparent;color:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar .ios-tab-icon{
+  position:relative;display:grid;place-items:center;
+  width:36px;height:30px;border-radius:10px;
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar button.active .ios-tab-icon{
+  color:var(--at-cyan);background:var(--at-aqua-soft);
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar button.active .ios-tab-icon::after{
+  content:'';position:absolute;bottom:-3px;left:calc(50% - 2px);
+  width:4px;height:4px;border-radius:50%;background:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar button:active{transform:scale(.97)}
+ .mv-app.atlas-product-v4 .ios-tab-bar button>span:last-child{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;
+ }
+ .mv-app.atlas-product-v4 .mv-content-inner.op-content{
+  padding:0 15px calc(105px + env(safe-area-inset-bottom));
+ }
+ .mv-app.atlas-product-v4 .mv-content-map.op-content{
+  min-height:calc(100svh - 150px);
+  padding-bottom:calc(95px + env(safe-area-inset-bottom));
+ }
+ .mv-app.atlas-product-v4 .op-footer{padding-bottom:calc(115px + env(safe-area-inset-bottom))}
+ .mv-app.atlas-product-v4 .mv-mobile-backdrop{
+  z-index:210;position:fixed;inset:0;background:rgba(1,12,28,.68);
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer{
+  position:fixed!important;z-index:220;
+  inset:auto 0 0!important;
+  left:0!important;right:0!important;
+  width:100%!important;max-width:100%!important;
+  max-height:min(calc(var(--atlas-visual-height,100dvh) - 10px),84dvh);
+  padding:7px 15px calc(18px + env(safe-area-inset-bottom));
+  border-radius:25px 25px 0 0;
+  border:1px solid var(--at-border);
+  border-bottom:0;
+  box-shadow:0 -15px 75px rgba(0,11,26,.36);
+  overflow:auto;overscroll-behavior:contain;
+  background:var(--at-surface);
+  animation:ios-sheet-entrance .22s cubic-bezier(.2,.7,.1,1) both;
+ }
+ .mv-app.atlas-product-v4 .ios-sheet-grab{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:25px;min-height:25px;
+  margin:0 0 5px;padding:2px;border:0;background:transparent;
+  border-radius:10px;
+ }
+ .mv-app.atlas-product-v4 .ios-sheet-grab>span{
+  display:block;width:37px;height:5px;border-radius:10px;
+  background:var(--at-subtle);opacity:.48;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer-head{
+  padding:4px 6px 12px;
+  font-size:14px;letter-spacing:.06em;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer-head button{
+  width:41px;height:41px;border-radius:50%;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer>button:not(.ios-sheet-grab){
+  min-height:51px;border-radius:11px;
+  padding:11px 14px;font-size:15px;font-weight:650;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer>button.active{
+  background:var(--at-aqua-soft);color:var(--at-cyan);
+  box-shadow:none;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer>button svg{color:var(--at-cyan)}
+ .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-drawer-section{
+  margin:16px 9px 8px;font-size:10px;letter-spacing:.12em;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-mobile-trainer-picker{
+  margin:11px 8px;
+ }
+ .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-mobile-trainer-picker select{
+  min-height:49px;font-size:16px;
+ }
+ .mv-app.atlas-product-v4 .ios-action-scrim{
+  position:fixed;inset:0;z-index:360;
+  background:rgba(0,12,30,.64);border:0;border-radius:0;
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+ }
+ .mv-app.atlas-product-v4 .ios-quick-actions{
+  position:fixed;z-index:370;inset:auto 0 0;
+  width:100%;padding:7px 16px calc(24px + env(safe-area-inset-bottom));
+  max-height:min(calc(var(--atlas-visual-height,100dvh) - 8px),80dvh);
+  overflow-y:auto;overscroll-behavior:contain;
+  border-radius:25px 25px 0 0;
+  border:1px solid var(--at-border);border-bottom:0;
+  background:var(--at-surface);
+  box-shadow:0 -15px 60px rgba(0,10,24,.3);
+  animation:ios-sheet-entrance .22s cubic-bezier(.2,.7,.1,1) both;
+ }
+ .mv-app.atlas-product-v4 .ios-quick-actions>header{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:4px 5px 16px;
+ }
+ .mv-app.atlas-product-v4 .ios-quick-actions>header>div{flex:1}
+ .mv-app.atlas-product-v4 .ios-quick-actions>header span{
+  font-size:10.5px;font-weight:850;letter-spacing:.12em;color:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .ios-quick-actions>header h2{
+  font-size:23px;margin:4px 0 0;letter-spacing:-.04em;color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 .ios-quick-actions>header button{
+  width:42px;height:42px;display:grid;place-items:center;
+  border:1px solid var(--at-border);border-radius:50%;
+  background:var(--at-field);color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 .ios-quick-grid{display:grid;gap:6px}
+ .mv-app.atlas-product-v4 .ios-quick-grid>button{
+  display:flex;align-items:center;gap:14px;
+  min-height:73px;padding:11px 13px;
+  border-radius:13px;border:1px solid transparent;
+  color:var(--at-text);background:var(--at-field);
+  text-align:left;
+ }
+ .mv-app.atlas-product-v4 .ios-quick-grid>button:not(:disabled):active{
+  background:var(--at-aqua-soft);border-color:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .ios-quick-grid>button>svg:first-child{
+  flex:0 0 24px;width:24px;height:24px;color:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .ios-quick-grid>button>span{flex:1;min-width:0}
+ .mv-app.atlas-product-v4 .ios-quick-grid>button strong{display:block;font-size:16px}
+ .mv-app.atlas-product-v4 .ios-quick-grid>button small{
+  display:block;color:var(--at-muted);font-size:12.5px;margin-top:3px;
+ }
+ .mv-app.atlas-product-v4 .ios-quick-grid>button>svg:last-child{color:var(--at-muted)}
+ /* App-wide native-like editing sheets with protected keyboard space. */
+ .mv-app.atlas-product-v4 .op-modal-backdrop,
+ .mv-app.atlas-product-v4 .trainer-dialog-backdrop{
+  position:fixed;z-index:530;
+  inset:var(--atlas-visual-offset,0px) 0 auto;
+  height:min(var(--atlas-visual-height,100dvh),100dvh);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0!important;background:rgba(0,12,28,.65);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+ }
+ .mv-app.atlas-product-v4 .op-modal,
+ .mv-app.atlas-product-v4 .trainer-dialog{
+  display:flex;flex-direction:column;overflow:hidden;
+  width:100%!important;max-width:100%!important;
+  max-height:calc(min(var(--atlas-visual-height,100dvh),100dvh) - 8px);
+  margin:0;border-radius:25px 25px 0 0!important;
+  background:var(--at-surface);color:var(--at-text);
+  box-shadow:0 -18px 70px rgba(0,10,25,.35);
+  animation:ios-sheet-entrance .22s cubic-bezier(.2,.7,.1,1) both;
+ }
+ .mv-app.atlas-product-v4 .op-modal-head,
+ .mv-app.atlas-product-v4 .trainer-dialog-head{
+  flex:0 0 auto;padding:21px 18px 16px;
+  background:var(--at-surface);border-bottom:1px solid var(--at-border-soft);
+ }
+ .mv-app.atlas-product-v4 .op-modal-head h2,
+ .mv-app.atlas-product-v4 .trainer-dialog-head h2{
+  font-size:22px;line-height:1.23;margin:0;color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 .op-modal-head p,
+ .mv-app.atlas-product-v4 .trainer-dialog-head p{
+  font-size:12.5px;line-height:1.45;color:var(--at-muted);
+ }
+ .mv-app.atlas-product-v4 .op-modal-body,
+ .mv-app.atlas-product-v4 .trainer-dialog-body{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:18px 16px calc(25px + env(safe-area-inset-bottom));
+ }
+ .mv-app.atlas-product-v4 .op-form-actions{
+  position:sticky;bottom:calc(-25px - env(safe-area-inset-bottom));
+  z-index:3;display:flex;flex-wrap:wrap;gap:9px;
+  margin:21px -16px calc(-25px - env(safe-area-inset-bottom));
+  padding:11px 16px calc(14px + env(safe-area-inset-bottom));
+  background:var(--at-surface);border-top:1px solid var(--at-border-soft);
+ }
+ .mv-app.atlas-product-v4 .op-form-actions>.op-btn{
+  flex:1;min-height:51px;font-size:14px;
+ }
+ .mv-app.atlas-product-v4 .op-modal .op-icon-button,
+ .mv-app.atlas-product-v4 .trainer-dialog-close{
+  min-width:42px;min-height:42px;border-radius:50%;
+  background:var(--at-field);color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 .trainer-dialog-footer{
+  flex:0 0 auto;gap:8px;flex-wrap:wrap;
+  padding:11px 15px calc(12px + env(safe-area-inset-bottom));
+  background:var(--at-surface);
+  border-top:1px solid var(--at-border-soft);
+ }
+ .mv-app.atlas-product-v4 .trainer-dialog-footer p{font-size:11px;line-height:1.4}
+ .mv-app.atlas-product-v4 .trainer-dialog-footer button{
+  min-height:48px;font-size:13.5px;
+ }
+ /* No Safari focus zoom. Native date/select pickers remain intact. */
+ .mv-app.atlas-product-v4 :is(
+  .op-form,.travel-fields,.travel-form-block,.trainer-dialog-fields,
+  .travel-page,.op-toolbar,.fsa-command-input
+ ) :is(input:not([type='checkbox']):not([type='radio']),select,textarea){
+  font-size:16px!important;line-height:1.35;min-height:47px;
+ }
+ .mv-app.atlas-product-v4 :is(.op-form,.travel-fields,.trainer-dialog-fields) label{
+  font-size:13.5px;line-height:1.5;color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 :is(
+  .op-form,.travel-form-block,.trainer-dialog-fields
+ ) :is(input:not([type='checkbox']):not([type='radio']),select,textarea){
+  border-radius:11px;max-width:100%;
+ }
+ .mv-app.atlas-product-v4 :is(
+  .op-btn,.fsa-button,.studio-button,.fsa-side-link,
+  .travel-gateway,.op-queue-row,.fsa-manager-card,
+  .mv-region,.op-location-row,.fsa-airport-choice,.fsa-today-item
+ ):active:not(:disabled){transform:scale(.995);filter:brightness(1.07)}
+ /* Search is a full-height native search panel with internal scrolling. */
+ .mv-app.atlas-product-v4 .fsa-command-backdrop{
+  z-index:900;align-items:flex-end;justify-content:center;
+  padding:0;background:rgba(0,12,28,.62);
+ }
+ .mv-app.atlas-product-v4 .fsa-command-dialog{
+  width:100%;height:auto;max-height:min(var(--atlas-visual-height,90dvh),90dvh);
+  border-radius:24px 24px 0 0;
+  padding-bottom:env(safe-area-inset-bottom);
+  border-bottom:0;
+ }
+ .mv-app.atlas-product-v4 .fsa-command-input{padding:17px 14px}
+ .mv-app.atlas-product-v4 .fsa-command-input input{font-size:16px}
+ .mv-app.atlas-product-v4 .fsa-command-results{
+  min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ }
+ .mv-app.atlas-product-v4 .fsa-command-results button{min-height:70px}
+ .mv-app.atlas-product-v4 .fsa-command-results strong{font-size:15.5px}
+ .mv-app.atlas-product-v4 .fsa-command-results small{font-size:13px}
+ .mv-app.atlas-product-v4 .fsa-command-footer{display:none}
+ /* Atlas map stays a dominant touch surface; selected areas become sheets. */
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-map-frame{
+  height:clamp(405px,59svh,610px)!important;
+  max-width:100%;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-map-frame:has(.atlas-live-map-ready){
+  touch-action:pan-x pan-y;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-map-tools button{
+  min-width:45px;min-height:48px;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-insets button{
+  min-width:66px;min-height:59px;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-layers-button{
+  min-height:48px;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-layers-popover{
+  position:fixed;inset:auto 12px calc(87px + env(safe-area-inset-bottom));
+  z-index:440;width:calc(100vw - 24px);
+  max-width:430px;max-height:65dvh;
+  overflow-y:auto;overscroll-behavior:contain;
+  padding:20px 16px;border-radius:20px;
+  background:var(--at-surface);
+  box-shadow:0 12px 48px rgba(1,10,26,.36);
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-layers-popover .ios-layers-close{
+  position:absolute;top:9px;right:9px;
+  display:grid;place-items:center;
+  width:37px;min-height:37px;
+  padding:0;border:1px solid var(--at-border);
+  border-radius:50%;background:var(--at-field);
+  color:var(--at-text);
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-layers-popover label{
+  min-height:46px;line-height:1.35;
+ }
+ .mv-app.atlas-product-v4 .ios-market-scrim{
+  display:block;position:fixed;inset:0;z-index:235;
+  width:100%;height:100%;padding:0;
+  border:0;border-radius:0;background:rgba(0,13,27,.42);
+  -webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-inspector{
+  position:fixed!important;z-index:245;
+  inset:auto 0 0!important;
+  width:100%!important;max-width:100%!important;
+  height:auto;max-height:min(73dvh,var(--atlas-visual-height,73dvh));
+  border:1px solid var(--at-border)!important;
+  border-bottom:0!important;
+  border-radius:25px 25px 0 0!important;
+  padding:5px 0 calc(16px + env(safe-area-inset-bottom));
+  overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  background:var(--at-surface)!important;
+  box-shadow:0 -16px 65px rgba(0,11,25,.42)!important;
+  animation:ios-sheet-entrance .24s cubic-bezier(.2,.7,.1,1) both;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .ios-market-grab{
+  display:flex;position:sticky;top:0;z-index:5;
+  width:100%;height:24px;min-height:24px;
+  margin:0;background:var(--at-surface);
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-inspector-art{
+  min-height:0;padding-top:10px;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-inspector-cover strong{
+  font-size:clamp(24px,6vw,33px);line-height:1.2;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-inspector-tabs{
+  position:sticky;top:24px;z-index:4;
+  background:var(--at-surface);
+  border-bottom:1px solid var(--at-border-soft);
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-inspector-tabs>button{
+  min-height:50px;font-size:14px;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-airport-list .fsa-airport-choice{
+  min-height:70px;padding-top:11px;padding-bottom:11px;
+ }
+ .mv-app.atlas-product-v4 .atlas-v2 .mv-airport-list .fsa-airport-description strong{
+  font-size:14.5px;
+ }
+ /* Workflows use iPhone segmented controls and scrollable full-width pages. */
+ .mv-app.atlas-product-v4 .fsa-hub{min-width:0}
+ .mv-app.atlas-product-v4 .fsa-hub-head{padding:13px 13px}
+ .mv-app.atlas-product-v4 .fsa-hub-tabs{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px;margin:12px 0 16px;
+  padding:4px;border:1px solid var(--at-border);
+  border-radius:14px;background:var(--at-field);
+  overflow:visible;
+ }
+ .mv-app.atlas-product-v4 .fsa-people-hub .fsa-hub-tabs{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+ .mv-app.atlas-product-v4 .fsa-hub-tabs>button{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:0;min-height:58px;padding:8px 4px;gap:5px;
+  background:transparent;border:1px solid transparent;
+  border-radius:11px;
+ }
+ .mv-app.atlas-product-v4 .fsa-hub-tabs>button.is-active{
+  border-color:var(--at-border-soft);
+  background:var(--at-surface);box-shadow:0 2px 9px rgba(0,0,0,.12);
+ }
+ .mv-app.atlas-product-v4 .fsa-hub-tabs>button svg{
+  width:18px;height:18px;color:var(--at-cyan);
+ }
+ .mv-app.atlas-product-v4 .fsa-hub-tabs strong{font-size:12px;line-height:1.24}
+ .mv-app.atlas-product-v4 .fsa-hub-tabs small{display:none}
+ .mv-app.atlas-product-v4 .travel-page{gap:13px}
+ .mv-app.atlas-product-v4 .travel-workflow{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;overflow:visible;
+  padding:4px;margin:0;
+  background:var(--at-field);
+  border:1px solid var(--at-border);border-radius:14px;
+ }
+ .mv-app.atlas-product-v4 .travel-step{
+  min-width:0;min-height:61px!important;
+  display:flex;flex-direction:column;justify-content:center;
+  gap:5px;padding:7px 4px;border:1px solid transparent;border-radius:10px;
+ }
+ .mv-app.atlas-product-v4 .travel-step.active{
+  border-color:var(--at-border);background:var(--at-surface);
+  box-shadow:0 1px 8px rgba(0,0,0,.13);
+ }
+ .mv-app.atlas-product-v4 .travel-step-index{
+  width:22px;height:22px;flex:0 0 22px;
+ }
+ .mv-app.atlas-product-v4 .travel-step-copy strong{
+  font-size:12px;text-align:center;line-height:1.24;
+ }
+ .mv-app.atlas-product-v4 .travel-step-copy small,
+ .mv-app.atlas-product-v4 .travel-step>svg{display:none}
+ .mv-app.atlas-product-v4 .travel-command-actions{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+ }
+ .mv-app.atlas-product-v4 .travel-command-actions .op-btn{
+  min-width:0;min-height:48px;
+ }
+ .mv-app.atlas-product-v4 :is(.travel-panel,.op-card){
+  min-width:0;max-width:100%;
+ }
+ .mv-app.atlas-product-v4 .travel-form-block{padding-left:15px;padding-right:15px}
+ .mv-app.atlas-product-v4 :is(.travel-fields.two,.travel-fields.three,.travel-fields.four){
+  grid-template-columns:1fr;gap:13px;
+ }
+ .mv-app.atlas-product-v4 .travel-gateway{
+  min-height:66px;padding:12px 10px;gap:10px;
+ }
+ .mv-app.atlas-product-v4 .travel-gateway-title strong{font-size:14px}
+ .mv-app.atlas-product-v4 .travel-gateway-title small{font-size:11.5px}
+ .mv-app.atlas-product-v4 .travel-gateway-time strong{font-size:13px}
+ .mv-app.atlas-product-v4 .travel-plan-footer{gap:12px}
+ .mv-app.atlas-product-v4 .op-grid-two,
+ .mv-app.atlas-product-v4 .op-overview-split,
+ .mv-app.atlas-product-v4 .op-layout-main,
+ .mv-app.atlas-product-v4 .op-geo-layout,
+ .mv-app.atlas-product-v4 .fsa-report-columns,
+ .mv-app.atlas-product-v4 .studio-main-grid{
+  grid-template-columns:minmax(0,1fr);
+ }
+ .mv-app.atlas-product-v4 .op-head{
+  flex-direction:column;align-items:stretch;gap:12px;
+ }
+ .mv-app.atlas-product-v4 .op-head-actions{justify-content:flex-start;padding-top:0}
+ .mv-app.atlas-product-v4 .op-head-actions .op-btn{
+  flex:1 1 140px;min-height:47px;
+ }
+ .mv-app.atlas-product-v4 .op-toolbar{gap:9px;align-items:stretch}
+ .mv-app.atlas-product-v4 .op-toolbar select{
+  min-height:48px;min-width:0;font-size:15px;
+ }
+ .mv-app.atlas-product-v4 .op-queue-row{min-height:65px}
+ .mv-app.atlas-product-v4 .op-queue-main strong{font-size:15px}
+ .mv-app.atlas-product-v4 .op-queue-main small{font-size:12.5px}
+ .mv-app.atlas-product-v4 .op-calendar-day{min-height:45px}
+ .mv-app.atlas-product-v4 .fsa-calendar-view-switch button{
+  min-height:45px;font-size:13px;
+ }
+ .mv-app.atlas-product-v4 .fsa-reports .op-metric{padding:13px}
+ .mv-app.atlas-product-v4 .fsa-reports .op-metric strong{font-size:27px}
+ .mv-app.atlas-product-v4 .op-table{
+  display:block;overflow-x:auto;max-width:100%;
+  -webkit-overflow-scrolling:touch;
+ }
+ .mv-app.atlas-product-v4 .op-table :is(thead,tbody){min-width:570px}
+ /* Improve source labels across Reports, People, Travel and Calendar. */
+ .mv-app.atlas-product-v4 :is(
+  .fsa-hub-guide,.travel-command-intro>p,.studio-data-note,
+  .fsa-report-caveat,.op-subtitle,.fsa-provenance
+ ){font-size:13px;line-height:1.53}
+ .mv-app.atlas-product-v4 .studio-spotlight-copy{padding:23px 18px}
+ .mv-app.atlas-product-v4 .studio-spotlight h2{font-size:clamp(28px,7.9vw,38px)}
+ .mv-app.atlas-product-v4 .studio-masthead-actions .studio-button{min-height:48px}
+ .mv-app.atlas-product-v4 .studio-trainer-seat{min-height:44px}
+ .mv-app.atlas-product-v4 .studio-agenda-row{min-height:78px}
+ .mv-app.atlas-product-v4 .studio-checklist button{min-height:69px}
+ .mv-app.atlas-product-v4 .studio-pwa-space{height:16px}
+ .mv-app.atlas-product-v4 .ios-install-nudge{
+  position:fixed;z-index:104;display:flex;align-items:center;gap:9px;
+  left:11px;right:11px;bottom:calc(81px + env(safe-area-inset-bottom));
+  max-width:470px;margin:auto;padding:10px 11px;border-radius:12px;
+  border:1px solid var(--at-border);
+  background:var(--at-surface);color:var(--at-text);
+  box-shadow:0 8px 25px rgba(0,11,24,.25);
+  font-size:12.5px;line-height:1.3;font-weight:750;
+ }
+ .mv-app.atlas-product-v4 .ios-install-nudge>svg{flex-shrink:0;color:var(--at-cyan)}
+ .mv-app.atlas-product-v4 .ios-install-nudge>span{flex:1;min-width:0}
+ .mv-app.atlas-product-v4 .ios-install-nudge>button{
+  min-height:39px;padding:7px 10px;border-radius:9px;border:1px solid var(--at-cyan);
+  background:var(--at-aqua-soft);color:var(--at-text);font-weight:850;
+ }
+ .mv-app.atlas-product-v4 .ios-install-nudge .ios-nudge-dismiss{
+  display:grid;place-items:center;min-width:31px;width:31px;
+  padding:6px;border-color:var(--at-border);background:var(--at-field);
+ }
+}
+@media(max-width:390px){
+ .mv-app.atlas-product-v4 .mv-header{
+  gap:5px;padding-left:9px;padding-right:9px;
+ }
+ .mv-app.atlas-product-v4 .ios-nav-title>strong{font-size:16px}
+ .mv-app.atlas-product-v4 .ios-nav-title>span{font-size:7.9px}
+ .mv-app.atlas-product-v4 .mv-header .mv-brand{flex-basis:35px;min-width:35px}
+ .mv-app.atlas-product-v4 .mv-header .official-atlas-brand{
+  flex-basis:34px;width:34px;height:34px;
+ }
+ .mv-app.atlas-product-v4 .fsa-command-trigger{
+  flex-basis:39px;width:39px;
+ }
+ .mv-app.atlas-product-v4 .ios-mobile-add,
+ .mv-app.atlas-product-v4 .mv-mobile-menu-trigger{
+  flex-basis:39px;width:39px;
+ }
+ .mv-app.atlas-product-v4 .ios-tab-bar button{font-size:10px;gap:2px}
+ .mv-app.atlas-product-v4 .ios-tab-bar .ios-tab-icon{width:32px}
+ .mv-app.atlas-product-v4 .ios-travel-ready{min-width:0}
+}
+@keyframes ios-sheet-entrance{
+ from{transform:translateY(28px);opacity:.7}
+ to{transform:translateY(0);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+ .mv-app.atlas-product-v4 :is(
+  .mv-mobile-drawer,.ios-quick-actions,.op-modal,
+  .trainer-dialog,.atlas-v2 .mv-inspector
+ ){animation:none!important;transition:none!important}
+ .mv-app.atlas-product-v4 .ios-tab-bar button:active{
+  transform:none!important;
+ }
+}
+
+
+/* Search belongs at the app root, never inside the backdrop-filtered
+   sticky header's containing block. The iPhone keyboard owns the viewport. */
+@media(max-width:900px){
+ .mv-app.atlas-product-v4 .fsa-command-backdrop{
+  position:fixed;inset:var(--atlas-visual-offset,0px) 0 auto;
+  width:100%;height:min(var(--atlas-visual-height,100dvh),100dvh);
+  display:flex;align-items:flex-end;justify-content:center;
+ }
+ .mv-app.atlas-product-v4 .fsa-command-dialog{
+  max-height:calc(min(var(--atlas-visual-height,100dvh),100dvh) - 7px);
+  box-shadow:0 -15px 65px rgba(0,9,24,.33);
+ }
+}

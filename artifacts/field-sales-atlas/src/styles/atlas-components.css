@@ -1,0 +1,344 @@
+/* Shared cards, real business flows, forms and recoverable data states. */
+.mv-app .mv-content-inner .op-head h1 { color: var(--at-text); font: 850 clamp(26px, 2.6vw, 34px)/1.16 var(--atlas-font); letter-spacing: -.8px; }
+.mv-app .mv-content-inner :is(h1, h2, h3, h4, strong) { color: var(--at-text); }
+.mv-app .mv-content-inner :is(p, small, .op-subtitle, .op-subtle) { color: var(--at-muted); }
+.mv-app :is(.op-card, .smart-panel, .travel-panel, .live-flight, .mv-week-trainer, .mv-week-overview, .op-calendar-grid, .atlas-share-card) { border: 1px solid var(--at-border); border-radius: 14px; background: var(--at-surface); color: var(--at-text); box-shadow: var(--at-shadow); }
+.mv-app .op-card-header { padding: 20px; border-bottom-color: var(--at-border-soft); }
+.mv-app .op-card { overflow-wrap:anywhere; }
+.mv-app .op-card :is(.op-field-list,.op-info-row) { min-width:0; }
+.mv-app :is(.op-modal,.trainer-dialog) { max-height:calc(100dvh - 28px); overflow-y:auto; overscroll-behavior:contain; }
+.mv-app .op-modal-backdrop, .mv-app .trainer-dialog-backdrop { padding:14px; }
+.mv-app :is(.op-form,.trainer-dialog-fields) :is(input,select,textarea):focus-visible { outline:3px solid var(--at-cyan); outline-offset:2px; }
+.mv-app :is(.op-badge,.op-pill,.mv-week-priority) { font-variant-numeric:tabular-nums; }
+@media(max-width:650px){ .mv-app .op-modal-backdrop,.mv-app .trainer-dialog-backdrop { padding:6px; } }
+.mv-app .op-card-header h2 { color: var(--at-text); font-size: 18px; }
+.mv-app .op-card-header p { color: var(--at-muted); font-size: 13px; }
+.mv-app .op-eyebrow { color: var(--at-cyan); font-size: 11px; letter-spacing: .7px; }
+.mv-app .op-subtitle { color: var(--at-muted); font-size: 14px; line-height: 1.6; }
+.mv-app .op-btn { min-height: 44px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-raised); color: var(--at-text); font-size: 13px; font-weight: 800; }
+.mv-app .op-btn.primary { background: var(--at-action); border-color: var(--at-action); color: var(--at-action-fg); }
+.mv-app .op-btn.primary:hover { background: var(--at-action-hover); }
+.mv-app .op-btn.danger { background: var(--at-rose-soft); color: var(--at-rose); }
+.mv-app :is(.op-search, .travel-search, .mv-inspector-search) { background: var(--at-field); border-color: var(--at-border); color: var(--at-cyan); }
+.mv-app :is(.op-search, .travel-search) input { color: var(--at-text); background: transparent; font-size: 14px; }
+.mv-app .mv-content-inner :is(input:not([type='checkbox']):not([type='radio']), select, textarea) { min-height: 44px; border-color: var(--at-border); border-radius: 9px; background: var(--at-field); color: var(--at-text); font-size: 14px; }
+.mv-app .op-table th { background: var(--at-raised); color: var(--at-muted); font-size: 12px; border-color: var(--at-border-soft); }
+.mv-app .op-table td { color: var(--at-text); font-size: 13px; border-color: var(--at-border-soft); }
+.mv-app .op-table td strong { color: var(--at-text); font-size: 14px; }
+.mv-app .op-table td small { color: var(--at-muted); font-size: 12px; }
+.mv-app .op-table tbody tr:hover { background: var(--at-raised); }
+.mv-app .op-field-list label { color: var(--at-muted); font-size: 12px; }
+.mv-app .op-field-list strong { color: var(--at-text); font-size: 14px; }
+.mv-app :is(.op-info-row, .op-manager-header, .op-detail-tabs, .op-section-head) { border-color: var(--at-border-soft); }
+.mv-app .op-info-row :is(span, small) { color: var(--at-muted); }
+.mv-app .op-info-icon, .mv-app .op-avatar { color: var(--at-cyan); background: var(--at-aqua-soft); }
+.mv-app .op-detail-tabs button { min-height: 44px; color: var(--at-muted); font-size: 13px; }
+.mv-app .op-detail-tabs button.active { background: var(--at-aqua-soft); color: var(--at-text); border-bottom-color: var(--at-cyan); }
+.mv-app .op-queue-row:is(:hover, .is-selected) { background: var(--at-aqua-soft); }
+.mv-app .op-queue-main strong { color: var(--at-text); }
+.mv-app .op-queue-main small { color: var(--at-muted); }
+.mv-app .op-calendar-day { background: var(--at-surface); color: var(--at-text); border-color: var(--at-border); }
+.mv-app .op-calendar-day.muted { background: var(--at-raised); color: var(--at-muted); }
+.mv-app .op-calendar-event { background: var(--at-aqua-soft); color: var(--at-cyan); font-size: 12px; }
+.mv-app .op-toolbar { gap: 12px; }
+.mv-app :is(.op-empty, .fsa-directory-empty) { color: var(--at-muted); }
+.mv-app .op-empty strong { color: var(--at-text); font-size: 16px; }
+.mv-app .op-empty span { font-size: 14px; line-height: 1.6; }
+.mv-app .fsa-card-eyebrow { display: block; margin-bottom: 8px; color: var(--at-cyan); font-size: 11px; font-weight: 800; }
+.mv-app .fsa-count-chip { padding: 7px 10px; border: 1px solid var(--at-border-soft); border-radius: 20px; background: var(--at-aqua-soft); color: var(--at-cyan); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.mv-app .fsa-manager-cards { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 760px; overflow-y: auto; padding: 15px; }
+.mv-app .fsa-manager-card { display: flex; flex-direction: column; gap: 13px; min-height: 160px; width: 100%; padding: 16px; border: 1px solid var(--at-border-soft); border-radius: 12px; background: var(--at-field); color: var(--at-text); text-align: left; }
+.mv-app .fsa-manager-card:is(:hover, .is-current) { border-color: var(--at-cyan); background: var(--at-aqua-soft); }
+.mv-app .fsa-manager-card-main { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.mv-app .fsa-manager-avatar { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 11px; background: #33556e; color: #ffffff; font-size: 15px; font-weight: 850; }
+.mv-app .fsa-manager-card-identity { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+.mv-app .fsa-manager-card-identity strong { font-size: 15px; overflow-wrap: anywhere; }
+.mv-app .fsa-manager-card-identity small { display: flex; align-items: center; gap: 5px; color: var(--at-muted); font-size: 12px; }
+.mv-app .fsa-manager-card-chevron { color: var(--at-cyan); }
+.mv-app .fsa-manager-card-facts { display: grid; grid-template-columns: minmax(91px,.65fr) minmax(0,1.35fr); gap: 14px; padding: 12px 0; border-block: 1px solid var(--at-border-soft); }
+.mv-app .fsa-manager-card-facts > span { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.mv-app .fsa-manager-card-facts small { color: var(--at-muted); font-size: 10px; font-weight: 800; }
+.mv-app .fsa-manager-card-facts strong { color: var(--at-text); font-size: 13px; overflow-wrap: anywhere; }
+.mv-app .fsa-manager-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 9px; flex-wrap: wrap; }
+.mv-app .fsa-attention { display: flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 20px; background: var(--at-raised); color: var(--at-text); font-size: 11px; }
+.mv-app .fsa-attention-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--at-cyan); }
+.mv-app .fsa-attention-high .fsa-attention-dot { background: var(--at-rose); }
+.mv-app .fsa-manager-open { display: flex; align-items: center; gap: 6px; color: var(--at-cyan); font-size: 12px; font-weight: 800; }
+.mv-app .fsa-directory-empty { padding: 30px 20px; text-align: center; }
+/* Travel wizard: one progression, consistent choices, explicit estimates. */
+.mv-app .travel-page .travel-command-head, .mv-app .mv-week-page .mv-week-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px; border: 1px solid var(--at-border); border-radius: 15px; background: var(--at-surface); color: var(--at-text); }
+.mv-app .travel-command-head h1, .mv-app .mv-week-header h1 { margin: 0 0 9px; color: var(--at-text); font-size: 28px; line-height: 1.15; letter-spacing: -.8px; }
+.mv-app .travel-command-head p, .mv-app .mv-week-header p { margin: 0; color: var(--at-muted); font-size: 14px; line-height: 1.6; }
+.mv-app .travel-command-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.mv-app .travel-command-short { display: none; }
+.mv-app .travel-command-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 13px; }
+.mv-app .travel-command-summary span { display: flex; align-items: center; gap: 6px; color: var(--at-muted); font-size: 12px; }
+.mv-app .travel-command-summary svg { color: var(--at-cyan); }
+.mv-app .travel-workflow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--at-border); border-radius: 12px; background: var(--at-surface); }
+.mv-app .travel-step { display: flex; align-items: center; gap: 11px; min-width: 0; min-height: 76px; padding: 14px; border: 0; border-right: 1px solid var(--at-border-soft); background: var(--at-surface); color: var(--at-muted); }
+.mv-app .travel-step:last-child { border-right: 0; }
+.mv-app .travel-step.active { background: var(--at-aqua-soft); color: var(--at-text); box-shadow: inset 0 -3px var(--at-cyan); }
+.mv-app .travel-step-index { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; border: 1px solid var(--at-border); border-radius: 50%; color: var(--at-muted); font-size: 12px; font-weight: 850; }
+.mv-app .travel-step.active .travel-step-index { border-color: var(--at-cyan); color: var(--at-cyan); }
+.mv-app .travel-step-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.mv-app .travel-step-copy strong { color: var(--at-text); font-size: 14px; }
+.mv-app .travel-step-copy small { color: var(--at-muted); font-size: 11px; line-height: 1.3; }
+.mv-app .travel-step > svg { flex: 0 0 15px; }
+.mv-app .travel-command-actions .fsa-saved-current { background:var(--at-aqua-soft); color:var(--at-text); border-color:var(--at-cyan); }
+@media(max-width:470px){
+  .mv-app .travel-step { flex-direction:column; min-height:73px; padding:9px 4px; gap:4px; justify-content:center; text-align:center; }
+  .mv-app .travel-step-index { display:none; }
+  .mv-app .travel-step-copy { gap:2px; }
+  .mv-app .travel-step-copy strong { font-size:12px; }
+  .mv-app .travel-step-copy small { font-size:10px; }
+  .mv-app .travel-command-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+  .mv-app .travel-command-actions .op-btn { justify-content:center; min-height:44px; }
+}
+.mv-app .travel-section-line h2, .mv-app .smart-panel-head h3 { color: var(--at-text); font-size: 19px; }
+.mv-app .travel-section-line p { color: var(--at-muted); font-size: 13px; line-height: 1.6; }
+.mv-app .travel-fields label { color: var(--at-muted); font-size: 13px; }
+.mv-app :is(.travel-home-option, .travel-gateway, .travel-manager-picker button, .travel-manager-toggle, .travel-manager-disclosure, .travel-selected-place, .travel-quote-form, .travel-airport-search-picker, .smart-status-bar, .travel-plan-footer) { background: var(--at-surface); color: var(--at-text); border-color: var(--at-border); }
+.mv-app :is(.travel-home-option.selected, .travel-gateway.active, .travel-manager-picker button.selected) { background: var(--at-aqua-soft); border-color: var(--at-cyan); }
+.mv-app :is(.travel-home-option, .travel-gateway, .travel-manager-toggle, .travel-manager-picker) strong { color: var(--at-text); }
+.mv-app :is(.travel-home-option, .travel-gateway, .travel-manager-toggle, .travel-manager-picker) small { color: var(--at-muted); }
+.mv-app .travel-gateway-iata { background: var(--at-aqua-soft); color: var(--at-cyan); }
+.mv-app .travel-note { border-color: var(--at-border); background: var(--at-raised); color: var(--at-muted); }
+.mv-app .travel-note.caution { border-color: var(--at-border); background: var(--at-rose-soft); color: var(--at-text); }
+.mv-app .live-flight-status { background: var(--at-rose-soft); color: var(--at-rose); border-color: var(--at-border); }
+.mv-app .live-flight-status.connected { background: var(--at-aqua-soft); color: var(--at-cyan); }
+.mv-app .live-flight-unavailable { background: var(--at-raised); color: var(--at-text); border-color: var(--at-border); }
+/* Two-trainer planning. */
+.mv-app .mv-week-eyebrow { color: var(--at-cyan); font-size: 11px; }
+.mv-app .mv-week-range label { color: var(--at-muted); font-size: 13px; }
+.mv-app .mv-week-range input { color: var(--at-text); background: var(--at-field); border-color: var(--at-border); }
+.mv-app .mv-week-range small { color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-week-calendar, .mv-app .mv-week-review { color: var(--at-cyan); font-size: 13px; min-height: 44px; }
+.mv-app .mv-week-overview > div { border-color: var(--at-border-soft); }
+.mv-app .mv-week-overview strong { color: var(--at-text); font-size: 26px; }
+.mv-app .mv-week-overview span { color: var(--at-muted); font-size: 13px; }
+.mv-app .mv-week-trainer-head { background: var(--at-raised); border-color: var(--at-border); }
+.mv-app .mv-week-trainer-head strong { color: var(--at-text); font-size: 17px; }
+.mv-app .mv-week-trainer-head small { color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-week-trainer-head button { min-height: 44px; border-color: var(--at-border); background: var(--at-surface); color: var(--at-cyan); font-size: 12px; }
+.mv-app .mv-week-trainer-summary, .mv-app .mv-week-person { background: var(--at-surface); border-color: var(--at-border-soft); }
+.mv-app .mv-week-trainer-summary span { color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-week-subheading strong { color: var(--at-text); font-size: 14px; }
+.mv-app .mv-week-subheading span { color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-week-person strong { color: var(--at-text); font-size: 14px; }
+.mv-app .mv-week-person small { color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-week-person button { min-height: 44px; color: var(--at-cyan); font-size: 13px; }
+.mv-app .mv-week-priority { border: 1px solid var(--at-border); background: var(--at-raised); color: var(--at-muted); font-size: 11px; }
+.mv-app .mv-week-priority.high { background: var(--at-rose-soft); color: var(--at-rose); }
+.mv-app .mv-week-empty { padding: 24px; color: var(--at-muted); font-size: 14px; }
+.mv-app .mv-week-empty button { min-height: 44px; padding: 10px 12px; background: var(--at-aqua-soft); color: var(--at-cyan); border-color: var(--at-border); font-size: 13px; }
+.mv-app .mv-week-trainer-foot { background: var(--at-raised); color: var(--at-muted); font-size: 12px; line-height: 1.6; }
+.mv-app .mv-week-clusters, .mv-app .mv-week-safety { border: 1px solid var(--at-border); border-radius: 14px; background: var(--at-surface); color: var(--at-text); }
+.mv-app .mv-week-section-head h2 { color: var(--at-text); font-size: 18px; }
+.mv-app .mv-week-section-head p { color: var(--at-muted); font-size: 13px; }
+.mv-app .mv-week-cluster { border-color: var(--at-border-soft); }
+.mv-app .mv-week-cluster strong { color: var(--at-text); font-size: 14px; }
+.mv-app .mv-week-cluster small { color: var(--at-muted); font-size: 12px; }
+.mv-app .mv-week-cluster button { min-height: 44px; color: var(--at-cyan); font-size: 13px; }
+.mv-app .mv-week-clear { color: var(--at-text); background: var(--at-raised); }
+.mv-app .mv-week-clear p { color: var(--at-muted); font-size: 13px; }
+/* Modal surfaces inherit the app's theme rather than reverting to light mode. */
+.mv-app .op-modal-backdrop, .mv-app .trainer-dialog-backdrop { z-index: 300; background: rgb(0 8 24 / 68%); }
+.mv-app .op-modal, .mv-app .trainer-dialog { background: var(--at-surface); color: var(--at-text); border: 1px solid var(--at-border); border-radius: 15px; box-shadow: 0 25px 70px rgb(0 8 24 / 35%); }
+.mv-app .op-modal-head, .mv-app .op-modal-body { background: var(--at-surface); color: var(--at-text); border-color: var(--at-border-soft); }
+.mv-app .op-modal-head h2, .mv-app .trainer-dialog h2 { color: var(--at-text); font-size: 22px; }
+.mv-app .op-modal-head p, .mv-app .op-form-help, .mv-app .trainer-dialog p { color: var(--at-muted); font-size: 13px; }
+.mv-app .op-form label, .mv-app .trainer-dialog label { color: var(--at-muted); font-size: 13px; }
+.mv-app .op-form :is(input:not([type='checkbox']), select, textarea), .mv-app .trainer-dialog :is(input:not([type='checkbox']), select, textarea) { min-height: 44px; border-color: var(--at-border); border-radius: 8px; background: var(--at-field); color: var(--at-text); font-size: 15px; }
+.mv-app .op-icon-button { display: grid; place-items: center; min-width: 44px; min-height: 44px; color: var(--at-text); }
+.mv-app .atlas-global-alert { display: flex; align-items: center; gap: 10px; padding: 12px 24px; background: var(--at-rose-soft); color: var(--at-text); border-bottom: 1px solid var(--at-border); font-size: 13px; }
+.mv-app .atlas-global-alert small { display: block; margin-top: 3px; color: var(--at-muted); }
+.mv-app .atlas-global-alert button { min-height: 44px; margin-left: auto; padding: 10px 12px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-surface); color: var(--at-text); }
+.mv-app .atlas-global-alert a { color: var(--at-cyan); }
+.mv-app .atlas-nas-browser-alert { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; color: var(--at-muted); font-size: 12px; }
+.mv-app .atlas-nas-browser-alert button { min-height: 44px; padding: 10px 12px; border: 1px solid var(--at-border); border-radius: 9px; background: var(--at-raised); color: var(--at-text); }
+@media (max-width: 1100px) {
+  .mv-app .op-overview-split, .mv-app .travel-main-layout { grid-template-columns: minmax(0, 1fr); }
+  .mv-app .travel-page .travel-command-head { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 650px) {
+  .mv-app .travel-workflow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mv-app .travel-step { min-width: 0; min-height: 68px; padding: 10px; gap: 8px; }
+  .mv-app .travel-step-copy strong { font-size: 13px; }
+  .mv-app .travel-step-copy small { font-size: 11px; }
+  .mv-app .travel-step > svg { display: none; }
+  .mv-app .travel-command-head h1, .mv-app .mv-week-header h1 { font-size: 25px; }
+  .mv-app .travel-command-head, .mv-app .mv-week-page .mv-week-header { padding: 18px; }
+  .mv-app .mv-week-trainers, .mv-app .mv-week-lower { grid-template-columns: 1fr; }
+  .mv-app .mv-week-person small { flex-wrap: wrap; }
+  .mv-app .mv-week-cluster { flex-wrap: wrap; }
+  .mv-app .atlas-global-alert { flex-wrap: wrap; padding: 12px; }
+  .mv-app .mv-content-inner :is(input:not([type='checkbox']):not([type='radio']), select, textarea),
+  .mv-app .op-form :is(input:not([type='checkbox']), select, textarea),
+  .mv-app .trainer-dialog :is(input:not([type='checkbox']), select, textarea) { font-size: 16px; }
+}
+
+/* Calendar: agenda-first on mobile, with no loss of the month overview. */
+.mv-app .fsa-calendar-view-switch{display:flex;align-items:center;gap:7px;margin:16px 0 19px;flex-wrap:wrap}
+.mv-app .fsa-calendar-view-switch button{display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 14px;background:var(--at-surface);border:1px solid var(--at-border);border-radius:9px;color:var(--at-muted);font-weight:800;font-size:13px}
+.mv-app .fsa-calendar-view-switch button.is-active{background:var(--at-aqua-soft);border-color:var(--at-cyan);color:var(--at-text)}
+.mv-app .fsa-calendar-view-switch span{margin-left:auto;color:var(--at-muted);font-size:12px}
+.mv-app .fsa-calendar-agenda{border:1px solid var(--at-border);background:var(--at-surface);border-radius:16px;overflow:hidden;box-shadow:var(--at-shadow)}
+.mv-app .fsa-calendar-agenda>header{padding:23px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--at-raised);border-bottom:1px solid var(--at-border-soft)}
+.mv-app .fsa-calendar-agenda>header h2{font-size:24px;color:var(--at-text);letter-spacing:-.6px;margin:9px 0 6px}
+.mv-app .fsa-calendar-agenda>header p:last-child{color:var(--at-muted);font-size:13px;margin:0}
+.mv-app .fsa-agenda-day{display:grid;grid-template-columns:165px minmax(0,1fr);gap:0;border-bottom:1px solid var(--at-border-soft)}
+.mv-app .fsa-agenda-day:last-child{border-bottom:0}
+.mv-app .fsa-agenda-date{padding:20px 22px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--at-border-soft)}
+.mv-app .fsa-agenda-date strong{color:var(--at-muted);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.mv-app .fsa-agenda-date span{font-size:20px;font-weight:850;color:var(--at-text)}
+.mv-app .fsa-agenda-date small{display:flex;align-items:center;gap:4px;color:var(--at-rose);font-size:11px}
+.mv-app .fsa-agenda-events{display:flex;flex-direction:column;padding:7px 17px}
+.mv-app .fsa-agenda-events button{display:flex;align-items:center;gap:13px;width:100%;padding:12px 7px;text-align:left;color:var(--at-text);background:transparent;border:0;border-bottom:1px solid var(--at-border-soft);min-height:61px}
+.mv-app .fsa-agenda-events button:last-child{border-bottom:0}
+.mv-app .fsa-agenda-events button:hover{background:var(--at-aqua-soft)}
+.mv-app .fsa-agenda-type{width:40px;height:40px;flex:0 0 40px;border-radius:10px;display:grid;place-items:center;background:var(--at-aqua-soft);color:var(--at-cyan)}
+.mv-app .fsa-agenda-type.trip{background:var(--at-rose-soft);color:var(--at-rose)}
+.mv-app .fsa-agenda-events button>span:nth-child(2){display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.mv-app .fsa-agenda-events strong{font-size:14px;color:var(--at-text)}
+.mv-app .fsa-agenda-events small{font-size:12px;color:var(--at-muted)}
+.mv-app .fsa-agenda-events button>svg{color:var(--at-rose)}
+.mv-app .fsa-agenda-empty{display:flex;align-items:center;flex-direction:column;gap:13px;text-align:center;padding:47px 20px;color:var(--at-muted)}
+.mv-app .fsa-agenda-empty h3{font-size:19px;color:var(--at-text);margin:0}
+.mv-app .fsa-agenda-empty p{max-width:360px;font-size:13px;line-height:1.6;margin:0}
+.mv-app .fsa-agenda-empty button{margin-top:8px}
+@media(max-width:700px){
+ .mv-app .fsa-calendar-agenda>header{padding:18px;align-items:flex-start;flex-direction:column}
+ .mv-app .fsa-agenda-day{grid-template-columns:1fr}
+ .mv-app .fsa-agenda-date{padding:15px 17px 0;border-right:0;flex-direction:row;align-items:center;gap:9px}
+ .mv-app .fsa-agenda-date span{font-size:17px}
+ .mv-app .fsa-agenda-date small{margin-left:auto;font-size:10px}
+ .mv-app .fsa-agenda-events{padding:7px 14px 10px}
+ .mv-app .fsa-calendar-view-switch span{flex-basis:100%;margin-left:0}
+}
+/* Manager cards: purposeful hierarchy, readable labels and strong selection. */
+.mv-app .fsa-manager-cards { grid-template-columns: minmax(0,1fr); }
+.mv-app .fsa-manager-card{border-radius:15px;padding:16px;min-height:148px;transition:background .18s,border-color .18s,transform .18s,box-shadow .18s}
+.mv-app .fsa-manager-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,17,33,.12)}
+.mv-app .fsa-manager-card.is-current{box-shadow:inset 3px 0 var(--at-cyan);border-color:var(--at-cyan)}
+.mv-app .fsa-manager-avatar{border-radius:12px;background:linear-gradient(136deg,#246A78,#AD4E86)}
+.mv-app .fsa-manager-card-identity strong{font-size:16px}
+.mv-app .fsa-manager-card-facts small{font-size:11px;letter-spacing:.2px}
+.mv-app .fsa-manager-card-facts strong{font-size:13px;line-height:1.45}
+.mv-app .fsa-manager-open{font-size:13px}
+.mv-app .fsa-manager-card:focus-visible{outline:3px solid var(--at-cyan);outline-offset:3px}
+
+.mv-app .fsa-circuit-note{display:block;margin-top:5px;color:var(--at-muted);font-size:11px;line-height:1.5;max-width:480px}
+
+/* Reports belong to the same field design system and never duplicate the Atlas map. */
+.mv-app .fsa-reports{max-width:1520px;margin-inline:auto}
+.mv-app .fsa-reports .op-metrics{margin:4px 0 23px}
+.mv-app .fsa-reports .op-metric{border:1px solid var(--at-border);border-radius:12px;background:var(--at-surface);box-shadow:var(--at-shadow);padding:17px}
+.mv-app .fsa-reports .op-metric label{color:var(--at-muted);font-size:12px;font-weight:800}
+.mv-app .fsa-reports .op-metric strong{color:var(--at-text);font-size:30px}
+.mv-app .fsa-reports .op-metric small{color:var(--at-muted);font-size:12px}
+.mv-app .fsa-report-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;margin-bottom:17px}
+.mv-app .fsa-report-panel,.mv-app .fsa-report-upcoming{overflow:hidden}
+.mv-app .fsa-report-panel-head{padding:21px 23px 17px;border-bottom:1px solid var(--at-border-soft)}
+.mv-app .fsa-report-panel-head h2{margin:10px 0 7px;font-size:22px;letter-spacing:-.6px;color:var(--at-text)}
+.mv-app .fsa-report-panel-head p{margin:0;font-size:13px;line-height:1.55;color:var(--at-muted)}
+.mv-app .fsa-report-trainer{padding:21px 23px 13px}
+.mv-app .fsa-report-trainer-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mv-app .fsa-report-trainer-heading strong{display:flex;align-items:center;gap:9px;color:var(--at-text);font-size:16px}
+.mv-app .fsa-report-trainer-heading>span{font-size:13px;color:var(--at-muted);font-variant-numeric:tabular-nums}
+.mv-app .fsa-report-dot{display:inline-block;flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--at-cyan)}
+.mv-app .fsa-report-dot-1{background:var(--at-rose)}
+.mv-app .fsa-report-track{height:12px;margin:13px 0 10px;background:var(--at-raised);border-radius:20px;overflow:hidden}
+.mv-app .fsa-report-fill{display:block;height:100%;border-radius:20px;background:var(--at-cyan)}
+.mv-app .fsa-report-fill-1{background:var(--at-rose)}
+.mv-app .fsa-report-trainer-foot{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;color:var(--at-muted);font-size:12px}
+.mv-app .fsa-report-caveat{margin:12px 23px 21px;padding:12px;background:var(--at-raised);border-radius:9px;color:var(--at-muted);font-size:12px;line-height:1.6}
+.mv-app .fsa-report-queue{padding:7px 18px 0}
+.mv-app .fsa-report-queue button,.mv-app .fsa-report-visit-list button{
+  width:100%;display:flex;align-items:center;gap:11px;min-height:71px;
+  padding:12px 5px;border:0;border-bottom:1px solid var(--at-border-soft);
+  background:transparent;color:var(--at-text);text-align:left;
+}
+.mv-app .fsa-report-queue button:last-child,.mv-app .fsa-report-visit-list button:last-child{border-bottom:0}
+.mv-app .fsa-report-queue button:hover,.mv-app .fsa-report-visit-list button:hover{background:var(--at-aqua-soft)}
+.mv-app .fsa-report-queue button>span:nth-child(2),.mv-app .fsa-report-visit-list button>span:nth-child(2){display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.mv-app .fsa-report-queue strong,.mv-app .fsa-report-visit-list strong{font-size:14px;color:var(--at-text)}
+.mv-app .fsa-report-queue small,.mv-app .fsa-report-visit-list small{font-size:12px;color:var(--at-muted);line-height:1.4}
+.mv-app .fsa-report-queue button>svg:last-child,.mv-app .fsa-report-visit-list button>svg:last-child{color:var(--at-rose);flex:0 0 17px}
+.mv-app .fsa-report-person-icon{display:grid;place-items:center;width:41px;height:41px;flex:0 0 41px;background:var(--at-aqua-soft);color:var(--at-cyan);border-radius:10px}
+.mv-app .fsa-report-priority{padding:6px 8px;border-radius:99px;background:var(--at-raised);color:var(--at-text);font-size:11px;font-weight:800}
+.mv-app .fsa-report-priority-high{background:var(--at-rose-soft);color:var(--at-rose)}
+.mv-app .fsa-report-open{display:flex;align-items:center;gap:9px;min-height:46px;margin:10px 20px 18px;padding:9px 5px;background:transparent;border:0;color:var(--at-cyan);font-size:13px;font-weight:850}
+.mv-app .fsa-report-date{display:grid;place-items:center;flex:0 0 75px;height:52px;padding:7px;border-radius:10px;background:var(--at-aqua-soft);color:var(--at-cyan);font-size:13px;font-weight:900}
+.mv-app .fsa-report-status{flex:0 0 auto;padding:6px 8px;border-radius:99px;background:var(--at-raised);color:var(--at-muted);font-size:11px;font-weight:800}
+.mv-app .fsa-report-visit-list{padding:7px 20px 0}
+.mv-app .fsa-report-empty{display:flex;align-items:center;flex-direction:column;gap:9px;padding:28px 18px;text-align:center;color:var(--at-muted)}
+.mv-app .fsa-report-empty strong{font-size:14px;color:var(--at-text)}
+.mv-app .fsa-report-empty p{margin:0;font-size:12px;line-height:1.6}
+@media(max-width:1100px){.mv-app .fsa-report-columns{grid-template-columns:1fr}}
+@media(max-width:650px){
+ .mv-app .fsa-report-panel-head{padding:17px}
+ .mv-app .fsa-report-queue{padding:6px 11px}
+ .mv-app .fsa-report-visit-list{padding:7px 11px}
+ .mv-app .fsa-report-priority{font-size:10px}
+ .mv-app .fsa-report-status{display:none}
+ .mv-app .fsa-report-date{flex-basis:59px;font-size:12px}
+}
+
+/* Territorial details, CSV review and sources share the same product design vocabulary. */
+.mv-app .fsa-geography-tabs{display:flex;gap:5px;overflow-x:auto;padding:5px;border-bottom:1px solid var(--at-border)}
+.mv-app .fsa-geography-tabs button{flex:1 0 auto;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--at-muted);font-size:13px;font-weight:800}
+.mv-app .fsa-geography-tabs button.active,.mv-app .fsa-geography-tabs button[aria-selected='true']{background:var(--at-aqua-soft);border-color:var(--at-border);color:var(--at-text)}
+.mv-app .op-map-toolbar{background:var(--at-surface);border-color:var(--at-border)}
+.mv-app .op-map-toolbar-left strong{color:var(--at-text)}
+.mv-app .op-map-toolbar select{min-height:44px;background:var(--at-field);border-color:var(--at-border);color:var(--at-text)}
+.mv-app .op-map-toolbar .op-toggle{min-height:44px;color:var(--at-text);background:var(--at-raised);border:1px solid var(--at-border);border-radius:9px}
+.mv-app .op-map-toolbar .op-toggle.on{background:var(--at-aqua-soft);border-color:var(--at-cyan)}
+.mv-app .op-inspector{overflow:hidden}
+.mv-app .op-inspector-title{background:var(--at-raised);padding:21px;border-bottom:1px solid var(--at-border)}
+.mv-app .op-inspector-title h2{color:var(--at-text);font-size:24px}
+.mv-app .op-inspector-title p{color:var(--at-muted)}
+.mv-app .op-inspector-content{background:var(--at-surface);padding:16px}
+.mv-app .op-location-row{min-height:53px;gap:10px;border-bottom:1px solid var(--at-border-soft);background:transparent;color:var(--at-text)}
+.mv-app .op-location-row:hover{background:var(--at-aqua-soft)}
+.mv-app .op-location-row :is(strong,small){color:var(--at-text)}
+.mv-app .op-location-row small{color:var(--at-muted)}
+.mv-app .op-location-row svg{color:var(--at-cyan)}
+.mv-app .op-source-row{padding:17px 0;gap:14px;border-bottom:1px solid var(--at-border-soft)}
+.mv-app .op-source-row :is(h3,strong){color:var(--at-text)}
+.mv-app .op-source-row p{color:var(--at-muted);font-size:13px;line-height:1.65}
+.mv-app .op-source-row svg{color:var(--at-cyan)}
+.mv-app .op-source-row a{color:var(--at-cyan);font-weight:800}
+.mv-app .op-upload{min-height:148px;padding:18px;background:var(--at-field);border:2px dashed var(--at-border);border-radius:13px}
+.mv-app .op-upload:hover,.mv-app .op-upload:focus-within{border-color:var(--at-cyan);background:var(--at-aqua-soft)}
+.mv-app .op-upload svg{color:var(--at-cyan)}
+.mv-app .op-upload strong{color:var(--at-text);font-size:15px}
+.mv-app .op-upload span{color:var(--at-muted);font-size:13px}
+.mv-app .fsa-import-progress{display:flex;flex-direction:column;gap:9px;padding:13px;margin-top:14px;border-radius:10px;border:1px solid var(--at-border);background:var(--at-raised)}
+.mv-app .fsa-import-progress strong{color:var(--at-text);font-size:13px}
+.mv-app .fsa-import-progress small{color:var(--at-muted);font-size:12px}
+.mv-app .fsa-import-progress progress{display:block;width:100%;height:12px;accent-color:var(--at-cyan)}
+.mv-app .fsa-full-backup{width:100%;margin-top:18px;justify-content:center}
+@media(max-width:760px){
+ .mv-app .op-map-toolbar{flex-direction:column;gap:12px;align-items:stretch}
+ .mv-app .op-map-toolbar-right{justify-content:flex-start;flex-wrap:wrap}
+ .mv-app .op-geo-layout{grid-template-columns:1fr}
+ .mv-app .op-inspector-content{padding:13px}
+ .mv-app .op-source-row{align-items:flex-start}
+}
+
+/* App-open FAA watch across all primary pages */
+.mv-app .atlas-global-alert{gap:12px;min-height:63px;padding:11px 22px}
+.mv-app .atlas-watch-summary{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.mv-app .atlas-watch-summary strong{color:var(--at-text);font-size:12px;font-weight:850}
+.mv-app .atlas-watch-summary small{color:var(--at-muted);font-size:11px;line-height:1.5}
+.mv-app .atlas-watch-actions{display:flex;align-items:center;gap:7px;margin-left:auto;flex:0 0 auto}
+.mv-app .atlas-global-alert .atlas-watch-actions button{margin-left:0;display:flex;align-items:center;gap:8px;min-height:43px;padding:8px 12px;font-size:11px;font-weight:800}
+.mv-app .atlas-global-alert .atlas-watch-actions button:disabled{opacity:.7}
+.mv-app .atlas-global-alert .atlas-watch-source{display:grid;place-items:center;width:40px;height:43px;color:var(--at-cyan);border:1px solid var(--at-border);border-radius:8px;background:var(--at-surface)}
+.mv-app .atlas-watch-monitoring{background:var(--at-aqua-soft)}
+.mv-app .atlas-watch-caution,.mv-app .atlas-watch-unknown{background:var(--at-raised)}
+.mv-app .atlas-watch-critical{background:var(--at-rose-soft)}
+.mv-app .atlas-watch-critical .atlas-alert-orbit,.mv-app .atlas-watch-unknown .atlas-alert-orbit{color:var(--at-rose)}
+.mv-app .atlas-watch-monitoring .atlas-alert-orbit{color:var(--at-cyan)}
+@media(max-width:760px){.mv-app .atlas-global-alert{padding:11px 13px;flex-wrap:wrap}.mv-app .atlas-watch-actions{width:100%;justify-content:space-between}.mv-app .atlas-watch-actions button{flex:1}.mv-app .atlas-watch-summary strong{font-size:12px}}
+@media(max-width:420px){.mv-app .atlas-watch-notify span{display:none}}

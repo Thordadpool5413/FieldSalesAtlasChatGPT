@@ -1,0 +1,171 @@
+/* Field Compass: one decision surface, deliberately sized for its device. */
+.mv-app .fsa-sidebar-bottom:has(.fsa-field-compass) {
+  margin-top:auto;
+  padding:10px 0 0;
+  border-color:var(--at-border-soft);
+}
+.mv-app .fsa-field-compass {
+  position:relative;
+  min-width:0;
+  isolation:isolate;
+  display:grid;
+  color:var(--at-text);
+  border:1px solid color-mix(in srgb,var(--at-cyan) 42%,var(--at-border));
+  background:
+    radial-gradient(ellipse at 96% 2%,color-mix(in srgb,var(--at-rose) 15%,transparent),transparent 70%),
+    radial-gradient(ellipse at 1% 98%,color-mix(in srgb,var(--at-cyan) 12%,transparent),transparent 73%),
+    var(--at-surface);
+  box-shadow:0 14px 44px rgba(0,8,28,.17);
+}
+.mv-app .fsa-field-compass::before {
+  content:'';
+  display:block;
+  position:absolute;
+  top:0;left:12px;right:12px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--at-cyan),var(--at-rose),transparent);
+}
+.mv-app .fsa-field-compass-orbit {
+  width:43px;height:43px;
+  display:grid;place-items:center;
+  flex-shrink:0;
+  position:relative;
+  color:var(--at-cyan);
+  border:1px solid color-mix(in srgb,var(--at-cyan) 55%,var(--at-border));
+  background:var(--at-aqua-soft);
+  border-radius:50%;
+}
+.mv-app .fsa-field-compass-orbit::before {
+  content:'';
+  position:absolute;inset:5px;
+  border-radius:50%;
+  border:1px dashed color-mix(in srgb,var(--at-cyan) 40%,transparent);
+  animation:field-compass-orbit 24s linear infinite;
+}
+.mv-app .fsa-field-compass-copy {min-width:0;display:flex;flex-direction:column;gap:6px;}
+.mv-app .fsa-field-compass-kicker {
+  display:flex;align-items:center;gap:7px;
+  color:var(--at-cyan);
+  font-size:10px;font-weight:850;letter-spacing:.115em;
+}
+.mv-app .fsa-field-compass-kicker i {
+  display:block;flex:0 0 7px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--at-cyan);
+  box-shadow:0 0 13px color-mix(in srgb,var(--at-cyan) 56%,transparent);
+}
+.mv-app .fsa-field-compass-copy>strong {
+  font:830 15.5px/1.22 'Outfit','DM Sans',system-ui,sans-serif;
+  letter-spacing:-.03em;
+  color:var(--at-text);
+  overflow-wrap:anywhere;
+}
+.mv-app .fsa-field-compass-copy>p {
+  font-size:11.8px;line-height:1.45;
+  color:var(--at-muted);margin:0;
+}
+.mv-app .fsa-field-compass-copy>small {
+  color:var(--at-muted);font-size:10px;line-height:1.4;
+}
+.mv-app .fsa-field-compass-action {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;min-height:46px;
+  border:1px solid var(--at-action);
+  border-radius:10px;padding:10px 12px;
+  color:var(--at-action-fg);
+  background:var(--at-action);
+  font-size:12px;font-weight:820;text-align:left;
+  transition:background .17s ease,transform .17s ease;
+}
+.mv-app .fsa-field-compass-action:hover {
+  background:var(--at-action-hover);
+  transform:translateY(-1px);
+}
+.mv-app .fsa-field-compass-action svg {flex:0 0 17px;}
+.mv-app .fsa-field-compass-shortcuts {display:grid;gap:6px;}
+.mv-app .fsa-field-compass-shortcuts button {
+  display:flex;align-items:center;gap:9px;
+  min-width:0;min-height:43px;
+  padding:9px 10px;border-radius:9px;
+  border:1px solid var(--at-border-soft);
+  background:var(--at-field);color:var(--at-muted);
+  text-align:left;font-size:12px;font-weight:760;
+  transition:background .15s ease,border-color .15s ease,color .15s ease;
+}
+.mv-app .fsa-field-compass-shortcuts button svg {color:var(--at-rose);flex:0 0 16px;}
+.mv-app .fsa-field-compass-shortcuts button:hover {
+  color:var(--at-text);background:var(--at-aqua-soft);
+  border-color:var(--at-cyan);
+}
+.mv-app .fsa-field-compass :is(button):focus-visible {
+  outline:3px solid var(--at-cyan);outline-offset:3px;
+}
+.mv-app .fsa-field-compass--rail {
+  grid-template-columns:minmax(0,1fr);
+  gap:12px;padding:15px 10px 11px;
+  border-radius:14px;
+}
+.mv-app .fsa-field-compass--rail .fsa-field-compass-orbit {
+  width:37px;height:37px;
+}
+.mv-app .fsa-field-compass--rail .fsa-field-compass-action {width:100%;}
+.mv-app .fsa-field-compass--rail .fsa-field-compass-shortcuts button:nth-child(n+3) {display:none;}
+.mv-app .fsa-field-compass--mobile {display:none;}
+@media(max-width:900px){
+  .mv-app .fsa-field-compass--rail {display:none;}
+  .mv-app .fsa-field-compass--mobile {
+    display:grid;
+    grid-template-columns:43px minmax(0,1fr) auto;
+    gap:10px 12px;
+    width:calc(100% - 24px);
+    max-width:1050px;
+    margin:10px auto 1px;
+    padding:13px;border-radius:14px;
+    align-items:center;
+  }
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-copy>strong {font-size:16px;}
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-copy>p {
+    font-size:12px;
+    display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:2;overflow:hidden;
+  }
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-action {
+    width:auto;max-width:160px;min-height:45px;
+  }
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-shortcuts {
+    grid-column:1/-1;
+    display:flex;gap:7px;overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity;
+    scrollbar-width:thin;
+  }
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-shortcuts button {
+    flex:0 0 auto;
+    min-height:44px;scroll-snap-align:start;
+  }
+  .mv-app .fsa-field-compass-note {
+    grid-column:1/-1;
+    display:flex;align-items:center;gap:6px;
+    min-width:0;
+    font-size:10px;line-height:1.3;color:var(--at-muted);
+  }
+  .mv-app .fsa-field-compass-note svg {color:var(--at-rose);flex-shrink:0;}
+}
+@media(max-width:570px){
+  .mv-app .fsa-field-compass--mobile {
+    grid-template-columns:minmax(0,1fr) auto;
+    padding:12px;
+  }
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-orbit {display:none;}
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-copy>strong {font-size:15px;}
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-copy>p {font-size:11.5px;}
+  .mv-app .fsa-field-compass--mobile .fsa-field-compass-action {
+    max-width:135px;font-size:11.5px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .mv-app .fsa-field-compass-orbit::before {animation:none;}
+  .mv-app .fsa-field-compass-action,
+  .mv-app .fsa-field-compass-shortcuts button {transition:none;}
+  .mv-app .fsa-field-compass-action:hover {transform:none;}
+}
+@keyframes field-compass-orbit {to {transform:rotate(360deg);}}

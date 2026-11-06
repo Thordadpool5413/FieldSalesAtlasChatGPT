@@ -1,0 +1,9 @@
+[
+  {
+    "name": "field-atlas-daily-source-health",
+    "cron": "0 6 * * *",
+    "handler": "refreshPublicSourceStatus",
+    "timezone": "America/New_York",
+    "payload": {}
+  }
+]

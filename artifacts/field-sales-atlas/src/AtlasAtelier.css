@@ -1,0 +1,25 @@
+/* Shared structural styles, followed by workflow and PWA geometry.
+   Art direction is owned by styles/miami-vice-system.css in main.tsx.
+   The retired Vice appearance layers are deliberately no longer imported. */
+@import './styles/atlas-tokens.css';
+@import './styles/atlas-shell.css';
+@import './styles/atlas-map.css';
+@import './styles/atlas-components.css';
+@import './styles/atlas-experience.css';
+@import './styles/atlas-clarity.css';
+/* Product direction v4 owns the guided command experience and navigation scale. */
+@import './styles/product-direction.css';
+/* iOS and installed-PWA surface, isolated from desktop components. */
+@import './styles/ios-experience.css';
+/* Native-feeling calendar and forms with explicit mobile layout ownership. */
+@import './styles/ios-detail-workflows.css';
+/* Standalone-only pull-to-refresh and transparent reconnect feedback. */
+@import './styles/ios-reliability.css';
+/* One final spatial hierarchy for desktop and mobile; structural repairs
+   intentionally supersede contradictory historical styles. */
+@import './styles/precision-density.css';
+/* Mobile Fit owns the final <=900px/PWA density and touch-safe overrides. */
+@import './styles/mobile-fit.css';
+/* Geometry for existing map and detail workflows. The vice-atlas surface has
+   its own appearance and responsive contract in miami-vice-system.css. */
+@import './styles/atlas-map-premiere.css';

@@ -1,0 +1,132 @@
+/* This component owns its responsive geometry. No global overrides. */
+.mv-app .atlas-v2 .atlas-telemetry-strip > .fsa-mission-rail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(150px,.66fr) minmax(0,2.45fr) minmax(155px,.72fr);
+  gap: 12px;
+  padding: 15px;
+  min-width: 0;
+  background:
+    radial-gradient(ellipse at 4% 4%,color-mix(in srgb,var(--at-cyan) 12%,transparent),transparent 48%),
+    radial-gradient(ellipse at 97% 85%,color-mix(in srgb,var(--at-rose) 9%,transparent),transparent 50%),
+    var(--at-surface);
+  border-bottom: 1px solid var(--at-border-soft);
+}
+.mv-app .atlas-v2 .fsa-mission-rail-intro {
+  display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0;
+}
+.mv-app .atlas-v2 .fsa-mission-eyebrow {
+  display: flex; align-items: center; gap: 6px; font-size: 10px;
+  font-weight: 830; letter-spacing: .085em; color: var(--at-cyan);
+}
+.mv-app .atlas-v2 .fsa-mission-rail-intro strong {
+  font: 800 clamp(16px,1.4vw,21px)/1.17 'Outfit','DM Sans',system-ui,sans-serif;
+  letter-spacing: -.03em; color: var(--at-text);
+}
+.mv-app .atlas-v2 .fsa-mission-rail-intro small,
+.mv-app .atlas-v2 .fsa-mission-rail-command > small {
+  font-size: 11px; line-height: 1.4; color: var(--at-muted);
+}
+.mv-app .atlas-v2 .fsa-mission-rail-cards {
+  display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; min-width: 0;
+}
+.mv-app .atlas-v2 .fsa-mission-card {
+  display: flex; flex-direction: column; min-width: 0; min-height: 116px;
+  padding: 12px; gap: 9px; text-align: left; border-radius: 12px;
+  border: 1px solid var(--at-border-soft);
+  color: var(--at-text);
+  background: color-mix(in srgb,var(--at-field) 88%,var(--at-surface));
+  transition: background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.mv-app .atlas-v2 .fsa-mission-card:hover:not(:disabled) {
+  background: color-mix(in srgb,var(--at-aqua-soft) 48%,var(--at-surface));
+  border-color: var(--at-cyan); transform: translateY(-2px);
+}
+.mv-app .atlas-v2 .fsa-mission-card-label {
+  display: flex; align-items: center; gap: 7px; font-size: 10px;
+  font-weight: 830; letter-spacing: .07em; color: var(--at-cyan);
+}
+.mv-app .atlas-v2 .fsa-mission-card-label svg:last-child { margin-left: auto; }
+.mv-app .atlas-v2 .fsa-mission-card:nth-child(2) .fsa-mission-card-label { color: var(--at-rose); }
+.mv-app .atlas-v2 .fsa-mission-card:nth-child(3) .fsa-mission-card-label { color: #a897ef; }
+.mv-app .atlas-v2 .fsa-mission-card > strong {
+  font: 760 14px/1.2 'Outfit','DM Sans',system-ui,sans-serif;
+  color: var(--at-text); overflow-wrap: anywhere;
+}
+.mv-app .atlas-v2 .fsa-mission-card > small { font-size: 11px; color: var(--at-muted); line-height: 1.4; }
+.mv-app .atlas-v2 .fsa-mission-rail-command {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+}
+.mv-app .atlas-v2 .fsa-mission-rail-command button {
+  display: flex; justify-content: center; align-items: center; gap: 9px;
+  min-height: 65px; padding: 10px; border-radius: 10px;
+  background: var(--at-action); color: var(--at-action-fg);
+  border: 1px solid var(--at-action); font-size: 12px; font-weight: 790;
+}
+.mv-app .atlas-v2 .fsa-mission-rail-command button:hover {
+  background: var(--at-action-hover); border-color: var(--at-action-hover);
+}
+.mv-app .atlas-v2 .fsa-mission-rail-command button span {
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.mv-app .atlas-v2 .fsa-mission-rail-command > small { text-align: center; font-size: 10px; }
+.mv-app .atlas-v2 .fsa-mission-card:focus-visible,
+.mv-app .atlas-v2 .fsa-mission-rail-command button:focus-visible {
+  outline: 3px solid var(--at-cyan); outline-offset: 3px;
+}
+@media (max-width: 1280px) {
+  .mv-app .atlas-v2 .atlas-telemetry-strip > .fsa-mission-rail { grid-template-columns: minmax(0,1fr); }
+  .mv-app .atlas-v2 .fsa-mission-rail-command {
+    flex-direction: row; align-items: center; justify-content: space-between;
+  }
+  .mv-app .atlas-v2 .fsa-mission-rail-command button { min-height: 48px; }
+  .mv-app .atlas-v2 .fsa-mission-rail-command > small { text-align: right; }
+}
+@media (max-width: 720px) {
+  .mv-app .atlas-v2 .atlas-telemetry-strip > .fsa-mission-rail { padding: 12px; }
+  .mv-app .atlas-v2 .fsa-mission-rail-cards {
+    grid-auto-flow: column; grid-auto-columns: minmax(236px, 78vw);
+    grid-template-columns: none; overflow-x: auto; gap: 9px;
+    overscroll-behavior-inline: contain; scroll-snap-type: x mandatory;
+    scrollbar-width: thin; padding-bottom: 6px;
+  }
+  .mv-app .atlas-v2 .fsa-mission-card { min-height: 130px; scroll-snap-align: start; }
+  .mv-app .atlas-v2 .fsa-mission-rail-command { flex-direction: column; align-items: stretch; }
+  .mv-app .atlas-v2 .fsa-mission-rail-command button { justify-content: space-between; min-height: 48px; }
+  .mv-app .atlas-v2 .fsa-mission-rail-command > small { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mv-app .atlas-v2 .fsa-mission-card { transition: none; }
+  .mv-app .atlas-v2 .fsa-mission-card:hover:not(:disabled) { transform: none; }
+}
+
+/* Match the command ribbon to the functional map. */
+.mv-app.atlas-command-v5 .atlas-reimagined .atlas-telemetry-strip > .fsa-mission-rail {
+  border-bottom:1px solid var(--at-border-soft);
+  background:
+    linear-gradient(112deg,
+      color-mix(in srgb,var(--at-cyan) 7%,var(--at-surface)),
+      color-mix(in srgb,var(--at-rose) 5%,var(--at-surface)));
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-mission-rail-intro strong {
+  font-size:clamp(18px,1.6vw,23px);letter-spacing:-.04em;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-mission-card {
+  border-radius:12px;min-height:111px;padding:13px;
+  background:color-mix(in srgb,var(--at-field) 84%,var(--at-surface));
+  border-color:var(--at-border-soft);
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-mission-card > strong {
+  font-size:15px;line-height:1.24;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-mission-card > small {
+  font-size:11.5px;line-height:1.4;
+}
+.mv-app.atlas-command-v5 .atlas-reimagined .fsa-mission-rail-command button {
+  border-radius:12px;min-height:67px;
+}
+@media (max-width:720px) {
+  .mv-app.atlas-command-v5 .atlas-reimagined .fsa-mission-card {
+    min-height:127px;
+  }
+}

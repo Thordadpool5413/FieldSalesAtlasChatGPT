@@ -1,0 +1,23 @@
+.mv-app .fsa-hold-scrim{position:fixed;inset:0;z-index:550;display:grid;place-items:center;padding:16px;background:rgba(1,9,24,.78);backdrop-filter:blur(9px)}
+.mv-app .fsa-hold-sheet{width:min(510px,100%);max-height:calc(100dvh - 24px);overflow-y:auto;border:1px solid var(--at-cyan);border-radius:20px;background:radial-gradient(ellipse at 100% 0%,rgba(255,76,164,.13),transparent 65%),var(--at-surface);padding:24px;color:var(--at-text);box-shadow:0 30px 96px rgba(0,8,30,.55)}
+.mv-app .fsa-hold-sheet>header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:18px}
+.mv-app .fsa-hold-sheet>header span{font-size:10px;letter-spacing:.1em;font-weight:800;color:var(--at-cyan)}
+.mv-app .fsa-hold-sheet>header h2{font:800 clamp(24px,3vw,31px)/1.1 'Outfit',sans-serif;letter-spacing:-.045em;margin:7px 0;color:var(--at-text)}
+.mv-app .fsa-hold-sheet>header p{font-size:12px;line-height:1.5;color:var(--at-muted);margin:0}
+.mv-app .fsa-hold-sheet>header button{height:44px;width:44px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--at-border);background:var(--at-field);color:var(--at-text)}
+.mv-app .fsa-hold-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.mv-app .fsa-hold-grid label{display:flex;min-width:0;flex-direction:column;gap:7px;font-size:12px;font-weight:750}
+.mv-app .fsa-hold-grid label.wide{grid-column:1/-1}
+.mv-app .fsa-hold-grid :is(input,select){width:100%;min-width:0;min-height:48px;padding:10px;border:1px solid var(--at-border);border-radius:10px;background:var(--at-field);color:var(--at-text);font-size:16px}
+.mv-app .fsa-hold-grid :is(input,select):focus-visible,.mv-app .fsa-hold-sheet button:focus-visible{outline:3px solid var(--at-cyan);outline-offset:2px}
+.mv-app .fsa-hold-disclosure{color:var(--at-muted);font-size:11px;line-height:1.5;padding:10px 0}
+.mv-app .fsa-hold-error{border:1px solid var(--at-rose);background:var(--at-rose-soft);border-radius:9px;padding:10px;font-size:12px}
+.mv-app .fsa-hold-sheet>footer{display:flex;gap:9px;justify-content:flex-end;margin-top:17px}
+.mv-app .fsa-hold-sheet>footer button{min-height:46px;padding:10px 14px;border:1px solid var(--at-border);border-radius:10px;font-weight:800;font-size:12px;background:var(--at-field);color:var(--at-text)}
+.mv-app .fsa-hold-sheet>footer button.fsa-hold-primary{background:var(--at-action);border-color:var(--at-action);color:var(--at-action-fg)}
+.mv-app .fsa-hold-sheet button:disabled{opacity:.56}
+.mv-app .fsa-calendar-header-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.mv-app .fsa-calendar-header-actions .op-btn{min-height:45px}
+.mv-app .op-calendar-event.availability{border-left:3px solid var(--at-rose);background:var(--at-rose-soft);color:var(--at-text)}
+.mv-app .fsa-agenda-type.availability{background:var(--at-rose-soft);color:var(--at-rose)}
+@media(max-width:650px){.mv-app .fsa-hold-scrim{padding:0;align-items:end}.mv-app .fsa-hold-sheet{width:100%;border-radius:22px 22px 0 0;padding:23px 16px calc(19px + env(safe-area-inset-bottom))}.mv-app .fsa-hold-sheet>footer button.fsa-hold-primary{flex:1}}
