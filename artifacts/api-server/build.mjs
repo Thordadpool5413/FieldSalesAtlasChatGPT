@@ -28,6 +28,16 @@ async function buildAll() {
     // - uses native modules and loads them dynamically (e.g. sharp)
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
+      // Keep declared runtime dependencies in node_modules instead of copying
+      // their implementation/data into the API bundle. Workspace packages and
+      // Pino remain bundled so package resolution and worker assets stay stable.
+      "@js-temporal/polyfill",
+      "cookie-parser",
+      "cors",
+      "drizzle-orm",
+      "express",
+      "geo-tz",
+      "papaparse",
       "*.node",
       "sharp",
       "better-sqlite3",
