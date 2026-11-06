@@ -651,6 +651,7 @@ function Product(){
               </button>;
             })}
           </nav>
+          <div className="fsa-sidebar-scroll" role="region" aria-label="Workspace tools">
           <button type="button" className="fsa-sidebar-create" aria-haspopup="dialog"
             aria-expanded={quickAddOpen} onClick={()=>setQuickAddOpen(true)}>
             <Plus size={20}/><span>New field record</span><ArrowRight size={17}/>
@@ -686,6 +687,7 @@ function Product(){
               </button>
             </nav>
           </details>
+          </div>
           <div className="fsa-sidebar-bottom">
             <button type="button" className="vice-rail-settings" onClick={()=>setTrainerProfilesOpen(true)}><Settings size={19}/><span>Trainer settings</span></button>
           </div>

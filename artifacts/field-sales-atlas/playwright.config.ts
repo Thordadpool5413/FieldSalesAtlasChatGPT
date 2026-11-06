@@ -18,8 +18,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 1000 } } },
-    { name: 'mobile', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } },
+    { name: 'desktop', testMatch: 'app.spec.ts', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 1000 } } },
+    { name: 'mobile', testMatch: 'app.spec.ts', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } },
+    { name: 'laptop', testMatch: 'layout.spec.ts', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
   ],
   webServer: {
     command: 'pnpm --dir ../.. run start:preview',

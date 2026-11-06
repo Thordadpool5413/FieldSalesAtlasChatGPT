@@ -185,7 +185,7 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
   }
   return <div className="op-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onDismiss();}}>
     <div className="op-modal large" role="dialog" aria-modal="true" aria-label="Personal travel settings">
-      <div className="op-modal-head"><div><h2>Personal travel settings</h2><p>These settings are shared with anyone holding your workspace link.</p></div><button className="op-icon-button" onClick={onDismiss}><X size={20}/></button></div>
+      <div className="op-modal-head"><div><h2>Personal travel settings</h2><p>These settings are shared with anyone holding your workspace link.</p></div><button className="op-icon-button" aria-label="Close personal travel settings" onClick={onDismiss}><X size={20}/></button></div>
       <div className="op-modal-body">
         <Kicker>01 · HOME AIRPORTS</Kicker>
         <div className="travel-prefs-airports">
@@ -227,9 +227,9 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
         <label className="travel-checkbox"><input type="checkbox" checked={form.preferNonstop} onChange={e=>setField('preferNonstop',e.target.checked)}/> Prefer nonstop itineraries</label>
         <div className="travel-fields"><label>Preferred airlines (optional)<input value={form.preferredAirlines} onChange={e=>setField('preferredAirlines',e.target.value)} placeholder="United, Delta, American…"/></label></div>
         <Note warn>These are planning assumptions only. Airport drive time is entered by you. Road distance/time uses a rough model and can differ substantially from actual traffic, geography or season.</Note>
-        <div className="travel-actions"><button className="op-btn" onClick={onDismiss}>Cancel</button>
-          <button className="op-btn primary" onClick={()=>onSave(safeTravelPrefs(form))} disabled={busy||!form.homeAirports.length}><Check size={15}/>{busy?'Saving...':'Save personal travel profile'}</button></div>
       </div>
+      <div className="travel-actions op-modal-footer"><button className="op-btn" onClick={onDismiss}>Cancel</button>
+        <button className="op-btn primary" onClick={()=>onSave(safeTravelPrefs(form))} disabled={busy||!form.homeAirports.length}><Check size={15}/>{busy?'Saving...':'Save personal travel profile'}</button></div>
     </div>
   </div>;
 }

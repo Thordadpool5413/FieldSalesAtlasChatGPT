@@ -415,7 +415,9 @@ export default function OperationsModal(){
               <button className="op-btn soft" onClick={copyInvite}><Copy size={15}/> Copy</button></div>
           </label>
         </div>}
-        {error&&<div className="op-error" role="alert" style={{marginTop:16}}><CircleAlert size={16}/><span>{error}</span></div>}
+      </div>
+      <div className="op-modal-footer">
+        {error&&<div className="op-error" role="alert"><CircleAlert size={16}/><span>{error}</span></div>}
         <div className="op-form-actions">
           {kind==='coaching'&&!!modal.record&&<button className="op-btn danger" disabled={saving||busy} onClick={deleteCoaching}><Trash2 size={14}/> Delete record</button>}
           {kind==='visit'&&!!modal.record&&<button className="op-btn danger" disabled={saving||busy} onClick={deleteVisit}><Trash2 size={14}/> Delete visit</button>}

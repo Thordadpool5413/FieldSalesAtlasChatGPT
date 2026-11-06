@@ -1,5 +1,5 @@
-/* Ocean Drive: shared art direction. Feature styles own behavior and geometry;
-   this module owns palette, type, chrome and the Atlas/travel composition. */
+/* Ocean Drive: shared art direction. Feature styles own their behavior;
+   this module owns responsive layout, palette, type and shared chrome. */
 html[data-field-atlas-theme='dark'],
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='dark'] {
   /* Derived from the supplied logo: cyan lettering, magenta ATLAS,
@@ -44,45 +44,48 @@ html[data-field-atlas-theme='light'],
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary,.op-btn-primary) {background:var(--at-action);border-color:var(--at-action);color:var(--at-action-fg);}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(input,select,textarea) {border-color:var(--at-border);border-radius:7px;color:var(--at-text);}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {grid-template-columns:220px minmax(0,1fr);}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {padding:26px 14px 18px;background:var(--at-rail);border-right:1px solid var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {padding:16px 12px 12px;background:var(--at-rail);border-right:1px solid var(--at-border-soft);overflow:hidden;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar::before,
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar::after {display:none;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-brand {height:auto;min-height:0;max-height:none;overflow:visible;border:0;margin:0 0 20px;padding:0;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-brand {display:block;flex:0 1 auto;width:100%;height:auto;aspect-ratio:1;padding:0;border:0;border-radius:10px;overflow:hidden;background:#081226;}
+/* Brand and main sections keep their space; only secondary tools scroll. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-brand {display:block;flex:0 0 auto;align-self:center;width:clamp(96px,17dvh,144px);height:clamp(96px,17dvh,144px);min-height:0;max-height:none;overflow:hidden;border:0;border-radius:10px;margin:0 0 12px;padding:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-brand {display:block;flex:0 0 auto;width:100%;height:100%;aspect-ratio:1;padding:0;border:0;border-radius:10px;overflow:hidden;background:#081226;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-brand img {display:block;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-label {display:none;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-nav {gap:4px;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link {min-height:48px;padding:11px 14px;font-size:15px;font-weight:500;color:var(--at-muted);border:0;border-radius:7px;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-nav {flex:0 0 auto;gap:2px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link {flex:0 0 auto;min-height:44px;padding:10px 12px;font-size:14px;line-height:1.4;font-weight:500;color:var(--at-muted);border:0;border-radius:7px;box-shadow:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active {color:var(--at-cyan);background:var(--at-aqua-soft);box-shadow:inset 2px 0 var(--at-rose);}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active::before,
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active::after {display:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link svg {stroke-width:1.6;color:currentColor;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-create {display:flex;align-items:center;gap:9px;min-height:44px;padding:10px 14px;margin:18px 0;background:transparent;border:1px solid var(--at-border);border-radius:7px;color:var(--at-cyan);box-shadow:none;font-size:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-scroll {flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--at-border) transparent;scrollbar-gutter:stable;margin-top:12px;padding:12px 2px 4px;border-top:1px solid var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-create {display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:10px 12px;margin:0 0 12px;background:transparent;border:1px solid var(--at-border);border-radius:7px;color:var(--at-cyan);box-shadow:none;font-size:12px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-create svg:last-child {display:none;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools {padding-top:16px;border-top:1px solid var(--at-border-soft);}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link {min-height:42px;font-size:12px;padding:9px 13px;gap:10px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools {padding:0;border:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link {min-height:44px;font-size:12px;padding:10px;gap:10px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link svg {width:16px;height:16px;flex-basis:16px;color:var(--at-subtle);}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools {margin-top:16px;border-top:1px solid var(--at-border-soft);padding-top:10px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools summary {font-size:12px;font-weight:500;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-bottom {padding:16px 0 0;margin-top:auto;border-color:var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-bottom {flex:0 0 auto;padding:8px 0 0;margin-top:8px;border-color:var(--at-border-soft);}
 .vice-rail-settings {display:flex;align-items:center;gap:11px;min-height:44px;width:100%;padding:10px 14px;background:transparent;border:0;color:var(--at-muted);font-size:12px;text-align:left;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {min-height:66px;padding:10px 28px;gap:16px;background:var(--at-rail);border-color:var(--at-border-soft);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {position:sticky;top:0;min-height:64px;padding:9px 28px;gap:12px;background:var(--at-rail);border-color:var(--at-border-soft);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product #field-atlas-main {scroll-margin-top:80px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header::after {display:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-crumb {font-size:13px;letter-spacing:0;font-weight:400;white-space:nowrap;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-crumb>span {text-transform:capitalize;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-crumb strong {font-weight:500;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {margin-left:auto;min-width:180px;min-height:40px;font-weight:400;font-size:12px;box-shadow:none;background:var(--at-field);border-radius:7px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {margin-left:auto;min-width:180px;min-height:44px;font-weight:400;font-size:12px;box-shadow:none;background:var(--at-field);border-radius:7px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger svg {color:var(--at-muted);}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger kbd {font-size:10px;border:0;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-focus-workspace {display:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-sync-indicator {font-size:10px;font-weight:400;color:var(--at-muted);background:transparent;border:0;box-shadow:none;white-space:nowrap;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-sync-dot {box-shadow:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header-trainers {margin-left:0;gap:8px;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-switch {min-height:40px;padding:7px 12px;border-radius:7px;background:transparent;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-switch {min-height:44px;padding:7px 12px;border-radius:7px;background:transparent;box-shadow:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-description small {display:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-description select {width:105px;font-size:12px;font-weight:500;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control {border:0;padding:0;background:transparent;}
-.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button {width:36px;min-height:40px;padding:9px;background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button {width:44px;min-height:44px;padding:10px;background:transparent;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button span {display:none;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button.active {color:var(--at-cyan);background:var(--at-aqua-soft);}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header-settings {background:transparent;border:0;}
@@ -250,16 +253,63 @@ html[data-field-atlas-theme='light'],
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {background:transparent;border:0;border-bottom:1px solid var(--at-border-soft);border-radius:0;box-shadow:none;padding:0 0 20px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-description {gap:0;}
 
+/* Fit controls to their containers; only the containing search field draws a border. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-toolbar {flex-wrap:wrap;gap:10px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-search {min-height:44px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-search input {min-width:0;min-height:42px;border:0;border-radius:0;background:transparent;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-search:focus-within {outline:2px solid var(--at-cyan);outline-offset:2px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-search input:focus-visible {outline:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-more-menu {max-height:min(600px,calc(100dvh - 92px));overflow-y:auto;overscroll-behavior:contain;scroll-padding:8px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-modal {display:flex;flex-direction:column;overflow:hidden;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-modal-head,.trainer-dialog-head,.trainer-switch,.trainer-dialog-footer) {flex:0 0 auto;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-modal-body,.trainer-dialog-body) {flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-block:16px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-modal-footer {flex:0 0 auto;margin:0;padding:16px 24px;border-top:1px solid var(--at-border-soft);background:var(--at-surface);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-modal-footer .op-form-actions {display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:0;margin:0;border:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-modal-footer>.op-error {margin:0 0 12px;max-height:20dvh;overflow-y:auto;}
+
+/* Laptop windows and browser zoom reduce height as well as width. Keep the
+   photograph, but give the map and working content the first-screen space. */
+@media(min-width:901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.vice-masthead,.fao>.vice-masthead) {min-height:clamp(148px,22dvh,212px);}
+  .vice-masthead .vice-masthead-content {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 24px;width:100%;max-width:920px;padding:24px 28px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-masthead h1 {grid-column:1;grid-row:1;max-width:650px;margin:0;font-size:clamp(36px,3vw,46px);line-height:1.06;}
+  .vice-masthead p {grid-column:1;grid-row:2;max-width:600px;margin:0;font-size:13px;}
+  .vice-masthead .vice-primary {grid-column:2;grid-row:1/3;align-self:center;min-height:44px;white-space:nowrap;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-primary {font-size:17px;gap:12px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page {gap:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading {gap:10px 16px;padding:14px 16px 10px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text h2 {font-size:26px;white-space:nowrap;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions :is(button,select) {display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;white-space:nowrap;font-size:12px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions>select:not(.atlas-mobile-region) {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses {min-height:44px;margin:0 16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>button {min-height:44px;padding:8px 6px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-body {margin:12px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-frame {height:clamp(340px,55dvh,520px);min-height:340px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-focused .mv-map-frame {height:calc(100dvh - 200px);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao {gap:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head {min-height:136px;flex-wrap:wrap;gap:16px;padding:24px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head>div:first-child {flex:1 1 280px;min-width:0;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head h1 {font-size:clamp(30px,2.6vw,38px);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head .op-head-actions {padding-top:0;max-width:100%;justify-content:flex-start;}
+}
+@media(min-width:1201px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text {flex:0 0 auto;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-field.atlas-destination {flex:1 1 220px;width:auto;max-width:320px;min-width:200px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility {flex:0 0 auto;width:auto;margin-left:auto;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions {width:auto;}
+}
+
 @media(min-width:901px) and (max-width:1200px) {
-  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {grid-template-columns:185px minmax(0,1fr);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {grid-template-columns:200px minmax(0,1fr);}
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {padding-inline:9px;}
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {padding-inline:20px;gap:10px;}
-  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {min-width:42px;width:42px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {min-width:44px;width:44px;}
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-sync-indicator {display:none;}
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-body {grid-template-columns:minmax(0,1fr) 210px;}
   .vice-map-welcome {padding:22px 18px;}
 }
 @media(max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-modal-footer {padding:12px 16px calc(12px + env(safe-area-inset-bottom));}
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {display:block;}
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {display:none;}
   /* Replaces legacy mobile-fit's fixed 54px header contract. */

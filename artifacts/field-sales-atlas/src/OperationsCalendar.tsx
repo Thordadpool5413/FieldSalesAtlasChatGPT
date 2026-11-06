@@ -200,10 +200,11 @@ export function CalendarPage(){
         <button type="button" className="op-btn" onClick={()=>ctx.go('air')}>
           <CalendarDays size={16}/> Plan travel
         </button>
-        <button type="button" className="op-btn" onClick={openHold} disabled={ctx.identity!=='member'}>
+        {managers.length>0&&<button type="button" className="op-btn" onClick={openHold} disabled={ctx.identity!=='member'}>
           <Plus size={16}/> Block trainer time
-        </button>
-        <button className="op-btn" onClick={()=>exportCalendar(visits,trips,managers,availability,ctx.trainerProfiles)} disabled={ctx.identity!=='member'}><ArrowDownToLine size={16}/> Export to Outlook (.ics)</button>
+        </button>}
+        <button className="op-btn" aria-label="Export to Outlook (.ics)" title="Download a calendar file for Outlook or another calendar app"
+          onClick={()=>exportCalendar(visits,trips,managers,availability,ctx.trainerProfiles)} disabled={ctx.identity!=='member'}><ArrowDownToLine size={16}/> Export calendar</button>
         <button className="op-btn primary"
           onClick={()=>managers.length?ctx.open('visit'):openHold()}
           disabled={ctx.identity!=='member'}>

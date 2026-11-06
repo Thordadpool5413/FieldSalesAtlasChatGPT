@@ -587,7 +587,8 @@ export function DataPage(){
         </div>
       </div>
     </div>
-    <BackendReadiness/>
+    {ctx.identity==='member'?<BackendReadiness/>:
+      <p className="atlas-screen-loading" role="status">{ctx.identity==='loading'?'Opening workspace diagnostics…':'Open your workspace to view diagnostics.'}</p>}
     <section className="op-section"><div className="op-section-head"><div><h2>Data provenance and reliability</h2><p>See what is live, what is editable and what still requires an external connector.</p></div></div>
       <div className="op-card op-side-pane">
         <div className="op-source-row"><Globe2 size={19}/><div><strong>Counties, places and centroids · 2026 U.S. Census Gazetteer</strong><p>Geographic names and coordinates from official published records. {geo.incomplete?'Selected-state directory reported partial coverage.':'Selected-state directory available when loaded.'} <a href="https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html" target="_blank" rel="noreferrer">Source</a></p></div></div>
