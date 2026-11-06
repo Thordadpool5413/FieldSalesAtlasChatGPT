@@ -858,10 +858,10 @@ function Product(){
       </nav>
       <div className="mv-shell">
         <main id="field-atlas-main" tabIndex={-1} className={'mv-content op-content'+(view==='home'?' mv-content-map':' mv-content-inner')}>
-          {error&&<div className="op-error" role="alert"><CircleAlert size={17}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Dismiss error"><X size={15}/></button></div>}
+          {error&&identity!=='error'&&<div className="op-error" role="alert"><CircleAlert size={17}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Dismiss error"><X size={15}/></button></div>}
           {notice&&<div className="op-notice" role="status"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss notice"><X size={15}/></button></div>}
           {identity==='loading'&&<div className="op-alert"><RefreshCw size={18}/><span>Opening your workspace. No account required.</span></div>}
-          {identity==='error'&&<div className="op-alert warn"><CircleAlert size={18}/><span>This workspace link could not be opened. Existing records have not been changed.</span>
+          {identity==='error'&&<div className="op-alert warn" role="alert"><CircleAlert size={18}/><span>{error||'This workspace link could not be opened.'} Existing records have not been changed.</span>
             <button className="op-btn tiny" onClick={()=>initializeWorkspace().then(()=>reload()).catch(e=>setError(errorText(e)))}>Retry link</button>
             <button className="op-btn tiny" onClick={startFreshWorkspace}>Create separate workspace</button>
           </div>}
