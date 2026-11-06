@@ -214,20 +214,20 @@ export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
   }
   return <>
     <button type='button' className='fsa-command-trigger' onClick={()=>setOpen(true)}
-      aria-label='Search people, places, trips and workspace tools' title='Search Field Sales Atlas (Ctrl or Command + K)'>
-      <Search size={19}/><span>Search the field</span><kbd>⌘ K</kbd>
+      aria-label='Search all workspace data: people, places, trips and tools' title='Search all workspace data (Ctrl or Command + K)'>
+      <Search size={19}/><span>Search all workspace</span><kbd>⌘ K</kbd>
     </button>
     {open&&createPortal(<div className='fsa-command-backdrop' onMouseDown={event=>{
       if(event.target===event.currentTarget)setOpen(false);
     }}>
-      <div className='fsa-command-dialog' ref={dialogRef} role='dialog' aria-modal='true' aria-label='Search the Field Sales Atlas'>
+      <div className='fsa-command-dialog' ref={dialogRef} role='dialog' aria-modal='true' aria-label='Search all workspace data'>
         <div className='fsa-command-input'>
           <Search size={22}/>
           <input ref={field} value={query} onChange={event=>{setQuery(event.target.value);setIndex(0);}}
             role='combobox' aria-expanded={Boolean(results.length)} aria-autocomplete='list'
             aria-controls='fsa-finder-results'
             aria-activedescendant={results.length?'fsa-find-'+Math.min(index,results.length-1):undefined}
-            placeholder='Managers, airports, Census ZCTAs, flights or tools...'
+             placeholder='Search all workspace data: managers, airports, visits, trips or tools...'
             onKeyDown={event=>{
               if(event.key==='ArrowDown'&&results.length){event.preventDefault();setIndex(i=>(i+1)%results.length);}
               if(event.key==='ArrowUp'&&results.length){event.preventDefault();setIndex(i=>(i-1+results.length)%results.length);}

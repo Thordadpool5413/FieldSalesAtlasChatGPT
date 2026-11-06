@@ -1,6 +1,6 @@
 
 import { geoAlbersUsa,geoGraticule,geoMercator,geoPath } from 'd3-geo';
-import { ArrowRight,CalendarCheck,CalendarClock,ChevronDown,Compass,Layers,MapPin,Maximize2,Minimize2,Plane,PlaneTakeoff,Plus,Search,Sparkles,Users,X } from 'lucide-react';
+import { ArrowRight,CalendarCheck,CalendarClock,ChevronDown,Compass,Info,Layers,List,Map as MapIcon,MapPin,Maximize2,Minimize2,Plane,PlaneTakeoff,Plus,Search,Sparkles,Users,X } from 'lucide-react';
 import type { MouseEvent as SvgMouseEvent,PointerEvent as SvgPointerEvent } from 'react';
 import { lazy,Suspense,useEffect,useMemo,useRef,useState } from 'react';
 import { feature,merge } from 'topojson-client';
@@ -39,6 +39,13 @@ function canadaCode(properties:Record<string,unknown>){
 function validLocation(p:Manager){
   return typeof p.lat==='number'&&typeof p.lon==='number'&&Number.isFinite(p.lat)&&Number.isFinite(p.lon);
 }
+function sourceTimestamp(value:string){
+  if(!value)return 'Not reported';
+  const date=new Date(value);
+  return Number.isFinite(date.getTime())
+    ?date.toLocaleString([],{dateStyle:'medium',timeStyle:'short'})
+    :'Not reported';
+}
 export default function MiamiMapHome({atlas,airports,managers,assignments,theme,onDestination,onAddManager}:Props){
   const ctx=useOp();
   const {trainerProfiles}=ctx;
@@ -62,6 +69,8 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   const [showTowns,setShowTowns]=useState(true);
   const [trainer,setTrainer]=useState('all');
   const [query,setQuery]=useState('');
+  const [listQuery,setListQuery]=useState('');
+  const [viewMode,setViewMode]=useState<'map'|'list'>('map');
   const [searchIndex,setSearchIndex]=useState(0);
   // At a selected state, show the full set of scheduled gateway options.
   // The national view remains restrained to avoid overwhelming the map.
@@ -550,7 +559,23 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
     ?territoryPeople(managers,assignments,inspectedRegion.code).length:0;
   const inspectedAirportCount=inspectedRegion
     ?airports.filter(airport=>airport.state===inspectedRegion.code&&airport.scheduled).length:0;
-  return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')}>
+  const setupComplete=managers.length>0&&assignments.length>0&&visits.length>0;
+  const listTerm=listQuery.trim().toLowerCase();
+  const listRegions=(countryScope==='canada'?CANADA_REGIONS:STATES)
+    .filter(item=>!listTerm||(item.name+' '+item.code).toLowerCase().includes(listTerm));
+  const listTerritories=assignments.filter(assignment=>{
+    const manager=managers.find(person=>person.id===assignment.managerId);
+    return !listTerm||[assignment.areaName,assignment.areaCode,assignment.stateCode,manager?.name]
+      .filter(Boolean).join(' ').toLowerCase().includes(listTerm);
+  });
+  const listManagers=managers.filter(manager=>{
+    return !listTerm||[manager.name,manager.baseCity,manager.baseState,manager.trainer]
+      .filter(Boolean).join(' ').toLowerCase().includes(listTerm);
+  });
+  const listAirports=mapAirports.map(item=>item.airport).filter(airport=>
+    !listTerm||(airport.iata+' '+airport.name+' '+airport.state).toLowerCase().includes(listTerm)
+  ).slice(0,40);
+  return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')+(setupComplete?' atlas-setup-complete':'')+(viewMode==='list'?' atlas-list-mode':'')}>
     {!focusMap && <OceanMasthead title="Your field. In perspective."
       description="Explore territories. Connect with your people. Plan the next visit."
       mobileDescription="Explore territories. Plan your next visit."
@@ -558,7 +583,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
     <div className={'atlas-mission-layout'+(region?' has-region':'')}>
       <div className="fsa-map-heading">
         <div className="atlas-field atlas-destination">
-          <label htmlFor="atlas-destination">Find a state, manager or airport</label>
+          <label htmlFor="atlas-destination">Search this map</label>
           <div className="mv-search atlas-search">
             <Search size={19}/>
             <input id="atlas-destination" ref={searchInput}
@@ -570,11 +595,11 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
                 else if(e.key==='Enter'&&searched.length){e.preventDefault();pickSearch(searched[searchIndex]||searched[0]);}
                 else if(e.key==='Escape'){setQuery('');setSearchIndex(0);}
               }}
-              placeholder={region?(focusedManager?.name||region.name):'Find a territory, person or airport'}
+              placeholder={region?(focusedManager?.name||region.name):'Search this map: state, manager or airport'}
               role="combobox" aria-autocomplete="list" aria-expanded={Boolean(query)}
               aria-controls={query?'atlas-search-options':undefined}
               aria-activedescendant={query&&searched.length?'atlas-search-option-'+searchIndex:undefined}
-              aria-label="Search for the place you are going"/>
+              aria-label="Search this map for a state, manager or airport"/>
             {region&&!query&&<button type="button" className="atlas-clear" aria-label="Clear destination"
               onClick={()=>{setRegion(null);setFocusedManager(null);searchInput.current?.focus();}}><X size={16}/></button>}
             {query&&<div className="mv-search-results" role="listbox" id="atlas-search-options" aria-label="Matching destinations">
@@ -703,9 +728,127 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
                ?(region?(visitCounts[region.code]||0):Object.values(visitCounts).reduce((a,b)=>a+b,0))+' scheduled visits in the next '+visitHorizon+' days'
              :mapLens==='airports'
                ?(region?selectedAirports:airports.filter(a=>a.scheduled)).length+' listed gateways'
-               :(region?relatedManagers.length:managers.length)+' saved managers'}
+              :(region?relatedManagers.length:managers.length)
+                ?(region?relatedManagers.length:managers.length)+' saved managers'
+                :airportLayer==='none'?'No saved managers or territories':'Airport markers are public references'}
          </div>
        </div>
+       <div className="atlas-map-view-switch" role="group" aria-label="Choose map or list display">
+         <span>View</span>
+         <button type="button" data-testid="map-view-map" className={viewMode==='map'?'active':''}
+           aria-pressed={viewMode==='map'} onClick={()=>setViewMode('map')}>
+           <MapIcon size={16}/> Map
+         </button>
+         <button type="button" data-testid="map-view-list" className={viewMode==='list'?'active':''}
+           aria-pressed={viewMode==='list'} onClick={()=>setViewMode('list')}>
+           <List size={16}/> List
+         </button>
+       </div>
+       <details className="atlas-data-sources" data-testid="data-sources">
+         <summary><Info size={15}/><span>Data sources & freshness</span><ChevronDown size={14}/></summary>
+         <div className="atlas-data-source-list">
+           <article data-testid="source-workspace">
+             <strong>Saved managers, territories and visits</strong>
+             <span>Workspace records · {ctx.syncStatus==='live'?'live connection':ctx.syncStatus==='offline'?'connection offline':ctx.syncStatus==='connecting'?'connecting':'recently updated'}.</span>
+             <small>Last successful refresh: {sourceTimestamp(ctx.lastSyncAt)}</small>
+           </article>
+           <article data-testid="source-airports">
+             <strong>Airport location markers</strong>
+             <span>Public OurAirports reference directory · {ctx.airportSource==='live'?'current provider response':ctx.airportSource==='cached'?'cached public snapshot':ctx.airportSource==='starter'?'limited starter fallback':'loading'}.</span>
+             <small>Directory checked: {sourceTimestamp(ctx.airportCheckedAt)}. Airport dots are locations, not live flights.</small>
+           </article>
+           <article data-testid="source-flight-status">
+             <strong>Flight status and availability</strong>
+             <span>Not included in airport markers. Flight DNA shows separate FAA airport advisories; these are not airline schedules, seat availability or a booked-flight feed.</span>
+           </article>
+           <article data-testid="source-geography">
+             <strong>Regional boundaries and basemap</strong>
+             <span>{ctx.geo.source||'Census geography reference'} · loaded on demand for a selected U.S. region. {showLiveMap&&liveReady?'OpenFreeMap public vector tiles are loaded for the basemap.':'The bundled vector map is shown until public tiles load.'}</span>
+             <small>Boundary refresh time is not provided by the source.</small>
+           </article>
+         </div>
+       </details>
+       {viewMode==='list'&&<section className="atlas-readable-list" aria-labelledby="atlas-readable-list-title" data-testid="atlas-readable-list">
+         <header className="atlas-readable-list-head">
+           <div><h3 id="atlas-readable-list-title">Browse map data as a list</h3>
+             <p>Saved workspace records are separate from public airport references.</p></div>
+           <label className="atlas-list-filter">
+             <span className="sr-only">Filter this map list</span>
+             <Search size={17}/>
+             <input type="search" value={listQuery} data-testid="map-list-filter"
+               onChange={event=>setListQuery(event.target.value)}
+               placeholder="Filter regions, people or airports"/>
+           </label>
+         </header>
+         <div className="atlas-readable-list-columns">
+           <section className="atlas-list-section" aria-labelledby="atlas-list-territories">
+             <header><h4 id="atlas-list-territories">Saved territories</h4><span>{listTerritories.length}</span></header>
+             {assignments.length===0
+               ?<div className="atlas-list-empty">
+                  <p>No territories are saved yet. Airport dots on the map are public references, not assignments.</p>
+                  <button type="button" data-testid="list-add-manager" onClick={()=>ctx.open('manager')}>Add your first manager <ArrowRight size={14}/></button>
+                </div>
+               :listTerritories.length
+                 ?<ul>{listTerritories.map(assignment=>{
+                    const manager=managers.find(person=>person.id===assignment.managerId);
+                    const ca=CANADA_REGION_BY_CODE[assignment.stateCode];
+                    const state=STATES.find(item=>item.code===assignment.stateCode);
+                    const location=assignment.areaName||ca?.name||state?.name||assignment.stateCode;
+                    return <li key={assignment.id}><button type="button"
+                      data-testid={'territory-row-'+assignment.id}
+                      onClick={()=>{
+                        const found=ca||state;
+                        if(found){handleSelect({code:assignment.stateCode,name:found.name,country:ca?'CA':'US'});setViewMode('map');}
+                      }}>
+                      <span><strong>{location}</strong><small>{manager?.name||'Manager not assigned'} · {assignment.areaType}</small></span>
+                      <ArrowRight size={15}/>
+                    </button></li>;
+                  })}</ul>
+                 :<p className="atlas-list-empty">No saved territory matches “{listQuery}”.</p>}
+           </section>
+           <section className="atlas-list-section" aria-labelledby="atlas-list-managers">
+             <header><h4 id="atlas-list-managers">Saved managers</h4><span>{listManagers.length}</span></header>
+             {managers.length===0
+               ?<p className="atlas-list-empty">No managers saved yet. Public map markers do not represent team members.</p>
+               :listManagers.length
+                 ?<ul>{listManagers.map(manager=><li key={manager.id}><button type="button"
+                    data-testid={'manager-row-'+manager.id}
+                    onClick={()=>{setViewMode('map');focusPin(manager);}}>
+                    <span><strong>{manager.name}</strong><small>{[manager.baseCity,manager.baseState,manager.trainer].filter(Boolean).join(' · ')||'Manager details'}</small></span>
+                    <ArrowRight size={15}/>
+                  </button></li>)}</ul>
+                 :<p className="atlas-list-empty">No saved manager matches “{listQuery}”.</p>}
+           </section>
+         </div>
+         <section className="atlas-list-section atlas-region-list" aria-labelledby="atlas-list-regions">
+           <header><h4 id="atlas-list-regions">{countryScope==='canada'?'Canadian provinces and territories':'U.S. states'}</h4><span>Public geography</span></header>
+           {listRegions.length
+             ?<ul>{listRegions.map(item=>{
+                const managerCount=territoryPeople(managers,assignments,item.code).length;
+                const territoryCount=assignments.filter(assignment=>assignment.stateCode===item.code).length;
+                return <li key={item.code}><button type="button" data-testid={'region-row-'+item.code}
+                  onClick={()=>{handleSelect({code:item.code,name:item.name,country:countryScope==='canada'?'CA':'US'});setViewMode('map');}}>
+                  <span><strong>{item.name}</strong><small>{managerCount} saved manager{managerCount===1?'':'s'} · {territoryCount} territory record{territoryCount===1?'':'s'}</small></span>
+                  <ArrowRight size={15}/>
+                </button></li>;
+              })}</ul>
+             :<p className="atlas-list-empty">No regions match “{listQuery}”.</p>}
+         </section>
+         <section className="atlas-list-section atlas-airport-list" aria-labelledby="atlas-list-airports">
+           <header><h4 id="atlas-list-airports">Public airport references</h4><span>{airportLayer==='none'?'Layer off':listAirports.length+' shown'}</span></header>
+           {airportLayer==='none'
+             ?<p className="atlas-list-empty">Turn on the Airports layer to browse public airport locations.</p>
+             :listAirports.length
+               ?<ul>{listAirports.map(airport=><li key={airport.iata+'-'+airport.state}>
+                  <button type="button" data-testid={'airport-row-'+airport.iata}
+                    onClick={()=>{setViewMode('map');openMapAirport(airport);}}>
+                    <span><strong>{airport.iata} · {airport.name}</strong><small>{airport.tier||'Airport'} · {airport.state} · public location reference</small></span>
+                    <ArrowRight size={15}/>
+                  </button>
+                </li>)}</ul>
+               :<p className="atlas-list-empty">No public airport references match “{listQuery}”.</p>}
+         </section>
+       </section>}
        {!region&&!focusMap&&<details className="atlas-market-discovery"><summary>Explore popular markets <ChevronDown size={16}/></summary><section className="atlas-public-market-rail" aria-label="Explore national airport gateway markets">
          <div className="atlas-public-market-lead">
            <span><Sparkles size={14}/> PUBLIC DATA · READY NOW</span>

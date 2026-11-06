@@ -72,6 +72,9 @@ type Context = {
   activeTrainerId:'trainer_a'|'trainer_b';setActiveTrainerId:(value:'trainer_a'|'trainer_b')=>void;
   activeTrainer:TrainerProfile;
   syncRevision:number;
+  syncStatus:'connecting'|'live'|'offline'|'updated';
+  lastSyncAt:string;
+  airportCheckedAt:string;
   openTrainers:()=>void;
   travelRequest: {state:string;country:'US'|'CA';managerId?:string;managerIds?:string[];departDate?:string;returnDate?:string;reference?:{lat:number;lon:number;label:string};arrivalAirport?:string;nonce:number}|null;
   clearTravelRequest:()=>void;
@@ -117,6 +120,20 @@ const MIAMI_MORE: Array<{id:Page;label:string;icon:typeof Plane}>=[
   {id:'data',label:'Data & exports',icon:Database},
   {id:'team',label:'Sharing & recovery',icon:ShieldCheck},
 ];
+const DESKTOP_NAV_GROUPS:Array<{label:string;items:Array<{id:Page;label:string;icon:typeof Plane}>}>=[
+  {label:'PLAN',items:[MIAMI_NAV[0],MIAMI_NAV[1],MIAMI_NAV[3]]},
+  {label:'TEAM',items:[MIAMI_NAV[2],FIELD_SHORTCUTS[3],FIELD_SHORTCUTS[4]]},
+  {label:'INSIGHTS',items:[FIELD_SHORTCUTS[0],FIELD_SHORTCUTS[1],FIELD_SHORTCUTS[2],MIAMI_MORE[0]]},
+];
+const ADDITIONAL_TOOLS=MIAMI_MORE.filter(item=>item.id!=='overview');
+function isNavItemActive(id:Page,view:Page,planSection:string,peopleSection:string){
+  if(id==='mission')return view==='mission';
+  if(id==='coaching')return view==='people'&&peopleSection==='coaching';
+  if(['coordinate','radar','booked','week','trips','air'].includes(id))
+    return view==='plan'&&(planSection===id||(id==='air'&&planSection==='travel'));
+  if(id==='people')return view==='people'&&peopleSection!=='coaching';
+  return view===id;
+}
 const PRIMARY_PAGES:Page[]=['plan','home','people','calendar'];
 function initialRoute():Page{
   if(typeof window==='undefined')return 'home';
@@ -180,11 +197,13 @@ function Product(){
   const [notice,setNotice]=useState('');
   const [syncStatus,setSyncStatus]=useState<'connecting'|'live'|'offline'|'updated'>('connecting');
   const [syncRevision,setSyncRevision]=useState(0);
+  const [lastSyncAt,setLastSyncAt]=useState('');
   const lastSyncRef=useRef('');
   const reloadRef=useRef<()=>Promise<void>>(async()=>undefined);
   const [atlas,setAtlas]=useState<unknown>(localUsAtlas);
   const [airports,setAirports]=useState<Airport[]>([...STARTER_AIRPORTS,...CANADA_STARTER_AIRPORTS]);
   const [airportSource,setAirportSource]=useState<Context['airportSource']>('loading');
+  const [airportCheckedAt,setAirportCheckedAt]=useState('');
   const [geo,setGeo]=useState<Geography>({state:'',counties:[],places:[]});
   const [geoBusy,setGeoBusy]=useState(false);
   const [geoError,setGeoError]=useState('');
@@ -237,8 +256,9 @@ function Product(){
   async function reload(){
     const response=await api.get('/api/operations');
     const b=response.data as Board;
-    setBoard(b);
     if(b.needsTeam)throw Error('This shared workspace cannot be found.');
+    setBoard(b);
+    setLastSyncAt(new Date().toISOString());
     setIdentity('member');
   }
   reloadRef.current=reload;
@@ -375,9 +395,17 @@ function Product(){
         const response=await api.get('/api/airports/curated');
         const records=response.data?.airports as Airport[] | undefined;
         if(!Array.isArray(records)||records.length<150)throw Error('Airport directory incomplete');
-        if(alive){setAirports(records);setAirportSource(response.data?.stale?'cached':'live');}
+        if(alive){
+          setAirports(records);
+          setAirportSource(response.data?.stale?'cached':'live');
+          setAirportCheckedAt(typeof response.data?.checkedAt==='string'?response.data.checkedAt:'');
+        }
       }catch{
-        if(alive){setAirports([...STARTER_AIRPORTS,...CANADA_STARTER_AIRPORTS]);setAirportSource('starter');}
+        if(alive){
+          setAirports([...STARTER_AIRPORTS,...CANADA_STARTER_AIRPORTS]);
+          setAirportSource('starter');
+          setAirportCheckedAt('');
+        }
       }
     }
     void loadAirports();
@@ -614,11 +642,12 @@ function Product(){
     (view==='people'&&peopleSection==='coaching')||!PRIMARY_PAGES.includes(view);
   const context=useMemo<Context>(()=>({
     board,user,identity,state,setState,zctaFocus,setZctaFocus,mapMode,setMapMode,view,go,
-    trainerProfiles,activeTrainerId,setActiveTrainerId,activeTrainer,syncRevision,openTrainers:()=>setTrainerProfilesOpen(true),
+    trainerProfiles,activeTrainerId,setActiveTrainerId,activeTrainer,syncRevision,syncStatus,lastSyncAt,airportCheckedAt,
+    openTrainers:()=>setTrainerProfilesOpen(true),
     travelRequest,clearTravelRequest:()=>setTravelRequest(null),atlasJump,jumpToAtlas,startTravel,clearAtlasJump:()=>setAtlasJump(null),selectedManager,setSelectedManager,
     selectedCounty,setSelectedCounty,modal,open,close,atlas,airports,airportSource,
     geo,geoBusy,geoError,busy,error,notice,setError,setNotice,reload,submit,
-  }),[board,user,identity,state,zctaFocus,mapMode,view,activeTrainerId,syncRevision,travelRequest,atlasJump,selectedManager,selectedCounty,modal,atlas,airports,airportSource,geo,geoBusy,geoError,busy,error,notice]);
+  }),[board,user,identity,state,zctaFocus,mapMode,view,activeTrainerId,syncRevision,syncStatus,lastSyncAt,airportCheckedAt,travelRequest,atlasJump,selectedManager,selectedCounty,modal,atlas,airports,airportSource,geo,geoBusy,geoError,busy,error,notice]);
 
 
   return <Store.Provider value={context}>
@@ -639,31 +668,21 @@ function Product(){
           <div className="fsa-sidebar-search">
             <GlobalFinder/>
           </div>
-          <div className="fsa-sidebar-label">YOUR WORKSPACE</div>
-          <nav className="fsa-side-nav" aria-label="Main sections">
-            {MIAMI_NAV.map(item=>{
-              const Icon=item.icon;
-              return <button type="button" key={item.id}
-                className={'fsa-side-link'+(view===item.id?' active':'')}
-                aria-current={view===item.id?'page':undefined} title={item.label}
-                onClick={()=>go(item.id)}>
-                <Icon size={20}/><span>{item.label}</span>
-              </button>;
-            })}
-          </nav>
           <div className="fsa-sidebar-scroll" role="region" aria-label="Workspace tools">
           <button type="button" className="fsa-sidebar-create" aria-haspopup="dialog"
             aria-expanded={quickAddOpen} onClick={()=>setQuickAddOpen(true)}>
             <Plus size={20}/><span>New field record</span><ArrowRight size={17}/>
           </button>
-          <div className="fsa-sidebar-label fsa-sidebar-label-tools">FIELD INTELLIGENCE</div>
-          <nav className="fsa-side-nav fsa-side-tools" aria-label="Field intelligence tools">
-            <button type="button" className="fsa-side-link fsa-tool-link" onClick={()=>{setSetupOpen(true);setMenuOpen(false);}}><Compass size={17}/><span>Workspace setup</span></button>
-              {FIELD_SHORTCUTS.map(item=>{
+          <button type="button" className="fsa-side-link fsa-tool-link fsa-setup-link"
+            onClick={()=>{setSetupOpen(true);setMenuOpen(false);}}>
+            <Compass size={17}/><span>Workspace setup</span>
+          </button>
+          {DESKTOP_NAV_GROUPS.map(group=><section className="fsa-sidebar-group" key={group.label}>
+            <div className="fsa-sidebar-label">{group.label}</div>
+            <nav className="fsa-side-nav fsa-side-tools" aria-label={group.label.toLowerCase()+' sections'}>
+              {group.items.map(item=>{
               const Icon=item.icon;
-              const active=item.id==='mission' ? view==='mission' : item.id==='coaching'
-                ? view==='people'&&peopleSection==='coaching'
-                : view==='plan'&&planSection===item.id;
+              const active=isNavItemActive(item.id,view,planSection,peopleSection);
               return <button type="button" key={item.id}
                 className={'fsa-side-link fsa-tool-link'+(active?' active':'')}
                 aria-current={active?'page':undefined}
@@ -671,24 +690,30 @@ function Product(){
                 <Icon size={19}/><span>{item.label}</span>
               </button>;
             })}
-          </nav>
-          <div className="fsa-sidebar-label fsa-sidebar-label-more">MORE</div>
-          <details className="fsa-more-tools" key={MIAMI_MORE.some(item=>item.id===view)?'more-active':'more-inactive'}
-            open={MIAMI_MORE.some(item=>item.id===view)?true:undefined}>
-            <summary><Settings size={19}/><span>Reports & tools</span><ChevronDown size={15}/></summary>
+            </nav>
+          </section>)}
+          <details className="fsa-more-tools" key={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.id,view,planSection,peopleSection))?'more-active':'more-inactive'}
+            open={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.id,view,planSection,peopleSection))?true:undefined}>
+            <summary><Settings size={19}/><span>More tools</span><ChevronDown size={15}/></summary>
             <nav aria-label="Additional workspace tools">
-              {MIAMI_MORE.map(item=>{
+              {ADDITIONAL_TOOLS.map(item=>{
                 const Icon=item.icon;
+                const active=isNavItemActive(item.id,view,planSection,peopleSection);
                 return <button key={item.id} type="button" onClick={()=>go(item.id)}
-                  className={view===item.id?'active':''}><Icon size={16}/><span>{item.label}</span></button>;
+                  className={active?'active':''} aria-current={active?'page':undefined}>
+                  <Icon size={16}/><span>{item.label}</span>
+                </button>;
               })}
             </nav>
           </details>
           </div>
           <div className="fsa-sidebar-bottom">
-            <div className={'fsa-sidebar-sync atlas-sync-'+syncStatus} role="status">
+            <div className={'fsa-sidebar-sync atlas-sync-'+syncStatus} role="status"
+              aria-label={'Workspace sync '+syncStatus}
+              title={lastSyncAt?'Last successful workspace refresh: '+new Date(lastSyncAt).toLocaleString():'Waiting for the first successful workspace refresh'}>
               <span className="atlas-sync-dot" aria-hidden="true"/>
-              <span>{syncStatus==='live'||syncStatus==='updated'?'Live sync':syncStatus==='connecting'?'Connecting':'Sync offline'}</span>
+              <span>Workspace · {syncStatus==='live'?'Live':syncStatus==='updated'?'Updated':syncStatus==='connecting'?'Connecting':'Offline'}</span>
+              <small>{lastSyncAt?'Refreshed '+new Date(lastSyncAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Awaiting first refresh'}</small>
             </div>
             <details className="fsa-sidebar-controls" onKeyDown={event=>{
               if(event.key==='Escape'){

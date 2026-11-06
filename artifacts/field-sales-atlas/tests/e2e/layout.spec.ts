@@ -104,7 +104,7 @@ test('recovered workspace controls fit a short window and search works in focus 
   await controls.getByRole('button', { name: 'Focus workspace', exact: true }).click();
   await expect(page.locator('.fsa-sidebar')).toBeHidden();
   await page.keyboard.press('Control+k');
-  const search = page.getByRole('dialog', { name: 'Search the Field Sales Atlas' });
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
   await expect(search).toHaveCount(1);
   await expect(search).toBeVisible();
   await search.getByRole('button', { name: 'Close search' }).click();
@@ -117,11 +117,36 @@ test('phone keyboard search opens one visible dialog with the desktop rail hidde
   await page.goto('/');
   await expect(page.locator('#field-atlas-main')).toBeVisible();
   await page.keyboard.press('Control+k');
-  const search = page.getByRole('dialog', { name: 'Search the Field Sales Atlas' });
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
   await expect(search).toHaveCount(1);
   await expect(search).toBeVisible();
   await search.getByRole('button', { name: 'Close search' }).click();
   await expect(search).toBeHidden();
+});
+
+test('phone users can browse an accessible, searchable map list with source details', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const listSwitch = page.getByTestId('map-view-list');
+  await expect(listSwitch).toBeVisible();
+  await listSwitch.click();
+  await expect(page.getByTestId('atlas-readable-list')).toBeVisible();
+  await expect(page.locator('.mv-map-body')).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Browse map data as a list' })).toBeVisible();
+
+  const filter = page.getByTestId('map-list-filter');
+  await filter.fill('Boston');
+  await expect(filter).toHaveValue('Boston');
+
+  const sources = page.getByTestId('data-sources');
+  await sources.locator('summary').click();
+  const airportSource = page.getByTestId('source-airports');
+  await expect(airportSource).toContainText('OurAirports reference directory');
+  await expect(airportSource).toContainText('not live flights');
+
+  await page.getByTestId('map-view-map').click();
+  await expect(page.locator('.mv-map-body')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 664 }]) {
