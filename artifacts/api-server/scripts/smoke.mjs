@@ -201,23 +201,44 @@ async function checkPreviewConfiguration() {
   );
 }
 
-async function main() {
-  await checkPreviewConfiguration();
-  const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "atlas-api-smoke-"));
-  const port = await availablePort();
-  const baseUrl = `http://127.0.0.1:${port}`;
+function startBuiltApi(port, dataDirectory, runtimeDirectory) {
   const child = spawn(process.execPath, ["--enable-source-maps", builtEntryPoint], {
     cwd: workspaceRoot,
     env: {
       ...process.env,
       NODE_ENV: "production",
       PORT: String(port),
-      ATLAS_DATA_DIR: path.join(temporaryDirectory, "workspace-data"),
-      ATLAS_RUNTIME_ROOT: path.join(temporaryDirectory, "runtime"),
+      ATLAS_DATA_DIR: dataDirectory,
+      ATLAS_RUNTIME_ROOT: runtimeDirectory,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  const output = collectOutput(child);
+  return { child, output: collectOutput(child) };
+}
+
+async function stopBuiltApi(child) {
+  if (child.exitCode !== null) return;
+
+  const exited = new Promise((resolve) => child.once("exit", resolve));
+  child.kill("SIGTERM");
+  const stoppedCleanly = await Promise.race([
+    exited.then(() => true),
+    delay(5_500).then(() => false),
+  ]);
+  if (!stoppedCleanly && child.exitCode === null) {
+    child.kill("SIGKILL");
+    await exited;
+  }
+}
+
+async function main() {
+  await checkPreviewConfiguration();
+  const temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), "atlas-api-smoke-"));
+  const port = await availablePort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const dataDirectory = path.join(temporaryDirectory, "workspace-data");
+  const runtimeDirectory = path.join(temporaryDirectory, "runtime");
+  let { child, output } = startBuiltApi(port, dataDirectory, runtimeDirectory);
   const eventControllers = [];
 
   try {
@@ -309,6 +330,163 @@ async function main() {
       operationsB.data?.activity?.every(({ summary }) => !summary.includes("Workspace A isolation marker")),
       "Workspace B activity must not contain workspace A records",
     );
+
+    const guestTravelRecords = await Promise.all(workspaces.map(async (workspace, index) => {
+      const label = index === 0 ? "Workspace A" : "Workspace B";
+      const manager = index === 0 ? createdManagerA.data.manager : createdManagerB.data.manager;
+      const visit = await apiRequest(baseUrl, "POST", "/api/visits", {
+        workspaceKey: workspace.key,
+        body: {
+          managerId: manager.id,
+          stateCode: "CA",
+          date: index === 0 ? "2027-03-10" : "2027-03-11",
+          objective: `${label} visit marker`,
+          trainer: `${label} trainer`,
+          location: `${label} visit location`,
+        },
+      });
+      assert.equal(visit.response.status, 201, `${label} must create its own visit`);
+
+      const trip = await apiRequest(baseUrl, "POST", "/api/trips", {
+        workspaceKey: workspace.key,
+        body: {
+          title: `${label} trip marker`,
+          trainer: `${label} trip trainer`,
+          startDate: index === 0 ? "2027-03-12" : "2027-03-13",
+          endDate: index === 0 ? "2027-03-14" : "2027-03-15",
+          arrivalAirport: "SFO",
+          notes: `${label} trip notes`,
+          stops: [{
+            managerId: manager.id,
+            stateCode: "CA",
+            date: index === 0 ? "2027-03-12" : "2027-03-13",
+            location: `${label} trip stop`,
+          }],
+        },
+      });
+      assert.equal(trip.response.status, 201, `${label} must create its own trip`);
+
+      const plan = await apiRequest(baseUrl, "POST", "/api/travel/plans", {
+        workspaceKey: workspace.key,
+        body: {
+          title: `${label} travel plan marker`,
+          departDate: index === 0 ? "2027-04-01" : "2027-04-08",
+          returnDate: index === 0 ? "2027-04-03" : "2027-04-10",
+          origins: ["SFO"],
+          selectedArrival: "SEA",
+          managerIds: [manager.id],
+          quotes: [],
+        },
+      });
+      assert.equal(plan.response.status, 201, `${label} must create its own travel plan`);
+
+      return {
+        visit: visit.data.visit,
+        trip: trip.data.trip,
+        plan: plan.data.plan,
+      };
+    }));
+
+    for (const controller of eventControllers) controller.abort();
+    eventControllers.length = 0;
+    await stopBuiltApi(child);
+    ({ child, output } = startBuiltApi(port, dataDirectory, runtimeDirectory));
+    await waitForServer(child, baseUrl, output);
+
+    const restartedOperations = await Promise.all(
+      workspaces.map((workspace) => apiRequest(baseUrl, "GET", "/api/operations", {
+        workspaceKey: workspace.key,
+      })),
+    );
+    for (const [index, operations] of restartedOperations.entries()) {
+      const workspace = workspaces[index];
+      const ownMarker = `Workspace ${index === 0 ? "A" : "B"} isolation marker`;
+      const otherMarker = `Workspace ${index === 0 ? "B" : "A"} isolation marker`;
+      const expectedManager = index === 0 ? createdManagerA : createdManagerB;
+
+      assert.equal(operations.data?.team?.id, workspace.id,
+        `Guest workspace ${index + 1} must retain its identity after restart`);
+      assert.deepEqual(
+        operations.data?.managers?.map(({ id, name }) => ({ id, name })),
+        [{ id: expectedManager.data?.manager?.id, name: ownMarker }],
+        `Guest workspace ${index + 1} must retain only its own manager after restart`,
+      );
+      assert.ok(
+        operations.data?.activity?.some(({ summary }) => summary.includes(ownMarker)),
+        `Guest workspace ${index + 1} activity must retain its own manager record after restart`,
+      );
+      assert.ok(
+        operations.data?.activity?.every(({ summary }) => !summary.includes(otherMarker)),
+        `Guest workspace ${index + 1} activity must not include the other workspace after restart`,
+      );
+      const ownRecords = guestTravelRecords[index];
+      const otherRecords = guestTravelRecords[index === 0 ? 1 : 0];
+      assert.deepEqual(
+        operations.data?.visits?.map(({ id }) => id),
+        [ownRecords.visit.id],
+        `Guest workspace ${index + 1} operations must contain only its own visit`,
+      );
+      assert.deepEqual(
+        operations.data?.trips?.map(({ id }) => id),
+        [ownRecords.trip.id],
+        `Guest workspace ${index + 1} operations must contain only its own trip`,
+      );
+      assert.ok(
+        operations.data?.visits?.every(({ objective }) => !objective.includes(index === 0 ? "Workspace B" : "Workspace A")),
+        `Guest workspace ${index + 1} operations must not expose the other workspace's visit`,
+      );
+      assert.ok(
+        operations.data?.trips?.every(({ title }) => !title.includes(index === 0 ? "Workspace B" : "Workspace A")),
+        `Guest workspace ${index + 1} operations must not expose the other workspace's trip`,
+      );
+
+      const travelPlans = await apiRequest(baseUrl, "GET", "/api/travel/plans", {
+        workspaceKey: workspace.key,
+      });
+      assert.deepEqual(
+        travelPlans.data?.plans?.map(({ id }) => id),
+        [ownRecords.plan.id],
+        `Guest workspace ${index + 1} travel plans must contain only its own plan`,
+      );
+      assert.ok(
+        travelPlans.data?.plans?.every(({ title }) => !title.includes(index === 0 ? "Workspace B" : "Workspace A")),
+        `Guest workspace ${index + 1} must not read the other workspace's travel plan`,
+      );
+
+      const integrity = await apiRequest(baseUrl, "GET", "/api/intelligence/health", {
+        workspaceKey: workspace.key,
+      });
+      assert.deepEqual(
+        integrity.data?.counts && {
+          visits: integrity.data.counts.visits,
+          trips: integrity.data.counts.trips,
+          travelPlans: integrity.data.counts.travelPlans,
+        },
+        { visits: 1, trips: 1, travelPlans: 1 },
+        `Guest workspace ${index + 1} integrity counts must reflect only its travel records`,
+      );
+
+      const foreignVisit = await apiRequest(baseUrl, "PUT", `/api/visits/${otherRecords.visit.id}`, {
+        workspaceKey: workspace.key,
+        body: { objective: "Unauthorized cross-workspace edit" },
+        allowError: true,
+      });
+      assert.equal(foreignVisit.response.status, 404,
+        `Guest workspace ${index + 1} must not update the other workspace's visit`);
+      const foreignTrip = await apiRequest(baseUrl, "DELETE", `/api/trips/${otherRecords.trip.id}`, {
+        workspaceKey: workspace.key,
+        allowError: true,
+      });
+      assert.equal(foreignTrip.response.status, 404,
+        `Guest workspace ${index + 1} must not delete the other workspace's trip`);
+      const foreignPlan = await apiRequest(baseUrl, "PUT", `/api/travel/plans/${otherRecords.plan.id}`, {
+        workspaceKey: workspace.key,
+        body: {},
+        allowError: true,
+      });
+      assert.equal(foreignPlan.response.status, 404,
+        `Guest workspace ${index + 1} must not update the other workspace's travel plan`);
+    }
 
     const ownerKey = workspaces[0].key;
     const invitations = await Promise.all([
@@ -538,15 +716,10 @@ async function main() {
       500,
     );
 
-    console.log("API smoke check passed: isolated storage, guest workspace separation, owner/trainer access boundaries, revocation, and live subscription cleanup.");
+    console.log("API smoke check passed: isolated storage, guest travel-record separation, owner/trainer access boundaries, revocation, and live subscription cleanup.");
   } finally {
     for (const controller of eventControllers) controller.abort();
-    child.kill("SIGTERM");
-    await Promise.race([
-      new Promise((resolve) => child.once("exit", resolve)),
-      delay(5_500),
-    ]);
-    if (child.exitCode === null) child.kill("SIGKILL");
+    await stopBuiltApi(child);
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
 }
