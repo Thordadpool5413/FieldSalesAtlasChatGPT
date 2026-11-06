@@ -1,149 +1,75 @@
 # Field Sales Atlas
 
-A map-first workspace for territory managers, field coaching, shared calendars, and two-trainer travel planning across the United States and Canada.
+A shared field-sales workspace for territories, coaching visits, calendars, and evidence-backed travel planning for two trainers.
 
-This repository imports the supplied Field Atlas AppDeploy source export and makes it runnable as a standalone Node application. The existing React interface, map tools, travel modules, artwork, and PWA are preserved. Local adapters replace the export's unavailable `@appdeploy/client` and `@appdeploy/sdk` runtime services.
+## Update the existing Replit workspace
 
-## Run locally
+GitHub `main` now includes both the original application history and the recovered Replit history ending at `0ecbdd2`. The Replit app keeps its pnpm workspace and separate web/API services. The recovery branch `replit-recovery-0ecbdd2` remains available as a backup.
 
-Use **Node 24.10 or newer within Node 24** (the development version is in `.node-version`). Node's built-in SQLite is required.
+Stop the current Run process, then use the Replit Shell:
 
-```sh
-npm ci
-npm run setup:optimizer
-npm run dev
-```
-
-The development server listens on port 5173, serves the Vite frontend and API together, and reloads backend changes. No account or API key is required. Opening the app creates an empty persistent workspace and saves its access link in the browser.
-
-Python 3.12 is tested for the two-trainer OR-Tools travel optimizer. **Travel → Plan Travel → Plan together** compares joint field schedules, explicit journey times, evidence gaps and incomplete budgets, then saves both trainers’ proposed appointments atomically. Read [the implementation and source-status guide](docs/TRAVEL_INTELLIGENCE_IMPLEMENTATION.md) for setup, actual integration limits, OSRM configuration and direct BTS import instructions.
-
-**Travel assistant**, **Flight change**, and **Data connections** add cited deadline calculations, reviewed disruption recovery and direct source validation. [The current release guide](docs/DEPENDABLE_TRAVEL_RELEASE.md) distinguishes working calculations from the still-blocked live weather, map and BTS downloads, and documents the saved unpublished network draft. The assistant does not edit the calendar; recovery applies only an explicitly reviewed complete option.
-
-## Workspace setup and guided planning
-
-On an empty Atlas, **Set up workspace** opens a nonblocking checklist for trainer profiles/home airports, manager entry or CSV import, and territory assignment. Progress comes from saved workspace records. Dismiss the reminder if you prefer; reopen it from Workspace setup in the sidebar or phone tools menu.
-
-**Explore a demo** creates a separate workspace with clearly labeled sample managers, trainer profiles, territories and a coaching follow-up. It never seeds the current workspace. The original link stays in this tab's session storage so **Return to my workspace** can reopen it; keep your original link for recovery after closing the browser session. Demo records are editable sample data, not live customers or flight information.
-
-Travel → Plan Travel now opens a four-step guided workflow: People → Dates → Airports → Review. It uses the existing scheduling engine and shows saved-trip, duplicate-visit and trainer-availability conflicts before saving. The server rechecks conflicts and commits the itinerary and proposed calendar visits together. Appointment windows, airline schedules, actual road routes and time zones still require confirmation. **Advanced comparison** carries the selected people, dates and gateway into the existing quote and cost tools.
-
-On phones, Atlas uses a compact heading, collapsible market discovery and a territory details sheet. The street-map engine loads only when live-map mode is selected. Sized PWA artwork is generated from the preserved originals in `docs/export/`; `npm run assets:optimize` regenerates those derivatives using Chromium without redrawing the artwork. The bundled U.S. airport coordinates have source provenance in `docs/airport-reference.md` and remain explicitly labeled as limited starter references during source outages.
-
-Optional settings can be copied from `.env.example` into `.env`. Both development and production read this file. Process environment variables take precedence.
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `HOST` | `127.0.0.1` | Bind address; set to `0.0.0.0` on a deployment host. |
-| `PORT` | `5173` | HTTP port. |
-| `ATLAS_DATA_DIR` | `./data` | Persistent directory for `atlas.sqlite` and its WAL files. |
-| `ATLAS_ROUTING_URL` | Unconfigured | Maintained OSRM endpoint; absent/unavailable routing produces explicitly provisional geographic estimates. |
-| `ATLAS_PYTHON` | `.venv/bin/python` when present | Runtime with the locked OR-Tools dependencies installed. |
-
-Run commands from the repository root. The configured HTTP proxy and TLS trust remain enabled for public-source requests.
-
-## Build and validate
-
-```sh
-npm test
-npm run build
-npx playwright install --with-deps chromium
-npm run test:e2e
-```
-
-- `npm test` exercises SQLite persistence, transaction rollback, pagination, workspace isolation, stale-edit protection, trainer-link revocation, itinerary scheduling, availability, and backup restoration.
-- `npm run build` checks frontend and backend TypeScript before building the frontend.
-- `npm run test:e2e` starts the production server on port 5174 with a temporary database. It tests desktop and mobile manager creation, reload persistence, navigation, and live updates across tabs. Third-party browser requests are deliberately blocked to exercise the bundled-map fallback; these tests do not certify public-provider availability.
-- `.github/workflows/ci.yml` runs these checks for pushes to `main` and pull requests.
-- The exported `tests/tests.json` remains a **manual acceptance checklist**, not an executable test suite.
-
-Browser tests use bundled Playwright Chromium, or `/usr/bin/chromium` if present. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to select another compatible Chromium. Test output and screenshots go under the operating system's temporary directory.
-
-## Production deployment
-
-```sh
-npm ci
-npm run setup:optimizer
-npm run build
-HOST=0.0.0.0 PORT=5173 ATLAS_DATA_DIR=/path/to/persistent/atlas-data npm start
-```
-
-Use a Node hosting service with a persistent writable volume and HTTPS. The same server serves `dist/`, `/api/*`, and the server-sent event stream at `/api/events`. The readiness endpoint is `GET /api/_healthcheck`. Keep reverse-proxy buffering off for `/api/events`; allow long-lived HTTP connections. HTTPS is required for installable-PWA capabilities outside localhost.
-
-Keep one application instance per SQLite database. Live connections are held in that process; horizontal replicas need a shared database and event broker before use. Retain the entire data directory across deployments. Use in-app JSON exports for portable workspace backups, and use SQLite-aware backup tooling for whole-database backups rather than copying an actively written database file alone.
-
-GitHub hosts the source and CI; **GitHub Pages alone cannot run this backend or persist shared records**. Publishing this repository does not create a hosted app or transfer records from an existing AppDeploy deployment. To migrate existing records, export a backup there and use Sharing & recovery here to restore it into a separate workspace.
-
-## Replit: pull source, rebuild, then review the app
-
-The GitHub source is `https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT`, branch `main`. Import or connect that repository in Replit. The tracked `.replit` file selects Node 24 and Python 3.12, binds the single application server to `0.0.0.0:5173`, and maps it to the web preview. The Run command is `npm run replit`.
-
-After a successful pull, stop the previous Run process and press **Run**. This installs the locked dependencies, prepares the existing travel optimizer, and creates a fresh production build before starting the server. It does not pull or push Git, publish the app, change workspace records, or remove the `data/` directory. Allow setup and compilation to finish before checking the preview.
-
-To identify the checkout and pull in Replit's Shell:
-
-```sh
-git branch --show-current
-git log -1 --oneline
-git status --short
-git fetch origin main
+```bash
 git pull --ff-only origin main
+git status -sb
+pnpm run replit
 ```
 
-Use `main` as the working branch. A pull blocked by local changes or divergent history must be resolved before the Run command can build the intended revision. Keep the exact Git error when troubleshooting; a successful GitHub push alone does not prove that Replit's checkout has updated.
+The Run button executes the same `pnpm run replit` command. It installs the locked dependencies and optimizer, then keeps both services running. The separate `api-smoke` workflow runs temporary tests and exits; it is not the app startup workflow.
 
-If Git specifically reports that an **untracked `.replit` file** would be overwritten, preserve Replit's generated configuration by renaming that file to `.replit.local-backup`, then retry the pull and merge any custom settings into the tracked configuration. Tracked edits and other merge conflicts require their own review in Replit's Git tool.
+For the previously reported clean Replit `main` at `0ecbdd2`, this pull is a fast-forward. If you have made additional commits or uncommitted edits since creating the recovery branch, preserve those changes and review the Git message before proceeding. No force push or reset is needed for the recovered commit.
 
-Every production build writes `/build-info.json`. Open that path on the preview or published address to see `revision`, `builtAt` and `sourceModified`. `revision` is `null` when the deployment does not include Git metadata; `sourceModified` records edits to tracked files. This public file contains no workspace data or credentials and is served with `Cache-Control: no-cache`. Compare the served revision with `git log -1` in Replit to distinguish old compiled files from an old checkout. The readiness path is `/api/_healthcheck`.
+Pulling or running does not publish the app. The published `.replit.app` address is a separate snapshot. Publication remains a separate owner action.
 
-Replit's `.replit.app` address serves a **published snapshot**, separate from the workspace preview. Pulling and pressing Run do not update that snapshot. The deployment configuration supplies install/build/run commands for a future publication; it does not publish automatically. If Replit itself returns “This app isn't live yet,” check the project's Publishing status and assigned address. Use a persistent writable volume for the existing SQLite database and keep one instance per database, as described above.
+## Local development
 
-Configuration reference: [Replit app configuration](https://docs.replit.com/replit-workspace/configuring-repl). Snapshot behavior: [Replit Publishing](https://docs.replit.com/cloud-services/deployments/about-deployments).
+Use Node 24.10+ within Node 24, Python 3.12, and pnpm 10.28.2 (pinned in `package.json`). Enable Corepack if pnpm is not installed:
 
-## Collaboration and data
-
-- Shareable workspace links are bearer capabilities: anyone who has the owner link can view and edit its records and manage trainer invitations. Keep links private. Access keys stay in URL fragments/browser storage and are sent only to same-origin API requests; they are not written to Git.
-- Owners can issue seat-bound trainer links and revoke them. A trainer seat is attribution, not a personally authenticated account. Revocation is checked before live deliveries.
-- SQLite transactions preserve atomic trip/calendar writes and backup restoration. Conditional updates reject stale edits. The database and local environment files are ignored by Git.
-- Live updates use server-sent events through a small compatibility adapter. The frontend keeps the original subscription and reconnect workflow.
-- Offline mode preserves the generic app shell and local map reference; it does not cache private API records or queue edits.
-- The exported daily public-source health scan runs at 06:00 America/New_York while the Node server is running. It is not a durable job queue and does not backfill scans while the server is stopped.
-
-## Public data and limitations
-
-The application uses public reference data and labels stale/unavailable sources. Core workspace editing works without these providers. Live maps, weather, geography, airport directories, and historical research require outbound HTTPS to their providers. Hostnames used for runtime requests include:
-
-```text
-api.weather.gov
-aviationweather.gov
-api.weather.gc.ca
-cdn.jsdelivr.net
-datasets-server.huggingface.co
-davidmegginson.github.io
-fonts.googleapis.com
-fonts.gstatic.com
-geocoding.geo.census.gov
-nasstatus.faa.gov
-raw.githubusercontent.com
-tiles.openfreemap.org
-transtats.bts.gov
-www.transtats.bts.gov
-www2.census.gov
+```bash
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run setup:optimizer
+pnpm dev
 ```
 
-Restrictive environments must allow the providers they need. External provider outages fall back to available local/cached references or explicit unavailable states. The app does not provide commercial airfare inventory, live flight-specific tracking, verified road traffic/ETA, ticketing, or two-way Google/Outlook authorization. Saved estimates and public airport-wide advisories are not verified flight or route promises.
+The web app uses port 24397; the API uses port 8080. `PORT` and `ATLAS_API_PORT` override these ports for the combined local runner. The web development server forwards `/api` requests, including live updates, to the API service. Stopping the runner stops both services; a service failure also stops its companion.
 
-## Repository layout
+## Code and data
 
-```text
-src/                 Existing React application, styles, and planning logic
-src/runtime/         Same-origin HTTP and live-event client adapters
-backend/             Exported API and public-source integrations
-backend/runtime/     SQLite, routing, and live-event adapters
-server/              Development/production Node server and daily scheduler
-public/              PWA manifest, service worker, offline shell, artwork
-tests/               Automated API/database/browser tests; manual checklist
-docs/export/         Original build manifest and historical AppDeploy SBOM
+- `artifacts/field-sales-atlas/src/` — React UI, including the official logo and Miami Vice theme.
+- `artifacts/api-server/src/field-atlas/` — the API's active backend, public-source adapters, shared travel types, and optimizer.
+- `artifacts/api-server/src/app.ts` — Express adapter and API routing.
+- `artifacts/field-sales-atlas/data/` — existing local SQLite records and imported history; preserved across this source update and ignored by Git.
+- `artifacts/field-sales-atlas/backend/` and `server/` — preserved standalone source export. Replit runs the API service above; make backend changes there. Automated backend tests target the active API implementation.
+- `research/` and `docs/research/` — preserved Replit research and the latest free-travel-data audit.
+- `artifacts/field-sales-atlas/docs/` — original app documentation and design references. Older standalone `npm` commands should be replaced with the root pnpm commands here.
+
+The post-merge hook installs dependencies only. It does not run a database schema push, copy a database, or delete saved records. Publishing or autoscaling still needs durable storage for SQLite; Git synchronization does not provide persistent storage across deployment instances.
+
+## Validation and build identity
+
+```bash
+pnpm test
+pnpm run build
+pnpm run test:api
+pnpm run test:runtime
+pnpm --filter @workspace/field-sales-atlas exec playwright install chromium
+pnpm run test:e2e
 ```
 
-The files in `docs/export/` describe the **original export's build**, not this adapted runtime. `package-lock.json` is the reproducible dependency record for this repository. The export contained source and artwork, but no original database, deployment credentials, SDK implementation, or dependency lockfile.
+The API smoke suite creates isolated temporary records and checks persistence after restart, guest isolation, trainer permissions, revocation, and live events. Browser tests exercise the built web app through the active API service. CI runs both alongside the backend tests and workspace build.
+
+The built web app serves `/build-info.json` as JSON with `revision`, `builtAt`, and `sourceModified`. Use this to verify the served UI. If Git metadata is absent from a build snapshot, `revision` is `null`; the file does not claim an unverified revision. A response containing HTML is not build metadata. API health is available at `/api/_healthcheck` and `/api/healthz`.
+
+## Travel data tools
+
+The root scripts retain airport refresh, connection checks, BTS import/sync, and road-routing setup:
+
+```bash
+pnpm run data:airports
+pnpm run data:check-sources
+pnpm run data:import-bts --help
+pnpm run data:sync-bts --help
+pnpm run setup:routing --help
+```
+
+Routing setup requires Docker and suitable map data. These tools are explicit operations; pulling the repository does not load data, create provider subscriptions, or change calendars. Public-source coverage, age, and limitations remain part of the travel evidence; flight availability requires provider verification.

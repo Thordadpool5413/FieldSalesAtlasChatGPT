@@ -1,0 +1,44 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "OBuSUZgCt7_p2jZ-98-T1"
+uri = "file://research/notes.md"
+type = "text"
+title = "Research Notes: Field Sales Atlas Public Data"
+description = "Research scope and running source log for the public-data review."
+logical_id = "5ef99fd9-9c66-4358-9876-d87956ff258c"
+content_hash = "sha256:3c40484a1f7c9bf128fe9e2fe48596f3ed858701af54daabdb766ee723cec104"
+size = 3337
+mtime_ms = 1793944292630
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:e0d146c0-7710-4808-83c1-c4e917926ca8/5ef99fd9-9c66-4358-9876-d87956ff258c/a4982d34-29a4-4998-a219-cf6121df0fa8"
+storage_version_token = "1793944305906117"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "6__cQ2roGQcKj8p2AI1qx"
+uri = "file://research/free-data-intelligence.md"
+type = "text"
+title = "Free Data Intelligence Review"
+description = "Evidence-backed review of the app’s current data sources and ranked free-data opportunities, including licensing, freshness, and availability caveats."
+logical_id = "87f18987-54d6-42f4-8c15-b3fd80c86db5"
+content_hash = "sha256:db738cb5bf8b27104a81a544a28be43c9a03dce75e24962e6d159a6fddc930ad"
+size = 23222
+mtime_ms = 1793945014281
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:e0d146c0-7710-4808-83c1-c4e917926ca8/87f18987-54d6-42f4-8c15-b3fd80c86db5/feb73ab2-0b40-49ff-afab-d0eb2be8fa36"
+storage_version_token = "1793945102442557"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "CqgN1gow96zpGkQlpdGv4"
+uri = "file://research/air-travel-free-data.md"
+type = "text"
+title = "Free Airline and Airport Data Review"
+description = "Aviation-focused assessment of public airline capacity, sampled fares, passenger experience, airport operations, and live-position APIs, with commercial-use and freshness caveats."
+logical_id = "61080dd9-1b60-4770-8de7-e00bdf5dc111"
+content_hash = "sha256:5af2e5f5843ed8407337259a91fa9c56d46815f233754e97cb21356ac5790c15"
+size = 14839
+mtime_ms = 1793950147469
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:e0d146c0-7710-4808-83c1-c4e917926ca8/61080dd9-1b60-4770-8de7-e00bdf5dc111/dfb989a6-83b6-4a23-b8b7-3e26154bf901"
+storage_version_token = "1793950233428020"
+content_type = "text/markdown"

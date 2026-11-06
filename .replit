@@ -1,16 +1,43 @@
-# One server serves the application, API and shared workspace events.
 modules = ["nodejs-24", "python-3.12"]
-run = "npm run replit"
-entrypoint = "server/index.ts"
-
-[env]
-HOST = "0.0.0.0"
-PORT = "5173"
-
-[[ports]]
-localPort = 5173
-externalPort = 80
 
 [deployment]
-build = ["sh", "-c", "npm ci --include=dev && npm run setup:optimizer && npm run build"]
-run = ["sh", "-c", "HOST=0.0.0.0 npm start"]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run replit"
+
+[[workflows.workflow]]
+name = "api-smoke"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/api-server run smoke"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
+
+[nix]
+channel = "stable-25_05"
+packages = ["glibcLocales"]

@@ -1,59 +1,35 @@
 {
-  "name": "field-sales-atlas",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
   "scripts": {
-    "dev": "tsx watch --use-env-proxy server/index.ts",
-    "build": "npm run typecheck && vite build && node scripts/write-build-info.mjs",
-    "start": "node --use-env-proxy --import tsx server/index.ts --production",
-    "preview": "npm start",
+    "preinstall": "node scripts/check-package-manager.mjs",
+    "build": "pnpm run typecheck && pnpm -r --filter @workspace/api-server --filter @workspace/field-sales-atlas run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "dev": "pnpm --filter @workspace/api-server run build && node scripts/start-local.mjs",
     "replit": "bash scripts/start-replit.sh",
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.server.json",
-    "test": "node --use-env-proxy --import tsx --test --test-isolation=none tests/*.test.ts",
-    "test:e2e": "playwright test",
-    "assets:optimize": "node scripts/optimize-assets.mjs",
     "setup:optimizer": "bash scripts/setup-optimizer.sh",
-    "data:airports": "node --use-env-proxy --import tsx scripts/refresh-airports.ts",
-    "data:check-sources": "node --use-env-proxy --import tsx scripts/check-travel-sources.ts",
-    "data:import-bts": "python3 scripts/import-bts.py",
-    "setup:routing": "python3 scripts/setup-routing.py",
-    "data:sync-bts": "python3 scripts/sync-bts.py"
+    "start:preview": "node scripts/start-local.mjs --preview",
+    "test": "pnpm --filter @workspace/field-sales-atlas test",
+    "test:api": "pnpm --filter @workspace/api-server smoke",
+    "test:e2e": "pnpm --filter @workspace/field-sales-atlas test:e2e",
+    "data:airports": "pnpm --filter @workspace/field-sales-atlas run data:airports",
+    "data:check-sources": "pnpm --filter @workspace/field-sales-atlas run data:check-sources",
+    "data:import-bts": "pnpm --filter @workspace/field-sales-atlas run data:import-bts",
+    "data:sync-bts": "pnpm --filter @workspace/field-sales-atlas run data:sync-bts",
+    "setup:routing": "pnpm --filter @workspace/field-sales-atlas run setup:routing",
+    "test:runtime": "node --test scripts/local-runtime.test.mjs"
   },
+  "private": true,
   "dependencies": {
-    "@fontsource/barlow-condensed": "^5.3.0",
-    "@fontsource/dm-sans": "^5.3.0",
-    "@js-temporal/polyfill": "^0.5.1",
-    "d3-geo": "^3.1.1",
-    "geo-tz": "^8.1.11",
-    "lucide-react": "^0.469.0",
-    "maplibre-gl": "^6.16.0",
-    "papaparse": "^5.5.3",
-    "pdfjs-dist": "^4.10.38",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "topojson-client": "^3.1.0",
-    "tsx": "^4.20.0",
-    "zod": "^4.6.7"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.0.0"
+    "@replit/connectors-sdk": "^0.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.0",
-    "@types/d3-geo": "^3.1.1",
-    "@types/node": "^24.0.0",
-    "@types/papaparse": "^5.5.2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@types/topojson-client": "^3.1.5",
-    "@vitejs/plugin-react": "^4.3.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.7.0",
-    "vite": "^6.0.0"
+    "prettier": "^3.9.10",
+    "typescript": "~5.9.3"
   },
+  "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": ">=24.10.0 <25"
   }
