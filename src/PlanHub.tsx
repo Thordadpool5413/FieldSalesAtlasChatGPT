@@ -4,7 +4,7 @@ import { TripsPage } from './OperationsTrip';
 import { CoachingPage,ManagersPage } from './OperationsViews';
 import type { Manager } from './opsModels';
 import TravelStart from './TravelStart';
-const AirTravelPage = lazy(() => import('./AirTravel'));
+const TripPlanningExperience = lazy(() => import('./TripPlanningExperience'));
 const TwoTrainerWeek = lazy(() => import('./TwoTrainerWeek'));
 const TrainerCoordination = lazy(() => import('./TrainerCoordination'));
 const FlightRadar = lazy(() => import('./FlightRadar'));
@@ -70,7 +70,7 @@ export default function PlanHub({section,onSectionChange,onDestination,onCircuit
         <TwoTrainerWeek onDestination={onDestination} onCircuit={onCircuit}/>
       </>}
       {section==='coordinate'&&<TrainerCoordination onDestination={onDestination} onCircuit={onCircuit}/>}
-      {section==='travel'&&<AirTravelPage initialTab='discover'/>}
+      {section==='travel'&&<TripPlanningExperience/>}
       {section==='radar'&&<FlightRadar onToolChange={onSectionChange}/>}
       {section==='booked'&&<Suspense fallback={<div className='op-alert'>Opening your flight importer…</div>}>
         <FlightGuardian onResearch={()=>onSectionChange('radar')}

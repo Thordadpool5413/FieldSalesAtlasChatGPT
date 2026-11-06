@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 // This is the sole final appearance layer, after all feature/component CSS imports.
 import './AtlasAtelier.css';
+import './WorkspaceExperience.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,14 +1,15 @@
-/* Field Sales Atlas PWA v11. Generic application shell may be cached offline.
+/* Field Sales Atlas PWA v12. Generic application shell may be cached offline.
  * Never cache API responses, workspace keys, auth records or personal data.
  * Updates remain user-approved to protect unsaved forms.
  */
-const CACHE_NAME='field-sales-atlas-static-v11';
+const CACHE_NAME='field-sales-atlas-static-v12';
 const PREFIX='field-sales-atlas-static-';
 const OFFLINE='/offline.html';
 const APP_SHELL='/';
 const PUBLIC_ASSETS=[
  '/resources/field-sales-atlas-logo.jpg',
  '/resources/app-icon.png',
+ '/resources/app-icon-192.png',
  '/resources/apple-touch-icon.png',
  '/resources/favicon.png',
  '/manifest.webmanifest'

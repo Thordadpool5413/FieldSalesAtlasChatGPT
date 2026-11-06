@@ -21,6 +21,7 @@
     "backend",
     "tests/**/*.test.ts",
     "vite.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "scripts/**/*.ts"
   ]
 }

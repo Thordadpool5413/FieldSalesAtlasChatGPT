@@ -9,19 +9,15 @@
   "theme_color": "#071525",
   "icons": [
     {
+      "src": "/resources/app-icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
       "src": "/resources/app-icon.png",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/resources/apple-touch-icon.png",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/resources/field-sales-atlas-logo.jpg",
-      "type": "image/jpeg",
-      "sizes": "2048x2048",
+      "sizes": "512x512",
       "purpose": "any"
     }
   ],
@@ -43,9 +39,9 @@
       "url": "/?page=home",
       "icons": [
         {
-          "src": "/resources/field-sales-atlas-logo.jpg",
-          "type": "image/jpeg",
-          "sizes": "2048x2048"
+          "src": "/resources/app-icon-192.png",
+          "type": "image/png",
+          "sizes": "192x192"
         }
       ]
     },
@@ -56,9 +52,9 @@
       "url": "/?page=plan&tool=travel",
       "icons": [
         {
-          "src": "/resources/field-sales-atlas-logo.jpg",
-          "type": "image/jpeg",
-          "sizes": "2048x2048"
+          "src": "/resources/app-icon-192.png",
+          "type": "image/png",
+          "sizes": "192x192"
         }
       ]
     },
@@ -69,9 +65,9 @@
       "url": "/?page=plan&tool=radar",
       "icons": [
         {
-          "src": "/resources/field-sales-atlas-logo.jpg",
-          "type": "image/jpeg",
-          "sizes": "2048x2048"
+          "src": "/resources/app-icon-192.png",
+          "type": "image/png",
+          "sizes": "192x192"
         }
       ]
     },
@@ -82,9 +78,9 @@
       "url": "/?page=calendar",
       "icons": [
         {
-          "src": "/resources/field-sales-atlas-logo.jpg",
-          "type": "image/jpeg",
-          "sizes": "2048x2048"
+          "src": "/resources/app-icon-192.png",
+          "type": "image/png",
+          "sizes": "192x192"
         }
       ]
     }

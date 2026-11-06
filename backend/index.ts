@@ -1,5 +1,6 @@
 import {
   router,
+  AppDatabaseError,
   json,
   error,
   db,
@@ -14,6 +15,11 @@ import { searchCensusZctas, resolveCensusZcta } from './censusZcta';
 import { nwsAirportForecast } from './nwsForecast';
 import { flightHistory } from './flightHistory';
 import { securityHistory, supportedCheckpointAirports } from './securityHistory';
+import { createDemoWorkspace } from './demo';
+import { zoneAt } from './travel/zones';
+import { zonedInstant } from '../shared/travel/time';
+import { makeTravelRoutes } from './travel/routes';
+import type { ScenarioBoard } from './travel/scenarios';
 
 type Member = { id: string; workspaceId: string; role: 'owner' | 'member' };
 type Team = { id: string; name: string; ownerId: string };
@@ -252,6 +258,9 @@ const safe = (value: string, max: number = 180) =>
   String(value || '')
     .trim()
     .slice(0, max);
+function guardRevision(workspaceId:string,revision:number){
+  return ()=>{if(db.workspaceRevision(workspaceId)!==revision)throw new AppDatabaseError('AppDatabaseConflict','Workspace changed during scheduling.');};
+}
 const tables = (workspaceId: string) => {
   const id = workspaceId.replace(/[^A-Za-z0-9_-]/g, '');
   return {
@@ -780,10 +789,21 @@ export const refreshPublicSourceStatus=async (_event:{
   return {statusCode:200};
 };
 
+async function travelBoard(workspaceId:string):Promise<ScenarioBoard>{
+  const revision=db.workspaceRevision(workspaceId);
+  const t=tables(workspaceId),x=extraTables(workspaceId);
+  const [managers,assignments,visits,coaching,trips,availability,trainerProfiles]=await Promise.all([
+    pageAll(t.managers),pageAll(t.assignments),pageAll(t.visits),pageAll(x.coaching),pageAll(x.trips),pageAll(x.trainerAvailability),trainerProfilesFor(workspaceId)
+  ]);
+  return {revision,managers:managers.items,assignments:assignments.items,visits:visits.items,coaching:coaching.items,trips:trips.items,
+    availability:availability.items,trainerProfiles,truncated:[managers,assignments,visits,coaching,trips,availability].some(result=>result.truncated)} as unknown as ScenarioBoard;
+}
 export const handler = router({
+  ...makeTravelRoutes({workspaceAccess,member,load:travelBoard,tables,extraTables,activityLog}),
   ...makeRestoreRoutes({workspaceAccess,member,tables,extraTables}),
 
   'GET /api/_healthcheck': [async () => json({ status: 'ready' })],
+  'POST /api/demo/create': [createDemoWorkspace],
   'POST /api/guest/create': [async () => {
     // A workspace is usable only when all three records commit together.
     const workspaceKey=randomUUID().replace(/-/g,'')+randomUUID().replace(/-/g,'');
@@ -1134,6 +1154,7 @@ export const handler = router({
     async ctx => {
       const m = await member(ctx.user!.userId);
       if (!m) return error('Team required.', 403);
+      const revision=db.workspaceRevision(m.workspaceId);
       const b = bodyOf(ctx.body);
       const t = tables(m.workspaceId);
       const managerId = str(b, 'managerId', 90);
@@ -1166,7 +1187,7 @@ export const handler = router({
         status: ['Planned', 'Completed', 'Rescheduled', 'Canceled'].includes(str(b, 'status', 25)) ? str(b, 'status', 25) : 'Planned',
         updatedAt: new Date().toISOString(),
       };
-      const [created] = await db.tx.add(t.visits, [record]);
+      const [[created]] = await db.transact([db.tx.add(t.visits, [record])],guardRevision(m.workspaceId,revision));
       if(created)await activityLog(m.workspaceId,trainerActor(ctx.query,ctx.user!.userId),'created','visit',record.date+' · '+person.name);
       return created
         ? json({ visit: record }, 201)
@@ -1233,6 +1254,7 @@ export const handler = router({
   'GET /api/operations': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId);
     if (!m) return json({ needsTeam: true });
+    const revision = db.workspaceRevision(m.workspaceId);
     const t = tables(m.workspaceId);
     const x = extraTables(m.workspaceId);
     const [team, managers, assignments, visits, coaching, trips, activity,trainerProfiles,availability] = await Promise.all([
@@ -1248,7 +1270,7 @@ export const handler = router({
       workspaceId: m.workspaceId, role: m.role,
     }]);
     return json({
-      needsTeam: false,
+      needsTeam: false, revision,
       team: { id: m.workspaceId, name: team?.name || 'Field Training Team', role: m.role },
       accessSeat:ctx.user!.scope.includes('trainer:trainer_b')?'trainer_b':
         ctx.user!.scope.includes('trainer:trainer_a')?'trainer_a':undefined,
@@ -1456,6 +1478,7 @@ export const handler = router({
   }],
   'PUT /api/visits/:id': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId); if (!m) return error('Team required.',403);
+    const revision=db.workspaceRevision(m.workspaceId);
     const table = tables(m.workspaceId).visits;
     const [existing] = await db.get<Visit>(table,[ctx.params.id],{consistent:true});
     if (!existing) return error('Visit not found.',404);
@@ -1478,19 +1501,26 @@ export const handler = router({
       if(blocked)return error('This trainer is marked '+blocked.reason.toLowerCase()+
         ' on '+date+'. Resolve the availability conflict before scheduling.',409);
     }
-    const [changed] = await db.tx.update(table,[{
+    const nextTrainer=strField(b,'trainer',100)||existing.trainer||'';
+    if(existing.tripId&&(managerId!==existing.managerId||date!==existing.date||nextTrainer!==existing.trainer))
+      return error('Reschedule or reassign this linked visit through its itinerary.',409);
+    const timingChanged=managerId!==existing.managerId||date!==existing.date||stateCode!==existing.stateCode||strField(b,'location',180)!==(existing.location||'');
+    const profiles=await trainerProfilesFor(m.workspaceId);
+    const [[changed]] = await db.transact([db.tx.update(table,[{
       id: ctx.params.id,
       ...(expectedUpdatedAt&&existing.updatedAt?{if:{updatedAt:expectedUpdatedAt}}:{}),
       record: {
         date,managerId,stateCode,status,
+        ...(timingChanged?{startTime:undefined,endTime:undefined,timeZone:undefined,startInstant:undefined,endInstant:undefined,timingStatus:'unresolved'}:{}),
+        trainerId:profiles.find(profile=>profile.name===nextTrainer)?.id,
         airport:strField(b,'airport',5).toUpperCase(),
         objective:strField(b,'objective',900),
         location:strField(b,'location',180),
-        trainer:strField(b,'trainer',100),
+        trainer:nextTrainer,
         outcome:strField(b,'outcome',1800),
         updatedAt:new Date().toISOString(),
       },
-    }],{patch:true});
+    }],{patch:true})],guardRevision(m.workspaceId,revision));
     if (!changed) return error('Visit was not updated.',409);
     await activityLog(m.workspaceId,trainerActor(ctx.query,ctx.user!.userId),'updated','visit',mgr.name + ' · ' + status);
     return json({ok:true});
@@ -1500,6 +1530,7 @@ export const handler = router({
     // visits together. If the transaction fails, neither record group is committed.
     const membership=await member(ctx.user!.userId);
     if(!membership)return error('Shared workspace required.',403);
+    const revision = db.workspaceRevision(membership.workspaceId);
     const b=bodyOf(ctx.body);
     const requestId=strField(b,'requestId',64);
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId))
@@ -1549,6 +1580,10 @@ export const handler = router({
     };
     const previous=await replay();
     if(previous)return previous;
+    if(b.expectedRevision!==undefined&&b.expectedRevision!==revision)return error('Workspace changed since preview. Refresh and review before approving.',409);
+    const profiles=await trainerProfilesFor(membership.workspaceId);
+    const profile=profiles.find(p=>p.name===trainer);
+    if(!profile||(b.trainerId!==undefined&&b.trainerId!==profile.id))return error('Choose a current trainer profile before scheduling.',400);
     if(await hasOverlappingTrainerTrip(membership.workspaceId,trainer,startDate,endDate))
       return error('This trainer has an overlapping saved trip. Review the calendar before scheduling.',409);
     const blocked=await conflictingTrainerBlock(membership.workspaceId,trainer,startDate,endDate);
@@ -1565,23 +1600,29 @@ export const handler = router({
     const tripStops=stops.map(({startTime,endTime,...stop})=>stop);
     const trip={
       id:tripId,requestHash,title,trainer,startDate,endDate,arrivalAirport,
-      status:'Planned',notes,stops:tripStops,
+      status:'Planned',trainerId:profile.id,notes,stops:tripStops,
       linkedVisitCount:stops.length,createdAt:now,updatedAt:now
     };
-    const scheduled=stops.map(s=>({
+    const buildScheduled=()=>stops.map(s=>{
+      const person=people.find(p=>p?.id===s.managerId) as (Manager & {lat?:number;lon?:number;timeZone?:string})|undefined;
+      const timeZone=zoneAt(person?.lat,person?.lon,person?.timeZone);
+      const instants=timeZone?{timeZone,startInstant:zonedInstant(s.date,s.startTime,timeZone),endInstant:zonedInstant(s.date,s.endTime,timeZone)}:{timingStatus:"unresolved"};
+      return ({
       id:'svisit_'+createHash('sha256').update(membership.workspaceId+'|'+requestId+'|'+s.managerId+'|'+s.date).digest('hex').slice(0,42),
-      managerId:s.managerId,stateCode:s.stateCode,date:s.date,
+      managerId:s.managerId,trainerId:profile.id,...instants,stateCode:s.stateCode,date:s.date,
       airport:arrivalAirport,trainer,location:s.location,
       objective:'Proposed coaching visit '+s.startTime+'–'+s.endTime+'. Appointment time is not yet confirmed.',
       status:'Planned',outcome:'',tripId,startTime:s.startTime,endTime:s.endTime,
       source:'field-atlas-itinerary',updatedAt:now
-    }));
+    });});
+    let scheduled:ReturnType<typeof buildScheduled>;
+    try { scheduled=buildScheduled(); } catch { return error('Appointment times are ambiguous or invalid in the local time zone. Choose another time.',400); }
     try{
       // Distinct lazy operations; db.transact commits both or neither.
       await db.transact([
         db.tx.add(tripTable,[trip]),
         db.tx.add(visitTable,scheduled)
-      ]);
+      ],()=>{if(db.workspaceRevision(membership.workspaceId)!==revision)throw new AppDatabaseError("AppDatabaseConflict","Workspace changed during approval.");});
     }catch(e:unknown){
       if(isAppDatabaseError(e)&&(
         e.code==='AppDatabaseDuplicateId'||e.code==='AppDatabaseUnknownOutcome'
@@ -1598,6 +1639,7 @@ export const handler = router({
   }],
   'POST /api/trips': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId); if (!m) return error('Team required.',403);
+    const revision=db.workspaceRevision(m.workspaceId);
     const b = bodyOf(ctx.body);
     const title = strField(b,'title',150), startDate=normalizeDate(b.startDate), endDate=normalizeDate(b.endDate);
     if (!title || !startDate || !endDate || startDate>endDate) return error('Trip requires a title and valid dates.',400);
@@ -1630,13 +1672,14 @@ export const handler = router({
     const record={ id:randomUUID(),title,startDate,endDate,
       trainer:strField(b,'trainer',100),arrivalAirport:strField(b,'arrivalAirport',5).toUpperCase(),
       status:'Planned',notes:strField(b,'notes',1500),stops,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString() };
-    const [added] = await db.tx.add(extraTables(m.workspaceId).trips,[record]);
+    const [[added]] = await db.transact([db.tx.add(extraTables(m.workspaceId).trips,[record])],guardRevision(m.workspaceId,revision));
     if (!added) return error('Unable to save trip.',409);
     await activityLog(m.workspaceId,trainerActor(ctx.query,ctx.user!.userId),'created','trip',title);
     return json({trip:record},201);
   }],
   'PUT /api/trips/:id': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId); if (!m) return error('Team required.',403);
+    const revision=db.workspaceRevision(m.workspaceId);
     const table=extraTables(m.workspaceId).trips;
     const [existing]=await db.get<Trip>(table,[ctx.params.id],{consistent:true});
     if (!existing) return error('Trip not found.',404);
@@ -1680,7 +1723,9 @@ export const handler = router({
     const now=new Date().toISOString();
     const nextTrainer=strField(b,'trainer',100);
     const nextAirport=strField(b,'arrivalAirport',5).toUpperCase();
+    const nextTrainerId=(await trainerProfilesFor(m.workspaceId)).find(profile=>profile.name===nextTrainer)?.id;
     const tripPatch={
+      trainerId:nextTrainerId,
       title,startDate,endDate,status,stops:nextStops,trainer:nextTrainer,
       arrivalAirport:nextAirport,notes:strField(b,'notes',1500),updatedAt:now
     };
@@ -1706,12 +1751,13 @@ export const handler = router({
         if(item){
           changes.push({id:item.id,record:{
             stateCode:stop.stateCode,date:stop.date,managerId:stop.managerId,
-            location:stop.location,trainer:nextTrainer,airport:nextAirport,updatedAt:now
+            location:stop.location,trainer:nextTrainer,trainerId:nextTrainerId,airport:nextAirport,updatedAt:now,
+            ...(stop.location!==(item.location||'')?{startTime:undefined,endTime:undefined,timeZone:undefined,startInstant:undefined,endInstant:undefined,timingStatus:'unresolved'}:{})
           },if:{status:item.status}});
         }else{
           additions.push({
             id:randomUUID(),managerId:stop.managerId,stateCode:stop.stateCode,
-            date:stop.date,airport:nextAirport,trainer:nextTrainer,
+            date:stop.date,airport:nextAirport,trainer:nextTrainer,trainerId:nextTrainerId,
             location:stop.location,status:'Planned',outcome:'',
             objective:'Proposed coaching visit. Appointment time still needs confirmation.',
             tripId:ctx.params.id,startTime:'',endTime:'',
@@ -1734,7 +1780,7 @@ export const handler = router({
     if(changes.length)operations.push(db.tx.update(visitTable,changes,{patch:true}));
     if(additions.length)operations.push(db.tx.add(visitTable,additions));
     try{
-      await db.transact(operations);
+      await db.transact(operations,guardRevision(m.workspaceId,revision));
     }catch(e:unknown){
       if(isAppDatabaseError(e)&&e.code==='AppDatabaseQuotaExceeded')throw e;
       return error('Trip and calendar could not be updated together. Reload before retrying.',409);

@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { AtlasDatabase, AppDatabaseError } from './database';
+export { AppDatabaseError } from './database';
 export { ws } from './events';
 
 export const db = new AtlasDatabase(resolve(process.env.ATLAS_DATA_DIR || './data', 'atlas.sqlite'));

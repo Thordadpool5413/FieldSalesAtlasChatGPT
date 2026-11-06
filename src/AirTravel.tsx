@@ -233,14 +233,14 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
     </div>
   </div>;
 }
-export default function AirTravelPage({initialTab='discover'}:{initialTab?:'discover'|'smart'|'compare'|'saved'}){
+export default function AirTravelPage({initialTab='discover',seedPlan}:{initialTab?:'discover'|'smart'|'compare'|'saved';seedPlan?:TravelPlan}){
   const ctx=useOp();
   const {board,airports,geo,geoBusy,geoError,identity}=ctx;
   const managers=board.managers||[];
   const [plans,setPlans]=useState<TravelPlan[]>([]);
   const [currentId,setCurrentId]=useState('');
   const [stalePlan,setStalePlan]=useState(false);
-  const [plan,setPlan]=useState<TravelPlan>(()=>newTravelPlan());
+  const [plan,setPlan]=useState<TravelPlan>(()=>seedPlan||newTravelPlan());
   const [prefs,setPrefs]=useState<TravelPrefs>(defaultTravelPrefs);
   const [,setPrefsSaved]=useState(false);
   const [prefsOpen,setPrefsOpen]=useState(false);
@@ -514,7 +514,7 @@ export default function AirTravelPage({initialTab='discover'}:{initialTab?:'disc
       const note='Generated from Field Sales Atlas smart coaching plan. Proposed appointment windows, not confirmed visits.\n'+
         scheduleText+'\nGround travel approximated. Validate routes, airline schedules, local time zones and meetings before travel.';
       const response=await api.post('/api/travel/commit',{
-        requestId:commitKey.current,
+        requestId:commitKey.current,expectedRevision:board.revision,trainerId:ctx.activeTrainerId,
         title:(plan.title.trim()||'Air travel coaching circuit')+' · field itinerary',
         trainer:plan.trainer.trim()||chosenManagers[0]?.trainer||ctx.activeTrainer.name,
         startDate:plan.departDate,endDate:plan.returnDate,arrivalAirport:arrivalCode,

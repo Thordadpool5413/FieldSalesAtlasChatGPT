@@ -10,10 +10,25 @@ Use **Node 24.10 or newer within Node 24** (the development version is in `.node
 
 ```sh
 npm ci
+npm run setup:optimizer
 npm run dev
 ```
 
 The development server listens on port 5173, serves the Vite frontend and API together, and reloads backend changes. No account or API key is required. Opening the app creates an empty persistent workspace and saves its access link in the browser.
+
+Python 3.12 is tested for the two-trainer OR-Tools travel optimizer. **Travel → Plan Travel → Plan together** compares joint field schedules, explicit journey times, evidence gaps and incomplete budgets, then saves both trainers’ proposed appointments atomically. Read [the implementation and source-status guide](docs/TRAVEL_INTELLIGENCE_IMPLEMENTATION.md) for setup, actual integration limits, OSRM configuration and direct BTS import instructions.
+
+**Travel assistant**, **Flight change**, and **Data connections** add cited deadline calculations, reviewed disruption recovery and direct source validation. [The current release guide](docs/DEPENDABLE_TRAVEL_RELEASE.md) distinguishes working calculations from the still-blocked live weather, map and BTS downloads, and documents the saved unpublished network draft. The assistant does not edit the calendar; recovery applies only an explicitly reviewed complete option.
+
+## Workspace setup and guided planning
+
+On an empty Atlas, **Set up workspace** opens a nonblocking checklist for trainer profiles/home airports, manager entry or CSV import, and territory assignment. Progress comes from saved workspace records. Dismiss the reminder if you prefer; reopen it from Workspace setup in the sidebar or phone tools menu.
+
+**Explore a demo** creates a separate workspace with clearly labeled sample managers, trainer profiles, territories and a coaching follow-up. It never seeds the current workspace. The original link stays in this tab's session storage so **Return to my workspace** can reopen it; keep your original link for recovery after closing the browser session. Demo records are editable sample data, not live customers or flight information.
+
+Travel → Plan Travel now opens a four-step guided workflow: People → Dates → Airports → Review. It uses the existing scheduling engine and shows saved-trip, duplicate-visit and trainer-availability conflicts before saving. The server rechecks conflicts and commits the itinerary and proposed calendar visits together. Appointment windows, airline schedules, actual road routes and time zones still require confirmation. **Advanced comparison** carries the selected people, dates and gateway into the existing quote and cost tools.
+
+On phones, Atlas uses a compact heading, collapsible market discovery and a territory details sheet. The street-map engine loads only when live-map mode is selected. Sized PWA artwork is generated from the preserved originals in `docs/export/`; `npm run assets:optimize` regenerates those derivatives using Chromium without redrawing the artwork. The bundled U.S. airport coordinates have source provenance in `docs/airport-reference.md` and remain explicitly labeled as limited starter references during source outages.
 
 Optional settings can be copied from `.env.example` into `.env`. Both development and production read this file. Process environment variables take precedence.
 
@@ -22,6 +37,8 @@ Optional settings can be copied from `.env.example` into `.env`. Both developmen
 | `HOST` | `127.0.0.1` | Bind address; set to `0.0.0.0` on a deployment host. |
 | `PORT` | `5173` | HTTP port. |
 | `ATLAS_DATA_DIR` | `./data` | Persistent directory for `atlas.sqlite` and its WAL files. |
+| `ATLAS_ROUTING_URL` | Unconfigured | Maintained OSRM endpoint; absent/unavailable routing produces explicitly provisional geographic estimates. |
+| `ATLAS_PYTHON` | `.venv/bin/python` when present | Runtime with the locked OR-Tools dependencies installed. |
 
 Run commands from the repository root. The configured HTTP proxy and TLS trust remain enabled for public-source requests.
 
@@ -46,6 +63,7 @@ Browser tests use bundled Playwright Chromium, or `/usr/bin/chromium` if present
 
 ```sh
 npm ci
+npm run setup:optimizer
 npm run build
 HOST=0.0.0.0 PORT=5173 ATLAS_DATA_DIR=/path/to/persistent/atlas-data npm start
 ```
@@ -72,6 +90,7 @@ The application uses public reference data and labels stale/unavailable sources.
 ```text
 api.weather.gov
 aviationweather.gov
+api.weather.gc.ca
 cdn.jsdelivr.net
 datasets-server.huggingface.co
 davidmegginson.github.io
@@ -81,6 +100,8 @@ geocoding.geo.census.gov
 nasstatus.faa.gov
 raw.githubusercontent.com
 tiles.openfreemap.org
+transtats.bts.gov
+www.transtats.bts.gov
 www2.census.gov
 ```
 

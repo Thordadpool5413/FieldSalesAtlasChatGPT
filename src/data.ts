@@ -1,3 +1,5 @@
+import airportReference from './airport-reference.json';
+
 export type Region = { code: string; name: string; fips: string };
 export type Airport = {
   iata: string;
@@ -207,4 +209,5 @@ export const STARTER_AIRPORTS: Airport[] = starterRows.map((r, i) => ({
   name: r[2],
   tier: i % 2 === 0 ? 'Major' : 'Secondary',
   scheduled: true,
+  ...airportReference[r[1] as keyof typeof airportReference],
 }));

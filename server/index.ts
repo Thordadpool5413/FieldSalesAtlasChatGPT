@@ -13,6 +13,9 @@ const host = process.env.HOST || '127.0.0.1';
 const port = Number(process.env.PORT || 5173);
 const { handler, refreshPublicSourceStatus } = await import('../backend/index');
 const { db } = await import('../backend/runtime/sdk');
+const { runTravelReviews } = await import('../backend/travel/watch');
+const travelReviews = setInterval(() => { void runTravelReviews().catch(() => console.error('Travel review pass could not complete.')); }, 30000);
+travelReviews.unref();
 const dist = resolve(root, 'dist');
 if (production && !existsSync(resolve(dist, 'index.html'))) throw new Error('Run npm run build before npm start.');
 
@@ -110,6 +113,7 @@ function shutdown() {
   if (stopping) return;
   stopping = true;
   clearInterval(schedule);
+  clearInterval(travelReviews);
   closeEvents();
   server.close(() => { void vite?.close().finally(() => { db.close(); }); if (!vite) db.close(); });
   setTimeout(() => process.exit(), 5000).unref();

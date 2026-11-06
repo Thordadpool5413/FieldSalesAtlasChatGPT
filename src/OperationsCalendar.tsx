@@ -354,13 +354,13 @@ export function CalendarPage(){
               <div className="op-info-icon">{e.type==='trip'?<CalendarDays size={16}/>:<CheckCircle2 size={16}/>}</div>
               <div><strong>{e.label}</strong><span>{e.type==='visit'?managers.find(m=>m.id===e.record.managerId)?.name:e.type==='availability'?'Shared time block':'Field trip'}</span>
                 <span>{e.trainer||'Trainer not assigned'} · {e.type==='trip'?'Multi-day itinerary':e.type==='availability'?e.record.reason:e.record.airport||'Airport not specified'}</span>
-                {e.type==='visit'&&((e.record as Visit).startTime||(e.record as Visit).endTime)&&<span>Proposed coaching window: {[(e.record as Visit).startTime,(e.record as Visit).endTime].filter(Boolean).join(' – ')} · confirm with manager</span>}
+                {e.type==='visit'&&((e.record as Visit).startTime||(e.record as Visit).endTime)&&<span>Proposed coaching window: {[(e.record as Visit).startTime,(e.record as Visit).endTime].filter(Boolean).join(' – ')} {(e.record as Visit).timeZone || '· time zone unresolved'} · confirm with manager</span>}
               </div>
               {e.type==='visit'&&<button className="op-btn tiny" onClick={()=>ctx.open('visit',e.record)}>Edit</button>}
               {e.type==='trip'&&<button className="op-btn tiny" onClick={()=>ctx.go('trips')}>Trips</button>}
                 {e.type==='availability'&&<button className="op-btn tiny" onClick={()=>ctx.go('coordinate')}>Manage</button>}
             </div>)}
-          <div className="op-muted-block" style={{marginTop:20}}>Outlook export creates an ICS file with proposed coaching windows in event notes. It does not create timezone-verified appointments, live bookings, two-way Microsoft 365 sync, or automatically detect external meeting changes.</div>
+          <div className="op-muted-block" style={{marginTop:20}}>Calendar export uses exact UTC times when a local time zone was resolved. Older visits with unresolved times remain all-day events. Appointments are proposed; external calendar synchronization and booking changes are not monitored.</div>
         </div>
       </aside>
     </div>}

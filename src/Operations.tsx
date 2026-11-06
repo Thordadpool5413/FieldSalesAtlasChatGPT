@@ -49,12 +49,14 @@ import { ws } from './runtime/client';
 import './SharedWorkspace.css';
 import SharedWorkspacePage from './SharedWorkspacePage';
 import TrainerProfilesEditor from './TrainerProfilesEditor';
-import TwoTrainerWeek from './TwoTrainerWeek';
+import WorkspaceSetup from './WorkspaceSetup';
 import localUsAtlas from './us-states-10m.json';
 import { api,createNewWorkspace,getShareUrl,initializeWorkspace } from './workspaceApi';
 const AirTravelPage = lazy(() => import('./AirTravel'));
 const MiamiMapHome = lazy(() => import('./MiamiMapHome'));
 const TodayHub = lazy(() => import('./TodayHub'));
+const TwoTrainerWeek = lazy(() => import('./TwoTrainerWeek'));
+
 
 export type Page = 'today' | 'mission' | 'plan' | 'people' | 'week' | 'radar' | 'booked' | 'coordinate' | 'home' | 'air' | 'overview' | 'map' | 'managers' | 'trips' | 'coaching' | 'calendar' | 'data' | 'team';
 export type Dialog = 'manager' | 'assignment' | 'visit' | 'coaching' | 'trip' | 'invite' | null;
@@ -193,6 +195,7 @@ function Product(){
   const [menuOpen,setMenuOpen]=useState(false);
   const [quickAddOpen,setQuickAddOpen]=useState(false);
   const [pwaOpen,setPwaOpen]=useState(false);
+  const [setupOpen,setSetupOpen]=useState(false);
   const [moreOpen,setMoreOpen]=useState(false);
   const moreSheetTouchY=useRef<number|null>(null);
   const quickSheetTouchY=useRef<number|null>(null);
@@ -655,7 +658,8 @@ function Product(){
           </button>
           <div className="fsa-sidebar-label fsa-sidebar-label-tools">FIELD INTELLIGENCE</div>
           <nav className="fsa-side-nav fsa-side-tools" aria-label="Field intelligence tools">
-            {FIELD_SHORTCUTS.map(item=>{
+            <button type="button" className="fsa-side-link fsa-tool-link" onClick={()=>{setSetupOpen(true);setMoreOpen(false);setMenuOpen(false);}}><Compass size={17}/><span>Workspace setup</span></button>
+              {FIELD_SHORTCUTS.map(item=>{
               const Icon=item.icon;
               const active=item.id==='mission' ? view==='mission' : item.id==='coaching'
                 ? view==='people'&&peopleSection==='coaching'
@@ -746,6 +750,7 @@ function Product(){
               <Settings size={19}/><span>Tools</span><ChevronDown size={15}/>
             </button>
             {moreOpen&&<div className="mv-more-menu">
+              <button type="button" onClick={()=>{setSetupOpen(true);setMoreOpen(false);}}><Compass size={17}/> Workspace setup</button>
               <button type="button" className="mv-more-create" onClick={()=>{setQuickAddOpen(true);setMoreOpen(false);}}>
                 <Plus size={17}/> Create field record
               </button>
@@ -840,6 +845,7 @@ function Product(){
             <Icon size={18}/>{item.label}
           </button>;
         })}
+        <button onClick={()=>{setSetupOpen(true);setMenuOpen(false);}}><Compass size={18}/> Workspace setup</button>
         <button onClick={()=>{setTrainerProfilesOpen(true);setMenuOpen(false);}}><Settings size={18}/> Trainer profiles</button>
         <button onClick={()=>{toggleTheme();setMenuOpen(false);}}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>} {theme==='dark'?'Light theme':'Dark theme'}</button>
         <button onClick={()=>{toggleDensity();setMenuOpen(false);}}><LayoutDashboard size={18}/> {density==='compact'?'Comfortable spacing':'Compact spacing'}</button>
@@ -849,7 +855,7 @@ function Product(){
       </nav>
       <div className="mv-shell">
         {view!=='home'&&<FieldCompass variant="mobile"/>}
-        <div id="field-atlas-main" tabIndex={-1} className={'mv-content op-content'+(view==='home'?' mv-content-map':' mv-content-inner')}>
+        <main id="field-atlas-main" tabIndex={-1} className={'mv-content op-content'+(view==='home'?' mv-content-map':' mv-content-inner')}>
           {error&&<div className="op-error" role="alert"><CircleAlert size={17}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Dismiss error"><X size={15}/></button></div>}
           {notice&&<div className="op-notice" role="status"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss notice"><X size={15}/></button></div>}
           {identity==='loading'&&<div className="op-alert"><RefreshCw size={18}/><span>Opening your workspace. No account required.</span></div>}
@@ -857,6 +863,7 @@ function Product(){
             <button className="op-btn tiny" onClick={()=>initializeWorkspace().then(()=>reload()).catch(e=>setError(errorText(e)))}>Retry link</button>
             <button className="op-btn tiny" onClick={startFreshWorkspace}>Create separate workspace</button>
           </div>}
+          <WorkspaceSetup expanded={setupOpen} onExpandedChange={setSetupOpen}/>
           {identity==='member'&&board.truncated&&<div className="op-alert warn"><CircleAlert size={18}/><span>The workspace has more records than the current data page. Review all records before relying on totals or bulk changes.</span></div>}
           {view==='plan'&&<PlanHub section={planSection} onSectionChange={changePlanSection} onDestination={startTravel} onCircuit={startCircuit}/>}
           {view==='people'&&<PeopleHub section={peopleSection} onSectionChange={changePeopleSection}/>}
@@ -871,7 +878,7 @@ function Product(){
           {view==='air'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening travel planner…</div>}>
             <AirTravelPage initialTab='discover'/>
           </Suspense>}
-          {view==='week'&&<TwoTrainerWeek onDestination={startTravel} onCircuit={startCircuit}/>}
+          {view==='week'&&<Suspense fallback={<p role='status'>Opening the field week…</p>}><TwoTrainerWeek onDestination={startTravel} onCircuit={startCircuit}/></Suspense>}
           {view==='overview'&&<OverviewPage/>}
           {view==='map'&&<MapPage/>}
           {view==='managers'&&<ManagersPage/>}
@@ -880,7 +887,7 @@ function Product(){
           {view==='calendar'&&<CalendarPage/>}
           {view==='data'&&<DataPage/>}
           {view==='team'&&<SharedWorkspacePage/>}
-        </div>
+        </main>
         {view!=='home'&&<footer className="op-footer mv-footer"><span>Field Sales Atlas · Sales Operational Guide</span>
           <span>Shared-link workspace · Only share the access link with trusted colleagues</span>
         </footer>}

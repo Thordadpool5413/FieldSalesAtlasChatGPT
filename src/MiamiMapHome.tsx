@@ -2,14 +2,13 @@
 import { geoAlbersUsa,geoGraticule,geoMercator,geoPath } from 'd3-geo';
 import { ArrowRight,CalendarCheck,CalendarClock,ChevronDown,Compass,Layers,MapPin,Maximize2,Minimize2,Plane,PlaneTakeoff,Plus,Search,Sparkles,Users,X } from 'lucide-react';
 import type { MouseEvent as SvgMouseEvent,PointerEvent as SvgPointerEvent } from 'react';
-import { useEffect,useMemo,useRef,useState } from 'react';
+import { lazy,Suspense,useEffect,useMemo,useRef,useState } from 'react';
 import { feature,merge } from 'topojson-client';
 import AtlasLiveDeck from './AtlasLiveDeck';
 import AtlasMissionRail from './AtlasMissionRail';
 import { CANADA_REGIONS,CANADA_REGION_BY_CODE } from './CanadaRegions';
 import { territoryPeople } from './fieldExperience';
 import type { LiveMapHandle } from './LiveTerritoryMap';
-import LiveTerritoryMap from './LiveTerritoryMap';
 import './MapIntelligence.css';
 import { useOp } from './Operations';
 import type { Airport,Assignment,Manager } from './opsModels';
@@ -22,6 +21,7 @@ type Props={
   onDestination:(region:Region,manager?:Manager,reference?:{lat:number;lon:number;label:string},arrivalAirport?:string)=>void;
   onAddManager:(code?:string)=>void;
 };
+const LiveTerritoryMap=lazy(()=>import('./LiveTerritoryMap'));
 const CANADA_URL='https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson';
 const EMPTY_CANADIAN_BOUNDARIES:Geo['features']=[];
 const US_LOOKUP=Object.fromEntries(STATES.map(s=>[s.fips,s]));
@@ -729,7 +729,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
                :(region?relatedManagers.length:managers.length)+' saved managers'}
          </div>
        </div>
-       {!region&&!focusMap&&<section className="atlas-public-market-rail" aria-label="Explore national airport gateway markets">
+       {!region&&!focusMap&&<details className="atlas-market-discovery"><summary>Explore popular markets <ChevronDown size={16}/></summary><section className="atlas-public-market-rail" aria-label="Explore national airport gateway markets">
          <div className="atlas-public-market-lead">
            <span><Sparkles size={14}/> PUBLIC DATA · READY NOW</span>
            <strong>Choose a market. Discover the connections.</strong>
@@ -744,7 +744,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
          <button className="atlas-public-market-flight" type="button" onClick={()=>ctx.go('radar')}>
            <PlaneTakeoff size={16}/> Research flights
          </button>
-       </section>}
+       </section></details>}
        {mapLens==='visits'&&<section className="atlas-visit-timeline" aria-label="Scheduled field visits by date range">
          <div className="atlas-visit-timeline-heading">
            <CalendarClock size={20}/>
@@ -800,7 +800,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
        <div className="mv-map-body">
       <div className="atlas-map-coordinates" aria-hidden="true"><span>GEOGRAPHIC TERRITORY SYSTEM</span><span>{countryScope==='us'?'USA / ALBERS':'CAN / MERCATOR'}</span></div>
       <div ref={frameRef} className={'mv-map-frame'+(mapStyle==='roads'?' mv-map-frame-roads':' mv-map-frame-vice')}>
-        {showLiveMap&&<LiveTerritoryMap ref={liveMapRef} atlas={atlas} canadaFeatures={(canada?.features||EMPTY_CANADIAN_BOUNDARIES) as never}
+        {showLiveMap&&<Suspense fallback={null}><LiveTerritoryMap ref={liveMapRef} atlas={atlas} canadaFeatures={(canada?.features||EMPTY_CANADIAN_BOUNDARIES) as never}
           theme={theme} scope={countryScope} region={region} styleChoice={mapStyle}
           airports={airports} managers={managers} assignments={assignments}
           airportLayer={airportLayer} trainer={trainer} showAssigned={showAssigned}
@@ -815,7 +815,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           onSelectCounty={area=>{setSelectedMapArea({...area,kind:'county'});ctx.setSelectedCounty(area.code);setPanelTab('coverage');}}
           onSelectTown={area=>{setSelectedMapArea({...area,kind:'town'});setPanelTab('coverage');}}
           onHoverRegion={setHoveredRegion}
-          onReady={setLiveReady} onZoom={setLiveZoom}/>}
+          onReady={setLiveReady} onZoom={setLiveZoom}/></Suspense>}
         <AtlasLiveDeck region={region} onAddManager={onAddManager}/>
         <div className="fsa-map-hud" aria-hidden="true">
           <span><i/> {showLiveMap&&liveReady?'STREET BASEMAP · PUBLIC TILES':showLiveMap?'LOADING STREETS · VECTOR BACKUP READY':'VECTOR TERRITORY ATLAS'}</span>

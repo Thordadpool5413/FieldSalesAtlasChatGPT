@@ -49,6 +49,27 @@ export async function createNewWorkspace(){
   return key;
 }
 
+const RETURN_KEY='field-atlas-demo-return-v1';
+export async function openDemoWorkspace(){
+  const response=await transport.post('/api/demo/create',{});
+  const key=String(response.data?.workspaceKey||'');
+  if(!validKey.test(key))throw Error('Demo creation did not return a valid workspace.');
+  // Keep the real workspace link on this device, never inside demo records.
+  if(accessKey){
+    try{window.sessionStorage.setItem(RETURN_KEY,accessKey);}catch{throw Error('Browser storage is unavailable. Keep a copy of your current workspace link before opening a demo.');}
+  }
+  saveKey(key);
+}
+export function canReturnFromDemo(){
+  try{return validKey.test(window.sessionStorage.getItem(RETURN_KEY)||'');}catch{return false;}
+}
+export function returnFromDemo(){
+  const key=window.sessionStorage.getItem(RETURN_KEY)||'';
+  if(!validKey.test(key))throw Error('Open your original workspace link to return to your records.');
+  saveKey(key);
+  window.sessionStorage.removeItem(RETURN_KEY);
+}
+
 export async function joinWorkspaceLink(input:string){
   const value=input.trim();
   let key='';

@@ -17,6 +17,11 @@ export type Assignment = Omit<BasicAssignment, 'areaType'> & {
   areaType: 'state' | 'county' | 'place' | 'zip';
 };
 export type Visit = BasicVisit & {
+  trainerId?: 'trainer_a' | 'trainer_b';
+  timeZone?: string;
+  startInstant?: string;
+  endInstant?: string;
+  timingStatus?: 'unresolved';
   location?: string;
   trainer?: string;
   outcome?: string;
@@ -36,6 +41,7 @@ export type TripStop = {
   lat?: number; lon?: number;
 };
 export type Trip = {
+  trainerId?: 'trainer_a' | 'trainer_b';
   id: string; title: string; trainer: string; startDate: string; endDate: string;
   arrivalAirport: string; status: 'Planned' | 'Completed' | 'Canceled';
   notes: string; stops: TripStop[]; createdAt: string; updatedAt: string;
@@ -58,6 +64,7 @@ export const defaultTrainerProfiles:TrainerProfile[]=[
   {id:'trainer_b',name:'Trainer 2',homeCity:'',homeAirports:[],homeDriveMinutes:{},preferredAirlines:'',preferNonstop:true,maxConnections:1,notes:''}
 ];
 export type Board = {
+  revision?: number;
   needsTeam?: boolean;
   team?: { id: string; name: string; role: string };
   accessSeat?:'trainer_a'|'trainer_b';
@@ -139,16 +146,19 @@ export function exportCSV(filename: string, rows: Array<Record<string,unknown>>,
 const icsEscape=(value:string)=>String(value||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
 const icsDay=(v:string)=>v.replace(/-/g,'');
 function nextDate(v:string){const d=new Date(v+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10);}
-export function exportCalendar(visits:Visit[],trips:Trip[],managers:Manager[],blocks:AvailabilityBlock[]=[],trainers:TrainerProfile[]=[]) {
+export function calendarContents(visits:Visit[],trips:Trip[],managers:Manager[],blocks:AvailabilityBlock[]=[],trainers:TrainerProfile[]=[]) {
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Field Sales Atlas//Coaching calendar//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   for(const v of visits.filter(v=>v.status!=='Canceled')) {
     const m=managers.find(m=>m.id===v.managerId);
+    const timed=!!v.timeZone&&!!v.startInstant&&!!v.endInstant&&Number.isFinite(Date.parse(v.startInstant))&&Date.parse(v.endInstant)>Date.parse(v.startInstant);
+    const instant=(value:string)=>new Date(value).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
     lines.push('BEGIN:VEVENT','UID:'+v.id+'@field-atlas','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''),
-      'DTSTART;VALUE=DATE:'+icsDay(v.date),'DTEND;VALUE=DATE:'+icsDay(nextDate(v.date)),
+      ...(timed?['DTSTART:'+instant(v.startInstant!),'DTEND:'+instant(v.endInstant!)]:['DTSTART;VALUE=DATE:'+icsDay(v.date),'DTEND;VALUE=DATE:'+icsDay(nextDate(v.date))]),
+      'STATUS:'+(v.status==='Completed'?'CONFIRMED':'TENTATIVE'),
       'SUMMARY:'+icsEscape((v.status==='Completed'?'Completed coaching':'Proposed coaching')+' · '+(m?.name||'Manager')),
       'DESCRIPTION:'+icsEscape([
         v.objective||'Coaching visit',
-        v.startTime&&v.endTime?'Proposed local-time window '+v.startTime+'–'+v.endTime+' (destination timezone unverified; not a confirmed meeting).':'',
+        v.startTime&&v.endTime?'Proposed local-time window '+v.startTime+'–'+v.endTime+' ('+(timed?v.timeZone:'destination timezone unverified')+'; confirm with manager).':'',
         v.trainer?'Trainer: '+v.trainer:'',
         v.tripId?'Linked to the shared Field Sales Atlas itinerary.':''
       ].filter(Boolean).join('\n')),
@@ -171,7 +181,16 @@ export function exportCalendar(visits:Visit[],trips:Trip[],managers:Manager[],bl
       'END:VEVENT');
   }
   lines.push('END:VCALENDAR');
-  downloadFile('field-atlas-calendar.ics',lines.join('\r\n'),'text/calendar;charset=utf-8');
+  const encoder=new TextEncoder();
+  const folded=lines.map(line=>{
+    let result='',part='',bytes=0;
+    for(const char of line){const count=encoder.encode(char).length;if(bytes+count>75){result+=part+'\r\n';part=' ';bytes=1;}part+=char;bytes+=count;}
+    return result+part;
+  });
+  return folded.join('\r\n')+'\r\n';
+}
+export function exportCalendar(visits:Visit[],trips:Trip[],managers:Manager[],blocks:AvailabilityBlock[]=[],trainers:TrainerProfile[]=[]) {
+  downloadFile('field-atlas-calendar.ics',calendarContents(visits,trips,managers,blocks,trainers),'text/calendar;charset=utf-8');
 }
 export function routeUrl(airport:Airport|undefined, stops:TripStop[], people:Manager[]) {
   const places=stops.map(s=>people.find(m=>m.id===s.managerId)).filter((m):m is Manager=>!!m && m.lat!==undefined&&m.lon!==undefined);

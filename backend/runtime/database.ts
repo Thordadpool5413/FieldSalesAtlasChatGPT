@@ -42,10 +42,25 @@ export class AtlasDatabase {
         document TEXT NOT NULL CHECK(json_valid(document)),
         PRIMARY KEY (collection, id)
       ) WITHOUT ROWID;
+      CREATE TABLE IF NOT EXISTS collection_revisions (
+        collection TEXT PRIMARY KEY,
+        revision INTEGER NOT NULL DEFAULT 0
+      ) WITHOUT ROWID;
     `);
   }
 
   close() { this.connection.close(); }
+
+  workspaceRevision(workspaceId: string): number {
+    const suffix = '_' + workspaceId;
+    const collections = ['managers', 'assignments', 'visits', 'trips', 'coaching', 'trainer_profiles', 'availability', 'travel_plans', 'travel_prefs', 'flight_changes', 'itinerary_updates'].map(name => 'atlas_' + name + suffix);
+    const statement = this.connection.prepare('SELECT revision FROM collection_revisions WHERE collection = ?');
+    return collections.reduce((sum, name) => sum + Number(statement.get(name)?.revision || 0), 0);
+  }
+
+  private changed(table: string) {
+    this.connection.prepare('INSERT INTO collection_revisions(collection, revision) VALUES (?, 1) ON CONFLICT(collection) DO UPDATE SET revision = revision + 1').run(table);
+  }
 
   async get<T = RecordData>(table: string, ids: string[], _options?: { consistent?: boolean }): Promise<(T | null)[]> {
     const statement = this.connection.prepare('SELECT document FROM records WHERE collection = ? AND id = ?');
@@ -100,7 +115,9 @@ export class AtlasDatabase {
       return records.map(record => {
         const id = (record as { id?: unknown }).id;
         if (typeof id !== 'string' || !id) throw new AppDatabaseError('AppDatabaseInvalidRecord', 'Record ID is required.');
-        return insert.run(table, id, JSON.stringify(record)).changes === 1;
+        const changed = insert.run(table, id, JSON.stringify(record)).changes === 1;
+        if (changed) this.changed(table);
+        return changed;
       });
     }),
     update: (table: string, changes: Change[], options: WriteOptions = {}): Operation<boolean[]> => new Operation(this, () => {
@@ -110,25 +127,29 @@ export class AtlasDatabase {
         if (change.if && (!before || Object.entries(change.if).some(([key, value]) => before[key] !== value))) return false;
         if (options.patch && !before) return false;
         save.run(table, change.id, JSON.stringify({ ...(options.patch ? before : {}), ...change.record, id: change.id }));
+        this.changed(table);
         return true;
       });
     }),
     delete: (table: string, ids: string[]): Operation<boolean[]> => new Operation(this, () => {
       const remove = this.connection.prepare('DELETE FROM records WHERE collection = ? AND id = ?');
-      return ids.map(id => remove.run(table, id).changes === 1);
+      return ids.map(id => { const changed = remove.run(table, id).changes === 1; if (changed) this.changed(table); return changed; });
     }),
   };
 
   delete(table: string, ids: string[]) { return this.tx.delete(table, ids); }
 
-  async transact(operations: Operation<boolean[]>[]): Promise<boolean[][]> {
+  async transact(operations: Operation<boolean[]>[], guard?: () => void): Promise<boolean[][]> {
     if (operations.some(operation => operation.store !== this)) throw new Error('Cross-database transaction is unsupported.');
-    return this.write(() => operations.map(operation => {
+    return this.write(() => {
+      guard?.();
+      return operations.map(operation => {
       const result = operation.execute();
       if (result.some(success => !success)) {
         throw new AppDatabaseError('AppDatabaseConflict', 'Transaction conflicted with an existing or changed record.');
       }
       return result;
-    }));
+      });
+    });
   }
 }
