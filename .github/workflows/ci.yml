@@ -21,7 +21,17 @@ jobs:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: artifacts/api-server/src/field-atlas/services/optimizer/requirements.lock.txt
-      - run: pnpm run setup:optimizer
+      - name: Install optimizer with inherited user-site pip settings
+        env:
+          PIP_USER: 'true'
+          PIP_CONFIG_FILE: ${{ runner.temp }}/atlas-pip-user.conf
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          Path(os.environ['PIP_CONFIG_FILE']).write_text('[install]\nuser = true\n')
+          PY
+          pnpm run setup:optimizer
       - run: pnpm test
       - run: pnpm run build
       - run: pnpm run test:api

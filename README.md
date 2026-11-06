@@ -9,14 +9,12 @@ GitHub `main` now includes both the original application history and the recover
 Stop the current Run process, then use the Replit Shell:
 
 ```bash
-git pull --ff-only origin main
-git status -sb
-pnpm run replit
+git pull --no-rebase origin main && pnpm run replit
 ```
 
 The Run button executes the same `pnpm run replit` command. It installs the locked dependencies and optimizer, then keeps both services running. The separate `api-smoke` workflow runs temporary tests and exits; it is not the app startup workflow.
 
-For the previously reported clean Replit `main` at `0ecbdd2`, this pull is a fast-forward. If you have made additional commits or uncommitted edits since creating the recovery branch, preserve those changes and review the Git message before proceeding. No force push or reset is needed for the recovered commit.
+The initial recovery made the Replit commit `0ecbdd2` an ancestor of `main`. Replit can create additional local commits after that recovery. When both Replit and GitHub have changed, a normal merge pull preserves both histories; `--ff-only` deliberately refuses that situation. Preserve uncommitted edits before pulling, and review any merge conflicts before running the app. The `&&` above prevents startup if the pull fails.
 
 Pulling or running does not publish the app. The published `.replit.app` address is a separate snapshot. Publication remains a separate owner action.
 
@@ -30,6 +28,8 @@ pnpm install --frozen-lockfile
 pnpm run setup:optimizer
 pnpm dev
 ```
+
+The optimizer installs into `.venv`, including on hosts where pip defaults to `--user`. The installer overrides the install destination for that command while retaining configured package indexes, proxies, and certificate trust.
 
 The web app uses port 24397; the API uses port 8080. `PORT` and `ATLAS_API_PORT` override these ports for the combined local runner. The web development server forwards `/api` requests, including live updates, to the API service. Stopping the runner stops both services; a service failure also stops its companion.
 
