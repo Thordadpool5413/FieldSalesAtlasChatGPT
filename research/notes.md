@@ -6,7 +6,7 @@
 ## Plan
 
 - **Question:** Which additional free or public APIs and datasets can materially improve Field Sales Atlas territory and travel intelligence?
-- **Scope:** Review current app sources, identify authoritative additions for territory sizing, local prospecting, travel operations, and selected verticals; compare licensing, cost, coverage, cadence, and operational fit. Exclude paid flight inventory and sources without workable commercial terms.
+- **Scope:** Review current app sources, identify authoritative additions for territory sizing, local prospecting, airline/airport intelligence, travel operations, and selected verticals; compare licensing, cost, coverage, cadence, and operational fit. Exclude paid flight inventory and sources without workable commercial terms.
 - **Audience:** Field Sales Atlas product owner and engineering team.
 - **Deliverable:** Evidence-backed report with a ranked integration plan, limitations, source links, and recommendations for safe data freshness and provenance.
 
@@ -19,6 +19,7 @@
 | 3 | Open places and local prospecting data | complete | 6 |
 | 4 | Ground travel, weather, and aviation operations | complete | 8 |
 | 5 | Industry-specific public data and integration priorities | complete | 3 |
+| 6 | Airline, air-travel, and airport intelligence | complete | 15 |
 
 ## Coverage Checklist
 
@@ -78,6 +79,14 @@ The most useful intelligence layer may be the app's own first-party visit outcom
 ## Cross-check and Deliverable
 
 The final report was checked against saved source pages for Census API limits, CBP release status, Canadian Business Counts cadence, Overture cadence/licensing, 511 limits, Open-Meteo terms, OpenSky restrictions, the airport-wait archive, and official CBP historical wait-time semantics. The report is `research/free-data-intelligence.md`; the source registry is `research/sources.json` with 28 sources.
+
+### Airline, air-travel, and airport intelligence
+
+BTS T-100 offers monthly route/market traffic and capacity; DB1C is a 40% monthly ticket sample effective July 2025 with fare and itinerary fields. DOT Air Travel Consumer Reports add service-quality measures; normalize complaint and baggage counts by passengers or flights. FAA ATADS offers monthly operations, TAF gives long-range airport activity projections, and 28-day NASR files add facilities/runways/airspace. [@bts-t100] [@bts-db1c] [@dot-atcr] [@faa-atads] [@faa-taf] [@faa-nasr] [@faa-nasr-current-cycle]
+
+ADSB.lol is a free, ODbL position feed that may be suitable for an experimental map only; it requires maintainer contact for production and may require keys in the future. Vendor free tiers reviewed (Aviationstack, FlightAware Personal) are non-commercial/personal; FAA APIs require keys and SWIM access requests. [@adsb-lol-api] [@aviationstack-pricing] [@flightaware-aeroapi] [@flightaware-personal-license] [@faa-data-portal]
+
+The expanded report is `research/air-travel-free-data.md`. The aviation-source set was cross-checked against saved official pages; `research/sources.json` now contains 43 sources.
 
 ## Gaps
 

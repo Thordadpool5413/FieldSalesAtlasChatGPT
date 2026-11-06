@@ -28,3 +28,17 @@ mtime_ms = 1793945014281
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:e0d146c0-7710-4808-83c1-c4e917926ca8/87f18987-54d6-42f4-8c15-b3fd80c86db5/feb73ab2-0b40-49ff-afab-d0eb2be8fa36"
 storage_version_token = "1793945102442557"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "CqgN1gow96zpGkQlpdGv4"
+uri = "file://research/air-travel-free-data.md"
+type = "text"
+title = "Free Airline and Airport Data Review"
+description = "Aviation-focused assessment of public airline capacity, sampled fares, passenger experience, airport operations, and live-position APIs, with commercial-use and freshness caveats."
+logical_id = "61080dd9-1b60-4770-8de7-e00bdf5dc111"
+content_hash = "sha256:5af2e5f5843ed8407337259a91fa9c56d46815f233754e97cb21356ac5790c15"
+size = 14839
+mtime_ms = 1793950147469
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:e0d146c0-7710-4808-83c1-c4e917926ca8/61080dd9-1b60-4770-8de7-e00bdf5dc111/dfb989a6-83b6-4a23-b8b7-3e26154bf901"
+storage_version_token = "1793950233428020"
+content_type = "text/markdown"

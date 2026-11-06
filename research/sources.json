@@ -222,5 +222,125 @@
     "publishedDate": "Issue 2020001; data version 1.1 sourced through 2020",
     "tier": "Tier 1",
     "evidencePath": "research/sources/verticals-03-statcan-healthcare-facilities.md"
+  },
+  {
+    "key": "bts-t100",
+    "title": "BTS T-100 Air Carrier Statistics",
+    "url": "https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE",
+    "publishedDate": "Dynamic; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-05-bts-t100.md"
+  },
+  {
+    "key": "bts-db1c",
+    "title": "BTS Origin and Destination Survey Data",
+    "url": "https://www.bts.gov/topics/airlines-and-airports/origin-and-destination-survey-data",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-06-bts-db1c.md"
+  },
+  {
+    "key": "dot-atcr",
+    "title": "U.S. DOT Air Travel Consumer Reports",
+    "url": "https://www.transportation.gov/individuals/aviation-consumer-protection/air-travel-consumer-reports",
+    "publishedDate": "Dynamic; data through August 2026 as accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-07-dot-consumer-reports.md"
+  },
+  {
+    "key": "faa-nasr",
+    "title": "FAA 28 Day NASR Subscription",
+    "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription",
+    "publishedDate": "28-day subscription; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-08-faa-nasr.md"
+  },
+  {
+    "key": "faa-taf",
+    "title": "FAA Terminal Area Forecast",
+    "url": "https://www.faa.gov/data_research/aviation/taf",
+    "publishedDate": "FY2025–FY2055 forecast; accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-09-faa-taf.md"
+  },
+  {
+    "key": "faa-atads",
+    "title": "FAA Air Traffic Activity Data System",
+    "url": "https://www.faa.gov/newsroom/airport-operations-and-ranking-reports-using-air-traffic-activity-data-system-atads",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-10-faa-atads.md"
+  },
+  {
+    "key": "adsb-lol-api",
+    "title": "ADSB.lol API",
+    "url": "https://api.adsb.lol/",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/aviation-11-adsb-lol.md"
+  },
+  {
+    "key": "faa-aspm",
+    "title": "FAA Operations and Performance Data",
+    "url": "https://www.aspm.faa.gov/",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-13-faa-aspm.md"
+  },
+  {
+    "key": "airplanes-live-api",
+    "title": "Airplanes.live REST API Documentation",
+    "url": "https://airplanes.live/api-docs",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/aviation-14-airplanes-live-api-docs.md"
+  },
+  {
+    "key": "aviationstack-pricing",
+    "title": "Aviationstack API Pricing",
+    "url": "https://aviationstack.com/pricing",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/aviation-16-aviationstack-pricing.md"
+  },
+  {
+    "key": "flightaware-aeroapi",
+    "title": "FlightAware AeroAPI Pricing and Tiers",
+    "url": "https://www.flightaware.com/commercial/aeroapi",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/aviation-17-flightaware-aeroapi.md"
+  },
+  {
+    "key": "faa-data-portal",
+    "title": "FAA Data Portal",
+    "url": "https://data.faa.gov/",
+    "publishedDate": "Accessed 2026-11-06",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-19-faa-data-portal.md"
+  },
+  {
+    "key": "flightaware-personal-license",
+    "title": "FlightAware AeroAPI Personal License Agreement",
+    "url": "https://www.flightaware.com/commercial/aeroapi/AeroAPI_Personal_License_Jul2026_v2.pdf",
+    "publishedDate": "2026-07",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/aviation-21-flightaware-personal-license.md"
+  },
+  {
+    "key": "flightaware-standard-license",
+    "title": "FlightAware AeroAPI Standard License Agreement",
+    "url": "https://www.flightaware.com/commercial/aeroapi/AeroAPI_Standard_License_Jul2026_v2.pdf",
+    "publishedDate": "2026-07",
+    "tier": "Tier 2",
+    "evidencePath": "research/sources/aviation-22-flightaware-standard-license.md"
+  },
+  {
+    "key": "faa-nasr-current-cycle",
+    "title": "FAA 28 Day NASR Subscription — Effective October 29, 2026",
+    "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/2026-10-29/",
+    "publishedDate": "2026-10-29",
+    "tier": "Tier 1",
+    "evidencePath": "research/sources/aviation-18-faa-nasr-current-cycle.md"
   }
 ]
