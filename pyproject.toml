@@ -1,0 +1,23 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Pinned Python dependencies for Field Sales Atlas travel optimization"
+requires-python = ">=3.12"
+dependencies = [
+    "absl-py==2.5.1",
+    "immutabledict==4.3.1",
+    "numpy==2.5.4",
+    "ortools==9.14.6206",
+    "pandas==3.1.1",
+    "protobuf==6.31.1",
+    "python-dateutil==4.0.0",
+    "typing-extensions==4.16.0",
+    "tzdata==2026.6",
+]
+
+[project.scripts]
+repl-nix-workspace = "repl_nix_workspace:main"
+
+[build-system]
+requires = ["uv_build>=0.13.4,<0.14.0"]
+build-backend = "uv_build"
