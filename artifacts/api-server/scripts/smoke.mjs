@@ -136,6 +136,51 @@ async function expectSseMessage(nextMessage, description) {
   }
 }
 
+async function openWorkspaceEventStream(baseUrl, workspaceKey, workspaceId, controllers) {
+  const controller = new AbortController();
+  controllers.push(controller);
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/api/events`, {
+      headers: { Accept: "text/event-stream" },
+      signal: controller.signal,
+    });
+  } catch (error) {
+    throw new Error(`Could not reach required API route GET /api/events: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (!response.ok || !response.body) {
+    throw new Error(`Required API route GET /api/events returned HTTP ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const nextMessage = createSseMessageReader(reader);
+  const ready = await expectSseMessage(nextMessage, "the connection readiness event");
+  assert.equal(ready?.type, "connection.ready", "SSE must send the readiness event first");
+  assert.match(ready?.connectionId || "", /^[a-f0-9]{48}$/i, "Readiness event must include its connection ID");
+
+  const subscribed = await apiRequest(baseUrl, "POST", "/api/subscriptions", {
+    workspaceKey,
+    body: {
+      entity_type: "workspace",
+      entity_id: workspaceId,
+      connection_id: ready.connectionId,
+    },
+  });
+  assert.equal(subscribed.data?.ok, true, "The SSE connection must subscribe to its guest workspace");
+  return nextMessage;
+}
+
+async function assertNoSseMessageDuring(pendingMessage, description, quietMs = 350) {
+  const outcome = await Promise.race([
+    pendingMessage.then(
+      (message) => ({ message }),
+      (error) => ({ error }),
+    ),
+    delay(quietMs).then(() => ({ quiet: true })),
+  ]);
+  assert.equal(outcome.quiet, true, `${description} must not receive another workspace's event`);
+}
+
 async function checkPreviewConfiguration() {
   const config = await readFile(artifactConfigPath, "utf8");
   assert.match(config, /previewPath\s*=\s*"\/api"/, "API artifact previewPath must remain /api");
@@ -164,7 +209,7 @@ async function main() {
     stdio: ["ignore", "pipe", "pipe"],
   });
   const output = collectOutput(child);
-  const eventController = new AbortController();
+  const eventControllers = [];
 
   try {
     await waitForServer(child, baseUrl, output);
@@ -172,65 +217,92 @@ async function main() {
     const health = await apiRequest(baseUrl, "GET", "/api/_healthcheck");
     assert.equal(health.data?.status, "ready", "Atlas health route must be available through /api");
 
-    const created = await apiRequest(baseUrl, "POST", "/api/guest/create", { body: {} });
-    assert.equal(created.response.status, 201);
-    const workspaceKey = created.data?.workspaceKey;
-    assert.match(workspaceKey || "", /^[0-9a-f]{64}$/i, "Guest workspace creation must return a share link");
-
-    const initialOperations = await apiRequest(baseUrl, "GET", "/api/operations", { workspaceKey });
-    const workspaceId = initialOperations.data?.team?.id;
-    assert.equal(initialOperations.data?.needsTeam, false, "Operations must resolve the newly created guest workspace");
-    assert.equal(initialOperations.data?.team?.role, "owner");
-    assert.match(workspaceId || "", /^team_[0-9a-f-]+$/i, "Operations must include the guest workspace identity");
-    assert.deepEqual(initialOperations.data?.managers, [], "A new isolated workspace must start without managers");
-
-    let eventResponse;
-    try {
-      eventResponse = await fetch(`${baseUrl}/api/events`, {
-        headers: { Accept: "text/event-stream" },
-        signal: eventController.signal,
-      });
-    } catch (error) {
-      throw new Error(`Could not reach required API route GET /api/events: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    if (!eventResponse.ok || !eventResponse.body) {
-      throw new Error(`Required API route GET /api/events returned HTTP ${eventResponse.status}`);
-    }
-    const reader = eventResponse.body.getReader();
-    const nextMessage = createSseMessageReader(reader);
-    const ready = await expectSseMessage(nextMessage, "the connection readiness event");
-    assert.equal(ready?.type, "connection.ready", "SSE must send the readiness event first");
-    assert.match(ready?.connectionId || "", /^[a-f0-9]{48}$/i, "Readiness event must include its connection ID");
-
-    const subscribed = await apiRequest(baseUrl, "POST", "/api/subscriptions", {
-      workspaceKey,
-      body: {
-        entity_type: "workspace",
-        entity_id: workspaceId,
-        connection_id: ready.connectionId,
-      },
+    const guests = await Promise.all([
+      apiRequest(baseUrl, "POST", "/api/guest/create", { body: {} }),
+      apiRequest(baseUrl, "POST", "/api/guest/create", { body: {} }),
+    ]);
+    const workspaces = guests.map((created, index) => {
+      assert.equal(created.response.status, 201, `Guest workspace ${index + 1} must be created`);
+      assert.match(created.data?.workspaceKey || "", /^[0-9a-f]{64}$/i, `Guest workspace ${index + 1} must return a share link`);
+      return { key: created.data.workspaceKey };
     });
-    assert.equal(subscribed.data?.ok, true, "The SSE connection must subscribe to the created workspace");
+    assert.notEqual(workspaces[0].key, workspaces[1].key, "Guest workspaces must have distinct share links");
 
-    const createdManager = await apiRequest(baseUrl, "POST", "/api/managers", {
-      workspaceKey,
-      body: { name: "API smoke check manager" },
+    for (const [index, workspace] of workspaces.entries()) {
+      const operations = await apiRequest(baseUrl, "GET", "/api/operations", { workspaceKey: workspace.key });
+      workspace.id = operations.data?.team?.id;
+      assert.equal(operations.data?.needsTeam, false, `Operations must resolve guest workspace ${index + 1}`);
+      assert.equal(operations.data?.team?.role, "owner");
+      assert.match(workspace.id || "", /^team_[0-9a-f-]+$/i, "Operations must include each guest workspace identity");
+      assert.deepEqual(operations.data?.managers, [], `Guest workspace ${index + 1} must start without managers`);
+    }
+    assert.notEqual(workspaces[0].id, workspaces[1].id, "Guest workspaces must have distinct workspace identities");
+
+    const [nextMessageA, nextMessageB] = await Promise.all(
+      workspaces.map((workspace) => openWorkspaceEventStream(baseUrl, workspace.key, workspace.id, eventControllers)),
+    );
+    const createdManagerA = await apiRequest(baseUrl, "POST", "/api/managers", {
+      workspaceKey: workspaces[0].key,
+      body: { name: "Workspace A isolation marker" },
     });
-    assert.equal(createdManager.response.status, 201);
-    const update = await expectSseMessage(nextMessage, "the subscribed workspace update");
-    assert.equal(update?.type, "entity.update", "Workspace mutation must produce an entity update");
-    assert.equal(update?.entity_type, "workspace");
-    assert.equal(update?.entity_id, workspaceId, "The event must belong to the subscribed workspace");
-    assert.equal(update?.action, "created");
-    assert.equal(update?.entity, "manager");
+    assert.equal(createdManagerA.response.status, 201);
+    const updateA = await expectSseMessage(nextMessageA, "workspace A's subscribed update");
+    assert.equal(updateA?.type, "entity.update");
+    assert.equal(updateA?.entity_type, "workspace");
+    assert.equal(updateA?.entity_id, workspaces[0].id, "Workspace A's event must carry its own identity");
+    assert.equal(updateA?.action, "created");
+    assert.equal(updateA?.entity, "manager");
 
-    const updatedOperations = await apiRequest(baseUrl, "GET", "/api/operations", { workspaceKey });
-    assert.equal(updatedOperations.data?.team?.id, workspaceId);
-    assert.equal(updatedOperations.data?.managers?.length, 1);
-    assert.equal(updatedOperations.data?.managers?.[0]?.id, createdManager.data?.manager?.id);
-    console.log("API smoke check passed: built startup, /api preview routes, guest operations, SSE readiness, and workspace update.");
+    const pendingB = nextMessageB();
+    await assertNoSseMessageDuring(pendingB, "Workspace B", 350);
+
+    const pendingA = nextMessageA();
+    const createdManagerB = await apiRequest(baseUrl, "POST", "/api/managers", {
+      workspaceKey: workspaces[1].key,
+      body: { name: "Workspace B isolation marker" },
+    });
+    assert.equal(createdManagerB.response.status, 201);
+    const updateB = await pendingB;
+    assert.equal(updateB?.type, "entity.update");
+    assert.equal(updateB?.entity_type, "workspace");
+    assert.equal(updateB?.entity_id, workspaces[1].id, "Workspace B's event must carry its own identity");
+    assert.equal(updateB?.action, "created");
+    assert.equal(updateB?.entity, "manager");
+    await assertNoSseMessageDuring(pendingA, "Workspace A", 350);
+
+    const operationsA = await apiRequest(baseUrl, "GET", "/api/operations", { workspaceKey: workspaces[0].key });
+    const operationsB = await apiRequest(baseUrl, "GET", "/api/operations", { workspaceKey: workspaces[1].key });
+    assert.equal(operationsA.data?.team?.id, workspaces[0].id);
+    assert.deepEqual(
+      operationsA.data?.managers?.map(({ id, name }) => ({ id, name })),
+      [{ id: createdManagerA.data?.manager?.id, name: "Workspace A isolation marker" }],
+      "Workspace A operations must contain only its own manager",
+    );
+    assert.equal(operationsB.data?.team?.id, workspaces[1].id);
+    assert.deepEqual(
+      operationsB.data?.managers?.map(({ id, name }) => ({ id, name })),
+      [{ id: createdManagerB.data?.manager?.id, name: "Workspace B isolation marker" }],
+      "Workspace B operations must contain only its own manager",
+    );
+    assert.ok(
+      operationsA.data?.activity?.some(({ summary }) => summary.includes("Workspace A isolation marker")),
+      "Workspace A activity must include its own manager record",
+    );
+    assert.ok(
+      operationsB.data?.activity?.some(({ summary }) => summary.includes("Workspace B isolation marker")),
+      "Workspace B activity must include its own manager record",
+    );
+    assert.ok(
+      operationsA.data?.activity?.every(({ summary }) => !summary.includes("Workspace B isolation marker")),
+      "Workspace A activity must not contain workspace B records",
+    );
+    assert.ok(
+      operationsB.data?.activity?.every(({ summary }) => !summary.includes("Workspace A isolation marker")),
+      "Workspace B activity must not contain workspace A records",
+    );
+    console.log("API smoke check passed: built startup, temporary storage, two-guest operations isolation, and workspace-scoped SSE updates.");
   } finally {
-    eventController.abort();
+    for (const controller of eventControllers) controller.abort();
     child.kill("SIGTERM");
     await Promise.race([
       new Promise((resolve) => child.once("exit", resolve)),
