@@ -3,8 +3,8 @@ name: Managed web preview bootstrapping
 description: Distinguishes Replit workflow package-manager failures from application build failures.
 ---
 
-When a managed web workflow fails during package-manager provisioning before the app server starts, validate the artifact's TypeScript check and direct build separately before changing application code. Do not alter the workspace package-manager pin unless logs establish that the pin itself is the cause and the wider workspace impact is understood.
+When a managed artifact fails before Vite starts, compare the root `packageManager` pin with the pnpm version available in the runtime. If logs show startup trying to install the pinned version and aborting, check lockfile compatibility and align the pin with the installed runtime rather than changing application code or dependencies. Restart the artifact-owned workflow afterward.
 
-**Why:** A managed workflow failed in pnpm bootstrap in this workspace while the artifact typecheck and direct Vite build succeeded. The failure was outside the UI source change.
+**Why:** This workspace's pinned pnpm version did not match the available runtime. Replit's bootstrap aborted before Vite; aligning the pin let the web workflow start, while the lockfile remained compatible.
 
-**How to apply:** On future web changes, check whether Vite actually started in the workflow logs. If not, verify source with the artifact's checks and treat workflow provisioning as a separate issue.
+**How to apply:** Use workflow logs to distinguish package-manager bootstrap failures from app startup errors. Verify the installed pnpm and lockfile format before changing the root pin; then restart only the managed artifact workflow.
