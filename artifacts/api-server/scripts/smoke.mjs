@@ -331,6 +331,62 @@ async function main() {
       "Workspace B activity must not contain workspace A records",
     );
 
+    const guestTravelRecords = await Promise.all(workspaces.map(async (workspace, index) => {
+      const label = index === 0 ? "Workspace A" : "Workspace B";
+      const manager = index === 0 ? createdManagerA.data.manager : createdManagerB.data.manager;
+      const visit = await apiRequest(baseUrl, "POST", "/api/visits", {
+        workspaceKey: workspace.key,
+        body: {
+          managerId: manager.id,
+          stateCode: "CA",
+          date: index === 0 ? "2027-03-10" : "2027-03-11",
+          objective: `${label} visit marker`,
+          trainer: `${label} trainer`,
+          location: `${label} visit location`,
+        },
+      });
+      assert.equal(visit.response.status, 201, `${label} must create its own visit`);
+
+      const trip = await apiRequest(baseUrl, "POST", "/api/trips", {
+        workspaceKey: workspace.key,
+        body: {
+          title: `${label} trip marker`,
+          trainer: `${label} trip trainer`,
+          startDate: index === 0 ? "2027-03-12" : "2027-03-13",
+          endDate: index === 0 ? "2027-03-14" : "2027-03-15",
+          arrivalAirport: "SFO",
+          notes: `${label} trip notes`,
+          stops: [{
+            managerId: manager.id,
+            stateCode: "CA",
+            date: index === 0 ? "2027-03-12" : "2027-03-13",
+            location: `${label} trip stop`,
+          }],
+        },
+      });
+      assert.equal(trip.response.status, 201, `${label} must create its own trip`);
+
+      const plan = await apiRequest(baseUrl, "POST", "/api/travel/plans", {
+        workspaceKey: workspace.key,
+        body: {
+          title: `${label} travel plan marker`,
+          departDate: index === 0 ? "2027-04-01" : "2027-04-08",
+          returnDate: index === 0 ? "2027-04-03" : "2027-04-10",
+          origins: ["SFO"],
+          selectedArrival: "SEA",
+          managerIds: [manager.id],
+          quotes: [],
+        },
+      });
+      assert.equal(plan.response.status, 201, `${label} must create its own travel plan`);
+
+      return {
+        visit: visit.data.visit,
+        trip: trip.data.trip,
+        plan: plan.data.plan,
+      };
+    }));
+
     for (const controller of eventControllers) controller.abort();
     eventControllers.length = 0;
     await stopBuiltApi(child);
@@ -363,6 +419,73 @@ async function main() {
         operations.data?.activity?.every(({ summary }) => !summary.includes(otherMarker)),
         `Guest workspace ${index + 1} activity must not include the other workspace after restart`,
       );
+      const ownRecords = guestTravelRecords[index];
+      const otherRecords = guestTravelRecords[index === 0 ? 1 : 0];
+      assert.deepEqual(
+        operations.data?.visits?.map(({ id }) => id),
+        [ownRecords.visit.id],
+        `Guest workspace ${index + 1} operations must contain only its own visit`,
+      );
+      assert.deepEqual(
+        operations.data?.trips?.map(({ id }) => id),
+        [ownRecords.trip.id],
+        `Guest workspace ${index + 1} operations must contain only its own trip`,
+      );
+      assert.ok(
+        operations.data?.visits?.every(({ objective }) => !objective.includes(index === 0 ? "Workspace B" : "Workspace A")),
+        `Guest workspace ${index + 1} operations must not expose the other workspace's visit`,
+      );
+      assert.ok(
+        operations.data?.trips?.every(({ title }) => !title.includes(index === 0 ? "Workspace B" : "Workspace A")),
+        `Guest workspace ${index + 1} operations must not expose the other workspace's trip`,
+      );
+
+      const travelPlans = await apiRequest(baseUrl, "GET", "/api/travel/plans", {
+        workspaceKey: workspace.key,
+      });
+      assert.deepEqual(
+        travelPlans.data?.plans?.map(({ id }) => id),
+        [ownRecords.plan.id],
+        `Guest workspace ${index + 1} travel plans must contain only its own plan`,
+      );
+      assert.ok(
+        travelPlans.data?.plans?.every(({ title }) => !title.includes(index === 0 ? "Workspace B" : "Workspace A")),
+        `Guest workspace ${index + 1} must not read the other workspace's travel plan`,
+      );
+
+      const integrity = await apiRequest(baseUrl, "GET", "/api/intelligence/health", {
+        workspaceKey: workspace.key,
+      });
+      assert.deepEqual(
+        integrity.data?.counts && {
+          visits: integrity.data.counts.visits,
+          trips: integrity.data.counts.trips,
+          travelPlans: integrity.data.counts.travelPlans,
+        },
+        { visits: 1, trips: 1, travelPlans: 1 },
+        `Guest workspace ${index + 1} integrity counts must reflect only its travel records`,
+      );
+
+      const foreignVisit = await apiRequest(baseUrl, "PUT", `/api/visits/${otherRecords.visit.id}`, {
+        workspaceKey: workspace.key,
+        body: { objective: "Unauthorized cross-workspace edit" },
+        allowError: true,
+      });
+      assert.equal(foreignVisit.response.status, 404,
+        `Guest workspace ${index + 1} must not update the other workspace's visit`);
+      const foreignTrip = await apiRequest(baseUrl, "DELETE", `/api/trips/${otherRecords.trip.id}`, {
+        workspaceKey: workspace.key,
+        allowError: true,
+      });
+      assert.equal(foreignTrip.response.status, 404,
+        `Guest workspace ${index + 1} must not delete the other workspace's trip`);
+      const foreignPlan = await apiRequest(baseUrl, "PUT", `/api/travel/plans/${otherRecords.plan.id}`, {
+        workspaceKey: workspace.key,
+        body: {},
+        allowError: true,
+      });
+      assert.equal(foreignPlan.response.status, 404,
+        `Guest workspace ${index + 1} must not update the other workspace's travel plan`);
     }
 
     const ownerKey = workspaces[0].key;
@@ -593,7 +716,7 @@ async function main() {
       500,
     );
 
-    console.log("API smoke check passed: isolated storage, guest workspace separation, owner/trainer access boundaries, revocation, and live subscription cleanup.");
+    console.log("API smoke check passed: isolated storage, guest travel-record separation, owner/trainer access boundaries, revocation, and live subscription cleanup.");
   } finally {
     for (const controller of eventControllers) controller.abort();
     await stopBuiltApi(child);
