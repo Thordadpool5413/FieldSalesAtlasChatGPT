@@ -1,0 +1,1091 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": "implementation-blueprint",
+  "status": "proposed",
+  "runtimeConfiguration": false,
+  "reviewedDate": "2026-11-06",
+  "implementationBaseRevision": "070b644002cb2dd097b16dec9f1b08084b0543d3",
+  "catalogPath": "docs/research/aviation-source-catalog.csv",
+  "designPath": "docs/architecture/AVIATION_DATA_CONNECTIONS.md",
+  "publication": "Not authorized or performed by this blueprint.",
+  "newFeedsActivated": false,
+  "codeRoots": {
+    "activeBackend": "artifacts/api-server/src/field-atlas/backend/",
+    "ui": "artifacts/field-sales-atlas/src/",
+    "apiTravelContracts": "artifacts/api-server/src/field-atlas/shared/travel/",
+    "uiTravelContracts": "artifacts/field-sales-atlas/shared/travel/"
+  },
+  "existingIntegrations": [
+    {
+      "id": "ourairports",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/providers/airports.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/connections"
+      ],
+      "readinessNote": "Implemented reference importer; deployed dataset not revalidated in this mapping change."
+    },
+    {
+      "id": "public-airport-weather",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/providers/publicTravel.ts",
+        "artifacts/api-server/src/field-atlas/backend/providers/evidence.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/sources"
+      ],
+      "readinessNote": "Implemented FAA/METAR/TAF/NWS/GeoMet path; Canadian schema/recency repair required."
+    },
+    {
+      "id": "legacy-weather-notices",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/index.ts",
+        "artifacts/api-server/src/field-atlas/backend/nwsAlerts.ts",
+        "artifacts/api-server/src/field-atlas/backend/nwsForecast.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/disruptions",
+        "GET /api/travel/aviation/:icao",
+        "GET /api/travel/weather-alerts",
+        "GET /api/travel/point-forecast"
+      ],
+      "readinessNote": "Implemented legacy shape; unify normalized facts while retaining compatibility."
+    },
+    {
+      "id": "direct-bts",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/providers/bts.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/history"
+      ],
+      "readinessNote": "Importer/reader implemented; production load/coverage must be checked."
+    },
+    {
+      "id": "derived-flight-history",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/flightHistory.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/flight-history"
+      ],
+      "readinessNote": "Separate third-party history with its own cohort, periods and coverage."
+    },
+    {
+      "id": "security-history",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/securityHistory.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/security-history"
+      ],
+      "readinessNote": "Posted-estimate archive; not a universal live measured queue."
+    },
+    {
+      "id": "road-routing",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/providers/routing.ts",
+        "artifacts/api-server/src/field-atlas/backend/providers/routingConfig.ts"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/connections/check"
+      ],
+      "readinessNote": "Implemented optional OSRM matrix; configured and road-validated states differ."
+    },
+    {
+      "id": "journey-calculation",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/travel/scenarios.ts",
+        "artifacts/api-server/src/field-atlas/backend/travel/optimizer.ts",
+        "artifacts/api-server/src/field-atlas/backend/travel/assistant.ts"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/scenarios",
+        "POST /api/travel/assistant"
+      ],
+      "readinessNote": "Deterministic constraints/deadline calculation; no general-purpose aviation language model."
+    },
+    {
+      "id": "reviewed-recovery",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/travel/recovery.ts",
+        "artifacts/api-server/src/field-atlas/backend/travel/context.ts"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/changes",
+        "POST /api/travel/recovery",
+        "POST /api/travel/recovery/:id/approve"
+      ],
+      "readinessNote": "Traveler-reported change and reviewed atomic update; different airport pairs currently rejected."
+    },
+    {
+      "id": "journey-attachment",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/travel/adopt.ts",
+        "artifacts/api-server/src/field-atlas/backend/travel/routes.ts"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/journeys/adopt",
+        "POST /api/travel/journeys/:id/itinerary"
+      ],
+      "readinessNote": "Explicit local-booking to shared-journey attachment exists; localStorage is not cross-device sync."
+    },
+    {
+      "id": "source-monitoring",
+      "implemented": true,
+      "repoFiles": [
+        "artifacts/api-server/src/field-atlas/backend/providers/connections.ts",
+        "artifacts/api-server/src/field-atlas/backend/travel/watch.ts"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/connections",
+        "POST /api/travel/connections/check"
+      ],
+      "readinessNote": "Arrival-airport monitoring exists; extend to all relevant itinerary airports/windows."
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "atlas",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/MiamiMapHome.tsx",
+        "artifacts/field-sales-atlas/src/LiveTerritoryMap.tsx"
+      ],
+      "existingRoutes": [],
+      "proposedEndpointIds": [
+        "hazards",
+        "positions",
+        "airport-context"
+      ]
+    },
+    {
+      "id": "flight-radar",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/FlightRadar.tsx",
+        "artifacts/field-sales-atlas/src/AirportDisruption.tsx",
+        "artifacts/field-sales-atlas/src/AviationWeather.tsx"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/disruptions",
+        "GET /api/travel/aviation/:icao",
+        "GET /api/travel/weather-alerts",
+        "GET /api/travel/point-forecast"
+      ],
+      "proposedEndpointIds": [
+        "aviation-context",
+        "hazards",
+        "aircraft-profile"
+      ]
+    },
+    {
+      "id": "booked-flights",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/FlightGuardian.tsx",
+        "artifacts/field-sales-atlas/src/BookedFlightLogic.ts"
+      ],
+      "existingRoutes": [],
+      "proposedEndpointIds": [
+        "aircraft-profile",
+        "aviation-context"
+      ]
+    },
+    {
+      "id": "flight-dna",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/FlightDnaPanel.tsx",
+        "artifacts/field-sales-atlas/src/SecurityHistory.tsx"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/flight-history",
+        "GET /api/travel/security-history"
+      ],
+      "proposedEndpointIds": [
+        "airport-context",
+        "aviation-context"
+      ]
+    },
+    {
+      "id": "planner",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/JourneyIntelligence.tsx",
+        "artifacts/field-sales-atlas/src/GuidedTripPlanner.tsx"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/scenarios",
+        "POST /api/travel/scenarios/:id/approve"
+      ],
+      "proposedEndpointIds": [
+        "aviation-context"
+      ]
+    },
+    {
+      "id": "assistant",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/TravelIntelligenceDesk.tsx"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/assistant"
+      ],
+      "proposedEndpointIds": [
+        "aviation-context",
+        "aircraft-profile",
+        "airport-context"
+      ]
+    },
+    {
+      "id": "recovery",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/TravelIntelligenceDesk.tsx"
+      ],
+      "existingRoutes": [
+        "POST /api/travel/changes",
+        "POST /api/travel/recovery",
+        "POST /api/travel/recovery/:id/approve"
+      ],
+      "proposedEndpointIds": [
+        "aviation-context"
+      ]
+    },
+    {
+      "id": "connections",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/TravelIntelligenceDesk.tsx",
+        "artifacts/field-sales-atlas/src/BackendReadiness.tsx"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/connections",
+        "POST /api/travel/connections/check",
+        "GET /api/travel/sources"
+      ],
+      "proposedEndpointIds": []
+    },
+    {
+      "id": "travel-day",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/TravelStart.tsx",
+        "artifacts/field-sales-atlas/src/MobileJourneyPeek.tsx"
+      ],
+      "existingRoutes": [
+        "GET /api/travel/journeys"
+      ],
+      "proposedEndpointIds": [
+        "aviation-context"
+      ]
+    },
+    {
+      "id": "calendar",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/OperationsCalendar.tsx",
+        "artifacts/field-sales-atlas/src/TrainerCoordination.tsx"
+      ],
+      "existingRoutes": [],
+      "proposedEndpointIds": []
+    },
+    {
+      "id": "evidence",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/TravelEvidence.tsx"
+      ],
+      "existingRoutes": [],
+      "proposedEndpointIds": []
+    },
+    {
+      "id": "airport-detail",
+      "repoFiles": [
+        "artifacts/field-sales-atlas/src/MiamiMapHome.tsx",
+        "artifacts/field-sales-atlas/src/AviationWeather.tsx"
+      ],
+      "existingRoutes": [],
+      "proposedEndpointIds": [
+        "airport-context"
+      ]
+    }
+  ],
+  "proposedEndpoints": [
+    {
+      "id": "aviation-context",
+      "route": "POST /api/travel/aviation/context",
+      "status": "proposed",
+      "implemented": false,
+      "authorization": "workspace",
+      "proposedRepoFile": "artifacts/api-server/src/field-atlas/backend/travel/aviationContext.ts",
+      "contract": "Workspace-authorized saved journey or validated bounded airport/time query; common evidence snapshots and gaps."
+    },
+    {
+      "id": "aircraft-profile",
+      "route": "GET /api/travel/aviation/aircraft/:registration",
+      "status": "proposed",
+      "implemented": false,
+      "authorization": "workspace",
+      "proposedRepoFile": "artifacts/api-server/src/field-atlas/backend/providers/aircraft.ts",
+      "contract": "Exact dated identity match; technical profile and source-specific image metadata; no flight assignment inferred."
+    },
+    {
+      "id": "hazards",
+      "route": "GET /api/travel/aviation/hazards",
+      "status": "proposed",
+      "implemented": false,
+      "authorization": "workspace",
+      "proposedRepoFile": "artifacts/api-server/src/field-atlas/backend/providers/aviationHazards.ts",
+      "contract": "Validated bounded geography/product/time filters; GeoJSON with per-feature evidence and validity."
+    },
+    {
+      "id": "positions",
+      "route": "GET /api/travel/aviation/positions",
+      "status": "proposed",
+      "implemented": false,
+      "authorization": "workspace",
+      "proposedRepoFile": "artifacts/api-server/src/field-atlas/backend/providers/aircraftPositions.ts",
+      "contract": "Optional bounded live query after permission/readiness; observation and position age; no future flight inventory."
+    },
+    {
+      "id": "airport-context",
+      "route": "GET /api/travel/aviation/airports/:code",
+      "status": "proposed",
+      "implemented": false,
+      "authorization": "workspace",
+      "proposedRepoFile": "artifacts/api-server/src/field-atlas/backend/travel/aviationContext.ts",
+      "contract": "Airport identity/reference, applicable notices and separate historical reporting cohorts."
+    }
+  ],
+  "sources": [
+    {
+      "id": "faa-aircraft-registry",
+      "catalogSource": "FAA Aircraft Registry",
+      "url": "https://www.faa.gov/licenses_certificates/aircraft_certification/aircraft_registry/releasable_aircraft_download",
+      "data": "U.S. registration, model/year/engine codes, Mode S identifiers",
+      "phase": "P1",
+      "surfaceIds": [
+        "booked-flights",
+        "flight-radar",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Bulk comma-delimited files; daily publisher refresh",
+      "verifiedEvidence": "Overview and PDF schema checked; bulk archive not imported",
+      "terms": "Public FAA download; preserve notices and current privacy withholding; exclude owner personal fields",
+      "limitations": "U.S. only; owner is not operator; tail can be reassigned",
+      "activationBlockers": [
+        "Review current download/privacy notices",
+        "Implement bounded background master/reference import and dated identity matching"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "faa-aircraft-characteristics",
+      "catalogSource": "FAA Aircraft Characteristics",
+      "url": "https://www.faa.gov/airports/engineering/aircraft_char_database/aircraft_data",
+      "data": "ICAO model, manufacturer, engines, dimensions, weights and wake categories",
+      "phase": "P1",
+      "surfaceIds": [
+        "booked-flights",
+        "flight-radar",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "XLSX; landing page labels October 2024 edition",
+      "verifiedEvidence": "Downloaded XLSX and read actual worksheet columns",
+      "terms": "Public FAA reference; retain cited technical provenance",
+      "limitations": "No airline cabin configuration or live assignment",
+      "activationBlockers": [
+        "Preserve exact October 2024 reference edition",
+        "Implement XLSX importer and exact type matching; retain technical provenance"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "faa-atcscc",
+      "catalogSource": "FAA ATCSCC operations plan",
+      "url": "https://www.fly.faa.gov/adv/adv_spt",
+      "data": "Active/planned traffic constraints, weather, routing and runway impacts",
+      "phase": "P2",
+      "surfaceIds": [
+        "flight-radar",
+        "atlas",
+        "assistant",
+        "recovery",
+        "travel-day",
+        "airport-detail"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Public operational text/HTML; issue and event times",
+      "verifiedEvidence": "Retrieved November 6 operations advisory",
+      "terms": "Public official product; not a guaranteed stable JSON API",
+      "limitations": "Planned/possible differs from active; no individual-flight attribution",
+      "activationBlockers": [
+        "Implement bounded text parser and replacement chain",
+        "Validate active/planned/possible status and UTC event windows"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "noaa-aviation-hazards",
+      "catalogSource": "NOAA AWC hazards",
+      "url": "https://aviationweather.gov/data/api/",
+      "data": "SIGMET/G-AIRMET/CWA and pilot reports with location/time/altitude",
+      "phase": "P2",
+      "surfaceIds": [
+        "atlas",
+        "flight-radar",
+        "assistant",
+        "travel-day",
+        "airport-detail"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "API JSON/GeoJSON and bulk cache products",
+      "verifiedEvidence": "Four SIGMET features and 22 sampled PIREPs; validated JSON",
+      "terms": "Public NOAA data; use service limits, cache/batch",
+      "limitations": "Product-specific coverage; no exact-flight ride/cancellation forecast",
+      "activationBlockers": [
+        "Implement product-specific geometry/time/altitude validation",
+        "Validate product coverage and production AWC access"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "faa-nasr",
+      "catalogSource": "FAA NASR",
+      "url": "https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/",
+      "data": "Airport/runway/navigation facility reference",
+      "phase": "P2",
+      "surfaceIds": [
+        "atlas",
+        "airport-detail",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Cycle-based reference downloads",
+      "verifiedEvidence": "Official index checked; bulk not imported",
+      "terms": "Public official download; preserve effective edition",
+      "limitations": "A retrieved file may be older than current cycle; not a terminal amenity feed",
+      "activationBlockers": [
+        "Select applicable effective cycle",
+        "Validate reference import schema and edition"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "faa-nms",
+      "catalogSource": "FAA NOTAM Management Service",
+      "url": "https://www.faa.gov/about/initiatives/notam/faqs",
+      "data": "Operational NOTAMs; exact fields after access granted",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-radar",
+        "assistant",
+        "recovery",
+        "airport-detail"
+      ],
+      "decision": "access-required",
+      "productionEnabled": false,
+      "accessAndCadence": "Distribution API access by request",
+      "verifiedEvidence": "Official FAQ explicitly requests contacting FAA for NMS API",
+      "terms": "Access/terms/cost must be confirmed with FAA",
+      "limitations": "Not an anonymous open API; transition plans do not establish production access",
+      "activationBlockers": [
+        "Request and establish NMS distribution API entitlement",
+        "Obtain current production schema, permitted uses and cost terms"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "faa-swim",
+      "catalogSource": "FAA SWIM / SWIFT",
+      "url": "https://www.faa.gov/air_traffic/technology/swim/products/get_connected",
+      "data": "Service-specific near-real-time flight/aeronautical/weather data",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-radar",
+        "assistant",
+        "recovery",
+        "airport-detail"
+      ],
+      "decision": "access-required",
+      "productionEnabled": false,
+      "accessAndCadence": "Access process; Solace JMS messaging",
+      "verifiedEvidence": "Current access documentation read",
+      "terms": "Reviewed/service-specific access; free-use entitlement not established",
+      "limitations": "More engineering than a REST adapter; some services need separate requests",
+      "activationBlockers": [
+        "Establish service-specific access and permitted use",
+        "Plan JMS ingestion, worker lifecycle and durable checkpoints"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "adsblol-live",
+      "catalogSource": "adsb.lol live",
+      "url": "https://github.com/adsblol/api",
+      "data": "Position, callsign, hex, registration/type when present, altitude/speed and age",
+      "phase": "P5",
+      "surfaceIds": [
+        "atlas",
+        "flight-radar"
+      ],
+      "decision": "conditional",
+      "productionEnabled": false,
+      "accessAndCadence": "Public API currently; dynamic rate limits",
+      "verifiedEvidence": "Sample returned 58 aircraft records near Orlando",
+      "terms": "Confirm production live-service terms separately; no SLA assumed",
+      "limitations": "Receiver gaps; position does not confirm status, schedule or seats",
+      "activationBlockers": [
+        "Confirm live production terms independently of historical ODbL",
+        "Validate quotas, receiver coverage and position-age/matching behavior"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "adsblol-history",
+      "catalogSource": "adsb.lol history",
+      "url": "https://www.adsb.lol/docs/open-data/historical",
+      "data": "Historical aircraft traces and observation-quality fields",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-radar"
+      ],
+      "decision": "conditional",
+      "productionEnabled": false,
+      "accessAndCadence": "Daily gzip/JSON bulk archives",
+      "verifiedEvidence": "Official schema/license/download documentation checked",
+      "terms": "ODbL 1.0; attribution and applicable derived-database share-alike",
+      "limitations": "Large processing volumes; not current operational status",
+      "activationBlockers": [
+        "Review attribution and derived-database share-alike obligations",
+        "Bound archival processing/storage; no default whole-network ingestion"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "adsbfi",
+      "catalogSource": "adsb.fi",
+      "url": "https://github.com/adsbfi/opendata",
+      "data": "Aircraft positions and reference fields",
+      "phase": "P5",
+      "surfaceIds": [
+        "atlas",
+        "flight-radar"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "Public API, 1 request/second",
+      "verifiedEvidence": "README terms and current endpoint versions read",
+      "terms": "Explicit personal non-commercial terms; commercial contact required",
+      "limitations": "Not approved as free work-app dependency",
+      "activationBlockers": [
+        "Current open service is personal/non-commercial; obtain a different written arrangement before business use"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "airplanes-live",
+      "catalogSource": "airplanes.live",
+      "url": "https://airplanes.live/api-docs/",
+      "data": "Aircraft-position services",
+      "phase": "P5",
+      "surfaceIds": [
+        "atlas",
+        "flight-radar"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "Public documentation; data probe failed",
+      "verifiedEvidence": "Docs 200; sample API 403",
+      "terms": "Business rights not established",
+      "limitations": "Data connectivity and permissions unresolved",
+      "activationBlockers": [
+        "Sample data request returned 403",
+        "Business-use entitlement and service terms not established"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "opensky",
+      "catalogSource": "OpenSky",
+      "url": "https://openskynetwork.github.io/opensky-api/rest.html",
+      "data": "Aircraft state vectors, tracks and flight observations",
+      "phase": "P5",
+      "surfaceIds": [
+        "atlas",
+        "flight-radar"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "OAuth2; endpoint-specific credit budgets",
+      "verifiedEvidence": "Current REST docs read; terms page 403",
+      "terms": "Separate terms/business permission not verified",
+      "limitations": "Quota is not commercial permission; observations not booking inventory",
+      "activationBlockers": [
+        "Business-use rights not established",
+        "Confirm OAuth2 credentials and endpoint-specific quota/access"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "adsbdb",
+      "catalogSource": "adsbdb",
+      "url": "https://github.com/mrjackwills/adsbdb",
+      "data": "Aircraft and callsign-route metadata",
+      "phase": "P5",
+      "surfaceIds": [
+        "flight-radar",
+        "booked-flights"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "Public aircraft/callsign API; server MIT",
+      "verifiedEvidence": "Callsign sample succeeded; data restriction read",
+      "terms": "README restricts copying/publishing/incorporating flight-route data without contributor permission",
+      "limitations": "MIT software license does not license all underlying data",
+      "activationBlockers": [
+        "Named contributor permission required for copying/publishing/incorporating route data",
+        "MIT server license is separate from data rights"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "planespotters-photos",
+      "catalogSource": "Planespotters photos",
+      "url": "https://www.planespotters.net/photo/api",
+      "data": "Thumbnail URLs, photographer and source link",
+      "phase": "P5",
+      "surfaceIds": [
+        "booked-flights",
+        "flight-radar"
+      ],
+      "decision": "conditional",
+      "productionEnabled": false,
+      "accessAndCadence": "Free keyless photo lookup",
+      "verifiedEvidence": "API terms read; sample valid empty photos array",
+      "terms": "Visible credit/link; direct unchanged image URLs; JSON cache up to 24h; no AI training/evaluation/datasets",
+      "limitations": "No photo guarantee; no image rehosting/storage for later use",
+      "activationBlockers": [
+        "Implement visible credit/link and direct unchanged image URLs",
+        "Restrict JSON cache to at most 24 hours; prevent image/PWA storage and AI dataset/training/evaluation use"
+      ],
+      "aiUse": "prohibited-for-training-evaluation-and-datasets"
+    },
+    {
+      "id": "wikimedia-commons",
+      "catalogSource": "Wikimedia Commons",
+      "url": "https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia",
+      "data": "Aircraft-type photos and per-file licensing metadata",
+      "phase": "P5",
+      "surfaceIds": [
+        "booked-flights",
+        "flight-radar"
+      ],
+      "decision": "conditional",
+      "productionEnabled": false,
+      "accessAndCadence": "MediaWiki API and curated media",
+      "verifiedEvidence": "Reuse guidance and Imageinfo API docs read",
+      "terms": "Check each file license, attribution and share-alike individually",
+      "limitations": "Not all images have same license; no proof of booked cabin",
+      "activationBlockers": [
+        "Curate actual files and their individual licenses",
+        "Carry required attribution and share-alike obligations"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "openap",
+      "catalogSource": "OpenAP",
+      "url": "https://openap.dev/",
+      "data": "Aircraft/engine performance, kinematics, fuel and emissions models",
+      "phase": "P6",
+      "surfaceIds": [
+        "booked-flights",
+        "assistant"
+      ],
+      "decision": "conditional",
+      "productionEnabled": false,
+      "accessAndCadence": "Open-source Python library",
+      "verifiedEvidence": "Handbook, source-data notes and license read",
+      "terms": "LGPL v3 code; check component/underlying data terms",
+      "limitations": "Modeled outputs; need trajectory, mass/load and allocation assumptions",
+      "activationBlockers": [
+        "Review LGPL and component data rights",
+        "Validate model version, type, trajectory/mass/load assumptions and output labels"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "statcan-movements",
+      "catalogSource": "Statistics Canada airport movements",
+      "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310030301",
+      "data": "Aircraft movement activity by airport and geography",
+      "phase": "P3",
+      "surfaceIds": [
+        "flight-dna",
+        "airport-detail",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Monthly published table/CSV",
+      "verifiedEvidence": "Official catalog records and resource URLs validated",
+      "terms": "Open Government Licence \u2013 Canada with attribution",
+      "limitations": "Includes operations beyond scheduled passenger flights; historical",
+      "activationBlockers": [
+        "Implement table-specific versioned CSV import",
+        "Preserve Canadian license attribution, scope and reporting period"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "statcan-passengers",
+      "catalogSource": "Statistics Canada airport passengers",
+      "url": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2310025301",
+      "data": "Airport passenger traffic",
+      "phase": "P3",
+      "surfaceIds": [
+        "flight-dna",
+        "airport-detail",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Annual published table/CSV",
+      "verifiedEvidence": "Official catalog record and resource URLs validated",
+      "terms": "Open Government Licence \u2013 Canada with attribution",
+      "limitations": "Annual lag; no current queue, timetable or seats",
+      "activationBlockers": [
+        "Implement table-specific annual CSV import",
+        "Preserve reporting lag, series revisions and attribution"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "catsa",
+      "catalogSource": "CATSA",
+      "url": "https://www.catsa-acsta.gc.ca/en/current-wait-times",
+      "data": "Queue-before-screening context at listed Canadian airports",
+      "phase": "P3",
+      "surfaceIds": [
+        "airport-detail",
+        "travel-day"
+      ],
+      "decision": "link-only",
+      "productionEnabled": false,
+      "accessAndCadence": "Official page; says refresh every 2 minutes",
+      "verifiedEvidence": "Official page and measurement limitations read",
+      "terms": "Reusable production API/data license not established",
+      "limitations": "Excludes check-in, screening process, preclearance and gate walk",
+      "activationBlockers": [
+        "Reusable API/data entitlement not verified",
+        "Use official link and explain queue measurement exclusions"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "bts-t100",
+      "catalogSource": "BTS T-100",
+      "url": "https://www.transtats.bts.gov/DatabaseInfo.asp?QO_VQ=EEE&Yv0x=D",
+      "data": "Segment service, departures, capacity and aircraft/service categories",
+      "phase": "P3",
+      "surfaceIds": [
+        "flight-dna",
+        "planner",
+        "assistant",
+        "recovery",
+        "airport-detail"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Monthly historical tables/bulk",
+      "verifiedEvidence": "Official database documentation checked; previously researched",
+      "terms": "Public U.S. government statistical data",
+      "limitations": "Segment differs from market; historical service is not availability",
+      "activationBlockers": [
+        "Implement Segment importer, passenger-service filtering and directional cohorts",
+        "Label historical service separately from current timetable/seat availability"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "bts-od40",
+      "catalogSource": "BTS OD40",
+      "url": "https://www.bts.gov/OD-40",
+      "data": "Historical fare/itinerary context with newer reporting schema",
+      "phase": "P3",
+      "surfaceIds": [
+        "flight-dna",
+        "planner",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Sampled historical ticket reports",
+      "verifiedEvidence": "Official program documentation checked; previously researched",
+      "terms": "Public U.S. government statistical data",
+      "limitations": "Not a current price quote; legacy/successor schema differences",
+      "activationBlockers": [
+        "Implement successor-versus-legacy schema and sample/period handling",
+        "Do not expose historical fare as a live quote"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "dot-consumer",
+      "catalogSource": "DOT consumer reports",
+      "url": "https://www.transportation.gov/individuals/aviation-consumer-protection/air-travel-consumer-reports",
+      "data": "Baggage, oversales, complaints and accessibility measures",
+      "phase": "P3",
+      "surfaceIds": [
+        "flight-dna",
+        "assistant"
+      ],
+      "decision": "official-data-candidate",
+      "productionEnabled": false,
+      "accessAndCadence": "Published statistical reports/tables",
+      "verifiedEvidence": "Official report page checked; previously researched",
+      "terms": "Public official reports; retain scope and attribution",
+      "limitations": "Carrier/reporting coverage and denominators matter; historical",
+      "activationBlockers": [
+        "Implement report-specific measures/denominators and carrier coverage",
+        "Do not interpret airline aggregate as a specific flight/bag probability"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "ntsb",
+      "catalogSource": "NTSB aviation data",
+      "url": "https://www.ntsb.gov/safety/data/Pages/Data_Stats.aspx",
+      "data": "Investigations, incidents and recommendations",
+      "phase": "P6",
+      "surfaceIds": [
+        "assistant"
+      ],
+      "decision": "optional-reference",
+      "productionEnabled": false,
+      "accessAndCadence": "CAROL and public downloadable accident data",
+      "verifiedEvidence": "Official download documentation read",
+      "terms": "Public-use downloads described; retain report status",
+      "limitations": "Not a valid airline/aircraft safety score from raw counts",
+      "activationBlockers": [
+        "Keep preliminary/final status and commercial/general aviation scope",
+        "No safety ranking from age or raw incident counts"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "eurocontrol-adrr",
+      "catalogSource": "EUROCONTROL ADRR",
+      "url": "https://www.eurocontrol.int/dashboard/aviation-data-research",
+      "data": "Trajectories, flights, network and airspace history",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-dna",
+        "assistant"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "Vetted account; historical research archive",
+      "verifiedEvidence": "October 2026 coverage expansion and linked PDF terms checked",
+      "terms": "R&D only; linked terms restrict commercial use and derived-product transfer without permission",
+      "limitations": "Not production-authorized; linked older terms differ from new coverage description",
+      "activationBlockers": [
+        "Linked terms restrict R&D data, commercial use and derived product transfer",
+        "Obtain applicable written permission; newer coverage does not alter rights"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "eurocontrol-opdi",
+      "catalogSource": "EUROCONTROL performance / OPDI",
+      "url": "https://www.opdi.aero/data",
+      "data": "Airport/airspace delay, events, taxi/holding and emissions metrics",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-dna",
+        "assistant"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "Historical event/measurement and performance downloads",
+      "verifiedEvidence": "Current OPDI coverage Jan2022-Sep2026 and disclaimer read",
+      "terms": "OPDI non-commercial focus; site disclaimer restricts commercial use",
+      "limitations": "Open in title does not establish unrestricted commercial rights",
+      "activationBlockers": [
+        "Site disclaimer and OPDI describe non-commercial use",
+        "Obtain appropriate permission before business ingestion"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "uk-caa",
+      "catalogSource": "UK CAA punctuality",
+      "url": "https://www.caa.co.uk/data-and-analysis/uk-aviation-market/flight-punctuality/uk-flight-punctuality-statistics/",
+      "data": "UK flight punctuality",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-dna",
+        "assistant"
+      ],
+      "decision": "conditional",
+      "productionEnabled": false,
+      "accessAndCadence": "Historical yearly/monthly publications",
+      "verifiedEvidence": "Official annual index verified",
+      "terms": "Download-specific reuse terms still to review",
+      "limitations": "Actual file schema/license not validated in this pass",
+      "activationBlockers": [
+        "Verify actual downloadable schema and reuse rights",
+        "Only prioritize if UK travel is required"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "flightaware",
+      "catalogSource": "FlightAware AeroAPI",
+      "url": "https://www.flightaware.com/commercial/aeroapi/",
+      "data": "Flight status, tracks and tier-specific alerts/history",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-radar",
+        "recovery"
+      ],
+      "decision": "paid-out-of-scope",
+      "productionEnabled": false,
+      "accessAndCadence": "Paid business tier; personal tier restrictions",
+      "verifiedEvidence": "Current tier descriptions and minimum read",
+      "terms": "Standard currently lists $100 monthly minimum; Personal limited to personal/academic derivatives",
+      "limitations": "Not free business infrastructure; status is not available booking inventory",
+      "activationBlockers": [
+        "App explicitly disables commercial services",
+        "No business subscription or account activation authorized by this blueprint"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    },
+    {
+      "id": "aviationstack",
+      "catalogSource": "Aviationstack",
+      "url": "https://aviationstack.com/pricing",
+      "data": "Flight-related services with plan-specific coverage",
+      "phase": "P6",
+      "surfaceIds": [
+        "flight-radar",
+        "recovery"
+      ],
+      "decision": "blocked-for-production",
+      "productionEnabled": false,
+      "accessAndCadence": "Free plan currently 100 requests",
+      "verifiedEvidence": "Current pricing restrictions read",
+      "terms": "Free plan says personal/non-commercial use",
+      "limitations": "Not an eligible assumed free work-app provider",
+      "activationBlockers": [
+        "Free tier personal/non-commercial; not a free business dependency",
+        "Preserve current free-data-only app behavior"
+      ],
+      "aiUse": "intended-use-permission-check-required"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "title": "Common evidence and current-source readiness",
+      "dependsOn": [],
+      "status": "planned",
+      "owners": [
+        "artifacts/api-server/src/field-atlas/backend/providers/evidence.ts",
+        "artifacts/api-server/src/field-atlas/backend/providers/publicTravel.ts",
+        "artifacts/api-server/src/field-atlas/backend/providers/connections.ts",
+        "artifacts/api-server/src/field-atlas/backend/index.ts",
+        "artifacts/api-server/src/field-atlas/shared/travel/types.ts",
+        "artifacts/field-sales-atlas/shared/travel/types.ts"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Aircraft reference and profiles",
+      "dependsOn": [
+        "P0"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "P2",
+      "title": "Airport operations and aviation hazards",
+      "dependsOn": [
+        "P0"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "P3",
+      "title": "Canadian and airline historical depth",
+      "dependsOn": [
+        "P0"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "P4",
+      "title": "App-wide journey, assistant and recovery use",
+      "dependsOn": [
+        "P1",
+        "P2"
+      ],
+      "optionalDependencies": [
+        "P3"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "P5",
+      "title": "Optional live aircraft and compliant images",
+      "dependsOn": [
+        "P1",
+        "P2"
+      ],
+      "status": "planned",
+      "gates": [
+        "source-specific rights",
+        "production access/schema/time validation",
+        "retention and cache controls"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Advanced access and performance research",
+      "dependsOn": [
+        "P0",
+        "P4"
+      ],
+      "status": "planned",
+      "gates": [
+        "specific need",
+        "service/component rights",
+        "bounded cost and infrastructure review"
+      ]
+    }
+  ],
+  "invariants": [
+    "Public sources never receive private trainer, manager, booking-reference or calendar text.",
+    "Aircraft position is not flight status, aircraft assignment or available seat inventory.",
+    "Historical route, fare and passenger metrics retain period, cohort, scope and denominator.",
+    "Evidence snapshot identity and provider observation time are separate from retrieval time.",
+    "No relevant record, invalid schema, outside coverage and provider unavailable remain different outcomes.",
+    "All screens use the same normalized facts through compatible projections during migration.",
+    "Local booking drafts are shared only through explicit reviewed journey attachment.",
+    "Only explicit reviewed approval may update calendars, with revision/expiry/idempotency checks.",
+    "New sources remain disabled until each use, access, schema, time and production-readiness gate is met.",
+    "Commercial offer search remains disabled; no paid service is activated.",
+    "Planespotters photos and metadata are excluded from AI/ML datasets, training and evaluation.",
+    "Provider failure does not become a normal/clear airport or successful trip conclusion."
+  ]
+}

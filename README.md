@@ -45,6 +45,12 @@ The web app uses port 24397; the API uses port 8080. `PORT` and `ATLAS_API_PORT`
 
 The post-merge hook installs dependencies only. It does not run a database schema push, copy a database, or delete saved records. Publishing or autoscaling still needs durable storage for SQLite; Git synchronization does not provide persistent storage across deployment instances.
 
+## Aviation integration blueprint
+
+The [aviation connection map](docs/architecture/AVIATION_DATA_CONNECTIONS.md) maps aircraft reference, airport operations, aviation hazards, historical airline data and optional tracking into the existing map, flight details, planner, assistant, recovery and mobile views. It identifies current code owners, proposed API contracts, evidence and identity rules, refresh policies, dependencies and acceptance checks.
+
+The [machine-readable map](docs/architecture/aviation-connections.json) distinguishes existing integrations from proposed endpoints and records activation blockers for all 28 sources in the [source catalog](docs/research/aviation-source-catalog.csv). The [supporting aviation research](docs/research/AVIATION_DATA_AND_AI_RESEARCH_2026-11-06.md) includes sample checks and reuse restrictions. These are implementation plans; this documentation update does not activate the proposed feeds.
+
 ## Validation and build identity
 
 ```bash
