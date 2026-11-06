@@ -6,8 +6,8 @@ export default function OfficialFieldAtlasLogo(){
         loading="eager" decoding="async" />
     </span>
     <span className="official-atlas-lockup" aria-hidden="true">
-      <strong>FIELD SALES <em>ATLAS</em></strong>
-      <small>TERRITORY + TRAVEL</small>
+      <strong><span>FIELD</span><em>ATLAS</em></strong>
+      <small>SALES · TERRITORY · TRAVEL</small>
     </span>
   </>;
 }

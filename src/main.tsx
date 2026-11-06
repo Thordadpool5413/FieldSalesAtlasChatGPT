@@ -5,6 +5,7 @@ import './index.css';
 // This is the sole final appearance layer, after all feature/component CSS imports.
 import './AtlasAtelier.css';
 import './WorkspaceExperience.css';
+import './styles/miami-vice-system.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

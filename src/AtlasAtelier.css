@@ -1,14 +1,11 @@
-/* The app's final presentation entrypoint. Each file has one owner.
-   Feature styles retain functional geometry; these modules own the shared UI.
-   Do not append release-specific overrides here. */
+/* Shared structural styles, followed by workflow and PWA geometry.
+   Art direction is owned by styles/miami-vice-system.css in main.tsx.
+   The retired Vice appearance layers are deliberately no longer imported. */
 @import './styles/atlas-tokens.css';
 @import './styles/atlas-shell.css';
 @import './styles/atlas-map.css';
 @import './styles/atlas-components.css';
 @import './styles/atlas-experience.css';
-/* One authoritative art-direction layer shared by desktop, mobile, day and night. */
-@import './styles/vice-signature.css';
-/* Final readability and responsive refinement. */
 @import './styles/atlas-clarity.css';
 /* Product direction v4 owns the guided command experience and navigation scale. */
 @import './styles/product-direction.css';
@@ -18,17 +15,11 @@
 @import './styles/ios-detail-workflows.css';
 /* Standalone-only pull-to-refresh and transparent reconnect feedback. */
 @import './styles/ios-reliability.css';
-/* Miami Vice Precision: one photo-led, travel-focused visual layer. */
-@import './styles/vice-cinematic.css';
-@import './styles/vice-fidelity.css';
-/* Mobile-only Miami Vice iOS and PWA polish. Loaded last to fix legacy overrides. */
-@import './styles/ios-vice-2026.css';
 /* One final spatial hierarchy for desktop and mobile; structural repairs
    intentionally supersede contradictory historical styles. */
 @import './styles/precision-density.css';
 /* Mobile Fit owns the final <=900px/PWA density and touch-safe overrides. */
 @import './styles/mobile-fit.css';
-/* Map-first Atlas Premiere: final art direction and route/interaction hierarchy. */
+/* Geometry for existing map and detail workflows. The vice-atlas surface has
+   its own appearance and responsive contract in miami-vice-system.css. */
 @import './styles/atlas-map-premiere.css';
-/* App-wide premium density and navigation coherence. */
-@import './styles/atlas-shell-premium.css';

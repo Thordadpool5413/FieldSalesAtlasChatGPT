@@ -85,12 +85,6 @@ export default function PlanHub({section,onSectionChange,onDestination,onCircuit
 
 export function PeopleHub({section,onSectionChange}:{section:'managers'|'coaching';onSectionChange:(next:'managers'|'coaching')=>void}){
   return <section className='fsa-hub fsa-people-hub' aria-label='People and coaching'>
-    <header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>
-      <div className='atlas-hub-lead'><span className='atlas-hub-icon atlas-hub-icon-pink'><Users size={18}/></span>
-        <div><p className='fsa-kicker'>FIELD SALES ATLAS / PEOPLE</p>
-        <p className='fsa-hub-guide'>Your managers, coaching priorities and follow-through</p></div>
-      </div><span className='atlas-hub-online'>SHARED TEAM</span>
-    </header>
     <div className='fsa-hub-tabs' role='tablist' aria-label='People sections'>
       <button type='button' role='tab' aria-selected={section==='managers'} className={section==='managers'?'is-active':''}
         onClick={()=>onSectionChange('managers')} onKeyDown={event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();onSectionChange('coaching');event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button[role="tab"]')[1]?.focus();}}}><Users size={20}/><span><strong>Territory Managers</strong><small>People, assignments and profiles</small></span></button>

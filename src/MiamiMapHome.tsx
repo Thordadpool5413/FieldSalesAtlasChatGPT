@@ -4,12 +4,11 @@ import { ArrowRight,CalendarCheck,CalendarClock,ChevronDown,Compass,Layers,MapPi
 import type { MouseEvent as SvgMouseEvent,PointerEvent as SvgPointerEvent } from 'react';
 import { lazy,Suspense,useEffect,useMemo,useRef,useState } from 'react';
 import { feature,merge } from 'topojson-client';
-import AtlasLiveDeck from './AtlasLiveDeck';
-import AtlasMissionRail from './AtlasMissionRail';
 import { CANADA_REGIONS,CANADA_REGION_BY_CODE } from './CanadaRegions';
 import { territoryPeople } from './fieldExperience';
 import type { LiveMapHandle } from './LiveTerritoryMap';
 import './MapIntelligence.css';
+import OceanMasthead from './OceanMasthead';
 import { useOp } from './Operations';
 import type { Airport,Assignment,Manager } from './opsModels';
 import { STATES,coachingPriority,dateLabel,today } from './opsModels';
@@ -22,7 +21,7 @@ type Props={
   onAddManager:(code?:string)=>void;
 };
 const LiveTerritoryMap=lazy(()=>import('./LiveTerritoryMap'));
-const CANADA_URL='https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson';
+const CANADA_URL='/resources/geography/canada.geojson';
 const EMPTY_CANADIAN_BOUNDARIES:Geo['features']=[];
 const US_LOOKUP=Object.fromEntries(STATES.map(s=>[s.fips,s]));
 function regionName(properties:Record<string,unknown>){
@@ -244,7 +243,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   }
   const trainers=useMemo(()=>[...new Set([...trainerProfiles.map(p=>p.name),...managers.map(m=>m.trainer).filter(Boolean)])],[trainerProfiles,managers]);
   const colors=useMemo(()=>Object.fromEntries(trainers.map((name)=>[
-    name,trainerProfiles[0]?.name===name?'#05c4ee':trainerProfiles[1]?.name===name?'#f00493':'#8093ad'
+    name,trainerProfiles[0]?.name===name?'#78e5da':trainerProfiles[1]?.name===name?'#ff8eab':'#8093ad'
   ])),[trainers,trainerProfiles]);
   function managerSummary(m:Manager){
     const history=visits.filter(v=>v.managerId===m.id&&v.status==='Completed').map(v=>v.date).sort();
@@ -551,33 +550,11 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
     ?territoryPeople(managers,assignments,inspectedRegion.code).length:0;
   const inspectedAirportCount=inspectedRegion
     ?airports.filter(airport=>airport.state===inspectedRegion.code&&airport.scheduled).length:0;
-  return <div data-lens={mapLens} className={'mv-map-page atlas-v2 atlas-reimagined'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')}>
-    {!focusMap && <header className="atlas-command-intro">
-      <div className="atlas-command-title">
-        <div className="atlas-command-kicker"><span className="atlas-command-pulse"/> FIELD SALES ATLAS <span>/</span> GEOGRAPHIC COMMAND</div>
-        <h1>{region?<>{region.name}<span>. In focus.</span></>:<>Your entire field<span>. One clear view.</span></>}</h1>
-        <p>{region
-          ? 'Your people, coaching priorities and arrival gateways, connected to this territory.'
-          : managers.length
-            ? 'See where your people are, who needs coaching and how to reach them.'
-            : 'Choose any state to explore public airports and counties, compare gateways and plan travel. Add managers when you are ready.'}</p>
-      </div>
-      <div className="atlas-command-pills">
-        <span className="atlas-command-stat"><strong>{managers.length}</strong><small>MANAGERS</small></span>
-        <span className="atlas-command-stat"><strong>{mappedMarkets}</strong><small>YOUR MARKETS</small></span>
-        <span className="atlas-command-stat atlas-stat-public"><strong>{airports.filter(a=>a.scheduled).length.toLocaleString()}</strong><small>LISTED GATEWAYS</small></span>
-        <button type='button' onClick={()=>ctx.go('mission')} className='atlas-command-secondary'>
-          <Sparkles size={16}/> Mission Control
-        </button>
-        <button type="button"
-          onClick={()=>managers.length?ctx.go('coordinate'):region?continueToTravel(region):searchInput.current?.focus()}
-          className="atlas-command-explore">
-          {managers.length?<Users size={16}/>:<Compass size={16}/>}
-          {managers.length?'Coordinate visits':region?'Plan this market':'Explore markets'}
-          <ArrowRight size={16}/>
-        </button>
-      </div>
-    </header>}
+  return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')}>
+    {!focusMap && <OceanMasthead title="Your field. In perspective."
+      description="Explore territories. Connect with your people. Plan the next visit."
+      mobileDescription="Explore territories. Plan your next visit."
+      action="Plan a trip" onAction={()=>region?continueToTravel(region):ctx.go('air')}/>}
     <div className={'atlas-mission-layout'+(region?' has-region':'')}>
       <div className="fsa-map-heading">
         <div className="atlas-field atlas-destination">
@@ -593,7 +570,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
                 else if(e.key==='Enter'&&searched.length){e.preventDefault();pickSearch(searched[searchIndex]||searched[0]);}
                 else if(e.key==='Escape'){setQuery('');setSearchIndex(0);}
               }}
-              placeholder={region?(focusedManager?.name||region.name):'Search state, manager or airport'}
+              placeholder={region?(focusedManager?.name||region.name):'Find a territory, person or airport'}
               role="combobox" aria-autocomplete="list" aria-expanded={Boolean(query)}
               aria-controls={query?'atlas-search-options':undefined}
               aria-activedescendant={query&&searched.length?'atlas-search-option-'+searchIndex:undefined}
@@ -613,8 +590,8 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
         </div>
         <div className="fsa-map-heading-top">
         <div className="fsa-map-heading-text">
-          <h2>{region?region.name:'Every territory. One clear view.'}</h2>
-          <p>{region?'See your people, coverage, and nearby flight gateways.':'Choose a territory to reveal managers, counties and airports.'}</p>
+          <h2>Territory atlas</h2>
+          <p>{region?region.name+' · Territory in focus':'United States & Canada'}</p>
         </div>
       <div className="atlas-utility">
         <div className="atlas-context">
@@ -816,7 +793,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           onSelectTown={area=>{setSelectedMapArea({...area,kind:'town'});setPanelTab('coverage');}}
           onHoverRegion={setHoveredRegion}
           onReady={setLiveReady} onZoom={setLiveZoom}/></Suspense>}
-        <AtlasLiveDeck region={region} onAddManager={onAddManager}/>
         <div className="fsa-map-hud" aria-hidden="true">
           <span><i/> {showLiveMap&&liveReady?'STREET BASEMAP · PUBLIC TILES':showLiveMap?'LOADING STREETS · VECTOR BACKUP READY':'VECTOR TERRITORY ATLAS'}</span>
           <span>{region?region.name:countryScope==='canada'?'CANADA / PROVINCES':'UNITED STATES / INTERACTIVE'}</span>
@@ -1104,6 +1080,15 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
       </div>
 
 
+      {!region&&!focusMap&&<aside className="vice-map-welcome" aria-label="Explore your territories">
+        <div><Compass size={25}/><h3>Find your<br/> next destination.</h3>
+        <p>Select a state or province to explore your people, coverage and arrival airports.</p></div>
+        <div className="vice-market-list">
+          {(['FL','CA','TX'] as const).map(code=>{const st=STATES.find(item=>item.code===code)!;return <button type="button" key={code} onClick={()=>handleSelect({code,name:st.name,country:'US'})}>
+            <span>{st.name}</span><ArrowRight size={17}/></button>;})}
+        </div>
+        <small>Public airport references. Flight availability and road routes require verification.</small>
+      </aside>}
       </div>
     </div>
       {region&&!focusMap&&<button type="button" className="ios-market-scrim" aria-label="Dismiss territory details"
@@ -1275,7 +1260,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
         <span className="atlas-deep-summary-action">Explore insights <ChevronDown size={17}/></span>
       </summary>
       <section className="atlas-telemetry-strip" aria-label="Field intelligence and geographic overview">
-      <AtlasMissionRail region={region} onAddManager={onAddManager}/>
+
       <div className="atlas-telemetry-item"><Compass size={20}/><span><small>GEOGRAPHY AVAILABLE</small><strong>{STATES.length}<em>regions · 50 states + D.C.</em></strong></span></div>
       <div className="atlas-telemetry-item"><Users size={20}/><span><small>TERRITORY MANAGERS</small><strong>{managers.length}<em>saved profiles</em></strong></span></div>
       <div className="atlas-telemetry-item"><MapPin size={20}/><span><small>MAPPED MARKETS</small><strong>{mappedMarkets}<em>covered markets</em></strong></span></div>

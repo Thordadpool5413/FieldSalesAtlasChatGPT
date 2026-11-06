@@ -1,8 +1,8 @@
-/* Field Sales Atlas PWA v12. Generic application shell may be cached offline.
+/* Field Sales Atlas PWA v13. Generic application shell may be cached offline.
  * Never cache API responses, workspace keys, auth records or personal data.
  * Updates remain user-approved to protect unsaved forms.
  */
-const CACHE_NAME='field-sales-atlas-static-v12';
+const CACHE_NAME='field-sales-atlas-static-v13';
 const PREFIX='field-sales-atlas-static-';
 const OFFLINE='/offline.html';
 const APP_SHELL='/';
@@ -12,7 +12,10 @@ const PUBLIC_ASSETS=[
  '/resources/app-icon-192.png',
  '/resources/apple-touch-icon.png',
  '/resources/favicon.png',
- '/manifest.webmanifest'
+ '/manifest.webmanifest',
+ '/resources/vice/ocean-drive-dusk.webp',
+ '/resources/vice/ocean-drive-dusk-small.webp',
+ '/resources/geography/canada.geojson'
 ];
 self.addEventListener('install',(event)=>{
  event.waitUntil((async()=>{
@@ -65,7 +68,8 @@ self.addEventListener('fetch',(event)=>{
  const staticFile=(url.pathname.startsWith('/assets/')||
                    url.pathname.startsWith('/resources/'))&&
                   /\.(?:js|css|svg|png|ico|jpe?g|webp|woff2?)$/i.test(url.pathname);
- if(!staticFile)return;
+ const publicGeography=url.pathname==='/resources/geography/canada.geojson';
+ if(!staticFile&&!publicGeography)return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE_NAME);
   const saved=await cache.match(request);

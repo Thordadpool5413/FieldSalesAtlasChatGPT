@@ -7,7 +7,7 @@ CheckCircle2,
 ChevronDown,ChevronLeft,
 CircleAlert,
 ClipboardCheck,
-Compass,Database,Globe2,LayoutDashboard,
+Compass,Database,LayoutDashboard,Map as MapIcon,
 Moon,
 MoreHorizontal,
 PanelLeftClose,PanelLeftOpen,
@@ -27,7 +27,6 @@ import { createContext,lazy,Suspense,useContext,useEffect,useMemo,useRef,useStat
 import AirportAlertRail from './AirportAlertRail';
 import './AtlasFoundation.css';
 import { CANADA_STARTER_AIRPORTS } from './CanadaRegions';
-import FieldCompass from './FieldCompass';
 import { uniqueManagerIds } from './fieldExperience';
 import GlobalFinder from './GlobalFinder';
 import IosPullRefresh from './IosPullRefresh';
@@ -97,7 +96,7 @@ export function useOp():Context {
 }
 // The Atlas is the application's home. Travel remains a separate working tool.
 const MIAMI_NAV: Array<{id:Page;label:string;icon:typeof Plane}>=[
-  {id:'home',label:'Atlas',icon:Globe2},
+  {id:'home',label:'Atlas',icon:MapIcon},
   {id:'plan',label:'Travel',icon:Plane},
   {id:'people',label:'People',icon:Users},
   {id:'calendar',label:'Calendar',icon:CalendarDays},
@@ -227,7 +226,7 @@ function Product(){
   });
   useEffect(()=>{
     const themeMeta=document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    themeMeta?.setAttribute('content',theme==='dark'?'#071525':'#F3F8FB');
+    themeMeta?.setAttribute('content',theme==='dark'?'#091519':'#edf6f4');
     document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-status-bar-style"]')
       ?.setAttribute('content',theme==='dark'?'black-translucent':'default');
     document.documentElement.setAttribute('data-field-atlas-theme',theme);
@@ -626,7 +625,7 @@ function Product(){
 
 
   return <Store.Provider value={context}>
-    <div className={'mv-app op-root atlas-design-v3 atlas-product-v4 atlas-command-v5'+(focusedWorkspace?' atlas-workspace-focused':'')}
+    <div className={'mv-app op-root atlas-design-v3 atlas-product-v4 atlas-command-v5 vice-product'+(focusedWorkspace?' atlas-workspace-focused':'')}
       data-theme={theme} data-view={view} data-density={density}>
       <a className="fsa-skip-link" href="#field-atlas-main" onClick={event=>{
         event.preventDefault();
@@ -688,7 +687,7 @@ function Product(){
             </nav>
           </details>
           <div className="fsa-sidebar-bottom">
-            <FieldCompass variant="rail"/>
+            <button type="button" className="vice-rail-settings" onClick={()=>setTrainerProfilesOpen(true)}><Settings size={19}/><span>Trainer settings</span></button>
           </div>
         </aside>
         <div className="fsa-stage">
@@ -854,7 +853,6 @@ function Product(){
         <button onClick={()=>{reload().catch(e=>setError(errorText(e)));setMenuOpen(false);}}><RefreshCw size={18}/> Refresh shared records</button>
       </nav>
       <div className="mv-shell">
-        {view!=='home'&&<FieldCompass variant="mobile"/>}
         <main id="field-atlas-main" tabIndex={-1} className={'mv-content op-content'+(view==='home'?' mv-content-map':' mv-content-inner')}>
           {error&&<div className="op-error" role="alert"><CircleAlert size={17}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Dismiss error"><X size={15}/></button></div>}
           {notice&&<div className="op-notice" role="status"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Dismiss notice"><X size={15}/></button></div>}

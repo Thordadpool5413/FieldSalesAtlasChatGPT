@@ -1,0 +1,370 @@
+/* Ocean Drive: shared art direction. Feature styles own behavior and geometry;
+   this module owns palette, type, chrome and the Atlas/travel composition. */
+html[data-field-atlas-theme='dark'],
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='dark'] {
+  --at-bg:#091519; --at-rail:#09181c; --at-stage:#0b1b20;
+  --at-surface:#102329; --at-raised:#1a343a; --at-field:#0b1c22;
+  --at-text:#f4f3ee; --at-muted:#adc2c5; --at-subtle:#98b4b9;
+  --at-border:#3c5960; --at-border-soft:#284047;
+  --at-cyan:#78e5da; --at-rose:#ff8eab; --at-accent:#ffc394;
+  --at-action:#78e5da; --at-action-fg:#082023; --at-action-hover:#a8f5e9;
+  --at-aqua-soft:#1b3c40; --at-rose-soft:#422c36;
+  --at-map-water:#091c22; --at-map-land:#17343a; --at-map-assigned:#31736f;
+  --at-map-stroke:#789b9d; --at-map-label:#e1edeb; --at-map-outline:#102b32;
+  --vice-map-canada:#23454c; --vice-map-active:#f58ca5;
+  --at-shadow:0 12px 40px #00000018;
+}
+html[data-field-atlas-theme='light'],
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='light'] {
+  --at-bg:#edf6f4; --at-rail:#e2f0ed; --at-stage:#ffffff;
+  --at-surface:#ffffff; --at-raised:#e3f0ee; --at-field:#f5faf9;
+  --at-text:#17383d; --at-muted:#506d71; --at-subtle:#537479;
+  --at-border:#a0bfbe; --at-border-soft:#d0e1de;
+  --at-cyan:#126d6b; --at-rose:#ad315c; --at-accent:#8a472d;
+  --at-action:#176e6b; --at-action-fg:#ffffff; --at-action-hover:#105a59;
+  --at-aqua-soft:#d6ece7; --at-rose-soft:#fce3eb;
+  --at-map-water:#daeeeb; --at-map-land:#b7d9d2; --at-map-assigned:#7bb6a8;
+  --at-map-stroke:#487970; --at-map-label:#143e3f; --at-map-outline:#d5eae5;
+  --vice-map-canada:#a8c9c4; --vice-map-active:#e89ab3;
+  --at-shadow:0 12px 40px #17383d0a;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product {
+  --atlas-font:'DM Sans','Avenir Next',system-ui,sans-serif;
+  --vice-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  font:400 14px/1.55 var(--atlas-font); background:var(--at-bg); color:var(--at-text);
+}
+.vice-product :is(h1,h2,h3,h4) {font-family:var(--atlas-font);letter-spacing:-.025em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(h1,h2,h3,h4) {font-family:var(--atlas-font);font-weight:600;letter-spacing:-.025em;text-wrap:balance;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,input,select,textarea) {font-family:var(--atlas-font);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,a,input,select,textarea,summary):focus-visible {outline:2px solid var(--at-cyan);outline-offset:4px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-card,.op-modal,.fsa-hub,.atlas-guided,.journey-panel,.travel-desk) {box-shadow:none;border-color:var(--at-border-soft);background:var(--at-surface);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-btn {min-height:44px;border-radius:7px;font-size:13px;font-weight:600;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary,.op-btn-primary) {background:var(--at-action);border-color:var(--at-action);color:var(--at-action-fg);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(input,select,textarea) {border-color:var(--at-border);border-radius:7px;color:var(--at-text);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {grid-template-columns:220px minmax(0,1fr);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {padding:26px 14px 18px;background:var(--at-rail);border-right:1px solid var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar::after {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-brand {height:auto;min-height:122px;max-height:none;overflow:visible;border:0;margin:0 0 20px;padding:0 14px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-brand {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-lockup {display:block;width:150px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-lockup strong {display:flex;flex-direction:column;font:700 46px/.98 var(--vice-display);letter-spacing:3px;color:var(--at-text);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-lockup strong>span {display:block;border-bottom:3px solid var(--at-rose);padding:0 0 7px;margin:0 0 6px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-lockup em {font-style:normal;color:var(--at-text);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .official-atlas-lockup small {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-label {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-nav {gap:4px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link {min-height:48px;padding:11px 14px;font-size:15px;font-weight:500;color:var(--at-muted);border:0;border-radius:7px;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active {color:var(--at-text);background:var(--at-aqua-soft);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active::after {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link svg {stroke-width:1.6;color:currentColor;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-create {display:flex;align-items:center;gap:9px;min-height:44px;padding:10px 14px;margin:18px 0;background:transparent;border:1px solid var(--at-border);border-radius:7px;color:var(--at-cyan);box-shadow:none;font-size:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-create svg:last-child {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools {padding-top:16px;border-top:1px solid var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link {min-height:42px;font-size:12px;padding:9px 13px;gap:10px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link svg {width:16px;height:16px;flex-basis:16px;color:var(--at-subtle);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools {margin-top:16px;border-top:1px solid var(--at-border-soft);padding-top:10px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools summary {font-size:12px;font-weight:500;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-bottom {padding:16px 0 0;margin-top:auto;border-color:var(--at-border-soft);}
+.vice-rail-settings {display:flex;align-items:center;gap:11px;min-height:44px;width:100%;padding:10px 14px;background:transparent;border:0;color:var(--at-muted);font-size:12px;text-align:left;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {min-height:66px;padding:10px 28px;gap:16px;background:var(--at-rail);border-color:var(--at-border-soft);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header::after {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-crumb {font-size:13px;letter-spacing:0;font-weight:400;white-space:nowrap;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-crumb>span {text-transform:capitalize;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-crumb strong {font-weight:500;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {margin-left:auto;min-width:180px;min-height:40px;font-weight:400;font-size:12px;box-shadow:none;background:var(--at-field);border-radius:7px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger svg {color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger kbd {font-size:10px;border:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-focus-workspace {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-sync-indicator {font-size:10px;font-weight:400;color:var(--at-muted);background:transparent;border:0;box-shadow:none;white-space:nowrap;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-sync-dot {box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header-trainers {margin-left:0;gap:8px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-switch {min-height:40px;padding:7px 12px;border-radius:7px;background:transparent;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-description small {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-description select {width:105px;font-size:12px;font-weight:500;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control {border:0;padding:0;background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button {width:36px;min-height:40px;padding:9px;background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button span {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button.active {color:var(--at-cyan);background:var(--at-aqua-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header-settings {background:transparent;border:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {padding:22px 28px 48px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice {margin:0 0 16px;padding:9px 14px;border:1px solid var(--at-border-soft);border-left:3px solid var(--at-rose);border-radius:5px;background:var(--at-field);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map>.atlas-demo-notice,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map>.atlas-setup {margin:16px 28px 0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice>div {display:flex;align-items:center;gap:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice strong {font-size:11px;white-space:nowrap;color:var(--at-rose);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice span {font-size:11px;}
+
+/* Full photograph, natural black edge for live text. No remote image requests. */
+.vice-masthead {position:relative;isolation:isolate;display:flex;align-items:center;min-height:275px;overflow:hidden;background:#091519;color:#f4f3ee;}
+.vice-masthead-image {position:absolute;inset:0;z-index:-2;}
+.vice-masthead-image img {display:block;width:100%;height:100%;object-fit:cover;object-position:center 58%;}
+.vice-masthead::after {content:'';position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,#07171bf2 0%,#07171bc4 25%,#07171b12 62%,transparent 85%);pointer-events:none;}
+.vice-masthead-content {padding:28px 38px;max-width:650px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-masthead h1 {margin:0 0 10px;max-width:500px;font:700 clamp(40px,4.6vw,66px)/.98 var(--vice-display);letter-spacing:.015em;text-transform:uppercase;text-wrap:balance;color:#f4f3ee;}
+.vice-masthead p {margin:0 0 20px;max-width:440px;font-size:14px;line-height:1.6;color:#e0ebea;text-wrap:pretty;}
+.vice-description-mobile {display:none;}
+.vice-primary {display:inline-flex;justify-content:center;align-items:center;gap:20px;min-height:44px;padding:9px 20px;border:0;border-radius:7px;background:#78e5da;color:#082023;font-weight:700;font-size:13px;box-shadow:none;transition:background .18s,transform .18s;}
+.vice-primary:hover {background:#a8f5e9;transform:translateY(-1px);}
+.vice-primary:active {transform:translateY(0);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-primary {font:700 19px/1.2 var(--vice-display);text-transform:uppercase;letter-spacing:.045em;}
+
+/* Atlas: photographic introduction, quiet map tools, open geographic canvas. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.has-active-region:not(.atlas-focused) {grid-template-columns:minmax(0,1fr) 310px;grid-template-areas:'heading heading' 'atlas planner' 'regions regions';gap:20px;padding:0 28px 28px;background:var(--at-bg);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead {grid-area:heading;margin:0 -28px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-mission-layout {grid-area:atlas;grid-column:1/-1;border:1px solid var(--at-border);border-radius:12px;box-shadow:none;background:var(--at-surface);overflow:visible;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .has-active-region .atlas-mission-layout {grid-column:1;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading {display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:18px 20px 12px;border:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-top {display:contents;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text {display:block;order:0;flex:1;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text h2 {font:700 32px/1.1 var(--vice-display);letter-spacing:.02em;text-transform:uppercase;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text p {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-field.atlas-destination {order:1;width:min(350px,50%);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-destination>label {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-search {min-height:44px;border-radius:7px;border:1px solid var(--at-border);box-shadow:none;background:var(--at-field);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-search input {height:42px;font-size:13px;font-weight:400;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-search>svg {color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility {order:2;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;padding:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-context {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions {display:flex;gap:7px;flex-wrap:wrap;width:100%;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions :is(button,select) {min-height:34px;padding:5px 9px;border:1px solid var(--at-border-soft);border-radius:5px;font-size:11px;font-weight:400;background:transparent;box-shadow:none;color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions>.atlas-focus {margin-left:auto;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses {display:flex;gap:15px;margin:0 20px;padding:0;min-height:48px;border:0;border-bottom:1px solid var(--at-border);border-radius:0;background:transparent;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>span {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>button {display:flex;align-items:center;gap:6px;min-height:46px;padding:9px 6px;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:12px;font-weight:500;color:var(--at-muted);background:transparent;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>button svg {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>button.is-active {border-bottom-color:var(--at-cyan);color:var(--at-text);background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-focus {margin-left:auto;align-self:center;font-size:11px;font-weight:400;color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-market-discovery {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-body {display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:0;margin:16px 16px 12px;width:auto;min-width:0;border:0;border-radius:0;overflow:visible;background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .has-active-region .mv-map-body,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-focused .mv-map-body {grid-template-columns:minmax(0,1fr);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-frame {height:490px;min-height:400px;border:0;border-radius:0;background:var(--at-map-water);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-frame::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-frame::after,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.mv-map-halo,.mv-map-grid-overlay,.fsa-sunset,.mv-map-sunset,.atlas-map-coordinates,.mv-map-insight,.fsa-map-hud) {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-water-start,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-water-middle,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-water-end {stop-color:var(--at-map-water);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-region-us {fill:var(--at-map-land);stroke:var(--at-map-stroke);stroke-width:.85;stroke-opacity:.65;filter:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-region-us.assigned {fill:var(--at-map-assigned);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-region:is(.active,:hover,:focus-visible) {fill:var(--vice-map-active);stroke:var(--at-rose);stroke-width:1.5;filter:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas[data-lens='coaching'] .priority-high {fill:color-mix(in srgb,var(--at-rose) 65%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas[data-lens='coaching'] .priority-moderate {fill:color-mix(in srgb,var(--at-accent) 58%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas[data-lens='coaching'] .priority-routine {fill:var(--at-map-assigned);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas[data-lens='visits'] .visit-low {fill:color-mix(in srgb,var(--at-cyan) 28%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas[data-lens='visits'] .visit-medium {fill:color-mix(in srgb,var(--at-cyan) 55%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas[data-lens='visits'] .visit-high {fill:color-mix(in srgb,var(--at-cyan) 80%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-visit-range-legend i.none {background:var(--at-map-land);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-visit-range-legend i.low {background:color-mix(in srgb,var(--at-cyan) 28%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-visit-range-legend i.medium {background:color-mix(in srgb,var(--at-cyan) 55%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-visit-range-legend i.high {background:color-mix(in srgb,var(--at-cyan) 80%,var(--at-map-land));}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-state-label {font-size:10px;font-weight:500;stroke-width:2px;fill:var(--at-map-label);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.atlas-map-corners,.atlas-graticule,.atlas-geographic-silhouette,.atlas-cartographic-ink) {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-mission-layout::before {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-mission-layout>.fsa-map-heading {position:relative;inset:auto;background:transparent;border-radius:12px 12px 0 0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-legend {left:10px;bottom:12px;padding:6px 8px;gap:9px;max-width:calc(100% - 130px);border:1px solid var(--at-border-soft);border-radius:5px;background:var(--at-field);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-legend>div {font-size:9px;font-weight:400;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-tools {display:flex;flex-direction:row;align-items:center;gap:0;right:8px;bottom:10px;width:auto;border:1px solid var(--at-border-soft);border-radius:5px;background:var(--at-field);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-tools button {width:32px;min-width:32px;height:36px;min-height:36px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-zoom {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-credit {right:8px;bottom:52px;font-size:8px;background:var(--at-map-water);}
+.vice-map-welcome {display:flex;flex-direction:column;justify-content:space-between;gap:24px;padding:28px 24px;border-left:1px solid var(--at-border-soft);}
+.vice-map-welcome>div>svg {color:var(--at-cyan);stroke-width:1.2;margin-bottom:14px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-map-welcome h3 {font:600 34px/1.05 var(--vice-display);text-transform:uppercase;letter-spacing:.01em;margin:0 0 14px;}
+.vice-map-welcome p {font-size:12px;color:var(--at-muted);line-height:1.7;margin:0;}
+.vice-market-list {display:grid;}
+.vice-market-list button {display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:10px 0;border:0;border-bottom:1px solid var(--at-border-soft);background:transparent;color:var(--at-text);font-size:13px;}
+.vice-market-list button:hover {color:var(--at-cyan);}
+.vice-market-list svg {color:var(--at-rose);}
+.vice-map-welcome>small {font-size:10px;line-height:1.6;color:var(--at-subtle);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector {border:1px solid var(--at-border);border-radius:12px;background:var(--at-surface);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-art {background:var(--at-surface);border-bottom:1px solid var(--at-border-soft);padding:24px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-art::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-art::after {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-cover strong {font:700 40px/1 var(--vice-display);text-transform:uppercase;letter-spacing:.015em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.atlas-v5-region-actions,.atlas-deep-regions,.atlas-telemetry) {box-shadow:none;border-color:var(--at-border-soft);background:var(--at-surface);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inset-shape {fill:var(--at-map-land);stroke:var(--at-map-stroke);stroke-width:.8;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-ownership-legend {grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;color:var(--at-muted);font-size:10px;padding:0 12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-ownership-legend>span {display:flex;align-items:center;gap:6px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-ownership-legend i {width:7px;height:7px;display:inline-block;border-radius:50%;background:var(--at-cyan);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-ownership-legend .trainer-b i {background:var(--at-rose);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-ownership-legend .shared i {background:var(--at-accent);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-intelligence {grid-column:1/-1;border-top:1px solid var(--at-border-soft);padding:4px 12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-intelligence>summary {display:flex;align-items:center;gap:20px;min-height:52px;cursor:pointer;list-style:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-summary-title {display:flex;align-items:center;gap:8px;font-size:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-summary-meta {color:var(--at-muted);font-size:11px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-summary-action {display:flex;align-items:center;gap:8px;margin-left:auto;font-size:11px;color:var(--at-cyan);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-strip {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:20px 0;gap:16px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-item {display:flex;align-items:center;gap:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-item>svg {color:var(--at-cyan);width:20px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-item>span {display:grid;gap:6px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-item small {font-size:9px;color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-item strong {display:grid;gap:3px;font-size:22px;font-weight:600;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-item em {font-style:normal;font-size:10px;font-weight:400;color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-all-regions {grid-column:1/-1;grid-area:auto;margin:0;padding:0 12px;border-top:1px solid var(--at-border-soft);}
+
+/* Travel: same destination artwork, itinerary and partner schedule first. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub {border:0;background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-body {padding:0;background:transparent;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao {gap:22px;padding:0;--fao-cyan:var(--at-cyan);--fao-pink:var(--at-rose);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao>.vice-masthead {border-radius:10px;min-height:260px;}
+.vice-travel-context {display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:12px;color:var(--at-muted);}
+.vice-travel-context button {display:flex;align-items:center;gap:9px;min-height:44px;border:0;background:transparent;color:var(--at-cyan);font-size:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-feature-grid {grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fao-routeboard,.fao-weekboard,.fao-shortcuts,.fao-readiness,.fao-mission-director) {border:1px solid var(--at-border-soft);border-radius:10px;box-shadow:none;background:var(--at-surface);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fao-routeboard,.fao-mission-director)::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fao-routeboard,.fao-mission-director)::after,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-route-glow {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-route-heading h2 {font:600 28px/1.1 var(--vice-display);letter-spacing:.01em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fao-panel-top,.fao-week-head,.fao-week-foot,.fao-week-bottom) {background:transparent;border-color:var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-airway-node strong {font:600 46px/1 var(--vice-display);color:var(--at-text);letter-spacing:.04em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-route-primary {background:var(--at-action);border-color:var(--at-action);color:var(--at-action-fg);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fao-week-head h2,.fao-lower-title h2) {font:600 24px/1.15 var(--vice-display);letter-spacing:.015em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-numeral {color:var(--at-rose);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-main {padding:24px;gap:14px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-titles h2 {font:600 34px/1.1 var(--vice-display);letter-spacing:.015em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-kicker {color:var(--at-rose);font-size:10px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-health {background:var(--at-field);border-color:var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-facts>div {background:transparent;border:0;border-left:1px solid var(--at-border-soft);border-radius:0;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-reasons>span {background:transparent;border:0;border-radius:0;padding:4px 0;font-size:12px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-overline {font-size:9px;color:var(--at-muted);letter-spacing:.06em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-signal {box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-head {padding:18px 20px;border:1px solid var(--at-border-soft);border-radius:10px;background:var(--at-surface);box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs {display:flex;gap:16px;border:0;border-bottom:1px solid var(--at-border);border-radius:0;background:transparent;padding:8px 0;margin-bottom:20px;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs>button {min-height:50px;padding:8px 10px;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--at-muted);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs>button.is-active {border-bottom:2px solid var(--at-cyan);background:transparent;color:var(--at-text);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs>button small {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-page-head h1,.op-heading h1) {font:700 42px/1.05 var(--vice-display);text-transform:uppercase;letter-spacing:.02em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.atlas-guided h1,.journey-panel h1) {font:600 34px/1.1 var(--vice-display);letter-spacing:.01em;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-calendar-event {border-radius:4px;box-shadow:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-help,.op-calendar-help,.fsa-calendar-help) {background:var(--at-field);color:var(--at-muted);border-color:var(--at-border-soft);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-muted-block,.op-kpi-note) {background:var(--at-field);color:var(--at-muted);border:1px solid var(--at-border-soft);border-radius:7px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-kpi-note strong {color:var(--at-text);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head {min-height:176px;align-items:center;padding:28px;border:0;border-radius:10px;overflow:hidden;background:linear-gradient(90deg,#091519f7,#091519e8 40%,#09151955 75%,#09151915),url('/resources/vice/ocean-drive-dusk.webp') right 58%/cover;color:#f4f3ee;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head::after {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head .op-eyebrow {display:none;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head h1 {font:700 42px/1 var(--vice-display);text-transform:uppercase;letter-spacing:.02em;color:#f4f3ee;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head .op-subtitle {color:#d5e5e4;font-size:13px;max-width:500px;line-height:1.6;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {background:transparent;border:0;border-bottom:1px solid var(--at-border-soft);border-radius:0;box-shadow:none;padding:0 0 20px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-trainer-description {gap:0;}
+
+@media(min-width:901px) and (max-width:1200px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {grid-template-columns:185px minmax(0,1fr);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {padding-inline:9px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {padding-inline:20px;gap:10px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {min-width:42px;width:42px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-sync-indicator {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-body {grid-template-columns:minmax(0,1fr) 210px;}
+  .vice-map-welcome {padding:22px 18px;}
+}
+@media(max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-structure {display:block;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar {display:none;}
+  /* Replaces legacy mobile-fit's fixed 54px header contract. */
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {height:calc(68px + env(safe-area-inset-top))!important;min-height:calc(68px + env(safe-area-inset-top))!important;padding:calc(8px + env(safe-area-inset-top)) 14px 8px!important;gap:7px;position:sticky;top:0;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fsa-crumb,.ios-nav-title,.ios-mobile-add,.ios-back-button,.atlas-sync-indicator,.mv-header-trainers) {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header .mv-brand {display:flex!important;align-items:center;justify-content:flex-start;width:auto;height:50px;max-height:none;min-width:70px;flex:1;margin:0;padding:0;border-radius:0;overflow:visible;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header .official-atlas-lockup {display:block;width:65px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header .official-atlas-lockup strong {font:700 25px/.94 var(--vice-display);letter-spacing:1.5px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header .official-atlas-lockup strong>span {border-bottom-width:2px;padding-bottom:3px;margin-bottom:3px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-command-trigger {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-mobile-trainer {display:flex!important;min-height:44px;max-width:125px;padding:6px 9px;border:1px solid var(--at-border);border-radius:6px;background:transparent;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-mobile-trainer select {font-size:12px;font-weight:500;max-width:100px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.mv-theme-mobile,.mv-mobile-menu-trigger) {display:grid!important;width:44px;min-width:44px;min-height:44px;border:0;background:transparent;box-shadow:none;color:var(--at-text);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav {display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));min-height:calc(66px + env(safe-area-inset-bottom))!important;padding:5px 8px calc(7px + env(safe-area-inset-bottom))!important;background:color-mix(in srgb,var(--at-rail) 96%,transparent);border-top:1px solid var(--at-border);border-radius:0;box-shadow:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button {position:relative;min-height:48px;border-radius:7px;background:transparent;color:var(--at-muted);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button.active {background:var(--at-aqua-soft);color:var(--at-cyan);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button.active::after {content:'';position:absolute;bottom:0;left:25%;right:25%;height:2px;background:var(--at-cyan);border-radius:0;box-shadow:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .ios-tab-label {font-size:10px;font-weight:500;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {padding:14px 16px calc(86px + env(safe-area-inset-bottom))!important;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map {padding-bottom:calc(80px + env(safe-area-inset-bottom))!important;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map>.atlas-setup,
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map>.atlas-demo-notice {margin:12px 16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice {padding:8px 10px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice>div {display:grid;gap:2px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-demo-notice span {font-size:10px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page,
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.has-active-region:not(.atlas-focused) {display:block;padding:0 16px 16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page>.vice-masthead {margin:0 -16px 16px;min-height:192px;}
+  .vice-masthead-content {padding:16px 22px;max-width:380px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-masthead h1 {font-size:36px;max-width:320px;}
+  .vice-description-mobile {display:inline;}
+  .vice-description-desktop {display:none;}
+  .vice-masthead p {font-size:12px;max-width:280px;margin-bottom:16px;}
+  .vice-masthead-image img {object-position:65% center;}
+  .vice-masthead::after {background:linear-gradient(90deg,#07171bd9,#07171b88 55%,#07171b05);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading {padding:16px 14px 0;gap:12px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text h2 {font-size:28px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-field.atlas-destination {width:100%;order:1;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility {order:2;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions {gap:6px;flex-wrap:wrap;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions :is(button,select) {min-height:44px;font-size:11px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions>.atlas-mobile-region {display:block;flex:1;min-width:0;width:calc(100% - 88px);max-width:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions>select:not(.atlas-mobile-region),
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions>.atlas-map-mode-toggle,
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-utility-actions>.atlas-focus {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses {margin:4px 14px 0;gap:0;justify-content:space-between;overflow:auto;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses>button {flex:0 0 auto;font-size:11px;min-height:46px;padding:10px 5px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-focus {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-body {display:block;margin:8px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-frame {height:340px;min-height:340px;}
+  .vice-map-welcome {padding:20px 12px;border:0;border-top:1px solid var(--at-border-soft);gap:14px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-map-welcome h3 {font-size:28px;}
+  .vice-map-welcome h3 br {display:none;}
+  .vice-map-welcome>div>svg {display:none;}
+  .vice-map-welcome p {font-size:12px;max-width:390px;}
+  .vice-market-list {grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+  .vice-market-list button {font-size:11px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-tools button {min-height:44px;min-width:44px;height:44px;width:44px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-credit {bottom:66px;max-width:180px;text-align:right;font-size:8px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-legend {max-width:calc(100% - 190px);bottom:12px;padding:4px 6px;gap:5px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector {position:fixed;z-index:130;inset:auto 12px calc(78px + env(safe-area-inset-bottom));width:auto;display:flex;flex-direction:column;height:min(660px,calc(100svh - 160px));max-height:calc(100svh - 160px);overflow:hidden;border-radius:16px;overscroll-behavior:contain;box-shadow:0 24px 80px #00000070;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-art {flex:0 0 auto;padding:16px 20px;min-height:90px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-cover strong {font-size:32px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-main {flex:1;overflow-y:auto;min-height:0;max-height:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .ios-market-scrim {z-index:120;background:#0008;backdrop-filter:blur(3px);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .ios-market-grab {display:flex;justify-content:center;align-items:center;min-height:22px;border:0;border-radius:0;background:var(--at-surface);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .ios-market-grab>span {width:36px;height:3px;border-radius:5px;background:var(--at-border);}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao {gap:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao>.vice-masthead {margin:0 -16px;border-radius:0;min-height:235px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-feature-grid {grid-template-columns:minmax(0,1fr);gap:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-routeboard {display:flex;min-height:300px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mobile-journey {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-director {display:flex;flex-direction:column;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao-mission-main {padding:20px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-head {padding:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs {gap:10px;margin-bottom:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs>button {min-height:48px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head {padding:22px 20px;min-height:160px;border-radius:8px;background-position:65% center;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head h1 {font-size:34px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head .op-subtitle {font-size:12px;max-width:270px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {display:flex;flex-direction:column;gap:12px;padding:0 0 16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry>div:first-child>span {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry .travel-desk-entry-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry .op-btn {min-height:44px;font-size:11px;white-space:normal;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-ownership-legend {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-intelligence {margin-top:16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-intelligence>summary {flex-wrap:wrap;gap:8px;padding:12px 0;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-deep-summary-meta {width:100%;order:3;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-telemetry-strip {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(prefers-reduced-motion:reduce) {.vice-primary {transition:none;}.vice-primary:hover {transform:none;}}
+
+/* Safari's browser chrome can leave only 664 CSS pixels on a 390px phone.
+   Keep territory selection visible there while preserving the larger PWA hero. */
+@media(max-width:600px) and (max-height:740px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map>.atlas-setup {margin:8px 16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-setup:not(.is-expanded) .atlas-setup-summary {padding:8px 10px;gap:8px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-setup:not(.is-expanded) .atlas-setup-summary>div>span {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas>.vice-masthead {min-height:128px;}
+  .vice-atlas>.vice-masthead .vice-masthead-content {display:grid;grid-template-columns:minmax(0,1fr) 110px;align-items:center;gap:8px;width:100%;max-width:none;padding:20px 22px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas>.vice-masthead h1 {font-size:30px;margin:0;}
+  .vice-atlas>.vice-masthead p {display:none;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas>.vice-masthead .vice-primary {font-size:14px;gap:8px;padding:8px;white-space:nowrap;}
+  .vice-atlas>.vice-masthead .vice-primary svg {width:16px;flex:0 0 16px;}
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .fsa-map-heading-text {display:none;}
+}

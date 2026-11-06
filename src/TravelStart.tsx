@@ -1,13 +1,14 @@
 import {
 ArrowRight,
 Check,ChevronRight,CircleAlert,
-Plane,PlaneTakeoff,Radar,Route,
+Plane,Radar,Route,
 ShieldCheck,
-TicketCheck,Users,Waypoints
+TicketCheck,Waypoints
 } from 'lucide-react';
 import { readBookedFlights } from './BookedFlightLogic';
 import FieldMissionBrief from './FieldMissionBrief';
 import MobileJourneyPeek from './MobileJourneyPeek';
+import OceanMasthead from './OceanMasthead';
 import { useOp } from './Operations';
 import type { Manager } from './opsModels';
 import { dateLabel,today } from './opsModels';
@@ -127,31 +128,13 @@ export default function TravelStart({ onSectionChange,onDestination,onCircuit }:
 
   return (
     <main className='fao' aria-label='Field Atlas travel desk'>
-      <header className='fao-masthead'>
-        <div className='fao-heading'>
-          <div className='fao-eyebrow'>
-            <span className='fao-led' aria-hidden='true' />
-            FIELD ATLAS / TRAVEL OPERATIONS
-            <span className='fao-heading-rule' aria-hidden='true' />
-            {dateLabel(currentDate, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
-          </div>
-          <h1>The travel desk<span className='fao-head-period'>.</span></h1>
-          <p>Plan the field. Protect the trip. Stay in sync.</p>
-        </div>
-        <div className='fao-mast-actions'>
-          <span className='fao-trainer-tag'><Users size={13} /> {activeName}</span>
-          <button className='fao-mast-action' onClick={() => onSectionChange('radar')}>
-            <Radar size={16} /> Flight DNA
-          </button>
-          <button className='fao-mast-action fao-mast-primary' onClick={() => onSectionChange('travel')}>
-            <PlaneTakeoff size={16} /> New trip <ArrowRight size={15} />
-          </button>
-        </div>
-      </header>
+      <OceanMasthead title="Make the next move count."
+        description="Plan the field. Protect the trip. Stay in sync."
+        action="New trip" onAction={()=>onSectionChange('travel')}/>
+      <div className="vice-travel-context"><span>{activeName} · {dateLabel(currentDate,{weekday:'short',month:'short',day:'numeric'})}</span>
+        <button type="button" onClick={()=>onSectionChange('radar')}><Radar size={16}/> Flight DNA <ArrowRight size={16}/></button></div>
 
-      <FieldMissionBrief onDestination={onDestination} onCircuit={onCircuit}
-        onCoordinate={()=>onSectionChange('coordinate')}
-        onWeek={()=>onSectionChange('week')}/>
+
 
       <div className="fao-mobile-journey" aria-label="Your next booked flight or field trip">
         <MobileJourneyPeek
@@ -274,6 +257,10 @@ export default function TravelStart({ onSectionChange,onDestination,onCircuit }:
           </button>
         </section>
       </div>
+
+      <FieldMissionBrief onDestination={onDestination} onCircuit={onCircuit}
+        onCoordinate={()=>onSectionChange('coordinate')}
+        onWeek={()=>onSectionChange('week')}/>
 
       <div className='fao-lower-grid'>
         <section className='fao-shortcuts' aria-labelledby='fao-tools-heading'>
