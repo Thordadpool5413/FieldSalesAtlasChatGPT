@@ -123,6 +123,7 @@ test('guided planning saves the proposed trip and visits into the shared calenda
 test('compact Atlas shows the map early, loads vector mode without MapLibre, and opens region details', async ({ page }, info) => {
   const requests: string[] = [];
   page.on('request', request => requests.push(request.url()));
+  await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Explore Florida', exact: true })).toBeVisible();
   expect(requests.some(url => url.includes('/assets/LiveTerritoryMap-'))).toBe(false);
@@ -144,6 +145,45 @@ test('compact Atlas shows the map early, loads vector mode without MapLibre, and
   await expect(page.getByRole('button', { name: 'Close destination inspector' })).toBeVisible();
   await page.getByRole('button', { name: 'Close destination inspector' }).click();
   await expect(inspector).toBeHidden();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test('first visit welcomes; returning visit keeps the map compact and usable', async ({ page }) => {
+  const viewport = page.viewportSize()!;
+  const mobile = viewport.width <= 900;
+  const map = page.getByRole('group', { name: /Interactive United States map/ });
+  const mapFrame = page.locator('.mv-map-frame');
+
+  async function expectMapProminentAndUsable(compact: boolean) {
+    await expect(map).toBeVisible();
+    const bounds = await map.boundingBox();
+    const frame = await mapFrame.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(frame).not.toBeNull();
+    if (compact) expect(bounds!.y).toBeLessThan(viewport.height * .76);
+    expect(frame!.height).toBeGreaterThanOrEqual(mobile ? 320 : 480);
+
+    const zoomControls = page.getByRole('group', { name: 'Map zoom controls' });
+    const zoomIn = zoomControls.getByRole('button', { name: 'Zoom in' });
+    await expect(zoomIn).toBeVisible();
+    await zoomIn.click();
+    await expect(zoomControls.getByLabel('Map magnification')).toHaveText('135%');
+  }
+
+  await page.goto('/');
+  const welcome = page.locator('.mv-map-page > .vice-masthead');
+  await expect(welcome).toBeVisible();
+  await expect(welcome.getByRole('heading', { name: 'Your field. In perspective.' })).toBeVisible();
+  await expect.poll(() => welcome.locator('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('.atlas-working-title')).toHaveCount(0);
+  await expectMapProminentAndUsable(false);
+
+  await page.reload();
+  await expect(welcome).toHaveCount(0);
+  await expect(page.locator('.atlas-working-title')).toBeVisible();
+  await expect(page.locator('.atlas-working-title h1')).toHaveText('Territory Atlas');
+  await expectMapProminentAndUsable(true);
+  expect(await page.evaluate(() => localStorage.getItem('field-atlas-map-welcome-v1'))).toBe('seen');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 

@@ -1,4 +1,135 @@
 /* Operational Atlas hierarchy, map key, and consistent interaction states. */
+html[data-field-atlas-theme='dark'],
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='dark'] {
+  --at-bg: #081426;
+  --at-rail: #0b1a2d;
+  --at-stage: #0d1d33;
+  --at-surface: #102238;
+  --at-raised: #172b43;
+  --at-field: #0b1a2d;
+  --at-text: #f2f5fb;
+  --at-muted: #b0c1d5;
+  --at-subtle: #9aafc5;
+  --at-border: #2d435b;
+  --at-border-soft: #22364d;
+  --at-cyan: #56e4e5;
+  --at-rose: #ff5f91;
+  --at-sunset: #ffb26f;
+  --at-accent: #fff199;
+  --at-action: #56e4e5;
+  --at-action-fg: #081426;
+  --at-action-hover: #8cf0ed;
+  --at-aqua-soft: #123340;
+  --at-rose-soft: #351f30;
+  --at-map-water: #0a182c;
+  --at-map-land: #172b44;
+  --at-map-assigned: #2b5c70;
+  --at-map-stroke: #5b748c;
+  --at-map-label: #e1eaf3;
+  --at-map-outline: #0b1a2d;
+  --vice-map-active: #523047;
+  --vice-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+}
+
+html[data-field-atlas-theme='light'],
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='light'] {
+  --at-cyan: #087887;
+  --at-rose: #b42b66;
+  --at-sunset: #a9502c;
+  --at-accent: #805c08;
+  --at-action: #087887;
+  --at-action-fg: #ffffff;
+  --at-action-hover: #075f6e;
+  --at-aqua-soft: #dff4f4;
+  --at-rose-soft: #fde7ef;
+  --vice-map-active: #f0c3d7;
+}
+
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-working-title {
+  position: relative;
+  overflow: hidden;
+  border-inline-start: 0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-working-title::before {
+  content: '';
+  position: absolute;
+  inset: 8px auto 8px 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, var(--at-cyan), var(--at-rose));
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-working-title h1,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-map-heading-text h2 {
+  font-family: var(--vice-display);
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-working-title-eyebrow {
+  color: var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-masthead::after {
+  background:
+    linear-gradient(90deg, #071226f2 0%, #071226c9 28%, #07122635 66%, #07122608 100%),
+    linear-gradient(130deg,
+      color-mix(in srgb, var(--at-rose) 18%, transparent) 0%,
+      color-mix(in srgb, var(--at-sunset) 18%, transparent) 48%,
+      transparent 82%);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-primary {
+  background: var(--at-action);
+  color: var(--at-action-fg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--at-cyan) 18%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-primary:hover:not(:disabled) {
+  background: var(--at-action-hover);
+  box-shadow: 0 0 13px color-mix(in srgb, var(--at-cyan) 20%, transparent);
+}
+
+/* Pink marks selected navigation; cyan remains the action and focus color. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active {
+  color: var(--at-rose);
+  background: var(--at-rose-soft);
+  box-shadow: inset 2px 0 var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button.active {
+  color: var(--at-rose);
+  background: var(--at-rose-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button.active::after {
+  background: var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v5-lenses > button.is-active {
+  border-bottom-color: var(--at-rose);
+  color: var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-map-view-switch button.active,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs > button.is-active,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-appearance-control button.active {
+  border-color: var(--at-rose);
+  background: var(--at-rose-soft);
+  color: var(--at-rose);
+}
+
+/* Quiet inactive surfaces; reserve restrained cyan glow for action and focus. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(
+  .op-card,
+  .op-modal,
+  .fsa-hub,
+  .atlas-guided,
+  .journey-panel,
+  .travel-desk,
+  .atlas-mission-layout
+) {
+  box-shadow: none;
+  border-color: var(--at-border-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary, .op-btn-primary) {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--at-cyan) 16%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary, .op-btn-primary):hover:not(:disabled) {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--at-cyan) 18%, transparent);
+}
+
 .mv-app.atlas-design-v3 .atlas-working-title {
   grid-area: heading;
   display: flex;
@@ -143,7 +274,8 @@
   .mv-layers-popover button,
   .atlas-working-title > button
 ):hover:not(:disabled) {
-  border-color: var(--at-cyan);
+  border-color: color-mix(in srgb, var(--at-cyan) 62%, var(--at-border));
+  color: var(--at-text);
 }
 .mv-app.atlas-design-v3 :is(
   .atlas-v5-lenses > button.is-active,
@@ -168,6 +300,7 @@
 ):focus-visible {
   outline: 2px solid var(--at-cyan);
   outline-offset: 3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--at-cyan) 14%, transparent);
 }
 .mv-app.atlas-design-v3 :is(button, input, select, textarea):disabled {
   cursor: not-allowed;
@@ -190,9 +323,9 @@
 }
 @media (max-width: 900px) {
   .mv-app.atlas-design-v3 .atlas-working-title {
-    min-height: 62px;
-    margin: 10px 0 8px;
-    padding: 8px 10px;
+    min-height: 52px;
+    margin: 0;
+    padding: 4px 10px;
   }
   .mv-app.atlas-design-v3 .atlas-working-title h1 { font-size: 18px; }
   .mv-app.atlas-design-v3 .atlas-working-title p { display: none; }

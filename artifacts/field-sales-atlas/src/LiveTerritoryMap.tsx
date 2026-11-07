@@ -37,7 +37,7 @@ const caName=new Map(CANADA_REGIONS.map(r=>[r.code,r.name]));
 const caCode=new Map(CANADA_REGIONS.map(r=>[r.name.toLowerCase(),r.code]));
 const hub=new Set(['ATL','ORD','DFW','DEN','LAX','JFK','EWR','BOS','MCO','MIA','CLT','SEA','SFO','IAH','MSP','DTW','LAS','PHX','SLC','YYZ','YVR','YUL']);
 const empty=():Collection=>({type:'FeatureCollection',features:[]});
-const ownerColors=['#25E7E6','#FF65B0','#A98BFF'] as const;
+const ownerColors=['#56E4E5','#FF5F91','#A98BFF'] as const;
 function territoryOwner(code:string,assignments:Assignment[],managers:Manager[],names:[string,string]){
  const members=new Set(assignments.filter(a=>a.stateCode===code).map(a=>a.managerId));
  const roles=new Set(managers.filter(m=>members.has(m.id)).map(m=>m.trainer).filter(Boolean));
@@ -318,13 +318,13 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
       paint:{'fill-color':ownershipColor as any,
        'fill-opacity':['case',['==',['get','assigned'],1],.24,.065]}},before);
      i.addLayer({id:'atlas-selected-halo',source:'atlas-states',type:'line',
-       filter:['==',['get','code'],''],paint:{'line-color':'#FF52A9','line-width':6,'line-blur':2,'line-opacity':.2}},before);
+        filter:['==',['get','code'],''],paint:{'line-color':'#FF5F91','line-width':4.5,'line-blur':1.4,'line-opacity':.14}},before);
      i.addLayer({id:'atlas-state-outline',source:'atlas-states',type:'line',
       paint:{'line-color':ownershipColor as any,
        'line-width':['interpolate',['linear'],['zoom'],2,1.05,7,2.1],
-       'line-opacity':.93}},before);
+        'line-opacity':.74}},before);
      i.addLayer({id:'atlas-selected-outline',source:'atlas-states',type:'line',
-      filter:['==',['get','code'],''],paint:{'line-color':'#FFE7F7','line-width':3.2}},before);
+       filter:['==',['get','code'],''],paint:{'line-color':'#FFE4EC','line-width':2.6}},before);
      add('atlas-counties',dataRef.current.countyGeo);
      i.addLayer({id:'atlas-county-hits',source:'atlas-counties',type:'fill',minzoom:4.2,
        paint:{'fill-color':['case',['==',['get','assigned'],1],'#A98BFF','#48CEE3'],
@@ -334,11 +334,11 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
               'line-width':['interpolate',['linear'],['zoom'],4,0.4,8,1.25],
               'line-opacity':['interpolate',['linear'],['zoom'],4.2,.26,8,.68]}});
      i.addLayer({id:'atlas-selected-county',source:'atlas-counties',type:'line',
-       filter:['==',['get','code'],''],paint:{'line-color':'#F7D4FF','line-width':2.3,
+        filter:['==',['get','code'],''],paint:{'line-color':'#FFB6CE','line-width':2.1,
          'line-opacity':1}});
      add('atlas-towns',dataRef.current.townGeo);
      i.addLayer({id:'atlas-town-points',source:'atlas-towns',type:'circle',minzoom:7,
-       paint:{'circle-color':'#51EBE4','circle-radius':2.9,'circle-opacity':.8,
+        paint:{'circle-color':'#56E4E5','circle-radius':2.9,'circle-opacity':.68,
               'circle-stroke-color':'#0C2943','circle-stroke-width':1.1}});
      i.addLayer({id:'atlas-town-labels',source:'atlas-towns',type:'symbol',minzoom:7,
        layout:{'text-field':['get','name'],'text-size':10.5,'text-font':['Noto Sans Regular'],
@@ -348,9 +348,9 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
               'text-halo-width':1.4}});
      add('atlas-route',dataRef.current.routeGeo);
      i.addLayer({id:'atlas-route-glow',source:'atlas-route',type:'line',
-        paint:{'line-color':'#FF5BAD','line-width':5,'line-opacity':.12,'line-blur':2}});
+         paint:{'line-color':'#FF5F91','line-width':4.5,'line-opacity':.08,'line-blur':1.3}});
      i.addLayer({id:'atlas-route-dash',source:'atlas-route',type:'line',
-       paint:{'line-color':'#FF75C5','line-width':2.2,'line-opacity':.86,'line-dasharray':[2.5,2]}});
+        paint:{'line-color':'#FF7FA5','line-width':2.2,'line-opacity':.82,'line-dasharray':[2.5,2]}});
      add('atlas-airports',dataRef.current.airportGeo);
      i.addLayer({id:'atlas-airport-halo',source:'atlas-airports',type:'circle',
        paint:{'circle-color':airportReferenceColor,'circle-radius':6,'circle-opacity':.12,'circle-blur':.25}});
@@ -370,7 +370,7 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
       layout:{'text-field':['get','point_count_abbreviated'],'text-font':['Noto Sans Bold'],'text-size':12},
       paint:{'text-color':'#102F45'}});
      i.addLayer({id:'atlas-manager-dots',source:'atlas-managers',type:'circle',filter:['!',['has','point_count']],
-      paint:{'circle-color':(p.lens==='coaching'?['match',['get','priority'],'high','#FF5FAA','moderate','#FFC46C','#42DDCA']:ownershipColor) as any,
+       paint:{'circle-color':(p.lens==='coaching'?['match',['get','priority'],'high','#FF5F91','moderate','#FFC46C','#56E4E5']:ownershipColor) as any,
         'circle-stroke-color':['case',['==',['get','approx'],1],'#FFBB77','#081C30'],
         'circle-stroke-width':2.5,'circle-radius':['case',['==',['get','approx'],1],5.3,7]}});
      i.addLayer({id:'atlas-state-codes',source:'atlas-states',type:'symbol',minzoom:4.3,
@@ -472,10 +472,10 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
          :['case',['==',['get','code'],code],.34,['==',['get','assigned'],1],p.showAssigned?.21:.085,.065]);
    i.setPaintProperty('atlas-fill','fill-color',
      p.lens==='coaching'?riskColor:p.lens==='visits'?visitColor:
-       ['case',['==',['get','code'],code],'#FF5AAE',ownershipColor] as any);
+       ['case',['==',['get','code'],code],'#FF5F91',ownershipColor] as any);
    i.setPaintProperty('atlas-state-outline','line-color',
      p.lens==='coaching'?riskColor:p.lens==='visits'?visitColor:ownershipColor as any);
-   i.setPaintProperty('atlas-manager-dots','circle-color',(p.lens==='coaching'?['match',['get','priority'],'high','#FF5FAA','moderate','#FFC46C','#42DDCA']:ownershipColor) as any);
+     i.setPaintProperty('atlas-manager-dots','circle-color',(p.lens==='coaching'?['match',['get','priority'],'high','#FF5F91','moderate','#FFC46C','#56E4E5']:ownershipColor) as any);
    i.setPaintProperty('atlas-manager-groups','circle-color',p.lens==='coaching'?'#FF5FAA':'#42F8F1');
   }catch{/* Original SVG is independently available. */}
  },[selectedGeo,countyGeo,townGeo,airportGeo,managerGeo,routeGeo,p.showAssigned,p.showLabels,p.selectedCounty,p.region?.code,p.lens,ready]);
