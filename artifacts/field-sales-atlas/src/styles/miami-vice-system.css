@@ -639,7 +639,7 @@ html[data-field-atlas-theme='light'],
 }
 .mv-app.atlas-command-v5.vice-product .atlas-map-view-switch {display:none;}
 .mv-app.atlas-command-v5.vice-product .atlas-data-sources {
-  margin:8px 14px 0;
+  margin:8px 14px 12px;
   border:1px solid var(--at-border-soft);
   border-radius:9px;
   background:color-mix(in srgb,var(--at-surface) 78%,transparent);
@@ -911,7 +911,7 @@ html[data-field-atlas-theme='light'],
     background:var(--at-aqua-soft);
     color:var(--at-cyan);
   }
-  .mv-app.atlas-command-v5.vice-product .atlas-data-sources {margin:4px 14px 0;}
+  .mv-app.atlas-command-v5.vice-product .atlas-data-sources {margin:4px 14px 10px;}
   .mv-app.atlas-command-v5.vice-product .atlas-data-sources>summary {min-height:34px;padding-block:5px;}
   .mv-app.atlas-command-v5.vice-product .atlas-data-source-list {grid-template-columns:minmax(0,1fr);}
   .mv-app.atlas-command-v5.vice-product .atlas-readable-list {

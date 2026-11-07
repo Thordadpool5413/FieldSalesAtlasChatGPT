@@ -80,10 +80,10 @@ export async function source<T>(request: SourceRequest<T>): Promise<SourceResult
       result = { data: parsed.data, evidence };
     } catch (failure) {
       const detail = failureDetail(failure);
-      result = saved?.result.data ? { data: saved.result.data, evidence: { ...saved.result.evidence, state: 'stale', failureCode: detail.code, limitation: saved.result.evidence.limitation + ' ' + detail.message + ' Showing the last validated snapshot.' } } : {
+      result = saved?.result.data ? { data: saved.result.data, evidence: { ...saved.result.evidence, state: 'stale', failureCode: detail.code, limitation: saved.result.evidence.limitation + ' ' + detail.message + ' Current status is unknown; showing the last validated snapshot.' } } : {
         data: null, evidence: { id, provider: request.provider, subject: request.subject, sourceUrl: request.url, kind: request.kind,
           state: 'unavailable', failureCode: detail.code, retrievedAt: now, version: request.version, scope: request.scope,
-          limitation: detail.message + ' No current-data conclusion is available.' },
+          limitation: detail.message + ' Current status is unknown. No current-data conclusion is available.' },
       };
     }
     const retryMs = result.evidence.state === 'current' ? request.ttlMs : 60000;

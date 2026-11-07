@@ -78,19 +78,22 @@ export function nws(lat: number, lon: number) {
     },
   });
 }
-export function parseCanadianObservations(value: unknown, now = Date.now()) {
+export function parseCanadianObservations(value: unknown, now = Date.now(), options: { allowStaleFallback?: boolean } = {}) {
   const root = object(value);
   if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-  const rows = root.features.map(v => object(object(v).properties)).flatMap(row => {
-    const at = dated(row.obs_date_tm || row['date_tm-value'] || row.datetime);
+  const datedRows = root.features.map(v => object(object(v).properties)).flatMap(row => {
+    const at = [row.obs_date_tm, row['date_tm-value'], row.datetime, row.date_tm, row.obs_date].map(dated).find((stamp): stamp is string => !!stamp);
     const time = at ? Date.parse(at) : NaN;
-    return at && Number.isFinite(time) && time <= now + 300000 && now - time <= 2 * 3600000 ? [{ row, at }] : [];
+    return at && Number.isFinite(time) && time <= now + 300000 ? [{ row, at, time }] : [];
   });
+  const recent = datedRows.filter(item => now - item.time <= 2 * 3600000);
+  const rows = recent.length ? recent : options.allowStaleFallback ? datedRows : [];
   if (!rows.length) throw new Error('No recent Canadian observation with validated source timestamps.');
   return {
     data: rows.map(({ row, at }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + at })),
     observedAt: rows.map(item => item.at).sort()[0],
-    limitation: 'Nearby Canadian surface stations, not necessarily the airport. Each observation keeps its source time. Weather warnings and forecasts are separate products.',
+    limitation: 'Nearby Canadian surface stations, not necessarily the airport. Each observation keeps its source time. Weather warnings and forecasts are separate products.'
+      + (!recent.length ? ' Only older validated observations are available; current status is unknown.' : ''),
   };
 }
 export function canadianObservations(lat: number, lon: number) {
@@ -99,33 +102,12 @@ export function canadianObservations(lat: number, lon: number) {
   const since = new Date(Math.floor(Date.now() / 3600000) * 3600000 - 2 * 3600000).toISOString();
   const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?bbox=' + bbox + '&datetime=' + encodeURIComponent(since + '/..') + '&sortby=-obs_date_tm&limit=5&f=json';
   return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url, kind: 'observation',
-    scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
+    scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-3',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-      if (root.features.length === 0) {
-        return { data: [], limitation: 'No Canadian surface observations were returned; current status is unknown.' };
-      }
-      try {
-        return parseCanadianObservations(value);
-      } catch (failure) {
-        const now = Date.now();
-        const staleTimes = root.features.map(raw => {
-          const row = object(object(raw).properties);
-          const observedAt = dated(row.obs_date_tm || row['date_tm-value'] || row.datetime);
-          const time = observedAt ? Date.parse(observedAt) : NaN;
-          return observedAt && Number.isFinite(time) && time <= now + 300000 && now - time > 2 * 3600000
-            ? observedAt
-            : undefined;
-        }).filter((value): value is string => !!value).sort();
-        const observedAt = staleTimes.at(-1);
-        if (!observedAt) throw failure;
-        return {
-          data: [],
-          observedAt,
-          limitation: 'No recent Canadian surface observation was available; current status is unknown.',
-        };
-      }
+      if (!root.features.length) return { data: [], limitation: 'No Canadian surface observations were returned; current status is unknown.' };
+      return parseCanadianObservations(value, Date.now(), { allowStaleFallback: true });
     },
   });
 }

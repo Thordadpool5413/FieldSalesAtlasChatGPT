@@ -319,6 +319,21 @@ html[data-atlas-keyboard='open'] .mv-app .mv-content-inner.op-content{
  .mv-app.atlas-product-v4 .mv-mobile-drawer-head button{
   width:41px;height:41px;border-radius:50%;
  }
+  .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-drawer-hint{
+   margin:9px 8px 12px;color:var(--at-muted);font-size:12px;line-height:1.45;
+  }
+  .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-mobile-tool-group{
+   display:flex;flex-direction:column;
+  }
+  .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-mobile-tool-group>button{
+   display:flex;align-items:center;gap:11px;min-height:51px;width:100%;
+   padding:11px 14px;border:0;border-radius:11px;background:transparent;
+   color:var(--at-text);text-align:left;font-size:15px;font-weight:650;
+  }
+  .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-mobile-tool-group>button.active{
+   background:var(--at-aqua-soft);color:var(--at-cyan);box-shadow:none;
+  }
+  .mv-app.atlas-product-v4 .mv-mobile-drawer .fsa-mobile-tool-group>button svg{color:var(--at-cyan)}
  .mv-app.atlas-product-v4 .mv-mobile-drawer>button:not(.ios-sheet-grab){
   min-height:51px;border-radius:11px;
   padding:11px 14px;font-size:15px;font-weight:650;

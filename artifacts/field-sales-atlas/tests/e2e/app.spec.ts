@@ -59,17 +59,14 @@ test('setup opens existing trainer tools, resumes after dismissal, and keeps dem
   await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
   const realUrl = page.url();
   const realKey = new URL(realUrl).hash.slice('#workspace='.length);
-  if (info.project.name === 'mobile') {
-    await page.getByTestId('setup-open').click();
-  } else {
-    await page.getByRole('button', { name: 'Set up workspace', exact: true }).click();
-  }
   const setup = page.getByRole('region', { name: 'Workspace setup' });
+  if (info.project.name === 'mobile') await setup.getByTestId('setup-open').click();
+  else await page.getByRole('button', { name: 'Set up workspace', exact: true }).click();
   await expect(setup.getByText('0 of 3 setup steps complete')).toBeVisible();
   await setup.getByRole('button', { name: 'Set trainer profiles' }).click();
   await expect(page.getByRole('dialog', { name: 'Manage the two field sales trainers' })).toBeVisible();
   await page.getByRole('button', { name: 'Close trainer settings' }).click();
-  await page.getByRole('button', { name: 'Set up workspace', exact: true }).click();
+  await setup.getByRole('button', { name: 'Set up workspace', exact: true }).click();
   await setup.getByRole('button', { name: 'Explore a demo' }).click();
   await expect(page.getByRole('region', { name: 'Demo workspace' })).toBeVisible();
   expect(new URL(page.url()).hash).not.toEqual(new URL(realUrl).hash);
@@ -303,9 +300,12 @@ test('first visit welcomes; returning visit keeps the map compact and usable', a
   await expect(welcome).toHaveCount(0);
   await expect(page.locator('.fsa-map-heading')).toBeVisible();
   await expect(page.locator('.fsa-map-heading-text')).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
   await expectMapProminentAndUsable(true);
   expect(await page.evaluate(() => localStorage.getItem('field-atlas-map-welcome-v1'))).toBe('seen');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  await page.getByRole('button', { name: 'Travel', exact: true }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/page=plan/);
 });
 
 test('saved territory stays selected in the compact map after reload', async ({ page }) => {

@@ -739,6 +739,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
          </div>
        </div>
        <div className="atlas-map-view-switch" role="group" aria-label="Choose map or list display">
+         {airportLayer!=='none'&&<span className="atlas-reference-note"><Plane size={13}/> Public airport points, not saved territories</span>}
          <span className="atlas-view-label">View</span>
          <button type="button" data-testid="map-view-map" className={viewMode==='map'?'active':''}
            aria-pressed={viewMode==='map'} onClick={()=>setViewMode('map')}>
@@ -1255,6 +1256,47 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
         <small>Public airport references. Flight availability and road routes require verification.</small>
       </aside>}
       </div>
+        <div className="atlas-map-key" role="group" aria-label="Map symbols and workspace freshness" data-testid="atlas-map-key">
+          <div className="atlas-map-key-item">
+            <span className="atlas-map-key-territory" aria-hidden="true"/>
+            <span className="atlas-map-key-copy"><strong>Saved territory</strong><small>Workspace assignment</small></span>
+          </div>
+          <div className="atlas-map-key-item">
+            <span className="atlas-map-key-airport" aria-hidden="true"><Plane size={13}/></span>
+            <span className="atlas-map-key-copy"><strong>Public airport</strong><small>Location reference, not live flights</small></span>
+          </div>
+          <div className="atlas-map-key-item">
+            <span className={'atlas-map-key-state '+ctx.syncStatus} aria-hidden="true"/>
+            <span className="atlas-map-key-copy">
+              <strong>Workspace records</strong>
+              <small>{mapSyncLabel} · {compactSourceTime(ctx.lastSyncAt)}</small>
+            </span>
+          </div>
+        </div>
+       <details className="atlas-data-sources" data-testid="data-sources">
+         <summary><Info size={15}/><span>Data sources & freshness</span><ChevronDown size={14}/></summary>
+         <div className="atlas-data-source-list">
+           <article data-testid="source-workspace">
+             <strong>Saved managers, territories and visits</strong>
+             <span>Workspace records · {ctx.syncStatus==='live'?'live connection':ctx.syncStatus==='offline'?'connection offline':ctx.syncStatus==='connecting'?'connecting':'recently updated'}.</span>
+             <small>Last successful refresh: {sourceTimestamp(ctx.lastSyncAt)}</small>
+           </article>
+           <article data-testid="source-airports">
+             <strong>Airport location markers</strong>
+             <span>Public OurAirports reference directory · {ctx.airportSource==='live'?'current provider response':ctx.airportSource==='cached'?'cached public snapshot':ctx.airportSource==='starter'?'limited starter fallback':'loading'}.</span>
+             <small>Directory checked: {sourceTimestamp(ctx.airportCheckedAt)}. Airport dots are locations, not live flights.</small>
+           </article>
+           <article data-testid="source-flight-status">
+             <strong>Flight status and availability</strong>
+             <span>Not included in airport markers. Flight DNA shows separate FAA airport advisories; these are not airline schedules, seat availability or a booked-flight feed.</span>
+           </article>
+           <article data-testid="source-geography">
+             <strong>Regional boundaries and basemap</strong>
+             <span>{ctx.geo.source||'Census geography reference'} · loaded on demand for a selected U.S. region. {showLiveMap&&liveReady?'OpenFreeMap public vector tiles are loaded for the basemap.':'The bundled vector map is shown until public tiles load.'}</span>
+             <small>Boundary refresh time is not provided by the source.</small>
+           </article>
+         </div>
+       </details>
     </div>
       {region&&!focusMap&&<button type="button" className="ios-market-scrim" aria-label="Dismiss territory details"
         onClick={()=>{setRegion(null);setFocusedManager(null);}}/>}
