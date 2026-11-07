@@ -59,12 +59,17 @@ test('setup opens existing trainer tools, resumes after dismissal, and keeps dem
   await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
   const realUrl = page.url();
   const realKey = new URL(realUrl).hash.slice('#workspace='.length);
-  await page.getByRole('button', { name: 'Set up workspace', exact: true }).click();
+  if (info.project.name === 'mobile') {
+    await page.getByTestId('setup-open').click();
+  } else {
+    await page.getByRole('button', { name: 'Set up workspace', exact: true }).click();
+  }
   const setup = page.getByRole('region', { name: 'Workspace setup' });
   await expect(setup.getByText('0 of 3 setup steps complete')).toBeVisible();
   await setup.getByRole('button', { name: 'Set trainer profiles' }).click();
   await expect(page.getByRole('dialog', { name: 'Manage the two field sales trainers' })).toBeVisible();
   await page.getByRole('button', { name: 'Close trainer settings' }).click();
+  await page.getByRole('button', { name: 'Set up workspace', exact: true }).click();
   await setup.getByRole('button', { name: 'Explore a demo' }).click();
   await expect(page.getByRole('region', { name: 'Demo workspace' })).toBeVisible();
   expect(new URL(page.url()).hash).not.toEqual(new URL(realUrl).hash);
@@ -75,9 +80,18 @@ test('setup opens existing trainer tools, resumes after dismissal, and keeps dem
   await page.getByRole('button', { name: 'Dismiss setup reminder' }).click();
   await page.reload();
   await expect(page.getByRole('region', { name: 'Workspace setup' })).toHaveCount(0);
-  if (info.project.name === 'mobile') await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  await page.getByRole('button', { name: 'People', exact: true }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/page=people/);
+  if (info.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  } else {
+    await page.getByText('Workspace controls', { exact: true }).click();
+  }
   await page.getByRole('button', { name: 'Workspace setup', exact: true }).filter({ visible: true }).first().click();
-  await expect(page.getByRole('region', { name: 'Workspace setup' }).getByText('Set up your trainers')).toBeVisible();
+  const reopenedSetup = page.getByRole('region', { name: 'Workspace setup' });
+  await expect(page).toHaveURL(/page=home/);
+  await expect(reopenedSetup.locator('.atlas-setup-body')).toBeVisible();
+  await expect(reopenedSetup.getByRole('button', { name: 'Collapse', exact: true })).toBeVisible();
 });
 
 function nextFieldWeek() {

@@ -560,6 +560,11 @@ function Product(){
       window.scrollTo(0,0);
     }
   }
+  function openWorkspaceSetup(){
+    go('home');
+    setSetupOpen(true);
+    setMenuOpen(false);
+  }
   useEffect(()=>{
     if(restoreScrollFor.current!==view)return;
     restoreScrollFor.current=null;
@@ -748,7 +753,7 @@ function Product(){
                   <LayoutDashboard size={16}/>
                   <span>{density==='compact'?'Comfortable spacing':'Compact spacing'}</span>
                 </button>
-                <button type="button" onClick={()=>{go('home');setSetupOpen(true);}}>
+                <button type="button" onClick={openWorkspaceSetup}>
                   <Compass size={16}/><span>Workspace setup</span>
                 </button>
                 <button type="button" onClick={()=>setPwaOpen(true)}>
@@ -847,7 +852,7 @@ function Product(){
             <Icon size={18}/>{item.label}
           </button>;
         })}
-        <button onClick={()=>{go('home');setSetupOpen(true);setMenuOpen(false);}}><Compass size={18}/> Workspace setup</button>
+        <button onClick={openWorkspaceSetup}><Compass size={18}/> Workspace setup</button>
         <button onClick={()=>{setTrainerProfilesOpen(true);setMenuOpen(false);}}><Settings size={18}/> Trainer profiles</button>
         <button onClick={()=>{toggleTheme();setMenuOpen(false);}}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>} {theme==='dark'?'Light theme':'Dark theme'}</button>
         <button onClick={()=>{toggleDensity();setMenuOpen(false);}}><LayoutDashboard size={18}/> {density==='compact'?'Comfortable spacing':'Compact spacing'}</button>
