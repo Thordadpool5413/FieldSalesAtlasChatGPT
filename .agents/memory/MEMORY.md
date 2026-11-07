@@ -3,4 +3,5 @@
 - [Managed web preview bootstrapping](managed-web-preview-bootstrapping.md) — A failed package-manager bootstrap can occur before Vite starts; validate the app build separately before changing source code.
 - [ECCC forecast period bounds](eccc-forecast-period-bounds.md) — City-page period labels lack exact validity timestamps; never infer dates or claim full trip-window coverage.
 - [Atlas visual language](atlas-visual-language.md) — Preserve distinct cyan action, flamingo selected-state, sunset highlight, and warm airport-reference color roles.
+- [Atlas first-use guidance](atlas-first-use-guidance.md) — Keep first-visit choices in the welcome; reuse Workspace setup for resumable guidance so repeat maps stay compact.
 - [Playwright browser in Replit](playwright-browser.md) — When Playwright’s cached browser is missing, use the workspace Chromium executable through its path override.

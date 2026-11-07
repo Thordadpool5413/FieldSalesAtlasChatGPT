@@ -889,7 +889,8 @@ function Product(){
           {view==='home'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening the interactive map…</div>}>
             <MiamiMapHome theme={theme} atlas={atlas} airports={airports} managers={board.managers||[]}
               assignments={board.assignments||[]} onDestination={startTravel}
-              onAddManager={code=>{if(code)setState(code);open('manager');}}/>
+              onAddManager={code=>{if(code)setState(code);open('manager');}}
+              onStartSetup={openWorkspaceSetup}/>
           </Suspense>}
           {view==='air'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening travel planner…</div>}>
             <AirTravelPage initialTab='discover'/>

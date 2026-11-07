@@ -48,6 +48,23 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
     try { localStorage.setItem(minimizeKey, 'false'); } catch { /* Keep the expanded state for this session. */ }
     setMinimized(false); onExpandedChange(true);
   }
+  function exploreMap() {
+    onExpandedChange(false);
+    ctx.go('home');
+    window.requestAnimationFrame(() => {
+      const picker = document.getElementById('atlas-region-picker');
+      if (!(picker instanceof HTMLSelectElement)) return;
+      picker.focus({ preventScroll: true });
+      picker.scrollIntoView({
+        block: 'center',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      });
+    });
+  }
+  function planTravel() {
+    onExpandedChange(false);
+    ctx.go('air');
+  }
   async function demoWorkspace() {
     setBusy(true); setError('');
     try { await openDemoWorkspace(); window.location.reload(); }
@@ -57,8 +74,8 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
     {!expanded && minimized ? <div className="atlas-setup-minimized">
       <button type="button" className="atlas-setup-collapsed" data-testid="setup-open"
         aria-controls="atlas-setup-steps" aria-expanded="false" onClick={restoreSetup}>
-        <Compass size={16}/><span>Setup</span><strong>{complete}/3</strong>
-        <span className="atlas-setup-collapsed-hint">{complete === 3 ? 'Ready' : 'Continue setup'}</span>
+        <Compass size={16}/><span>Team setup</span><strong>{complete}/3</strong>
+        <span className="atlas-setup-collapsed-hint">{complete === 0 ? 'Start here' : complete === 3 ? 'Ready' : 'Continue setup'}</span>
         <ChevronDown size={15}/>
       </button>
       <button type="button" className="atlas-setup-collapsed-dismiss" aria-label="Dismiss setup reminder" onClick={dismiss}>
@@ -66,14 +83,21 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
       </button>
     </div> : <>
       <div className="atlas-setup-summary">
-        <Compass size={21}/><div><strong>{complete === 3 ? 'Your workspace is ready' : 'Make Atlas yours'}</strong><span>{complete} of 3 setup steps complete</span></div>
+        <Compass size={21}/><div><strong>{complete === 3 ? 'Your workspace is ready' : 'Start with your field team'}</strong><span>{complete} of 3 setup steps complete</span></div>
         <button className="op-btn" aria-expanded={expanded} aria-controls="atlas-setup-steps" onClick={() => onExpandedChange(!expanded)}>{expanded ? 'Collapse' : 'Set up workspace'} <ArrowRight size={15}/></button>
         {!expanded && <button type="button" className="op-icon-button atlas-setup-minimize" aria-label="Minimize setup reminder" title="Minimize setup reminder" onClick={minimize}><Minus size={16}/></button>}
         {!expanded && <button className="op-icon-button" aria-label="Dismiss setup reminder" onClick={dismiss}><X size={17}/></button>}
       </div>
       {expanded && <div id="atlas-setup-steps" className="atlas-setup-body">
-        <p>A short setup connects your people, territories and visits. You can leave and resume at any time.</p>
-        <p className="atlas-setup-reference-note">Airport dots are public location references. These steps create your own saved managers, territories and visits.</p>
+        <p>A short setup connects your people, territories and visits. Start with a manager, assign a territory, then schedule a visit.</p>
+        <p className="atlas-setup-reference-note">Airport dots are public location references, not live flights or availability. Filled map areas show territories saved by this workspace.</p>
+        <div className="atlas-setup-other-paths" role="group" aria-label="Other ways to start">
+          <span>Prefer another starting point?</span>
+          <div className="atlas-setup-path-actions">
+            <button type="button" className="op-btn" onClick={exploreMap}>Explore the map</button>
+            <button type="button" className="op-btn" onClick={planTravel}>Plan travel</button>
+          </div>
+        </div>
         <ol>{steps.map((step, index) => <li key={step.title} aria-current={index === next ? 'step' : undefined}>
           <span className={'atlas-step-number' + (step.done ? ' complete' : '')}>{step.done ? <Check size={17}/> : index + 1}</span>
           <div><strong>{step.title}</strong><p>{step.detail}</p>
@@ -89,6 +113,7 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
         <div className="atlas-setup-demo"><div><strong>Want to explore first?</strong><p>Open a separate workspace with clearly labeled sample data.</p></div><button className="op-btn" disabled={busy} onClick={demoWorkspace}>{busy ? 'Opening demo…' : 'Explore a demo'}</button></div>
         {error && <p role="alert" className="op-error"><CircleAlert size={16}/>{error}</p>}
         <button className="atlas-quiet-action" onClick={dismiss}>Continue on my own</button>
+        <p className="atlas-setup-return-note">Reopen setup later from Workspace setup in the sidebar or tools menu.</p>
       </div>}
     </>}
   </section>;

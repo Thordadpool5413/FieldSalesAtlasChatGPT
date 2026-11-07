@@ -19,6 +19,7 @@ type Props={
   atlas:unknown; airports:Airport[]; managers:Manager[]; assignments:Assignment[]; theme:'dark'|'light';
   onDestination:(region:Region,manager?:Manager,reference?:{lat:number;lon:number;label:string},arrivalAirport?:string)=>void;
   onAddManager:(code?:string)=>void;
+  onStartSetup:()=>void;
 };
 const LiveTerritoryMap=lazy(()=>import('./LiveTerritoryMap'));
 const CANADA_URL='/resources/geography/canada.geojson';
@@ -53,14 +54,14 @@ function compactSourceTime(value:string){
     ?date.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})
     :'Time not reported';
 }
-export default function MiamiMapHome({atlas,airports,managers,assignments,theme,onDestination,onAddManager}:Props){
+export default function MiamiMapHome({atlas,airports,managers,assignments,theme,onDestination,onAddManager,onStartSetup}:Props){
   const ctx=useOp();
   const {trainerProfiles}=ctx;
   const visits=ctx.board.visits||[];
   const coaching=ctx.board.coaching||[];
   const [canada,setCanada]=useState<Geo|null>(null);
   const [canadaError,setCanadaError]=useState(false);
-  const [showMapWelcome]=useState(()=>{
+  const [showMapWelcome,setShowMapWelcome]=useState(()=>{
     try{return localStorage.getItem('field-atlas-map-welcome-v1')!=='seen';}
     catch{return true;}
   });
@@ -358,6 +359,26 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   function continueToTravel(target:Region,person?:Manager,arrivalAirport?:string){
     onDestination(target,person,referenceForRegion(target),arrivalAirport);
   }
+  function startSetupFromWelcome(){
+    setShowMapWelcome(false);
+    onStartSetup();
+  }
+  function exploreMapFromWelcome(){
+    setShowMapWelcome(false);
+    window.requestAnimationFrame(()=>{
+      const picker=document.getElementById('atlas-region-picker');
+      if(!(picker instanceof HTMLSelectElement))return;
+      picker.focus({preventScroll:true});
+      picker.scrollIntoView({
+        block:'center',
+        behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
+      });
+    });
+  }
+  function planTravelFromWelcome(){
+    setShowMapWelcome(false);
+    ctx.go('air');
+  }
   const visibleManagers=showManagers?managers.filter(m=>{
     if(trainer!=='all'&&m.trainer!==trainer)return false;
     const code=m.baseState||assignments.find(a=>a.managerId===m.id)?.stateCode||'';
@@ -596,8 +617,23 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')+(setupComplete?' atlas-setup-complete':'')+(!showMapWelcome?' atlas-map-workspace':'')+(viewMode==='list'?' atlas-list-mode':'')}>
     {!focusMap&&showMapWelcome&&<OceanMasthead title="Your field. In perspective."
       description="Explore territories. Connect with your people. Plan the next visit."
-      mobileDescription="Explore territories. Plan your next visit."
-      action="Plan a trip" onAction={()=>region?continueToTravel(region):ctx.go('air')}/>}
+      mobileDescription="Explore territories. Plan your next visit."/>}
+    {!focusMap&&showMapWelcome&&<section className="atlas-first-use-guide" data-testid="first-use-guide"
+      aria-label="First-time guide">
+      <div className="atlas-first-use-copy">
+        <strong>New to Atlas?</strong>
+        <span>Add a manager, choose a territory, then schedule your first visit.</span>
+      </div>
+      <div className="atlas-first-use-actions" role="group" aria-label="Choose how to start">
+        <button type="button" className="op-btn atlas-first-use-primary" data-testid="first-use-setup"
+          onClick={startSetupFromWelcome}><Users size={16}/> Set up my team</button>
+        <button type="button" className="op-btn" data-testid="first-use-map"
+          onClick={exploreMapFromWelcome}><MapIcon size={16}/> Explore the map</button>
+        <button type="button" className="op-btn" data-testid="first-use-travel"
+          onClick={planTravelFromWelcome}><Plane size={16}/> Plan travel</button>
+      </div>
+      <p className="atlas-first-use-reference">Airport dots are public locations, not live flights. Filled areas are saved workspace territories.</p>
+    </section>}
     <div className={'atlas-mission-layout'+(region?' has-region':'')}>
       <div className="fsa-map-heading">
         <div className="atlas-field atlas-destination">
@@ -644,7 +680,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
             onClick={()=>{setRegion(null);setFocusedManager(null);}}><X size={14}/></button>}
         </div>
         <div className="atlas-utility-actions">
-          <select className="atlas-mobile-region" value={region?(region.country==='CA'?'CA:':'')+region.code:'all'}
+          <select id="atlas-region-picker" className="atlas-mobile-region" value={region?(region.country==='CA'?'CA:':'')+region.code:'all'}
             aria-label="Jump to any U.S. state or Canadian province"
             onChange={e=>{
               const selected=e.target.value;

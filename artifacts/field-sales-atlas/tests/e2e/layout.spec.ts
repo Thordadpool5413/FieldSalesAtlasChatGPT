@@ -184,6 +184,59 @@ test('mobile tools are grouped consistently and preserve every destination', asy
 });
 
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+  test(`first-time visitors can choose setup, map or travel at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const firstUse = page.getByRole('region', { name: 'First-time guide' });
+    const paths = firstUse.getByRole('group', { name: 'Choose how to start' });
+    await expect(firstUse).toBeVisible();
+    await expect(firstUse).toContainText('Add a manager, choose a territory, then schedule your first visit.');
+    for (const label of ['Set up my team', 'Explore the map', 'Plan travel']) {
+      await expect(paths.getByRole('button', { name: label, exact: true })).toBeVisible();
+    }
+    if (viewport.width <= 600) {
+      const mapKey = page.getByTestId('atlas-map-key').first();
+      await expect(mapKey).toBeVisible();
+      await expect(mapKey).toContainText('Workspace assignment');
+      await expect(mapKey).toContainText('Location only—not territory or flight status');
+    } else {
+      await expect(firstUse).toContainText('Airport dots are public locations, not live flights. Filled areas are saved workspace territories.');
+    }
+
+    await paths.getByRole('button', { name: 'Set up my team', exact: true }).click();
+    const setup = page.getByRole('region', { name: 'Workspace setup' });
+    await expect(setup.getByText('Add your first manager', { exact: true })).toBeVisible();
+    await expect(setup.getByText('Choose a region and territory', { exact: true })).toBeVisible();
+    await expect(setup.getByText('Schedule your first visit', { exact: true })).toBeVisible();
+    await expect(setup.getByRole('button', { name: 'Add first manager', exact: true })).toBeEnabled();
+    await expect(setup.getByRole('button', { name: 'Choose a region', exact: true })).toBeDisabled();
+
+    await setup.getByRole('button', { name: 'Explore the map', exact: true }).click();
+    const regionPicker = page.getByLabel('Jump to any U.S. state or Canadian province');
+    await expect(regionPicker).toBeFocused();
+    await expect(firstUse).toHaveCount(0);
+    if (viewport.width <= 600) await setup.getByTestId('setup-open').click();
+    else await setup.getByRole('button', { name: 'Set up workspace', exact: true }).click();
+
+    await setup.getByRole('button', { name: 'Continue on my own', exact: true }).click();
+    await expect(setup).toHaveCount(0);
+    if (viewport.width <= 600) {
+      await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+      await page.getByRole('dialog', { name: 'Field Sales Atlas tools and navigation' })
+        .getByRole('button', { name: 'Workspace setup', exact: true }).click();
+    } else {
+      const controls = page.locator('.fsa-sidebar-controls');
+      await controls.locator('summary').click();
+      await controls.getByRole('button', { name: 'Workspace setup', exact: true }).click();
+    }
+    await expect(setup.getByText('Add your first manager', { exact: true })).toBeVisible();
+    await setup.getByRole('button', { name: 'Plan travel', exact: true }).click();
+    await expect(page).toHaveURL(/page=plan&tool=travel/);
+    await expect(page.getByRole('region', { name: 'Guided trip planner' })).toBeVisible();
+  });
+}
+
+for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
   test(`workspace and map search have one clear scope at ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
