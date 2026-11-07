@@ -64,6 +64,13 @@ html[data-field-atlas-theme='light'],
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools {padding:0;border:0;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link {min-height:44px;font-size:12px;padding:10px;gap:10px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-side-link svg {width:16px;height:16px;flex-basis:16px;color:var(--at-subtle);}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-tool-copy {display:flex;flex-direction:column;gap:2px;min-width:0;text-align:left;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-tool-copy strong {font-size:12px;font-weight:650;line-height:1.25;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-tool-copy small {font-size:10px;font-weight:400;line-height:1.3;color:var(--at-muted);white-space:normal;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-tool-link {align-items:flex-start;min-height:50px;padding:7px 10px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-tools .fsa-tool-link>svg {margin-top:2px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools nav button {align-items:flex-start;min-height:48px;padding-block:7px;}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools nav button>svg {margin-top:2px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools {margin-top:16px;border-top:1px solid var(--at-border-soft);padding-top:10px;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-more-tools summary {font-size:12px;font-weight:500;}
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-sidebar-bottom {flex:0 0 auto;padding:8px 0 0;margin-top:8px;border-color:var(--at-border-soft);}
@@ -1026,4 +1033,36 @@ html[data-field-atlas-theme='light'],
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.atlas-setup-complete>.vice-masthead .vice-masthead-content {
     padding-block:16px;
   }
+}
+@media(max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-mobile-drawer .fsa-mobile-tool-group>button {
+    align-items:flex-start;min-height:62px;padding:10px 14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-mobile-drawer .fsa-mobile-tool-group>button>svg {
+    flex:0 0 18px;margin-top:3px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-mobile-tool-copy {
+    display:flex;flex-direction:column;gap:2px;min-width:0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-mobile-tool-copy strong {
+    font-size:14px;line-height:1.25;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-mobile-tool-copy small {
+    color:var(--at-muted);font-size:11px;font-weight:400;line-height:1.35;white-space:normal;
+  }
+}
+.mv-app.atlas-command-v5 .fsa-command-shortcuts button span {
+  display:flex;flex-direction:column;gap:2px;
+}
+.mv-app.atlas-command-v5 .fsa-command-shortcuts button strong {
+  font-size:12px;line-height:1.25;
+}
+.mv-app.atlas-command-v5 .fsa-command-shortcuts button small {
+  color:var(--at-muted);font-size:10px;font-weight:500;line-height:1.3;
+}
+.mv-app.atlas-command-v5 .fsa-command-shortcuts button {
+  align-items:flex-start;min-height:58px;
+}
+.mv-app.atlas-command-v5 .fsa-command-shortcuts button svg {
+  margin-top:2px;
 }

@@ -21,13 +21,13 @@ type Props = {
 
 export default function PlanHub({section,onSectionChange,onDestination,onCircuit}:Props){
   const sections=[
-    {id:'start' as const,label:'Home',icon:Route,detail:'Simple travel overview'},
-    {id:'radar' as const,label:'Flight DNA',icon:Radar,detail:'Free flight intelligence'},
-    {id:'booked' as const,label:'Booked Flights',icon:TicketCheck,detail:'Import and protect your itinerary'},
-    {id:'travel' as const,label:'Plan Travel',icon:PlaneTakeoff,detail:'Compare airport options'},
-    {id:'trips' as const,label:'Itineraries',icon:Route,detail:'Review saved trips'},
-    {id:'week' as const,label:'Our Week',icon:CalendarDays,detail:'Weekly overview'},
-    {id:'coordinate' as const,label:'Coordinate',icon:Waypoints,detail:'Resolve and divide work'},
+    {id:'start' as const,label:'Home',icon:Route,detail:'See your travel plans and next steps'},
+    {id:'radar' as const,label:'Flight DNA',icon:Radar,detail:'Check past flights, airport alerts, and weather'},
+    {id:'booked' as const,label:'Booked Flights',icon:TicketCheck,detail:'Review imported itineraries and flight details'},
+    {id:'travel' as const,label:'Plan Travel',icon:PlaneTakeoff,detail:'Compare airports and routes for a trip'},
+    {id:'trips' as const,label:'Itineraries',icon:Route,detail:'Review saved trip plans'},
+    {id:'week' as const,label:'Our Week',icon:CalendarDays,detail:'See the team’s weekly schedule'},
+    {id:'coordinate' as const,label:'Coordinate',icon:Waypoints,detail:'Balance trainer coverage and visit plans'},
   ];
   return <section className={'fsa-hub fsa-plan-hub'+(section==='radar'?' fs-flight-focused':'')+(section==='start'?' fsa-plan-home':'')} aria-label='Field planning'>
     {section!=='start'&&<header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>

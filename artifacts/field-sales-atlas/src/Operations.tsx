@@ -106,21 +106,22 @@ const MIAMI_NAV: Array<{id:Page;label:string;icon:typeof Plane}>=[
 ];
 const QUICK_NAV=MIAMI_NAV;
 // Surface existing working tools without changing the four-tab phone navigation.
-const FIELD_SHORTCUTS: Array<{id:Page;label:string;icon:typeof Plane}>=[
-  {id:'mission',label:'Mission Control',icon:Sparkles},
-  {id:'radar',label:'Flight DNA',icon:Activity},
-  {id:'booked',label:'Booked flights',icon:Plane},
-  {id:'coordinate',label:'Coordinate trainers',icon:Route},
-  {id:'coaching',label:'Coaching desk',icon:ClipboardCheck},
+type NavItem={id:Page;label:string;icon:typeof Plane;description?:string};
+const FIELD_SHORTCUTS: NavItem[]=[
+  {id:'mission',label:'Mission Control',icon:Sparkles,description:'Review field readiness and find work that needs attention.'},
+  {id:'radar',label:'Flight DNA',icon:Activity,description:'Check past flights, airport alerts, and weather.'},
+  {id:'booked',label:'Booked flights',icon:Plane,description:'Review imported itineraries and flight details.'},
+  {id:'coordinate',label:'Coordinate trainers',icon:Route,description:'Balance trainer coverage and find better visit options.'},
+  {id:'coaching',label:'Coaching desk',icon:ClipboardCheck,description:'Review coaching notes and follow-up commitments.'},
 ];
-const MIAMI_MORE: Array<{id:Page;label:string;icon:typeof Plane}>=[
-  {id:'overview',label:'Reports',icon:Activity},
-  {id:'air',label:'Airport & route planner',icon:Plane},
-  {id:'map',label:'County & ZIP explorer',icon:Compass},
-  {id:'data',label:'Data & exports',icon:Database},
-  {id:'team',label:'Sharing & recovery',icon:ShieldCheck},
+const MIAMI_MORE: NavItem[]=[
+  {id:'overview',label:'Reports',icon:Activity,description:'See regional coverage and manager activity.'},
+  {id:'air',label:'Airport & route planner',icon:Plane,description:'Compare airports and routes for a trip.'},
+  {id:'map',label:'County & ZIP explorer',icon:Compass,description:'Explore counties, towns, and ZIP territories.'},
+  {id:'data',label:'Data & exports',icon:Database,description:'Import or download workspace records.'},
+  {id:'team',label:'Sharing & recovery',icon:ShieldCheck,description:'Manage sharing and restore workspace data.'},
 ];
-const DESKTOP_NAV_GROUPS:Array<{label:string;items:Array<{id:Page;label:string;icon:typeof Plane}>}>=[
+const DESKTOP_NAV_GROUPS:Array<{label:string;items:NavItem[]}>=[
   {label:'PLAN',items:[MIAMI_NAV[0],MIAMI_NAV[1],MIAMI_NAV[3]]},
   {label:'TEAM',items:[MIAMI_NAV[2],FIELD_SHORTCUTS[3],FIELD_SHORTCUTS[4]]},
   {label:'INSIGHTS',items:[FIELD_SHORTCUTS[0],FIELD_SHORTCUTS[1],FIELD_SHORTCUTS[2],MIAMI_MORE[0]]},
@@ -691,8 +692,13 @@ function Product(){
               return <button type="button" key={item.id}
                 className={'fsa-side-link fsa-tool-link'+(active?' active':'')}
                 aria-current={active?'page':undefined}
+                aria-label={item.label}
+                aria-describedby={item.description?'fsa-tool-description-desktop-'+item.id:undefined}
                 title={item.label} onClick={()=>go(item.id)}>
-                <Icon size={19}/><span>{item.label}</span>
+                <Icon size={19}/><span className="fsa-tool-copy">
+                  <strong id={'fsa-tool-label-desktop-'+item.id}>{item.label}</strong>
+                  {item.description&&<small id={'fsa-tool-description-desktop-'+item.id}>{item.description}</small>}
+                </span>
               </button>;
             })}
             </nav>
@@ -705,8 +711,12 @@ function Product(){
                 const Icon=item.icon;
                 const active=isNavItemActive(item.id,view,planSection,peopleSection);
                 return <button key={item.id} type="button" onClick={()=>go(item.id)}
-                  className={active?'active':''} aria-current={active?'page':undefined}>
-                  <Icon size={16}/><span>{item.label}</span>
+                  className={active?'active':''} aria-current={active?'page':undefined} aria-label={item.label}
+                  aria-describedby={item.description?'fsa-tool-description-more-'+item.id:undefined}>
+                  <Icon size={16}/><span className="fsa-tool-copy">
+                    <strong id={'fsa-tool-label-more-'+item.id}>{item.label}</strong>
+                    {item.description&&<small id={'fsa-tool-description-more-'+item.id}>{item.description}</small>}
+                  </span>
                 </button>;
               })}
             </nav>
@@ -846,8 +856,13 @@ function Product(){
             const Icon=item.icon;
             const active=isNavItemActive(item.id,view,planSection,peopleSection);
             return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
+              aria-label={item.label}
+              aria-describedby={item.description?'fsa-tool-description-mobile-'+item.id:undefined}
               onClick={()=>go(item.id)}>
-              <Icon size={18}/>{item.label}
+              <Icon size={18}/><span className="fsa-mobile-tool-copy">
+                <strong id={'fsa-tool-label-mobile-'+item.id}>{item.label}</strong>
+                <small id={'fsa-tool-description-mobile-'+item.id}>{item.description}</small>
+              </span>
             </button>;
           })}
         </div>)}
@@ -857,8 +872,13 @@ function Product(){
           const Icon=item.icon;
           const active=isNavItemActive(item.id,view,planSection,peopleSection);
           return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
+            aria-label={item.label}
+            aria-describedby={item.description?'fsa-tool-description-mobile-more-'+item.id:undefined}
             onClick={()=>go(item.id)}>
-            <Icon size={18}/>{item.label}
+            <Icon size={18}/><span className="fsa-mobile-tool-copy">
+              <strong id={'fsa-tool-label-mobile-more-'+item.id}>{item.label}</strong>
+              <small id={'fsa-tool-description-mobile-more-'+item.id}>{item.description}</small>
+            </span>
           </button>;
         })}
         </div>

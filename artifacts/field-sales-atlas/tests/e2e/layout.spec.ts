@@ -173,6 +173,10 @@ test('mobile tools are grouped consistently and preserve every destination', asy
   const drawer = page.getByRole('dialog', { name: 'Field Sales Atlas tools and navigation' });
   const insights = drawer.getByRole('group', { name: 'INSIGHTS tools' });
   const flightInsights = insights.getByRole('button', { name: 'Flight DNA', exact: true });
+  await expect(flightInsights).toBeVisible();
+  await expect(flightInsights.locator('small')).toBeVisible();
+  await expect(flightInsights.locator('small')).toHaveText('Check past flights, airport alerts, and weather.');
+  await expect(flightInsights).toHaveAccessibleDescription('Check past flights, airport alerts, and weather.');
   await expect(flightInsights).toHaveAttribute('aria-current', 'page');
   await expect(drawer.getByRole('group', { name: 'TEAM tools' })).toContainText('Coordinate trainers');
   await expect(drawer.getByRole('group', { name: 'More tools' })).toContainText('County & ZIP explorer');
@@ -181,6 +185,50 @@ test('mobile tools are grouped consistently and preserve every destination', asy
     .getByRole('button', { name: 'County & ZIP explorer', exact: true }).click();
   await expect(page).toHaveURL(/page=map/);
   await expect(drawer).toBeHidden();
+
+  await page.goto('/');
+  const mapFrame = page.locator('.mv-map-frame');
+  await expect(mapFrame).toBeVisible();
+  const mapBefore = (await mapFrame.boundingBox())!;
+  await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  await expect(drawer).toBeVisible();
+  await flightInsights.scrollIntoViewIfNeeded();
+  await expect(flightInsights.locator('small')).toBeInViewport();
+  const mapAfter = (await mapFrame.boundingBox())!;
+  expect(Math.abs(mapAfter.x - mapBefore.x)).toBeLessThan(1);
+  expect(Math.abs(mapAfter.width - mapBefore.width)).toBeLessThan(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('desktop navigation and workspace search explain specialized tools without changing destinations', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  const mission = page.getByRole('navigation', { name: 'insights sections' })
+    .getByRole('button', { name: 'Mission Control', exact: true });
+  await mission.scrollIntoViewIfNeeded();
+  await expect(mission.locator('small')).toHaveText('Review field readiness and find work that needs attention.');
+  await expect(mission.locator('small')).toBeInViewport();
+  await expect(mission).toHaveAccessibleDescription('Review field readiness and find work that needs attention.');
+
+  const map = page.locator('.mv-map-frame');
+  await expect(map).toBeVisible();
+  const mapBounds = (await map.boundingBox())!;
+  expect(mapBounds.width).toBeLessThanOrEqual(1280);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  await mission.click();
+  await expect(page).toHaveURL(/page=mission/);
+  await expect(mission).toHaveAttribute('aria-current', 'page');
+  await page.goto('/?page=plan&tool=radar');
+  const flightTab = page.locator('.fsa-hub-tabs').getByRole('tab', { name: /Flight DNA/ });
+  await expect(flightTab).toContainText('Check past flights, airport alerts, and weather');
+  await page.keyboard.press('Control+k');
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
+  await search.getByRole('combobox').fill('Flight DNA');
+  const flightResult = search.getByRole('option', { name: /Flight DNA/ });
+  await expect(flightResult).toContainText('Check past flights, airport alerts, and weather');
+  await flightResult.click();
+  await expect(page).toHaveURL(/page=plan&tool=radar/);
 });
 
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
