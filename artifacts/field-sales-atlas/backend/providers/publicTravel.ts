@@ -3,6 +3,21 @@ import type { Evidence } from '../../shared/travel/types';
 
 const object = (v: unknown): Record<string, unknown> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {};
 const text = (v: unknown) => typeof v === 'string' ? v.slice(0, 240) : '';
+const english = (v: unknown) => {
+  const row = object(v);
+  return text(row.en ?? row.value ?? v);
+};
+const canadianStates = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
+const isCanadianAirport = (airport: { state?: string; country?: string }) => airport.country === 'CA' || canadianStates.includes(airport.state || '');
+function airportBbox(lat: number, lon: number, radius: number) {
+  return [lon - radius, lat - radius, lon + radius, lat + radius].map(value => value.toFixed(3)).join(',');
+}
+function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const radians = (value: number) => value * Math.PI / 180;
+  const dLat = radians(lat2 - lat1), dLon = radians(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 export type TravelSignal = { title: string; detail: string; validFrom?: string; validTo?: string };
 export function faa(airport: string) {
   return source<TravelSignal[]>({ provider: 'FAA NAS', subject: airport, url: 'https://nasstatus.faa.gov/api/airport-events', kind: 'observation',
@@ -65,16 +80,98 @@ export function nws(lat: number, lon: number) {
 }
 export function canadianObservations(lat: number, lon: number) {
   const subject = lat.toFixed(2) + ',' + lon.toFixed(2);
-  const bbox = [lon - .75, lat - .75, lon + .75, lat + .75].map(v => v.toFixed(3)).join(',');
-  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url: `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${bbox}&limit=5&f=json`,
-    kind: 'observation', scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-1',
+  const bbox = airportBbox(lat, lon, .75);
+  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url: `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${bbox}&limit=5&sortby=-obs_date_tm&f=json`,
+    kind: 'observation', scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-      const rows = root.features.map(v => object(object(v).properties));
-      const times = rows.map(row => dated(row.datetime || row.date_tm || row.obs_date)).filter((v): v is string => !!v).sort();
-      if (!rows.length || !times.length) throw new Error('Canadian observation product/timestamps could not be validated.');
-      return { data: rows.map(row => ({ title: text(row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + (dated(row.datetime || row.date_tm || row.obs_date) || 'unknown time') })), observedAt: times.at(-1), limitation: 'Product-specific live schema/access must validate before use; weather warnings and forecasts are separate products.' };
+      if (!root.features.length) return { data: [], limitation: 'No nearby surface observations were returned; current Canadian weather status is unknown.' };
+      const rows = root.features.map(v => object(object(v).properties)).map(row => ({
+        row,
+        observedAt: [row.obs_date_tm, row['date_tm-value'], row.date_tm, row.datetime, row.obs_date].map(dated).find((value): value is string => !!value),
+      })).filter((entry): entry is { row: Record<string, unknown>; observedAt: string } => !!entry.observedAt);
+      if (!rows.length) throw new Error('Canadian observation timestamps could not be validated.');
+      const times = rows.map(entry => entry.observedAt).sort();
+      return { data: rows.map(({ row, observedAt }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + observedAt })), observedAt: times.at(-1), limitation: 'Nearby surface observations are not airport-specific warnings or forecasts.' };
+    },
+  });
+}
+
+export function canadianForecast(lat: number, lon: number) {
+  const subject = lat.toFixed(3) + ',' + lon.toFixed(3);
+  const bbox = airportBbox(lat, lon, 1.25);
+  return source<TravelSignal[]>({ provider: 'ECCC City Page Weather', subject, url: `https://api.weather.gc.ca/collections/citypageweather-realtime/items?bbox=${bbox}&limit=25&f=json`,
+    kind: 'forecast', scope: 'Nearest available ECCC city-page forecast within 150 km of the airport coordinates; regional forecast, not an airport observation or aviation forecast.', ttlMs: 15 * 60000, maxAgeMs: 12 * 3600000, version: 'eccc-citypage-1',
+    parse(value) {
+      const root = object(value);
+      if (!Array.isArray(root.features)) throw new Error('Invalid ECCC city forecast collection.');
+      if (!root.features.length) return { data: [], limitation: 'No ECCC city forecast was returned near this airport; Canadian forecast coverage is unknown.' };
+      const candidates = root.features.map(raw => {
+        const feature = object(raw), geometry = object(feature.geometry), coordinates = Array.isArray(geometry.coordinates) ? geometry.coordinates : [];
+        const cityLon = Number(coordinates[0]), cityLat = Number(coordinates[1]);
+        if (!Number.isFinite(cityLon) || !Number.isFinite(cityLat) || Math.abs(cityLon) > 180 || Math.abs(cityLat) > 90) return null;
+        return { properties: object(feature.properties), distance: distanceKm(lat, lon, cityLat, cityLon) };
+      }).filter((entry): entry is { properties: Record<string, unknown>; distance: number } => !!entry);
+      if (!candidates.length) throw new Error('ECCC city forecast locations could not be validated.');
+      const nearest = candidates.filter(candidate => candidate.distance <= 150).sort((a, b) => a.distance - b.distance)[0];
+      if (!nearest) return { data: [], limitation: 'No published ECCC city forecast is within 150 km; conditions at the airport are unknown.' };
+      const group = object(nearest.properties.forecastGroup);
+      if (!Array.isArray(group.forecasts) || !group.forecasts.length) throw new Error('ECCC forecast periods are missing.');
+      const forecasts = group.forecasts.map(raw => {
+        const row = object(raw), period = object(row.period);
+        return {
+          title: english(period.textForecastName) || english(period.value),
+          detail: english(row.textSummary) || english(row.cloudPrecip) || english(object(row.abbreviatedForecast).textSummary),
+        };
+      }).filter(row => row.title && row.detail).slice(0, 16);
+      if (!forecasts.length) throw new Error('ECCC forecast periods could not be validated.');
+      const observedAt = dated(english(group.timestamp) || nearest.properties.lastUpdated);
+      const city = english(nearest.properties.name) || 'Nearby Canadian city';
+      return { data: forecasts.map(row => ({ title: row.title, detail: `${row.detail} (${city} regional forecast)` })), observedAt,
+        limitation: `Regional forecast for ${city}, approximately ${Math.round(nearest.distance)} km from the airport. ECCC does not publish exact period validity timestamps in this product; airport conditions and full trip-window coverage are unknown.` };
+    },
+  });
+}
+
+export function canadianWarnings(lat: number, lon: number) {
+  const subject = lat.toFixed(3) + ',' + lon.toFixed(3);
+  const bbox = airportBbox(lat, lon, .75);
+  return source<TravelSignal[]>({ provider: 'ECCC Weather Alerts', subject, url: `https://api.weather.gc.ca/collections/weather-alerts/items?bbox=${bbox}&limit=100&sortby=-publication_datetime&f=json`,
+    kind: 'observation', scope: 'Active ECCC warning polygons intersecting the 0.75-degree bounding box around the airport; warnings are regional, not airport-specific.', ttlMs: 5 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-alerts-1',
+    parse(value) {
+      const root = object(value);
+      if (!Array.isArray(root.features)) throw new Error('Invalid ECCC weather alert collection.');
+      const alerts = root.features.map(raw => {
+        const feature = object(raw);
+        return { feature, properties: object(feature.properties) };
+      });
+      const publicationTimes = alerts.map(({ properties }) => dated(properties.publication_datetime)).filter((value): value is string => !!value).sort();
+      const observedAt = dated(root.timeStamp) || publicationTimes.at(-1);
+      const now = Date.now();
+      const warnings: TravelSignal[] = [];
+      for (const { feature, properties: row } of alerts) {
+        const status = text(row.status_en).toLowerCase();
+        const type = text(row.alert_type).toLowerCase();
+        if (!status || !type) throw new Error('ECCC alert status or type is missing.');
+        if (status !== 'active' || type !== 'warning') continue;
+        const geometry = object(feature.geometry);
+        if (!['Polygon', 'MultiPolygon'].includes(text(geometry.type)) || !Array.isArray(geometry.coordinates) || !geometry.coordinates.length) throw new Error('ECCC warning area geometry could not be validated.');
+        const validFrom = dated(row.validity_datetime);
+        const expiration = dated(row.expiration_datetime);
+        const validTo = dated(row.event_end_datetime) || expiration;
+        if (!validFrom || !validTo || validTo <= validFrom || !expiration) throw new Error('ECCC warning validity could not be validated.');
+        if (Date.parse(expiration) <= now) continue;
+        const name = text(row.alert_name_en) || 'Weather warning';
+        const area = text(row.feature_name_en) || text(row.province);
+        const detail = text(row.alert_text_en);
+        if (!detail) throw new Error('ECCC warning text is missing.');
+        warnings.push({ title: area ? `${name} — ${area}` : name, detail, validFrom, validTo });
+      }
+      return { data: warnings.slice(0, 30), observedAt,
+        limitation: warnings.length
+          ? 'These are active warning records in the queried regional area, not airport-specific advisories or an all-clear for areas outside the published warning polygons.'
+          : 'No active ECCC warning records were returned for this queried area at the source timestamp; this is not an all-clear for conditions outside the query area.' };
     },
   });
 }
@@ -99,12 +196,12 @@ export function nwsForecast(lat: number, lon: number) {
 
 export async function publicAirportEvidence(airport: { iata: string; icao?: string; lat?: number; lon?: number; state?: string; country?: string }): Promise<Array<SourceResult<TravelSignal[]>>> {
   const work: Array<Promise<SourceResult<TravelSignal[]>>> = [];
-  const canadian = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].includes(airport.state || '');
+  const canadian = isCanadianAirport(airport);
   const us = airport.country ? airport.country === 'US' : !canadian;
   if (us) work.push(faa(airport.iata));
   if (airport.icao) work.push(metar(airport.icao), taf(airport.icao));
   if (Number.isFinite(airport.lat) && Number.isFinite(airport.lon)) {
-    if (canadian) work.push(canadianObservations(airport.lat!, airport.lon!));
+    if (canadian) work.push(canadianObservations(airport.lat!, airport.lon!), canadianForecast(airport.lat!, airport.lon!), canadianWarnings(airport.lat!, airport.lon!));
     else if (us) work.push(nws(airport.lat!, airport.lon!), nwsForecast(airport.lat!, airport.lon!));
   }
   return Promise.all(work);

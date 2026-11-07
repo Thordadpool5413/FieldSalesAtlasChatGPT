@@ -31,6 +31,13 @@ export function evidenceState(evidence: Evidence, now = Date.now()): Evidence['s
   if (evidence.validTo && Date.parse(evidence.validTo) <= now) return 'stale';
   return evidence.state;
 }
+function currentEvidence(evidence: Evidence, now = Date.now()): Evidence {
+  const state = evidenceState(evidence, now);
+  const limitation = state === 'stale' && !/current status is unknown/i.test(evidence.limitation)
+    ? evidence.limitation + ' Current status is unknown because the evidence is stale.'
+    : evidence.limitation;
+  return { ...evidence, state, limitation };
+}
 const inFlightJson = new Map<string, Promise<unknown>>();
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, { headers: { Accept: 'application/json, application/geo+json', 'User-Agent': 'FieldSalesAtlas/2.0 (https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT)' }, signal: AbortSignal.timeout(8500) }).catch((failure: unknown) => {
@@ -53,7 +60,7 @@ export function officialJson(url: string): Promise<unknown> {
 export async function source<T>(request: SourceRequest<T>): Promise<SourceResult<T>> {
   const id = sourceId(request.provider, request.subject + ':' + request.version + ':' + request.url);
   const [saved] = await db.get<{ id: string; result: SourceResult<T>; retryAfter: string }>(table, [id]);
-  if (saved && Date.parse(saved.retryAfter) > Date.now()) return { data: saved.result.data, evidence: { ...saved.result.evidence, state: evidenceState(saved.result.evidence) } };
+  if (saved && Date.parse(saved.retryAfter) > Date.now()) return { data: saved.result.data, evidence: currentEvidence(saved.result.evidence) };
   const running = pending.get(id);
   if (running) return running as Promise<SourceResult<T>>;
   const work = (async (): Promise<SourceResult<T>> => {
@@ -64,18 +71,19 @@ export async function source<T>(request: SourceRequest<T>): Promise<SourceResult
       const issueTime = parsed.observedAt ? Date.parse(parsed.observedAt) : NaN;
       const sourceTimeValid = Number.isFinite(issueTime) && issueTime <= Date.now() + 300000 && Date.now() - issueTime <= request.maxAgeMs;
       const expiresAt = new Date(Math.min(Date.now() + request.ttlMs, Number.isFinite(issueTime) ? issueTime + request.maxAgeMs : Infinity, parsed.validTo ? Date.parse(parsed.validTo) : Infinity)).toISOString();
+      const staleLimitation = !sourceTimeValid && parsed.observedAt ? ' The source timestamp is outside the accepted freshness window; current status is unknown.' : '';
       const evidence: Evidence = { id, provider: request.provider, subject: request.subject, sourceUrl: request.url,
         kind: request.kind, state: sourceTimeValid ? 'current' : parsed.observedAt ? 'stale' : 'partial', retrievedAt: now,
         observedAt: parsed.observedAt, validFrom: parsed.validFrom, validTo: parsed.validTo, expiresAt,
-        version: request.version, scope: request.scope, limitation: parsed.limitation || (!parsed.observedAt ? 'The source did not provide a usable issue/observation time.' : '') };
+        version: request.version, scope: request.scope, limitation: (parsed.limitation || (!parsed.observedAt ? 'The source did not provide a usable issue/observation time.' : '')) + staleLimitation };
       evidence.state = evidenceState(evidence);
       result = { data: parsed.data, evidence };
     } catch (failure) {
       const detail = failureDetail(failure);
-      result = saved?.result.data ? { data: saved.result.data, evidence: { ...saved.result.evidence, state: 'stale', failureCode: detail.code, limitation: saved.result.evidence.limitation + ' ' + detail.message + ' Showing the last validated snapshot.' } } : {
+      result = saved?.result.data ? { data: saved.result.data, evidence: { ...saved.result.evidence, state: 'stale', failureCode: detail.code, limitation: saved.result.evidence.limitation + ' ' + detail.message + ' Current status is unknown; showing the last validated snapshot.' } } : {
         data: null, evidence: { id, provider: request.provider, subject: request.subject, sourceUrl: request.url, kind: request.kind,
           state: 'unavailable', failureCode: detail.code, retrievedAt: now, version: request.version, scope: request.scope,
-          limitation: detail.message + ' No current-data conclusion is available.' },
+          limitation: detail.message + ' Current status is unknown. No current-data conclusion is available.' },
       };
     }
     const retryMs = result.evidence.state === 'current' ? request.ttlMs : 60000;
@@ -88,5 +96,5 @@ export async function source<T>(request: SourceRequest<T>): Promise<SourceResult
 
 export async function sourceStatuses() {
   const result = await db.list<{ result: SourceResult<unknown>; lastAttemptAt: string }>(table, { limit: 100 });
-  return result.items.map(row => ({ ...row.result.evidence, state: evidenceState(row.result.evidence), lastAttemptAt: row.lastAttemptAt }));
+  return result.items.map(row => ({ ...currentEvidence(row.result.evidence), lastAttemptAt: row.lastAttemptAt }));
 }

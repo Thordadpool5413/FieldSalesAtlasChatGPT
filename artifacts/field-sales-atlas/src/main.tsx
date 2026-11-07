@@ -6,6 +6,7 @@ import './index.css';
 import './AtlasAtelier.css';
 import './WorkspaceExperience.css';
 import './styles/miami-vice-system.css';
+import './styles/map-priority.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

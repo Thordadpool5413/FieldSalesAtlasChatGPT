@@ -13,7 +13,7 @@ for (const viewport of [{ width: 1536, height: 694 }, { width: 1366, height: 768
     await page.evaluate(() => document.fonts.ready);
     const logo = page.locator('.fsa-sidebar-brand img');
     const before = (await logo.boundingBox())!;
-    const primary = page.getByRole('navigation', { name: 'Main sections' });
+    const primary = page.getByRole('navigation', { name: 'plan sections' });
     const firstLink = (await primary.getByRole('button').first().boundingBox())!;
     expect(before.y).toBeGreaterThanOrEqual(8);
     expect(before.height).toBeGreaterThanOrEqual(96);
@@ -22,14 +22,16 @@ for (const viewport of [{ width: 1536, height: 694 }, { width: 1366, height: 768
     expect(map.y).toBeLessThan(viewport.height * .76);
 
     const tools = page.getByRole('region', { name: 'Workspace tools', exact: true });
-    await tools.getByText('Reports & tools', { exact: true }).click();
+    await tools.getByText('More tools', { exact: true }).click();
     const lastTool = tools.getByRole('button').last();
     await lastTool.focus();
     await expect(lastTool).toBeInViewport();
     const after = (await logo.boundingBox())!;
     expect(Math.abs(after.y - before.y)).toBeLessThan(1);
     for (const name of ['Atlas', 'Travel', 'People', 'Calendar']) {
-      await expect(primary.getByRole('button', { name, exact: true })).toBeInViewport();
+      const link = tools.getByRole('button', { name, exact: true });
+      await link.focus();
+      await expect(link).toBeInViewport();
     }
     await expect(page.locator('.fsa-sidebar-controls summary')).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -104,7 +106,7 @@ test('recovered workspace controls fit a short window and search works in focus 
   await controls.getByRole('button', { name: 'Focus workspace', exact: true }).click();
   await expect(page.locator('.fsa-sidebar')).toBeHidden();
   await page.keyboard.press('Control+k');
-  const search = page.getByRole('dialog', { name: 'Search the Field Sales Atlas' });
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
   await expect(search).toHaveCount(1);
   await expect(search).toBeVisible();
   await search.getByRole('button', { name: 'Close search' }).click();
@@ -117,11 +119,45 @@ test('phone keyboard search opens one visible dialog with the desktop rail hidde
   await page.goto('/');
   await expect(page.locator('#field-atlas-main')).toBeVisible();
   await page.keyboard.press('Control+k');
-  const search = page.getByRole('dialog', { name: 'Search the Field Sales Atlas' });
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
   await expect(search).toHaveCount(1);
   await expect(search).toBeVisible();
   await search.getByRole('button', { name: 'Close search' }).click();
   await expect(search).toBeHidden();
+});
+
+test('phone users can browse an accessible, searchable map list with source details', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const setupChip = page.getByTestId('setup-open');
+  await expect(setupChip).toBeVisible();
+  await setupChip.click();
+  await expect(page.getByRole('button', { name: 'Add first manager' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Collapse', exact: true }).click();
+  await page.getByRole('button', { name: 'Minimize setup reminder' }).click();
+  await expect(setupChip).toBeVisible();
+
+  const listSwitch = page.getByTestId('map-view-list');
+  await expect(listSwitch).toBeVisible();
+  await listSwitch.click();
+  await expect(page.getByTestId('atlas-readable-list')).toBeVisible();
+  await expect(page.locator('.mv-map-body')).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Browse map data as a list' })).toBeVisible();
+
+  const filter = page.getByTestId('map-list-filter');
+  await filter.fill('California');
+  await expect(filter).toHaveValue('California');
+  await expect(page.getByTestId('region-row-CA')).toBeVisible();
+
+  const sources = page.getByTestId('data-sources');
+  await sources.locator('summary').click();
+  const airportSource = page.getByTestId('source-airports');
+  await expect(airportSource).toContainText('OurAirports reference directory');
+  await expect(airportSource).toContainText('not live flights');
+
+  await page.getByTestId('map-view-map').click();
+  await expect(page.locator('.mv-map-body')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 664 }]) {

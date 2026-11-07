@@ -155,10 +155,14 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
   if (input.checkPublicSources) {
     const sources = await publicAirportEvidence(airport);
     evidence.push(...sources.map(result => result.evidence));
-    signals.push(...sources.flatMap(result => (result.data || []).map(signal => ({ ...signal, sourceId: result.evidence.id }))));
+    signals.push(...sources.flatMap(result => (result.data || []).map(signal => ({ ...signal, kind: result.evidence.kind, sourceId: result.evidence.id }))));
     if (sources.some(result => !['current', 'reference'].includes(result.evidence.state))) gaps.push('Some official operational or weather evidence is incomplete or stale.');
     const start = zonedInstant(input.startDate, '00:00', hubZone), end = zonedInstant(input.endDate, '23:59', hubZone);
-    if (!sources.some(result => result.evidence.kind === 'forecast' && result.evidence.validFrom && result.evidence.validTo && result.evidence.validFrom <= start && result.evidence.validTo >= end)) gaps.push('A validated airport forecast does not cover the full field-trip period.');
+    if (!sources.some(result => result.evidence.kind === 'forecast' && result.evidence.validFrom && result.evidence.validTo && result.evidence.validFrom <= start && result.evidence.validTo >= end)) {
+      gaps.push(['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].includes(airport.state || '')
+        ? 'The ECCC city forecast is regional and has no exact period timestamps; coverage for the full field-trip window is unknown.'
+        : 'A validated airport forecast does not cover the full field-trip period.');
+    }
   } else gaps.push('Current official weather and airport notices have not been requested for this preview.');
   const scenarios: Scenario[] = optimized.solutions.map(solution => {
     const visits: ScenarioVisit[] = [], legs: JourneyLeg[] = [...flightLegs];

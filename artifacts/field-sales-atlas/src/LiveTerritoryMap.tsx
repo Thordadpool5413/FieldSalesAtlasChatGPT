@@ -71,6 +71,9 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
  const host=useRef<HTMLDivElement>(null);
  const map=useRef<GLInstance|null>(null);
  const latest=useRef(p);latest.current=p;
+ const airportReferenceColor=p.theme==='light'?'#9B5B20':'#FFC49B';
+ const airportSecondaryColor=p.theme==='light'?'#B66C3E':'#E5A06E';
+ const airportSelectedColor=p.theme==='light'?'#087F90':'#42F8F1';
  const [ready,setReady]=useState(false);
  const states=useMemo<Collection>(()=>{
   const result=empty();
@@ -221,6 +224,22 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
     minZoom:1.7,maxZoom:13,dragRotate:false,cooperativeGestures:false
    });
    map.current=instance;
+   const mapInstance=instance;
+   mapInstance.setMissingStyleImageResolver(async imageId=>{
+    if(imageId!=='circle-11'||mapInstance.hasImage(imageId))return;
+    const data=new Uint8Array(11*11*4);
+    for(let y=0;y<11;y++)for(let x=0;x<11;x++){
+     const distance=Math.hypot(x-5,y-5);
+     if(distance>4.5)continue;
+     const offset=(y*11+x)*4;
+     const border=distance>=3.5;
+     data[offset]=border?243:105;
+     data[offset+1]=border?251:161;
+     data[offset+2]=border?255:185;
+     data[offset+3]=255;
+    }
+    mapInstance.addImage(imageId,{width:11,height:11,data});
+   });
    instance.addControl(new AttributionControl({compact:true}),'bottom-right');
    instance.touchZoomRotate.disableRotation();
    instance.on('zoom',()=>{if(!disposed&&instance)latest.current.onZoom(Math.round(100*Math.pow(2,instance.getZoom()-3)));});
@@ -299,7 +318,7 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
       paint:{'fill-color':ownershipColor as any,
        'fill-opacity':['case',['==',['get','assigned'],1],.24,.065]}},before);
      i.addLayer({id:'atlas-selected-halo',source:'atlas-states',type:'line',
-      filter:['==',['get','code'],''],paint:{'line-color':'#FF52A9','line-width':10,'line-blur':5,'line-opacity':.44}},before);
+       filter:['==',['get','code'],''],paint:{'line-color':'#FF52A9','line-width':6,'line-blur':2,'line-opacity':.2}},before);
      i.addLayer({id:'atlas-state-outline',source:'atlas-states',type:'line',
       paint:{'line-color':ownershipColor as any,
        'line-width':['interpolate',['linear'],['zoom'],2,1.05,7,2.1],
@@ -329,16 +348,17 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
               'text-halo-width':1.4}});
      add('atlas-route',dataRef.current.routeGeo);
      i.addLayer({id:'atlas-route-glow',source:'atlas-route',type:'line',
-       paint:{'line-color':'#FF5BAD','line-width':7,'line-opacity':.22,'line-blur':5}});
+        paint:{'line-color':'#FF5BAD','line-width':5,'line-opacity':.12,'line-blur':2}});
      i.addLayer({id:'atlas-route-dash',source:'atlas-route',type:'line',
        paint:{'line-color':'#FF75C5','line-width':2.2,'line-opacity':.86,'line-dasharray':[2.5,2]}});
      add('atlas-airports',dataRef.current.airportGeo);
      i.addLayer({id:'atlas-airport-halo',source:'atlas-airports',type:'circle',
-      paint:{'circle-color':'#FF4DAB','circle-radius':9,'circle-opacity':.22,'circle-blur':.6}});
+       paint:{'circle-color':airportReferenceColor,'circle-radius':6,'circle-opacity':.12,'circle-blur':.25}});
      i.addLayer({id:'atlas-airport-dots',source:'atlas-airports',type:'circle',
-      paint:{'circle-color':['case',['==',['get','selected'],1],'#48FFE9',['==',['get','major'],1],'#FF58AD','#53C9DF'],
+       paint:{'circle-color':['case',['==',['get','selected'],1],airportSelectedColor,
+         ['==',['get','major'],1],airportReferenceColor,airportSecondaryColor],
        'circle-radius':['case',['==',['get','selected'],1],7,['==',['get','major'],1],4.7,3],
-       'circle-stroke-color':'#F7FAFC','circle-stroke-width':1.65}});
+        'circle-stroke-color':p.theme==='light'?'#FFFFFF':'#102A3E','circle-stroke-width':1.65}});
      i.addLayer({id:'atlas-airport-names',source:'atlas-airports',type:'symbol',minzoom:5.2,
       layout:{'text-field':['get','iata'],'text-font':['Noto Sans Bold'],'text-size':11,'text-offset':[0,1.5]},
       paint:{'text-color':p.theme==='light'?'#153A4E':'#EFF9FE','text-halo-width':1.6,

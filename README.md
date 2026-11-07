@@ -4,17 +4,17 @@ A shared field-sales workspace for territories, coaching visits, calendars, and 
 
 ## Update the existing Replit workspace
 
-GitHub `main` includes the original application history and the recovered Replit work. The Replit app keeps its pnpm workspace and separate web/API services. Both recovery snapshots, `replit-recovery-0ecbdd2` and `replit-recovery-startup`, remain available as backups.
+GitHub `main` includes the original application history and the recovered Replit work. The Replit app keeps its pnpm workspace and separate web/API services. Recovery snapshots `replit-recovery-0ecbdd2`, `replit-recovery-startup` and `replit-recovery-readiness` remain available as backups.
 
 Stop the current Run process, then use the Replit Shell:
 
 ```bash
-git pull --no-rebase origin main && pnpm run replit
+git pull --ff-only origin main && pnpm run replit
 ```
 
 The Run button executes the same `pnpm run replit` command. It installs the locked dependencies and optimizer, then keeps both services running. The separate `api-smoke` workflow runs temporary tests and exits; it is not the app startup workflow.
 
-The initial recovery made the Replit commit `0ecbdd2` an ancestor of `main`. Replit can create additional local commits after that recovery. When both Replit and GitHub have changed, a normal merge pull preserves both histories; `--ff-only` deliberately refuses that situation. Preserve uncommitted edits before pulling, and review any merge conflicts before running the app. The `&&` above prevents startup if the pull fails.
+The recoveries preserve Replit commits, including `0ecbdd2` and `3037c98`, as ancestors of repaired `main`. Replit can create additional local commits afterward. A fast-forward-only pull stops when the histories diverge so the exact local work can be preserved and reconciled. If a previous pull already stopped with conflicts, follow [Replit merge recovery](docs/REPLIT_GIT_RECOVERY.md) before trying another pull. The `&&` above prevents startup if the pull fails.
 
 Pulling or running does not publish the app. The published `.replit.app` address is a separate snapshot. Publication remains a separate owner action.
 
