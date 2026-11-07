@@ -1426,12 +1426,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           <PlaneTakeoff size={22}/> Plan Trip to {region.name}<ArrowRight size={20}/>
         </button>
       </aside>}
-    <div className="atlas-ownership-legend" aria-label="Territory ownership colors">
-      <span><i aria-hidden="true"/>{trainerProfiles[0]?.name||'Trainer 1'}</span>
-      <span className="trainer-b"><i aria-hidden="true"/>{trainerProfiles[1]?.name||'Trainer 2'}</span>
-      <span className="shared"><i aria-hidden="true"/>Shared coverage</span>
-      <span>State & county fills reflect saved assignments, not external territory records.</span>
-    </div>
     <details className="atlas-deep-intelligence">
       <summary>
         <span className="atlas-deep-summary-title"><Sparkles size={18}/> Field intelligence</span>
