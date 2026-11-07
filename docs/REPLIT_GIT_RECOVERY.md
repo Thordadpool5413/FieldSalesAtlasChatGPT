@@ -1,10 +1,12 @@
 # Replit and GitHub merge recovery
 
-Repaired main preserves the readiness recovery (**3037c98** and **4bd95c7**) and the subsequent Replit snapshot on **replit-recovery-d0a16a5**. That branch contains **d0a16a5** and its later commit **4b699f5**. The original recovery branches remain available as backups.
+Repaired main preserves the readiness recovery (**3037c98** and **4bd95c7**) and all subsequent uploaded Replit snapshots. The latest branch, **replit-recovery-e38c12f**, points to **089d11f** and includes **e38c12f**. The earlier branch **replit-recovery-d0a16a5** retains **d0a16a5** and **4b699f5**. The original recovery branches remain available as backups.
 
 The resolution combines structured provider failures and explicit stale/unknown messages, preserves Canadian forecasts/warnings and bounded observation validation, and keeps the UI travel types connected to the canonical API contract. Replit's map, navigation and source-information changes are retained.
 
 The map key and source details follow the map so the phone layout keeps the map in its first viewport. Replit's newer theme tokens, restrained map styling and first-visit/returning-visit checks are retained. Browser checks cover grouped navigation, collapsed phone setup and a searchable map list alongside booking readiness and shared-trainer recovery.
+
+The latest Replit changes remove the returning-user header row and its trip button. The map controls and main Travel navigation remain available; browser checks validate both after reloading.
 
 ## Synchronize the recovered workspace
 

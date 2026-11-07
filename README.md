@@ -4,7 +4,7 @@ A shared field-sales workspace for territories, coaching visits, calendars, and 
 
 ## Update the existing Replit workspace
 
-GitHub `main` includes the original application history and the recovered Replit work. The Replit app keeps its pnpm workspace and separate web/API services. Recovery snapshots `replit-recovery-0ecbdd2`, `replit-recovery-startup`, `replit-recovery-readiness` and `replit-recovery-d0a16a5` remain available as backups.
+GitHub `main` includes the original application history and the recovered Replit work. The Replit app keeps its pnpm workspace and separate web/API services. The recovery snapshots remain available as backups; the latest is `replit-recovery-e38c12f` at `089d11f`.
 
 Stop the current Run process, then use the Replit Shell:
 
@@ -14,7 +14,7 @@ git pull --ff-only origin main && pnpm run replit
 
 The Run button executes the same `pnpm run replit` command. It installs the locked dependencies and optimizer, then keeps both services running. The separate `api-smoke` workflow runs temporary tests and exits; it is not the app startup workflow.
 
-The recoveries preserve Replit commits, including `0ecbdd2`, `3037c98`, `d0a16a5` and `4b699f5`, as ancestors of repaired `main`. Pause Replit Agent edits during synchronization: additional local commits can create another divergence. A fast-forward-only pull stops when the histories diverge so the exact local work can be preserved and reconciled. If a previous pull already stopped with conflicts, follow [Replit merge recovery](docs/REPLIT_GIT_RECOVERY.md) before trying another pull. The `&&` above prevents startup if the pull fails.
+The recoveries preserve the uploaded Replit commits as ancestors of repaired `main`. Pause Replit Agent edits during synchronization: additional local commits can create another divergence. A fast-forward-only pull stops when the histories diverge so the exact local work can be preserved and reconciled. If a previous pull already stopped with conflicts, follow [Replit merge recovery](docs/REPLIT_GIT_RECOVERY.md) before trying another pull. The `&&` above prevents startup if the pull fails.
 
 Pulling or running does not publish the app. The published `.replit.app` address is a separate snapshot. Publication remains a separate owner action.
 

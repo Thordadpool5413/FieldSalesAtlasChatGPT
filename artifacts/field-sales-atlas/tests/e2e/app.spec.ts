@@ -180,11 +180,12 @@ test('first visit welcomes; returning visit keeps the map compact and usable', a
 
   await page.reload();
   await expect(welcome).toHaveCount(0);
-  await expect(page.locator('.atlas-working-title')).toBeVisible();
-  await expect(page.locator('.atlas-working-title h1')).toHaveText('Territory Atlas');
+  await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
   await expectMapProminentAndUsable(true);
   expect(await page.evaluate(() => localStorage.getItem('field-atlas-map-welcome-v1'))).toBe('seen');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+  await page.getByRole('button', { name: 'Travel', exact: true }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/page=plan/);
 });
 
 test('guided review blocks saving when the trainer is unavailable', async ({ page }) => {
