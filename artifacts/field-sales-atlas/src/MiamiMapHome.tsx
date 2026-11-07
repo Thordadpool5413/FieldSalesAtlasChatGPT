@@ -46,6 +46,13 @@ function sourceTimestamp(value:string){
     ?date.toLocaleString([],{dateStyle:'medium',timeStyle:'short'})
     :'Not reported';
 }
+function compactSourceTime(value:string){
+  if(!value)return 'Time not reported';
+  const date=new Date(value);
+  return Number.isFinite(date.getTime())
+    ?date.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})
+    :'Time not reported';
+}
 export default function MiamiMapHome({atlas,airports,managers,assignments,theme,onDestination,onAddManager}:Props){
   const ctx=useOp();
   const {trainerProfiles}=ctx;
@@ -53,6 +60,14 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   const coaching=ctx.board.coaching||[];
   const [canada,setCanada]=useState<Geo|null>(null);
   const [canadaError,setCanadaError]=useState(false);
+  const [showMapWelcome]=useState(()=>{
+    try{return localStorage.getItem('field-atlas-map-welcome-v1')!=='seen';}
+    catch{return true;}
+  });
+  useEffect(()=>{
+    if(!showMapWelcome)return;
+    try{localStorage.setItem('field-atlas-map-welcome-v1','seen');}catch{}
+  },[showMapWelcome]);
   const [region,setRegion]=useState<Region|null>(()=>{
     try{
       const saved=JSON.parse(localStorage.getItem('field-atlas-focused-region-v1')||'null');
@@ -560,6 +575,9 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   const inspectedAirportCount=inspectedRegion
     ?airports.filter(airport=>airport.state===inspectedRegion.code&&airport.scheduled).length:0;
   const setupComplete=managers.length>0&&assignments.length>0&&visits.length>0;
+  const mapSyncLabel=ctx.syncStatus==='live'?'Live connection':
+    ctx.syncStatus==='updated'?'Recently updated':
+    ctx.syncStatus==='offline'?'Offline':'Connecting';
   const listTerm=listQuery.trim().toLowerCase();
   const listRegions=(countryScope==='canada'?CANADA_REGIONS:STATES)
     .filter(item=>!listTerm||(item.name+' '+item.code).toLowerCase().includes(listTerm));
@@ -575,8 +593,18 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
   const listAirports=mapAirports.map(item=>item.airport).filter(airport=>
     !listTerm||(airport.iata+' '+airport.name+' '+airport.state).toLowerCase().includes(listTerm)
   ).slice(0,40);
-  return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')+(setupComplete?' atlas-setup-complete':'')+(viewMode==='list'?' atlas-list-mode':'')}>
-    {!focusMap && <OceanMasthead title="Your field. In perspective."
+  return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')+(setupComplete?' atlas-setup-complete':'')+(!showMapWelcome?' atlas-map-workspace':'')+(viewMode==='list'?' atlas-list-mode':'')}>
+    {!focusMap&&!showMapWelcome&&<header className="atlas-working-title">
+      <div className="atlas-working-title-copy">
+        <span className="atlas-working-title-eyebrow"><MapIcon size={14}/> Field operations</span>
+        <h1>Territory Atlas</h1>
+        <p>{region?region.name+' · territory in focus':'Saved coverage, field teams, and public airport references.'}</p>
+      </div>
+      <button type="button" className="op-btn primary" onClick={()=>region?continueToTravel(region):ctx.go('air')}>
+        Plan a trip <ArrowRight size={15}/>
+      </button>
+    </header>}
+    {!focusMap&&showMapWelcome&&<OceanMasthead title="Your field. In perspective."
       description="Explore territories. Connect with your people. Plan the next visit."
       mobileDescription="Explore territories. Plan your next visit."
       action="Plan a trip" onAction={()=>region?continueToTravel(region):ctx.go('air')}/>}
@@ -614,10 +642,10 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           </div>
         </div>
         <div className="fsa-map-heading-top">
-        <div className="fsa-map-heading-text">
+        {(showMapWelcome||focusMap)&&<div className="fsa-map-heading-text">
           <h2>Territory atlas</h2>
           <p>{region?region.name+' · Territory in focus':'United States & Canada'}</p>
-        </div>
+        </div>}
       <div className="atlas-utility">
         <div className="atlas-context">
           <span className="atlas-context-dot"/>
@@ -745,6 +773,23 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
            <List size={16}/> List
          </button>
        </div>
+        <div className="atlas-map-key" role="group" aria-label="Map symbols and workspace freshness" data-testid="atlas-map-key">
+          <div className="atlas-map-key-item">
+            <span className="atlas-map-key-territory" aria-hidden="true"/>
+            <span className="atlas-map-key-copy"><strong>Saved territory</strong><small>Workspace assignment</small></span>
+          </div>
+          <div className="atlas-map-key-item">
+            <span className="atlas-map-key-airport" aria-hidden="true"><Plane size={13}/></span>
+            <span className="atlas-map-key-copy"><strong>Public airport</strong><small>Location reference, not live flights</small></span>
+          </div>
+          <div className="atlas-map-key-item">
+            <span className={'atlas-map-key-state '+ctx.syncStatus} aria-hidden="true"/>
+            <span className="atlas-map-key-copy">
+              <strong>Workspace records</strong>
+              <small>{mapSyncLabel} · {compactSourceTime(ctx.lastSyncAt)}</small>
+            </span>
+          </div>
+        </div>
        <details className="atlas-data-sources" data-testid="data-sources">
          <summary><Info size={15}/><span>Data sources & freshness</span><ChevronDown size={14}/></summary>
          <div className="atlas-data-source-list">
@@ -1103,7 +1148,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
               const showCode=chosen&&mapW>=480;
               return <g key={'airport-'+a.iata+'-'+i}
                 transform={'translate('+x+' '+y+')'} className={'mv-airport-mark'+(primary?' primary':'')+(major?' major':' secondary')+(chosen?' chosen':'')}
-                role="button" tabIndex={0} aria-label={'Explore '+a.iata+' airport'}
+                role="button" tabIndex={0} aria-label={'Explore public airport location reference '+a.iata}
                 onMouseEnter={()=>setHoveredAirport(a)}
                 onMouseLeave={()=>setHoveredAirport(null)}
                 onFocus={()=>setHoveredAirport(a)}
@@ -1116,7 +1161,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
                   transform={'scale('+(1/zoom)+')'} className="mv-airport-glyph"/>}
                 {showCode&&<text className="mv-airport-code" y={-17/zoom}
                   fontSize={11/zoom} textAnchor="middle">{a.iata}</text>}
-                <title>{a.iata+' · '+a.name+' · '+a.tier+' · schedules must be checked'}</title>
+                <title>{a.iata+' · '+a.name+' · public airport location reference · live flights and seat availability are not included'}</title>
               </g>;
             })}
             {clusters.map((group,i)=>{
