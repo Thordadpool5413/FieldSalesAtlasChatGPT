@@ -353,6 +353,15 @@ html[data-field-atlas-theme='light'],
   .mv-app.atlas-design-v3 .mv-map-page.atlas-map-workspace:not(.atlas-focused) .mv-map-frame {
     height: clamp(360px, calc(100dvh - 460px), 500px);
   }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.has-active-region:not(.atlas-focused) .fsa-map-heading {
+    z-index: 246;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.has-active-region:not(.atlas-focused) .atlas-utility-actions > .atlas-focus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
 }
 @media (max-width: 600px) {
   .mv-app.atlas-design-v3 .atlas-map-key { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
