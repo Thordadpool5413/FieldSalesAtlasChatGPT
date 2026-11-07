@@ -121,6 +121,7 @@ test('guided planning saves the proposed trip and visits into the shared calenda
 test('compact Atlas shows the map early, loads vector mode without MapLibre, and opens region details', async ({ page }, info) => {
   const requests: string[] = [];
   page.on('request', request => requests.push(request.url()));
+  await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Explore Florida', exact: true })).toBeVisible();
   expect(requests.some(url => url.includes('/assets/LiveTerritoryMap-'))).toBe(false);
@@ -142,6 +143,45 @@ test('compact Atlas shows the map early, loads vector mode without MapLibre, and
   await expect(page.getByRole('button', { name: 'Close destination inspector' })).toBeVisible();
   await page.getByRole('button', { name: 'Close destination inspector' }).click();
   await expect(inspector).toBeHidden();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+});
+
+test('first visit welcomes; returning visit keeps the map compact and usable', async ({ page }) => {
+  const viewport = page.viewportSize()!;
+  const mobile = viewport.width <= 900;
+  const map = page.getByRole('group', { name: /Interactive United States map/ });
+  const mapFrame = page.locator('.mv-map-frame');
+
+  async function expectMapProminentAndUsable(compact: boolean) {
+    await expect(map).toBeVisible();
+    const bounds = await map.boundingBox();
+    const frame = await mapFrame.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(frame).not.toBeNull();
+    if (compact) expect(bounds!.y).toBeLessThan(viewport.height * .76);
+    expect(frame!.height).toBeGreaterThanOrEqual(mobile ? 320 : 480);
+
+    const zoomControls = page.getByRole('group', { name: 'Map zoom controls' });
+    const zoomIn = zoomControls.getByRole('button', { name: 'Zoom in' });
+    await expect(zoomIn).toBeVisible();
+    await zoomIn.click();
+    await expect(zoomControls.getByLabel('Map magnification')).toHaveText('135%');
+  }
+
+  await page.goto('/');
+  const welcome = page.locator('.mv-map-page > .vice-masthead');
+  await expect(welcome).toBeVisible();
+  await expect(welcome.getByRole('heading', { name: 'Your field. In perspective.' })).toBeVisible();
+  await expect.poll(() => welcome.locator('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('.atlas-working-title')).toHaveCount(0);
+  await expectMapProminentAndUsable(false);
+
+  await page.reload();
+  await expect(welcome).toHaveCount(0);
+  await expect(page.locator('.atlas-working-title')).toBeVisible();
+  await expect(page.locator('.atlas-working-title h1')).toHaveText('Territory Atlas');
+  await expectMapProminentAndUsable(true);
+  expect(await page.evaluate(() => localStorage.getItem('field-atlas-map-welcome-v1'))).toBe('seen');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
@@ -256,7 +296,7 @@ test('travel assistant explains a Thursday home deadline, reveals source age and
   await expect(assistant.getByRole('heading', { name: 'Your supplied timings fit the deadline.' })).toBeVisible({ timeout: 20000 });
   await expect(assistant.getByText('Estimated home: ' + end + ' 21:45', { exact: false })).toBeVisible();
   await assistant.getByRole('button', { name: /Evidence \d+: Saved workspace/ }).first().click();
-  await expect(assistant.getByText(/Retrieval: (Under a minute old|\d+ min old)/).first()).toBeVisible();
+  await expect(assistant.locator('.travel-answer').getByText(/Retrieval: (Under a minute old|\d+ min old)/).first()).toBeVisible();
   expect(new URL(page.url()).hash).toBe('#workspace=' + key);
   const after = await (await page.request.get('/api/operations?workspaceKey=' + key)).json(); expect(after.visits).toEqual(before.visits);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
@@ -304,4 +344,68 @@ test('data connections display failed checks as unavailable and keep routing est
   await expect(connections.getByText('A drivable road-network route was not validated. Geographic estimates are provisional.')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-data-connections.png`), fullPage: true, scale: 'css' });
+});
+
+test('booked-flight readiness calculates connection margin, saves explicit checks and compares a revised confirmation', async ({ page }, info) => {
+  const errors:string[]=[];page.on('pageerror',failure=>errors.push(failure.message));
+  await page.goto('/?page=plan&tool=booked');
+  const text='Flight AA 100\nDecember 7, 2026\nFrom: Miami (MIA) 6:00 AM\nTo: New York (JFK) December 7, 2026 9:00 AM\n\nFlight AA 101\nDecember 7, 2026\nFrom: New York (JFK) 10:30 AM\nTo: Boston (BOS) December 7, 2026 11:30 AM\nConfirmation: ABC123';
+  await page.locator('#fg-email').fill(text);await page.getByRole('button',{name:'Extract flight details'}).click();
+  const legs=page.locator('.fg-leg');await expect(legs).toHaveCount(2);
+  for(const leg of await legs.all()){
+    await leg.locator('summary').filter({hasText:'Time zones and connection requirements'}).click();
+    await leg.getByLabel('Departure IANA time zone').fill('America/New_York');
+    await leg.getByLabel('Arrival IANA time zone').fill('America/New_York');
+  }
+  await legs.nth(1).getByLabel('Gate-to-gate processing allowance (min)').fill('40');
+  await legs.nth(1).getByLabel('Boarding cutoff before departure (min)').fill('20');
+  await legs.nth(1).getByLabel('Ticket relationship').selectOption('same-ticket-reported');
+  const readiness=page.getByRole('region',{name:'Journey readiness and remaining margin'});
+  await expect(readiness.locator('.readiness-margin')).toHaveText('30 min');
+  await expect(readiness.getByText('Exceeds margin').first()).toBeVisible();
+  await page.getByRole('checkbox',{name:'I have checked these flight details against my airline itinerary.'}).check();
+  await page.getByRole('checkbox',{name:/I checked that tickets were issued/}).check();
+  await page.getByRole('button',{name:'Save locally',exact:true}).click();
+  await expect(page.getByText('Flight saved on this device.',{exact:false})).toBeVisible();
+  const stored=await page.evaluate(()=>localStorage.getItem('atlas-booked-flight-guardian-v1')||'');
+  expect(stored).not.toContain('ABC123');expect(JSON.parse(stored).records[0].review.ticketingConfirmedAt).toBeTruthy();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await readiness.scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(tmpdir(),'field-atlas-'+info.project.name+'-readiness.png'),fullPage:false,scale:'css'});
+  await page.getByRole('button',{name:'Update from a new confirmation'}).click();
+  await page.locator('#fg-email').fill(text.replace('10:30 AM','11:00 AM'));
+  await page.getByRole('button',{name:'Extract flight details'}).click();
+  await expect(page.getByText('Changes from the saved itinerary')).toBeVisible();
+  await expect(page.getByText('Leg 2 departTime: 10:30 → 11:00')).toBeVisible();
+  await expect(page.getByRole('checkbox',{name:/I checked that tickets were issued/})).not.toBeChecked();
+  expect(errors).toEqual([]);
+});
+
+test('shared readiness persists transport and equipment checks for both trainers without changing visits', async ({page},info)=>{
+  const errors:string[]=[];page.on('pageerror',failure=>errors.push(failure.message));
+  const {key,report}=await savedAirJourney(page);
+  const before=await (await page.request.get('/api/operations?workspaceKey='+key)).json();
+  await page.goto('/?page=plan&tool=travel#workspace='+key);
+  await page.getByRole('button',{name:'Travel assistant',exact:true}).click();
+  const assistant=page.getByRole('region',{name:'Evidence-backed travel assistant'});
+  await expect(assistant.getByLabel('Saved travel plan')).toHaveValue(report.id);
+  await assistant.locator('summary').filter({hasText:'Journey readiness & remaining margin'}).click();
+  const readiness=assistant.getByRole('region',{name:'Journey readiness and remaining margin'});
+  await expect(readiness.locator('.readiness-trainers>article')).toHaveCount(2);
+  await assistant.locator('summary').filter({hasText:'Review transport, equipment and pickup deadlines'}).click();
+  const fields=assistant.locator('.readiness-controls fieldset');
+  await fields.nth(0).getByLabel('Ground transport access').selectOption('independent');
+  await fields.nth(0).getByLabel('Training equipment access').selectOption('ready');
+  await fields.nth(1).getByLabel('Ground transport access').selectOption('shared-needs-review');
+  await fields.nth(1).getByLabel('Training equipment access').selectOption('ready');
+  await assistant.getByRole('button',{name:'Save reviewed journey requirements'}).click();
+  await expect(readiness.locator('.readiness-verdict')).toHaveText('attention');
+  const after=await (await page.request.get('/api/operations?workspaceKey='+key)).json();
+  expect(after.visits).toEqual(before.visits);
+  const persisted=await (await page.request.get('/api/travel/journeys/'+report.id+'/readiness?workspaceKey='+key)).json();
+  expect(persisted.requirements.trainers[1].transport).toBe('shared-needs-review');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await readiness.scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(tmpdir(),'field-atlas-'+info.project.name+'-shared-readiness.png'),fullPage:false,scale:'css'});
+  expect(errors).toEqual([]);
 });

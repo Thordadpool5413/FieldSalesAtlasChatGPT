@@ -1,3 +1,6 @@
+import JourneyReadiness from './JourneyReadiness';
+import { connectionConstraints, createReadinessReport } from '../shared/travel/readiness';
+import { changedBookingFields } from './BookedFlightLogic';
 import {
 ArrowRight,CalendarClock,Check,ChevronDown,CircleAlert,ClipboardPaste,
 FilePlus2,FileText,Info,LockKeyhole,Plane,PlaneTakeoff,Plus,Radar,
@@ -36,6 +39,8 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
   const ctx=useOp();
   const [saved,setSaved]=useState<BookedFlight[]>(readBookedFlights);
   const [selectedId,setSelectedId]=useState('');
+  const [replacementId,setReplacementId]=useState('');
+  const [checkingZones,setCheckingZones]=useState(false);
   useEffect(()=>{
     let target='';
     try{
@@ -62,9 +67,14 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
   const [notice,setNotice]=useState('');
   const [error,setError]=useState('');
   const [sharing,setSharing]=useState(false);
+  const [sharingAirport,setSharingAirport]=useState('');
   // Do not show a wall of disabled itinerary fields before the user imports a booking.
   const [showDetails,setShowDetails]=useState(false);
   const [fileLabel,setFileLabel]=useState('');
+  const changeList=selectedId?changedBookingFields(saved.find(item=>item.id===selectedId)?.legs||[],draft.legs):[];
+  const readiness=useMemo(()=>createReadinessReport(draft.legs.map(leg=>({...leg,trainerId:draft.trainerId,review:draft.review})),
+    [{id:draft.trainerId,name:ctx.trainerProfiles.find(item=>item.id===draft.trainerId)?.name||'Trainer'}],
+    connectionConstraints(draft.legs.map(leg=>({...leg,trainerId:draft.trainerId})))),[draft,ctx.trainerProfiles]);
   const activeTrainer=ctx.trainerProfiles.find(p=>p.id===draft.trainerId);
   const valid=itineraryValid(draft.legs);
   const impacts=useMemo(()=>valid?
@@ -72,10 +82,10 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
     [draft,ctx.board,ctx.trainerProfiles,ctx.airports]);
   const savesForTrainer=saved.filter(item=>item.trainerId===ctx.activeTrainerId);
   const first=draft.legs[0],last=draft.legs[draft.legs.length-1];
-  const travelEnd=last?.arriveDate||last?.departDate||'';
   const selfReview=valid&&draft.verified;
   // A calendar trip must include confirmed arrival dates. Unknown overnight
   // arrival days are allowed in private drafts, never silently shared.
+  const calendarAirportKnown=!!sharingAirport&&draft.legs.some(leg=>leg.origin===sharingAirport||leg.destination===sharingAirport);
   const calendarDatesComplete=draft.legs.every(leg=>Boolean(leg.arriveDate));
 
   function clearMessages(){
@@ -83,7 +93,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
   }
   function editLeg(id:string,patch:Partial<BookedLeg>){
     clearMessages();setDraft(current=>({
-      ...current,verified:false,
+      ...current,verified:false,review:undefined,
       legs:current.legs.map(leg=>leg.id===id?{...leg,...patch}:leg)
     }));
   }
@@ -91,7 +101,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
     if(draft.legs.length>=8)return;
     clearMessages();
     setDraft(current=>({
-      ...current,verified:false,
+      ...current,verified:false,review:undefined,
       legs:[...current.legs,{
         ...emptyBookedLeg(),
         origin:current.legs[current.legs.length-1]?.destination||'',
@@ -102,15 +112,18 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
   }
   function deleteLeg(id:string){
     clearMessages();
-    setDraft(current=>({...current,verified:false,
+    setDraft(current=>({...current,verified:false,review:undefined,
       legs:current.legs.length>1?current.legs.filter(l=>l.id!==id):[emptyBookedLeg()]
     }));
   }
   function fromRaw(raw:string,kind:BookedFlight['source']){
     const parsed=parseBookedText(raw,ctx.airports.map(a=>a.iata));
     setParseNotes(parsed.warnings);
-    setSelectedId('');
-    setDraft(editableFlight(parsed.legs.length?parsed.legs:[emptyBookedLeg()],ctx.activeTrainerId,kind));
+    const previous=saved.find(item=>item.id===replacementId);
+    setSelectedId(previous?.id||'');
+    setDraft({...editableFlight(parsed.legs.length?parsed.legs:[emptyBookedLeg()],previous?.trainerId||ctx.activeTrainerId,kind),
+      ...(previous?{id:previous.id,createdAt:previous.createdAt,revision:previous.revision,changes:previous.changes,sharedTripId:previous.sharedTripId}:{})});
+    setReplacementId('');
     setPaste(''); // Raw email + PNR are discarded as soon as extraction finishes.
     setNotice(parsed.legs.length?
       'Draft extracted. Check each airport, date, time and operating flight number.':
@@ -161,14 +174,14 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
     finally{setParsing(false);}
   }
   function newFlight(){
-    clearMessages();setSelectedId('');
+    clearMessages();setSelectedId('');setReplacementId('');setSharingAirport('');
     setParseNotes([]);setPaste('');setFileLabel('');
     setDraft(editableFlight([emptyBookedLeg()],ctx.activeTrainerId,'manual'));
     setSource('paste');setShowDetails(false);
   }
   function selectSaved(record:BookedFlight){
     setDraft({...record,legs:record.legs.map(leg=>({...leg}))});
-    setSelectedId(record.id);setParseNotes([]);setPaste('');setFileLabel('');
+    setReplacementId('');setSharingAirport('');setSelectedId(record.id);setParseNotes([]);setPaste('');setFileLabel('');
     setShowDetails(true);clearMessages();
     // The review is the task. Don't leave a selected flight buried below import.
     if(window.matchMedia('(max-width:900px)').matches){
@@ -188,9 +201,12 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
       id:selectedId||draft.id,
       updatedAt:localNow(),
       verified:draft.verified,
+      revision:(saved.find(item=>item.id===selectedId)?.revision||0)+1,
+      changes:changeList.length?[...(draft.changes||[]),{at:localNow(),fields:changeList}].slice(-10):draft.changes,
       legs:draft.legs.map(l=>({
         id:l.id,carrier:l.carrier,flightNumber:l.flightNumber,origin:l.origin,destination:l.destination,
-        departDate:l.departDate,departTime:l.departTime,arriveDate:l.arriveDate,arriveTime:l.arriveTime
+        departDate:l.departDate,departTime:l.departTime,arriveDate:l.arriveDate,arriveTime:l.arriveTime,
+        departureZone:l.departureZone,arrivalZone:l.arrivalZone,connection:l.connection
       }))
     };
     try{
@@ -228,6 +244,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
   }
   async function publishTrip(){
     if(sharing||!valid||!draft.verified||!selectedId||ctx.identity!=='member')return;
+    if(!calendarAirportKnown){setError('Choose the field airport for these travel days.');return;}
     if(!calendarDatesComplete){
       setError('Confirm an arrival date for every leg before publishing shared travel days.');
       return;
@@ -237,13 +254,13 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
     ))return;
     setSharing(true);setError('');setNotice('');
     try{
-      const dates=draft.legs.map(leg=>leg.departDate).filter(Boolean);
-      const start=dates[0],end=travelEnd||dates[dates.length-1];
+      const dates=draft.legs.flatMap(leg=>[leg.departDate,leg.arriveDate]).filter(Boolean).sort();
+      const start=dates[0],end=dates[dates.length-1];
       const preview='Flight travel · '+first.origin+' → '+last.destination;
       const result=await ctx.submit(()=>api.post('/api/trips',{
         title:preview,trainer:activeTrainer?.name||'',
         startDate:start,endDate:end,
-        arrivalAirport:last.destination,
+        arrivalAirport:sharingAirport,
         status:'Planned',stops:[],
         notes:'Imported flight travel days; airport codes only. Verify actual airline itinerary and timing separately. No reservation identifier shared.'
       }),'Travel days added to the shared coaching calendar.');
@@ -261,6 +278,21 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
       setNotice('Shared trip created. Check Calendar to confirm dates; flight-specific status remains unverified.');
     }catch(err){setError(textError(err));}
     finally{setSharing(false);}
+  }
+  async function resolveZones(){
+    setCheckingZones(true);clearMessages();
+    const requested=JSON.stringify(draft.legs);
+    try{
+      const result=await api.post('/api/travel/itinerary/readiness',{flights:draft.legs.map(leg=>({...leg,trainerId:draft.trainerId,review:draft.review}))});
+      setDraft(current=>{
+        if(JSON.stringify(current.legs)!==requested)return current;
+        return {...current,legs:current.legs.map(leg=>{
+          const resolved=result.data.flights.find((item:BookedLeg)=>item.origin===leg.origin&&item.destination===leg.destination&&item.departDate===leg.departDate&&item.departTime===leg.departTime);
+          return {...leg,departureZone:resolved?.departureZone,arrivalZone:resolved?.arrivalZone};
+        })};
+      });
+      setNotice('Airport time zones resolved from reference coordinates. Review fields and save to retain them; airline status is not checked.');
+    }catch(failure){setError(textError(failure));}finally{setCheckingZones(false);}
   }
   function exportBrief(){
     if(!valid)return;
@@ -288,7 +320,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
   }
   const attention=impacts.filter(x=>x.level==='attention');
   const review=impacts.filter(x=>x.level==='review');
-  return <main className={'fg-page'+(valid?' fg-valid':'')+(savesForTrainer.length?' fg-has-saved':'')+(selectedId?' fg-selected':'')}>
+  return <main className={'fg-page'+(valid?' fg-valid':'')+(savesForTrainer.length?' fg-has-saved':'')+(selectedId?' fg-selected':'')+(replacementId?' fg-updating':'')}>
     <header className="fg-mobile-heading">
       <h1>{selectedId?'Your itinerary':'Booked flights'}</h1>
       <p>{selectedId?'Review your flight details and coaching impact.':
@@ -371,11 +403,12 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
           <div><span className="fg-overline">HUMAN REVIEW</span><h2>Confirm what's real.</h2>
             <p>The parser never claims it accessed your airline reservation. Check each detail against your official itinerary.</p></div>
         </div>
+        {changeList.length>0&&<div className="fg-change-review" role="status"><strong>Changes from the saved itinerary</strong><ul>{changeList.map((item,index)=><li key={index}>{item}</li>)}</ul><p>Review changed details before saving. Shared trips and airline reservations are unchanged.</p></div>}
         <div className="fg-review-top">
           <label>Assigned trainer
             <select value={draft.trainerId} onChange={e=>{
               clearMessages();
-              setDraft(curr=>({...curr,trainerId:e.target.value as BookedFlight['trainerId'],verified:false}));
+              setDraft(curr=>({...curr,trainerId:e.target.value as BookedFlight['trainerId'],verified:false,review:undefined}));
             }}>
               {ctx.trainerProfiles.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -430,6 +463,15 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
                   onChange={e=>editLeg(leg.id,{arriveTime:e.target.value})}/>
               </label>
             </div>
+            <details className="fg-connection-settings"><summary>Time zones and connection requirements</summary>
+              <div className="fg-fields"><label>Departure IANA time zone<input value={leg.departureZone||''} placeholder="America/New_York" onChange={e=>editLeg(leg.id,{departureZone:e.target.value})}/></label>
+              <label>Arrival IANA time zone<input value={leg.arrivalZone||''} placeholder="America/Chicago" onChange={e=>editLeg(leg.id,{arrivalZone:e.target.value})}/></label></div>
+              {index>0&&<><p className="fg-muted">For the interval before this leg: include terminal transfer, applicable baggage collection/recheck, border and security procedures. Check the boarding cutoff with the operating airline. Blank means unknown.</p><div className="fg-fields">
+                <label>Gate-to-gate processing allowance (min)<input type="number" min={0} max={720} value={leg.connection?.transferMinutes??''} onChange={e=>editLeg(leg.id,{connection:{...leg.connection,transferMinutes:e.target.value===''?undefined:Number(e.target.value)}})}/></label>
+                <label>Boarding cutoff before departure (min)<input type="number" min={0} max={180} value={leg.connection?.boardingCutoffMinutes??''} onChange={e=>editLeg(leg.id,{connection:{...leg.connection,boardingCutoffMinutes:e.target.value===''?undefined:Number(e.target.value)}})}/></label>
+                <label>Ticket relationship<select value={leg.connection?.ticketRelation||'unknown'} onChange={e=>editLeg(leg.id,{connection:{...leg.connection,ticketRelation:e.target.value as 'unknown'|'same-ticket-reported'|'separate-tickets'}})}><option value="unknown">Not reviewed</option><option value="same-ticket-reported">Same ticket, traveler-reported</option><option value="separate-tickets">Separate tickets</option></select></label>
+              </div></>}
+            </details>
             <button type="button" className="fg-leg-research"
               disabled={!leg.departDate||!leg.origin||!leg.destination||leg.origin===leg.destination}
               onClick={()=>research(leg)}>
@@ -450,9 +492,13 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
         </div>}
         <label className="fg-verify">
           <input type="checkbox" checked={draft.verified} disabled={!valid}
-            onChange={e=>setDraft(current=>({...current,verified:e.target.checked}))}/>
+            onChange={e=>setDraft(current=>({...current,verified:e.target.checked,review:{...current.review,fieldsReviewedAt:e.target.checked?localNow():undefined}}))}/>
           <span>I have checked these flight details against my airline itinerary.</span>
         </label>
+        <div className="fg-review-checks">
+          <label><input type="checkbox" checked={!!draft.review?.ticketingConfirmedAt} disabled={!valid} onChange={e=>setDraft(current=>({...current,review:{...current.review,ticketingConfirmedAt:e.target.checked?localNow():undefined}}))}/><span>I checked that tickets were issued.<small>Traveler-reported; Atlas does not access airline ticket records.</small></span></label>
+          <label><input type="checkbox" checked={!!draft.review?.airlineCheckedAt} disabled={!valid} onChange={e=>setDraft(current=>({...current,review:{...current.review,airlineCheckedAt:e.target.checked?localNow():undefined}}))}/><span>I checked these flight details with the airline now.<small>{draft.review?.airlineCheckedAt?'Reported check: '+new Date(draft.review.airlineCheckedAt).toLocaleString():'Saving alone does not mark airline details as checked.'}</small></span></label>
+        </div>
         <div className="fg-actions">
           <button type="button" className="fg-primary" onClick={save} disabled={!valid}>
             <ShieldCheck size={17}/> Save locally
@@ -460,6 +506,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
           <button type="button" className="fg-tertiary" onClick={newFlight}>
             <Plus size={17}/> New import
           </button>
+          {selectedId&&<button type="button" className="fg-tertiary" onClick={()=>{setReplacementId(selectedId);setSource('paste');setNotice('Paste the revised confirmation above. Extraction will compare it with this saved itinerary.');window.scrollTo({top:0,behavior:'auto'});}}>Update from a new confirmation</button>}
           {selectedId&&<button type="button" className="fg-remove" onClick={removeFlight}>
             <Trash2 size={16}/> Delete
           </button>}
@@ -470,6 +517,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
         {notice&&<p className="fg-success" role="status"><Check size={16}/>{notice}</p>}
       </section>
       <aside className="fg-side">
+        {valid&&<><JourneyReadiness report={readiness}/><button type="button" className="fg-tertiary" disabled={checkingZones||!draft.legs.every(leg=>leg.departTime&&leg.arriveTime&&leg.arriveDate)} onClick={()=>void resolveZones()}>{checkingZones?'Resolving time zones…':'Resolve airport time zones'}</button><p className="fg-muted">This sends only sanitized flight fields to the workspace API. To calculate visit and return-flight margins, attach the saved booking to a journey in Travel assistant.</p></>}
         <section className="fg-panel fg-saved" aria-label="Saved booked flights">
           <div className="fg-side-title"><div><span className="fg-overline">ON THIS DEVICE</span>
             <h2>My booked flights</h2></div><span className="fg-count">{savesForTrainer.length}</span></div>
@@ -484,7 +532,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
             </button>;
           }):<div className="fg-empty">
             <PlaneTakeoff size={30}/><strong>Nothing saved yet</strong>
-            <p>Import a confirmation email or enter your booked flight. Only reviewed flight fields can be saved.</p>
+            <p>Import a confirmation email or enter your booked flight. Draft flight fields can be saved; review is required before sharing.</p>
           </div>}
         </section>
         <section className="fg-panel fg-impact">
@@ -512,8 +560,9 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
           <span className="fg-overline">OPTIONAL TEAM VISIBILITY</span>
           <h2>Share travel days, not your booking.</h2>
           <p>Only your trainer name, airport codes and travel dates are added to the shared calendar. No confirmation code, email, passenger or payment data is sent.</p>
+          <label className="fg-review-top">Field airport for these travel days<select value={sharingAirport} onChange={event=>setSharingAirport(event.target.value)}><option value="">Choose the field airport</option>{[...new Set(draft.legs.flatMap(leg=>[leg.origin,leg.destination]))].filter(code=>/^[A-Z]{3}$/.test(code)).map(code=><option key={code} value={code}>{code}</option>)}</select></label>
           <button type="button" className="fg-publish-button"
-            disabled={!selfReview||!calendarDatesComplete||!selectedId||ctx.identity!=='member'||sharing||!!draft.sharedTripId}
+            disabled={!calendarAirportKnown||!selfReview||!calendarDatesComplete||!selectedId||ctx.identity!=='member'||sharing||!!draft.sharedTripId}
             onClick={()=>void publishTrip()}>
             <CalendarClock size={17}/>
             {draft.sharedTripId?'Trip already shared':sharing?'Sharing travel dates…':'Add travel days to shared calendar'}

@@ -8,7 +8,7 @@ const english = (v: unknown) => {
   return text(row.en ?? row.value ?? v);
 };
 const canadianStates = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
-const isCanadianAirport = (airport: { state?: string; country?: string }) => airport.country === 'CA' || canadianStates.includes(airport.state || '');
+const isCanadianAirport = (airport: { state?: string; country?: string }) => airport.country ? airport.country === 'CA' : canadianStates.includes(airport.state || '');
 function airportBbox(lat: number, lon: number, radius: number) {
   return [lon - radius, lat - radius, lon + radius, lat + radius].map(value => value.toFixed(3)).join(',');
 }
@@ -78,23 +78,29 @@ export function nws(lat: number, lon: number) {
     },
   });
 }
+export function parseCanadianObservations(value: unknown, now = Date.now()) {
+  const root = object(value);
+  if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
+  const rows = root.features.map(v => object(object(v).properties)).flatMap(row => {
+    const at = dated(row.obs_date_tm || row['date_tm-value'] || row.datetime);
+    const time = at ? Date.parse(at) : NaN;
+    return at && Number.isFinite(time) && time <= now + 300000 && now - time <= 2 * 3600000 ? [{ row, at }] : [];
+  });
+  if (!rows.length) throw new Error('No recent Canadian observation with validated source timestamps.');
+  return {
+    data: rows.map(({ row, at }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + at })),
+    observedAt: rows.map(item => item.at).sort()[0],
+    limitation: 'Nearby Canadian surface stations, not necessarily the airport. Each observation keeps its source time. Weather warnings and forecasts are separate products.',
+  };
+}
 export function canadianObservations(lat: number, lon: number) {
   const subject = lat.toFixed(2) + ',' + lon.toFixed(2);
   const bbox = airportBbox(lat, lon, .75);
-  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url: `https://api.weather.gc.ca/collections/swob-realtime/items?bbox=${bbox}&limit=5&sortby=-obs_date_tm&f=json`,
-    kind: 'observation', scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
-    parse(value) {
-      const root = object(value);
-      if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-      if (!root.features.length) return { data: [], limitation: 'No nearby surface observations were returned; current Canadian weather status is unknown.' };
-      const rows = root.features.map(v => object(object(v).properties)).map(row => ({
-        row,
-        observedAt: [row.obs_date_tm, row['date_tm-value'], row.date_tm, row.datetime, row.obs_date].map(dated).find((value): value is string => !!value),
-      })).filter((entry): entry is { row: Record<string, unknown>; observedAt: string } => !!entry.observedAt);
-      if (!rows.length) throw new Error('Canadian observation timestamps could not be validated.');
-      const times = rows.map(entry => entry.observedAt).sort();
-      return { data: rows.map(({ row, observedAt }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + observedAt })), observedAt: times.at(-1), limitation: 'Nearby surface observations are not airport-specific warnings or forecasts.' };
-    },
+  const since = new Date(Math.floor(Date.now() / 3600000) * 3600000 - 2 * 3600000).toISOString();
+  const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?bbox=' + bbox + '&datetime=' + encodeURIComponent(since + '/..') + '&sortby=-obs_date_tm&limit=5&f=json';
+  return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url, kind: 'observation',
+    scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
+    parse: parseCanadianObservations,
   });
 }
 

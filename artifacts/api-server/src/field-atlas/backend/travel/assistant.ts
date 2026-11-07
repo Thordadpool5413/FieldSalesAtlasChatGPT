@@ -1,3 +1,4 @@
+import { journeyReadiness } from './readiness';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { db } from '../runtime/sdk';
@@ -71,6 +72,15 @@ export async function answerTravelQuestion(workspaceId: string, request: z.infer
   const unknownHome = answer.trainers.some(row => row.meetsDeadline === null);
   answer.verdict = !scheduleFits || knownLate ? 'not-with-current-itinerary' : unknownHome ? 'unknown' : 'provisional';
   answer.title = answer.verdict === 'not-with-current-itinerary' ? 'The supplied itinerary does not meet this goal.' : answer.verdict === 'unknown' ? 'The return-home goal still needs evidence.' : 'Your supplied timings fit the deadline.';
+  const readiness = await journeyReadiness(input, changed.board, answer.scenario?.visits || context.pending, { date: deadline.date, time: deadline.time });
+  answer.readiness = readiness.readiness;
+  const missedRequirements = readiness.readiness.constraints.filter(item => item.marginMinutes !== null && item.marginMinutes < 0 && item.kind !== 'home');
+  if (missedRequirements.length) {
+    answer.verdict = 'not-with-current-itinerary';
+    answer.title = 'A supplied journey requirement does not fit this itinerary.';
+    answer.missing.push(...missedRequirements.map(item => item.label + ': resolve the timing or supplied requirement before relying on this plan.'));
+  }
+  answer.evidence.push(...readiness.evidence);
   answer.missing = [...new Set(answer.missing)];
   answer.evidence = answer.evidence.filter((item, index, all) => all.findIndex(other => other.id === item.id) === index);
   answer.followups = [unknownHome || knownLate ? 'Supply a return itinerary that reaches each trainer’s home airport by the requested deadline.' : 'Verify flight operation and confirm the proposed appointments.',

@@ -1,5 +1,7 @@
+import type { FlightReview, ConnectionRequirements } from './readiness';
 export type EvidenceState = 'current' | 'stale' | 'unavailable' | 'partial' | 'reference';
 export type Evidence = {
+  failureCode?: 'timeout' | 'network' | 'access-denied' | 'rate-limited' | 'http' | 'schema';
   id: string; provider: string; subject: string; sourceUrl: string;
   kind: 'observation' | 'forecast' | 'reference' | 'historical' | 'estimate' | 'traveler';
   state: EvidenceState; retrievedAt: string; observedAt?: string; validFrom?: string; validTo?: string;
@@ -10,7 +12,7 @@ export type FlightInput = {
   trainerId: 'trainer_a' | 'trainer_b'; carrier: string; flightNumber: string; origin: string; destination: string;
   departDate: string; departTime: string; arriveDate: string; arriveTime: string;
   departureZone?: string; arrivalZone?: string; fare?: number | null;
-  providedAt?: string;
+  providedAt?: string; review?: FlightReview; connection?: ConnectionRequirements;
 };
 export type JourneyLeg = {
   kind: 'home-access' | 'airport-processing' | 'flight' | 'arrival-processing' | 'road' | 'visit' | 'return-road';

@@ -2,6 +2,8 @@
 
 Status: proposed implementation plan, 2026-11-05. This document does not activate integrations, alter the saved environment configuration, publish the environment, or push repository changes.
 
+For the November 6 code ownership audit and additional aviation-source connections, use the [aviation integration blueprint](../../../docs/architecture/AVIATION_DATA_CONNECTIONS.md). It distinguishes the implemented foundation from the proposed expansion and maps source permissions, evidence, API contracts and app consumers.
+
 ## The product promise
 
 Help two field trainers choose a workable journey, understand its tradeoffs, and respond to changes with the best evidence available.

@@ -323,9 +323,9 @@ html[data-field-atlas-theme='light'],
 }
 @media (max-width: 900px) {
   .mv-app.atlas-design-v3 .atlas-working-title {
-    min-height: 62px;
-    margin: 10px 0 8px;
-    padding: 8px 10px;
+    min-height: 52px;
+    margin: 0;
+    padding: 4px 10px;
   }
   .mv-app.atlas-design-v3 .atlas-working-title h1 { font-size: 18px; }
   .mv-app.atlas-design-v3 .atlas-working-title p { display: none; }
