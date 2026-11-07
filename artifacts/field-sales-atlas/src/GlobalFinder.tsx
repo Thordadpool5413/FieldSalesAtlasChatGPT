@@ -22,14 +22,14 @@ const TOOL_CATALOG:Array<{page:Page;label:string;detail:string;terms:string}> = 
   {page:'plan',label:'Travel',detail:'Field travel workspace',terms:'travel booking flight planning'},
   {page:'radar',label:'Flight DNA',detail:'Flight history and aviation intelligence',terms:'weather delays flight radar'},
   {page:'booked',label:'Booked Flights',detail:'Review imported itinerary',terms:'flight guardian ticket'},
-  {page:'air',label:'Travel planner',detail:'Airport and trip options',terms:'route airports comparison'},
+  {page:'air',label:'Airport & route planner',detail:'Airport and trip options',terms:'route airports comparison'},
   {page:'coordinate',label:'Trainer Coordination',detail:'Shared coverage and visit recommendations',terms:'two-trainer availability work'},
   {page:'week',label:'Our Week',detail:'Team weekly schedule',terms:'shared weekly agenda'},
   {page:'people',label:'People',detail:'Manager directory',terms:'contacts roster'},
   {page:'coaching',label:'Coaching Desk',detail:'Observations and commitments',terms:'ride along notes follow-up'},
   {page:'calendar',label:'Calendar',detail:'Visits and availability',terms:'appointments agenda'},
   {page:'overview',label:'Reports and Coverage Pulse',detail:'Interactive regional data visualization',terms:'dashboard charts distribution metrics'},
-  {page:'map',label:'Territory Explorer',detail:'Counties, towns, ZIPs and airports',terms:'geography county drilldown'},
+  {page:'map',label:'County & ZIP explorer',detail:'Counties, towns, ZIPs and airports',terms:'geography county drilldown'},
   {page:'data',label:'Data & Exports',detail:'Imports and downloaded records',terms:'csv download backup'},
   {page:'team',label:'Sharing & Recovery',detail:'Workspace collaboration and recovery',terms:'shared access restore'}
 ];
