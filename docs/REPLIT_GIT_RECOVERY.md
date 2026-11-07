@@ -1,6 +1,6 @@
 # Replit and GitHub merge recovery
 
-Repaired main preserves the readiness recovery (**3037c98** and **4bd95c7**) and all subsequent uploaded Replit snapshots. The latest branch, **replit-recovery-5747ba0**, points to **5747ba0** and includes the seven additional Replit commits after **089d11f**. Earlier recovery branches remain available as backups.
+Repaired main preserves the readiness recovery (**3037c98** and **4bd95c7**) and all subsequent uploaded Replit snapshots. The latest branch, **replit-recovery-mobile-menu**, points to **1c1385b**, which commits the previously interrupted merge and the mobile menu/search edits. Earlier recovery branches remain available as backups.
 
 The resolution combines structured provider failures and explicit stale/unknown messages, preserves Canadian forecasts/warnings and bounded observation validation, and keeps the UI travel types connected to the canonical API contract. Replit's map, navigation and source-information changes are retained.
 
@@ -12,9 +12,13 @@ The subsequent Replit snapshot also preserves setup reopening from People, a com
 
 The phone Focus action is inside the territory panel. The background toolbar stays behind that panel, leaving its Close button and other panel controls reachable.
 
+The mobile menu shares the desktop TEAM and INSIGHTS groups and keeps Atlas, Travel, People and Calendar in the bottom bar. The workspace search and map search retain distinct scopes. One map key and one source-details panel remain below the map; duplicate copies introduced during reconciliation are removed.
+
 ## Synchronize the recovered workspace
 
 Pause Replit Agent edits and stop the current Run process while synchronizing. If there is no pending merge and the working tree is clean, run these commands one line at a time:
+
+Replit snapshot **1c1385b** has already completed its merge and has a clean working tree, so it uses this normal synchronization flow.
 
 ~~~bash
 git pull --ff-only origin main

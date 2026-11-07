@@ -150,6 +150,38 @@ test('phone keyboard search opens one visible dialog with the desktop rail hidde
   await expect(search).toBeHidden();
 });
 
+test('mobile tools are grouped consistently and preserve every destination', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?page=plan&tool=radar');
+  const bottomTabs = page.getByRole('navigation', { name: 'Primary iPhone tabs' });
+  for (const name of ['Atlas', 'Travel', 'People', 'Calendar']) {
+    await expect(bottomTabs.getByRole('button', { name, exact: true })).toBeVisible();
+  }
+
+  await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Field Sales Atlas tools and navigation' });
+  const insights = drawer.getByRole('group', { name: 'INSIGHTS tools' });
+  const flightInsights = insights.getByRole('button', { name: 'Flight DNA', exact: true });
+  await expect(flightInsights).toHaveAttribute('aria-current', 'page');
+  await expect(drawer.getByRole('group', { name: 'TEAM tools' })).toContainText('Coordinate trainers');
+  await expect(drawer.getByRole('group', { name: 'More tools' })).toContainText('County & ZIP explorer');
+
+  await drawer.getByRole('group', { name: 'More tools' })
+    .getByRole('button', { name: 'County & ZIP explorer', exact: true }).click();
+  await expect(page).toHaveURL(/page=map/);
+  await expect(drawer).toBeHidden();
+});
+
+for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+  test(`workspace and map search have one clear scope at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await expect(page.locator('.fsa-command-trigger:visible')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Search all workspace data: people, places, trips and tools' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
+  });
+}
+
 test('phone users can browse an accessible, searchable map list with source details', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');

@@ -125,6 +125,10 @@ const DESKTOP_NAV_GROUPS:Array<{label:string;items:Array<{id:Page;label:string;i
   {label:'TEAM',items:[MIAMI_NAV[2],FIELD_SHORTCUTS[3],FIELD_SHORTCUTS[4]]},
   {label:'INSIGHTS',items:[FIELD_SHORTCUTS[0],FIELD_SHORTCUTS[1],FIELD_SHORTCUTS[2],MIAMI_MORE[0]]},
 ];
+const PRIMARY_NAV_IDS=new Set<Page>(MIAMI_NAV.map(item=>item.id));
+const MOBILE_TOOL_GROUPS=DESKTOP_NAV_GROUPS
+  .map(group=>({label:group.label,items:group.items.filter(item=>!PRIMARY_NAV_IDS.has(item.id))}))
+  .filter(group=>group.items.length>0);
 const ADDITIONAL_TOOLS=MIAMI_MORE.filter(item=>item.id!=='overview');
 function isNavItemActive(id:Page,view:Page,planSection:string,peopleSection:string){
   if(id==='mission')return view==='mission';
@@ -829,29 +833,35 @@ function Product(){
         <div className="mv-mobile-drawer-head"><span>TOOLS & SETTINGS</span>
           <button onClick={()=>setMenuOpen(false)} aria-label="Close menu"><X size={20}/></button>
         </div>
+        <p className="fsa-drawer-hint">Atlas, Travel, People and Calendar stay in the bottom bar. Related tools are grouped below.</p>
         <label className="fsa-mobile-trainer-picker">ACTIVE TRAINER
           <select aria-label="Change active trainer from navigation" value={activeTrainerId}
             onChange={event=>setActiveTrainerId(event.target.value==='trainer_b'?'trainer_b':'trainer_a')}>
             {trainerProfiles.map(profile=><option key={profile.id} value={profile.id}>{profile.name}</option>)}
           </select>
         </label>
-        <span className="fsa-drawer-section">FIELD INTELLIGENCE</span>
-        {FIELD_SHORTCUTS.map(item=>{
+        {MOBILE_TOOL_GROUPS.map(group=><div key={group.label} className="fsa-mobile-tool-group" role="group" aria-label={group.label+' tools'}>
+          <span className="fsa-drawer-section" role="heading" aria-level={2}>{group.label}</span>
+          {group.items.map(item=>{
+            const Icon=item.icon;
+            const active=isNavItemActive(item.id,view,planSection,peopleSection);
+            return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
+              onClick={()=>go(item.id)}>
+              <Icon size={18}/>{item.label}
+            </button>;
+          })}
+        </div>)}
+        <div className="fsa-mobile-tool-group" role="group" aria-label="More tools">
+        <span className="fsa-drawer-section" role="heading" aria-level={2}>MORE TOOLS</span>
+        {ADDITIONAL_TOOLS.map(item=>{
           const Icon=item.icon;
-          const active=item.id==='mission' ? view==='mission' : item.id==='coaching'
-            ? view==='people'&&peopleSection==='coaching'
-            : view==='plan'&&planSection===item.id;
-          return <button key={item.id} className={active?'active':''} onClick={()=>go(item.id)}>
+          const active=isNavItemActive(item.id,view,planSection,peopleSection);
+          return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
+            onClick={()=>go(item.id)}>
             <Icon size={18}/>{item.label}
           </button>;
         })}
-        <span className="fsa-drawer-section">ADDITIONAL TOOLS</span>
-        {MIAMI_MORE.map(item=>{
-          const Icon=item.icon;
-          return <button key={item.id} className={view===item.id?'active':''} onClick={()=>go(item.id)}>
-            <Icon size={18}/>{item.label}
-          </button>;
-        })}
+        </div>
         <button onClick={openWorkspaceSetup}><Compass size={18}/> Workspace setup</button>
         <button onClick={()=>{setTrainerProfilesOpen(true);setMenuOpen(false);}}><Settings size={18}/> Trainer profiles</button>
         <button onClick={()=>{toggleTheme();setMenuOpen(false);}}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>} {theme==='dark'?'Light theme':'Dark theme'}</button>
