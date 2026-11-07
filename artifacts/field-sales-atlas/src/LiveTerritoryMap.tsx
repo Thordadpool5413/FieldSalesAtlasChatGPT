@@ -71,9 +71,6 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
  const host=useRef<HTMLDivElement>(null);
  const map=useRef<GLInstance|null>(null);
  const latest=useRef(p);latest.current=p;
- const airportReferenceColor=p.theme==='light'?'#9B5B20':'#FFC49B';
- const airportSecondaryColor=p.theme==='light'?'#B66C3E':'#E5A06E';
- const airportSelectedColor=p.theme==='light'?'#087F90':'#42F8F1';
  const [ready,setReady]=useState(false);
  const states=useMemo<Collection>(()=>{
   const result=empty();
@@ -217,6 +214,10 @@ const LiveTerritoryMap=forwardRef<LiveMapHandle,Props>(function LiveTerritoryMap
   const report=(value:boolean)=>{if(disposed)return;setReady(value);latest.current.onReady(value);};
   report(false);
   try{
+   const mapColors=getComputedStyle(node);
+   const airportReferenceColor=mapColors.getPropertyValue('--at-airport-reference').trim();
+   const airportSecondaryColor=mapColors.getPropertyValue('--at-airport-secondary').trim();
+   const airportSelectedColor=mapColors.getPropertyValue('--at-cyan').trim();
    instance=new GLMap({
     container:node,
     style:'https://tiles.openfreemap.org/styles/'+(p.theme==='light'?'positron':p.styleChoice==='roads'?'dark':'fiord'),

@@ -27,6 +27,8 @@ html[data-field-atlas-theme='dark'],
   --at-map-stroke: #5b748c;
   --at-map-label: #e1eaf3;
   --at-map-outline: #0b1a2d;
+  --at-airport-reference: #FFC49B;
+  --at-airport-secondary: #E5A06E;
   --vice-map-active: #523047;
   --vice-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
 }
@@ -42,6 +44,8 @@ html[data-field-atlas-theme='light'],
   --at-action-hover: #075f6e;
   --at-aqua-soft: #dff4f4;
   --at-rose-soft: #fde7ef;
+  --at-airport-reference: #9B5B20;
+  --at-airport-secondary: #B66C3E;
   --vice-map-active: #f0c3d7;
 }
 
@@ -204,10 +208,10 @@ html[data-field-atlas-theme='light'],
   width: 22px;
   height: 22px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--at-accent) 52%, var(--at-border));
+  border: 1px solid color-mix(in srgb, var(--at-airport-reference) 52%, var(--at-border));
   border-radius: 50%;
-  background: color-mix(in srgb, var(--at-accent) 12%, var(--at-field));
-  color: var(--at-accent);
+  background: color-mix(in srgb, var(--at-airport-reference) 12%, var(--at-field));
+  color: var(--at-airport-reference);
 }
 .mv-app.atlas-design-v3 .atlas-map-key-state {
   flex: 0 0 9px;
@@ -224,11 +228,11 @@ html[data-field-atlas-theme='light'],
 /* Airports are reference locations; manager pins and territory fills keep their own encoding. */
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark .mv-airport-bubble {
   fill: var(--at-field);
-  stroke: var(--at-accent);
+  stroke: var(--at-airport-secondary);
   stroke-width: 1.8;
 }
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark.major .mv-airport-bubble {
-  fill: var(--at-accent);
+  fill: var(--at-airport-reference);
   stroke: var(--at-surface);
 }
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark.chosen .mv-airport-bubble {
@@ -238,6 +242,11 @@ html[data-field-atlas-theme='light'],
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark:is(:hover, :focus-visible) .mv-airport-bubble {
   stroke: #fff;
   stroke-width: 2.2;
+}
+
+/* The territory swatch and fallback assigned regions share one saved-area color. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v2 .mv-region-us.assigned {
+  fill: var(--at-map-assigned);
 }
 
 /* Controls share the same quiet motion, hover, focus, selected, and disabled language. */

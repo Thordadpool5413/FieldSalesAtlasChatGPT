@@ -146,6 +146,115 @@ test('compact Atlas shows the map early, loads vector mode without MapLibre, and
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
+test('map symbols and controls stay clear in both map modes and themes', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'Map-source parity is covered at desktop size.');
+  await page.route('https://tiles.openfreemap.org/styles/**', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      version: 8,
+      sources: {},
+      layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#102238' } }],
+    }),
+  }));
+  const demo = await page.request.post('/api/demo/create', { data: {} });
+  const { workspaceKey } = await demo.json();
+  await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
+  await page.goto('/#workspace=' + workspaceKey);
+
+  const mapKey = page.getByTestId('atlas-map-key');
+  const assignedRegion = page.locator('.mv-region-us.assigned').first();
+  const airportMarker = page.locator('.mv-airport-mark.major .mv-airport-bubble').first();
+  await expect(mapKey).toBeVisible();
+  await expect(mapKey).toContainText('Saved territory');
+  await expect(mapKey).toContainText('Workspace assignment');
+  await expect(mapKey).toContainText('Public airport');
+  await expect(mapKey).toContainText('Location reference, not live flights');
+  await expect(mapKey).toContainText('Workspace records');
+  await expect(assignedRegion).toHaveCount(1);
+  await expect(airportMarker).toHaveCount(1);
+
+  const appearance = page.locator('.fsa-sidebar-controls summary');
+  const controls = page.locator('.fsa-sidebar-controls');
+  const appearanceGroup = page.getByRole('group', { name: 'Appearance' });
+  const themeValues: Record<string, string> = {};
+
+  async function chooseTheme(name: 'Light' | 'Dark') {
+    if (!await controls.evaluate(element => (element as HTMLDetailsElement).open)) {
+      await appearance.click();
+    }
+    await appearanceGroup.getByRole('button', { name, exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-field-atlas-theme', name.toLowerCase());
+  }
+
+  async function verifyLegendAndControls(theme: 'light' | 'dark', mode: 'svg' | 'maplibre') {
+    await expect(mapKey).toContainText(/Live connection|Recently updated|Offline|Connecting/);
+    await expect.poll(() => page.evaluate(() => {
+      const app = document.querySelector('.mv-app')!;
+      return getComputedStyle(app.querySelector('.mv-region-us.assigned')!).fill ===
+        getComputedStyle(app.querySelector('.atlas-map-key-territory')!).backgroundColor;
+    })).toBe(true);
+    const colors = await page.evaluate(() => {
+      const app = document.querySelector('.mv-app')!;
+      const keyTerritory = app.querySelector('.atlas-map-key-territory')!;
+      const assigned = app.querySelector('.mv-region-us.assigned')!;
+      const keyAirport = app.querySelector('.atlas-map-key-airport')!;
+      const airport = app.querySelector('.mv-airport-mark.major .mv-airport-bubble')!;
+      return {
+        territoryKey: getComputedStyle(keyTerritory).backgroundColor,
+        territoryFill: getComputedStyle(assigned).fill,
+        airportKey: getComputedStyle(keyAirport).color,
+        airportFill: getComputedStyle(airport).fill,
+      };
+    });
+    expect(colors.airportFill).toBe(colors.airportKey);
+    const signature = JSON.stringify(colors);
+    if (themeValues[theme]) expect(signature).toBe(themeValues[theme]);
+    else themeValues[theme] = signature;
+
+    const sourceToggle = page.locator('.atlas-map-mode-toggle');
+    await sourceToggle.focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(sourceToggle).toBeFocused();
+    const focusStyle = await sourceToggle.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+    });
+    expect(focusStyle.outlineStyle).not.toBe('none');
+    expect(parseFloat(focusStyle.outlineWidth)).toBeGreaterThanOrEqual(2);
+
+    const zoomToRegion = page.getByRole('button', { name: 'Zoom to selected state' });
+    await expect(zoomToRegion).toBeDisabled();
+    const disabledStyle = await zoomToRegion.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { opacity: Number(style.opacity), cursor: style.cursor };
+    });
+    expect(disabledStyle.opacity).toBeLessThan(1);
+    expect(disabledStyle.cursor).toBe('not-allowed');
+
+    if (mode === 'maplibre') {
+      await expect(page.locator('.atlas-live-map-ready canvas')).toBeVisible();
+    } else {
+      await expect(page.locator('.atlas-live-map-ready')).toHaveCount(0);
+    }
+  }
+
+  for (const theme of ['Light', 'Dark'] as const) {
+    await chooseTheme(theme);
+    const normalizedTheme = theme.toLowerCase() as 'light' | 'dark';
+    await verifyLegendAndControls(normalizedTheme, 'svg');
+
+    const sourceToggle = page.locator('.atlas-map-mode-toggle');
+    await sourceToggle.click();
+    await expect(sourceToggle).toContainText('Street map');
+    await expect(page.locator('.atlas-live-map-ready canvas')).toBeVisible();
+    await verifyLegendAndControls(normalizedTheme, 'maplibre');
+    await sourceToggle.click();
+    await expect(sourceToggle).toContainText('Vector map');
+    await expect(page.locator('.atlas-live-map-ready')).toHaveCount(0);
+  }
+});
+
 test('first visit welcomes; returning visit keeps the map compact and usable', async ({ page }) => {
   const viewport = page.viewportSize()!;
   const mobile = viewport.width <= 900;
