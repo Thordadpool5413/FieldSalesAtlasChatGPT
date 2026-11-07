@@ -100,7 +100,33 @@ export function canadianObservations(lat: number, lon: number) {
   const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?bbox=' + bbox + '&datetime=' + encodeURIComponent(since + '/..') + '&sortby=-obs_date_tm&limit=5&f=json';
   return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url, kind: 'observation',
     scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-2',
-    parse: parseCanadianObservations,
+    parse(value) {
+      const root = object(value);
+      if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
+      if (root.features.length === 0) {
+        return { data: [], limitation: 'No Canadian surface observations were returned; current status is unknown.' };
+      }
+      try {
+        return parseCanadianObservations(value);
+      } catch (failure) {
+        const now = Date.now();
+        const staleTimes = root.features.map(raw => {
+          const row = object(object(raw).properties);
+          const observedAt = dated(row.obs_date_tm || row['date_tm-value'] || row.datetime);
+          const time = observedAt ? Date.parse(observedAt) : NaN;
+          return observedAt && Number.isFinite(time) && time <= now + 300000 && now - time > 2 * 3600000
+            ? observedAt
+            : undefined;
+        }).filter((value): value is string => !!value).sort();
+        const observedAt = staleTimes.at(-1);
+        if (!observedAt) throw failure;
+        return {
+          data: [],
+          observedAt,
+          limitation: 'No recent Canadian surface observation was available; current status is unknown.',
+        };
+      }
+    },
   });
 }
 

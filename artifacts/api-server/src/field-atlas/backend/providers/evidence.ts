@@ -14,7 +14,7 @@ class ProviderFailure extends Error {
 function failureDetail(failure: unknown): { code: Evidence['failureCode']; message: string } {
   if (failure instanceof ProviderFailure) return { code: failure.code, message: failure.message };
   if (failure instanceof Error && ['TimeoutError', 'AbortError'].includes(failure.name)) return { code: 'timeout', message: 'Provider request timed out.' };
-  return { code: 'schema', message: 'Provider response did not pass data or timestamp validation.' };
+  return { code: 'schema', message: 'Provider response did not pass data or timestamp validation; current status is unknown.' };
 }
 const pending = new Map<string, Promise<SourceResult<unknown>>>();
 const table = 'atlas_public_evidence_v1';
