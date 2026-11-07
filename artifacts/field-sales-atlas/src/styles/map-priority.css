@@ -27,6 +27,8 @@ html[data-field-atlas-theme='dark'],
   --at-map-stroke: #5b748c;
   --at-map-label: #e1eaf3;
   --at-map-outline: #0b1a2d;
+  --at-airport-reference: #FFC49B;
+  --at-airport-secondary: #E5A06E;
   --vice-map-active: #523047;
   --vice-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
 }
@@ -42,6 +44,8 @@ html[data-field-atlas-theme='light'],
   --at-action-hover: #075f6e;
   --at-aqua-soft: #dff4f4;
   --at-rose-soft: #fde7ef;
+  --at-airport-reference: #9B5B20;
+  --at-airport-secondary: #B66C3E;
   --vice-map-active: #f0c3d7;
 }
 
@@ -204,10 +208,10 @@ html[data-field-atlas-theme='light'],
   width: 22px;
   height: 22px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--at-accent) 52%, var(--at-border));
+  border: 1px solid color-mix(in srgb, var(--at-airport-reference) 52%, var(--at-border));
   border-radius: 50%;
-  background: color-mix(in srgb, var(--at-accent) 12%, var(--at-field));
-  color: var(--at-accent);
+  background: color-mix(in srgb, var(--at-airport-reference) 12%, var(--at-field));
+  color: var(--at-airport-reference);
 }
 .mv-app.atlas-design-v3 .atlas-map-key-state {
   flex: 0 0 9px;
@@ -224,11 +228,11 @@ html[data-field-atlas-theme='light'],
 /* Airports are reference locations; manager pins and territory fills keep their own encoding. */
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark .mv-airport-bubble {
   fill: var(--at-field);
-  stroke: var(--at-accent);
+  stroke: var(--at-airport-secondary);
   stroke-width: 1.8;
 }
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark.major .mv-airport-bubble {
-  fill: var(--at-accent);
+  fill: var(--at-airport-reference);
   stroke: var(--at-surface);
 }
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark.chosen .mv-airport-bubble {
@@ -239,6 +243,12 @@ html[data-field-atlas-theme='light'],
   stroke: #fff;
   stroke-width: 2.2;
 }
+
+/* The territory swatch and fallback assigned regions share one saved-area color. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-v2 .mv-region-us.assigned {
+  fill: var(--at-map-assigned);
+}
+.mv-app.atlas-design-v3 .mv-inspector-focus { display: none; }
 
 /* Controls share the same quiet motion, hover, focus, selected, and disabled language. */
 .mv-app.atlas-design-v3 :is(
@@ -344,6 +354,23 @@ html[data-field-atlas-theme='light'],
   .mv-app.atlas-design-v3 .mv-map-page.atlas-map-workspace:not(.atlas-focused) .mv-map-frame {
     height: clamp(360px, calc(100dvh - 460px), 500px);
   }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-kicker {
+    min-height: 44px;
+    padding-right: 96px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-inspector-focus {
+    position: absolute;
+    top: 9px;
+    right: 61px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--at-border);
+    border-radius: 9px;
+    background: var(--at-surface);
+    color: var(--at-cyan);
+  }
 }
 @media (max-width: 600px) {
   .mv-app.atlas-design-v3 .atlas-map-key { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
@@ -353,6 +380,108 @@ html[data-field-atlas-theme='light'],
   .mv-app.atlas-design-v3 .atlas-map-key-item:nth-child(3) .atlas-map-key-copy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
   .mv-app.atlas-design-v3 .atlas-map-key-copy strong { font-size: 10px; }
   .mv-app.atlas-design-v3 .atlas-map-key-copy small { font-size: 9px; }
+}
+@media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {
+    height: 50px !important;
+    min-height: 50px !important;
+    padding-block: 3px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header .official-atlas-brand {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.mv-theme-mobile, .mv-mobile-menu-trigger) {
+    min-height: 38px;
+    width: 38px;
+    flex-basis: 38px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav {
+    min-height: 42px !important;
+    padding: 2px 6px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button {
+    min-height: 36px;
+    gap: 1px;
+    padding: 1px 2px;
+    font-size: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button svg {
+    width: 16px;
+    height: 16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map {
+    padding-bottom: 48px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map > .atlas-setup {
+    margin: 4px 8px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.vice-atlas {
+    display: block;
+    padding: 0 8px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.vice-atlas > .vice-masthead {
+    display: none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-mission-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .fsa-map-heading {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 7px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .fsa-map-heading-text {
+    display: none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-field.atlas-destination {
+    order: 1;
+    flex: 1 1 260px;
+    width: auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-utility {
+    order: 2;
+    flex: 0 0 auto;
+    width: auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-utility-actions {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-utility-actions > .atlas-mobile-region {
+    min-height: 38px;
+    max-width: 220px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-v5-lenses {
+    order: 2;
+    min-height: 36px;
+    margin: 0 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-v5-lenses > button {
+    min-height: 34px;
+    padding-block: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .mv-map-body {
+    order: 3;
+    margin: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-map-key {
+    order: 4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-data-sources {
+    order: 5;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .mv-map-frame {
+    height: 180px !important;
+    min-height: 180px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .mv-map-tools {
+    bottom: 54px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .mv-app.atlas-design-v3 :is(

@@ -77,9 +77,18 @@ test('setup opens existing trainer tools, resumes after dismissal, and keeps dem
   await page.getByRole('button', { name: 'Dismiss setup reminder' }).click();
   await page.reload();
   await expect(page.getByRole('region', { name: 'Workspace setup' })).toHaveCount(0);
-  if (info.project.name === 'mobile') await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  await page.getByRole('button', { name: 'People', exact: true }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/page=people/);
+  if (info.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  } else {
+    await page.getByText('Workspace controls', { exact: true }).click();
+  }
   await page.getByRole('button', { name: 'Workspace setup', exact: true }).filter({ visible: true }).first().click();
-  await expect(page.getByRole('region', { name: 'Workspace setup' }).getByText('Add your first manager', { exact: true })).toBeVisible();
+  const reopenedSetup = page.getByRole('region', { name: 'Workspace setup' });
+  await expect(page).toHaveURL(/page=home/);
+  await expect(reopenedSetup.locator('.atlas-setup-body')).toBeVisible();
+  await expect(reopenedSetup.getByRole('button', { name: 'Collapse', exact: true })).toBeVisible();
 });
 
 function nextFieldWeek() {
@@ -148,6 +157,115 @@ test('compact Atlas shows the map early, loads vector mode without MapLibre, and
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
+test('map symbols and controls stay clear in both map modes and themes', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'Map-source parity is covered at desktop size.');
+  await page.route('https://tiles.openfreemap.org/styles/**', route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      version: 8,
+      sources: {},
+      layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#102238' } }],
+    }),
+  }));
+  const demo = await page.request.post('/api/demo/create', { data: {} });
+  const { workspaceKey } = await demo.json();
+  await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
+  await page.goto('/#workspace=' + workspaceKey);
+
+  const mapKey = page.getByTestId('atlas-map-key');
+  const assignedRegion = page.locator('.mv-region-us.assigned').first();
+  const airportMarker = page.locator('.mv-airport-mark.major .mv-airport-bubble').first();
+  await expect(mapKey).toBeVisible();
+  await expect(mapKey).toContainText('Saved territory');
+  await expect(mapKey).toContainText('Workspace assignment');
+  await expect(mapKey).toContainText('Public airport');
+  await expect(mapKey).toContainText('Location only—not territory or flight status');
+  await expect(mapKey).toContainText('Workspace records');
+  await expect(assignedRegion).toHaveCount(1);
+  await expect(airportMarker).toHaveCount(1);
+
+  const appearance = page.locator('.fsa-sidebar-controls summary');
+  const controls = page.locator('.fsa-sidebar-controls');
+  const appearanceGroup = page.getByRole('group', { name: 'Appearance' });
+  const themeValues: Record<string, string> = {};
+
+  async function chooseTheme(name: 'Light' | 'Dark') {
+    if (!await controls.evaluate(element => (element as HTMLDetailsElement).open)) {
+      await appearance.click();
+    }
+    await appearanceGroup.getByRole('button', { name, exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-field-atlas-theme', name.toLowerCase());
+  }
+
+  async function verifyLegendAndControls(theme: 'light' | 'dark', mode: 'svg' | 'maplibre') {
+    await expect(mapKey).toContainText(/Live connection|Recently updated|Offline|Connecting/);
+    await expect.poll(() => page.evaluate(() => {
+      const app = document.querySelector('.mv-app')!;
+      return getComputedStyle(app.querySelector('.mv-region-us.assigned')!).fill ===
+        getComputedStyle(app.querySelector('.atlas-map-key-territory')!).backgroundColor;
+    })).toBe(true);
+    const colors = await page.evaluate(() => {
+      const app = document.querySelector('.mv-app')!;
+      const keyTerritory = app.querySelector('.atlas-map-key-territory')!;
+      const assigned = app.querySelector('.mv-region-us.assigned')!;
+      const keyAirport = app.querySelector('.atlas-map-key-airport')!;
+      const airport = app.querySelector('.mv-airport-mark.major .mv-airport-bubble')!;
+      return {
+        territoryKey: getComputedStyle(keyTerritory).backgroundColor,
+        territoryFill: getComputedStyle(assigned).fill,
+        airportKey: getComputedStyle(keyAirport).color,
+        airportFill: getComputedStyle(airport).fill,
+      };
+    });
+    expect(colors.airportFill).toBe(colors.airportKey);
+    const signature = JSON.stringify(colors);
+    if (themeValues[theme]) expect(signature).toBe(themeValues[theme]);
+    else themeValues[theme] = signature;
+
+    const sourceToggle = page.locator('.atlas-map-mode-toggle');
+    await sourceToggle.focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(sourceToggle).toBeFocused();
+    const focusStyle = await sourceToggle.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+    });
+    expect(focusStyle.outlineStyle).not.toBe('none');
+    expect(parseFloat(focusStyle.outlineWidth)).toBeGreaterThanOrEqual(2);
+
+    const zoomToRegion = page.getByRole('button', { name: 'Zoom to selected state' });
+    await expect(zoomToRegion).toBeDisabled();
+    const disabledStyle = await zoomToRegion.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { opacity: Number(style.opacity), cursor: style.cursor };
+    });
+    expect(disabledStyle.opacity).toBeLessThan(1);
+    expect(disabledStyle.cursor).toBe('not-allowed');
+
+    if (mode === 'maplibre') {
+      await expect(page.locator('.atlas-live-map-ready canvas')).toBeVisible();
+    } else {
+      await expect(page.locator('.atlas-live-map-ready')).toHaveCount(0);
+    }
+  }
+
+  for (const theme of ['Light', 'Dark'] as const) {
+    await chooseTheme(theme);
+    const normalizedTheme = theme.toLowerCase() as 'light' | 'dark';
+    await verifyLegendAndControls(normalizedTheme, 'svg');
+
+    const sourceToggle = page.locator('.atlas-map-mode-toggle');
+    await sourceToggle.click();
+    await expect(sourceToggle).toContainText('Street map');
+    await expect(page.locator('.atlas-live-map-ready canvas')).toBeVisible();
+    await verifyLegendAndControls(normalizedTheme, 'maplibre');
+    await sourceToggle.click();
+    await expect(sourceToggle).toContainText('Vector map');
+    await expect(page.locator('.atlas-live-map-ready')).toHaveCount(0);
+  }
+});
+
 test('first visit welcomes; returning visit keeps the map compact and usable', async ({ page }) => {
   const viewport = page.viewportSize()!;
   const mobile = viewport.width <= 900;
@@ -175,17 +293,72 @@ test('first visit welcomes; returning visit keeps the map compact and usable', a
   await expect(welcome).toBeVisible();
   await expect(welcome.getByRole('heading', { name: 'Your field. In perspective.' })).toBeVisible();
   await expect.poll(() => welcome.locator('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
-  await expect(page.locator('.atlas-working-title')).toHaveCount(0);
+  await expect(page.locator('.fsa-map-heading-text h2')).toHaveText('Territory atlas');
   await expectMapProminentAndUsable(false);
 
   await page.reload();
   await expect(welcome).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
+  await expect(page.locator('.fsa-map-heading')).toBeVisible();
+  await expect(page.locator('.fsa-map-heading-text')).toHaveCount(0);
   await expectMapProminentAndUsable(true);
   expect(await page.evaluate(() => localStorage.getItem('field-atlas-map-welcome-v1'))).toBe('seen');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
   await page.getByRole('button', { name: 'Travel', exact: true }).filter({ visible: true }).first().click();
   await expect(page).toHaveURL(/page=plan/);
+});
+
+test('saved territory stays selected in the compact map after reload', async ({ page }) => {
+  const viewport = page.viewportSize()!;
+  const mobile = viewport.width <= 900;
+  const demo = await page.request.post('/api/demo/create', { data: {} });
+  const { workspaceKey } = await demo.json();
+  const board = await (await page.request.get('/api/operations?workspaceKey=' + workspaceKey)).json();
+  expect(board.assignments.some((assignment: { stateCode: string }) => assignment.stateCode === 'FL')).toBe(true);
+
+  await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
+  await page.goto('/#workspace=' + workspaceKey);
+  const regionPicker = page.getByLabel('Jump to any U.S. state or Canadian province');
+  await expect(regionPicker).toBeVisible();
+  await regionPicker.selectOption('FL');
+
+  const inspector = page.getByRole('complementary', { name: 'Territory details for Florida' });
+  await expect(inspector).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('field-atlas-focused-region-v1')))
+    .toBe(JSON.stringify({ code: 'FL', name: 'Florida', country: 'US' }));
+
+  await page.reload();
+  await expect(page.locator('.mv-map-page > .vice-masthead')).toHaveCount(0);
+  await expect(page.locator('.fsa-map-heading')).toBeVisible();
+  await expect(page.locator('.fsa-map-heading-text')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Field actions for Florida' })).toBeVisible();
+  await expect(inspector).toBeVisible();
+  await expect(page.locator('.atlas-context')).toContainText('Florida');
+  await expect(page.locator('.mv-region-us.active.assigned[aria-label^="Explore Florida"]')).toHaveCount(1);
+
+  const map = page.getByRole('group', { name: /Interactive United States map/ });
+  const frame = page.locator('.mv-map-frame');
+  await expect(map).toBeVisible();
+  const frameBounds = await frame.boundingBox();
+  expect(frameBounds).not.toBeNull();
+  expect(frameBounds!.height).toBeGreaterThanOrEqual(mobile ? 320 : 480);
+
+  await expect(regionPicker).toHaveValue('FL');
+  if (mobile) {
+    const focusMap = page.getByRole('button', { name: 'Focus map', exact: true });
+    await expect(focusMap).toBeVisible();
+    await focusMap.click();
+    await expect(inspector).toBeHidden();
+    await expect(page.locator('.mv-region-us.active.assigned[aria-label^="Explore Florida"]')).toHaveCount(1);
+  }
+  const zoomControls = page.getByRole('group', { name: 'Map zoom controls' });
+  await expect(zoomControls).toBeVisible();
+  await zoomControls.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(zoomControls.getByLabel('Map magnification')).toHaveText('135%');
+  await page.getByRole('button', { name: /Layers/ }).click();
+  await expect(page.locator('.mv-layers-popover')).toBeVisible();
+  await expect(page.getByLabel('Assigned territories')).toBeChecked();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
 
 test('guided review blocks saving when the trainer is unavailable', async ({ page }) => {

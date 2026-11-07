@@ -115,8 +115,8 @@ const FIELD_SHORTCUTS: Array<{id:Page;label:string;icon:typeof Plane}>=[
 ];
 const MIAMI_MORE: Array<{id:Page;label:string;icon:typeof Plane}>=[
   {id:'overview',label:'Reports',icon:Activity},
-  {id:'air',label:'Travel planner',icon:Plane},
-  {id:'map',label:'Territory details',icon:Compass},
+  {id:'air',label:'Airport & route planner',icon:Plane},
+  {id:'map',label:'County & ZIP explorer',icon:Compass},
   {id:'data',label:'Data & exports',icon:Database},
   {id:'team',label:'Sharing & recovery',icon:ShieldCheck},
 ];
@@ -560,6 +560,11 @@ function Product(){
       window.scrollTo(0,0);
     }
   }
+  function openWorkspaceSetup(){
+    go('home');
+    setSetupOpen(true);
+    setMenuOpen(false);
+  }
   useEffect(()=>{
     if(restoreScrollFor.current!==view)return;
     restoreScrollFor.current=null;
@@ -673,10 +678,6 @@ function Product(){
             aria-expanded={quickAddOpen} onClick={()=>setQuickAddOpen(true)}>
             <Plus size={20}/><span>New field record</span><ArrowRight size={17}/>
           </button>
-          <button type="button" className="fsa-side-link fsa-tool-link fsa-setup-link"
-            onClick={()=>{setSetupOpen(true);setMenuOpen(false);}}>
-            <Compass size={17}/><span>Workspace setup</span>
-          </button>
           {DESKTOP_NAV_GROUPS.map(group=><section className="fsa-sidebar-group" key={group.label}>
             <div className="fsa-sidebar-label">{group.label}</div>
             <nav className="fsa-side-nav fsa-side-tools" aria-label={group.label.toLowerCase()+' sections'}>
@@ -751,6 +752,9 @@ function Product(){
                 <button type="button" onClick={toggleDensity}>
                   <LayoutDashboard size={16}/>
                   <span>{density==='compact'?'Comfortable spacing':'Compact spacing'}</span>
+                </button>
+                <button type="button" onClick={openWorkspaceSetup}>
+                  <Compass size={16}/><span>Workspace setup</span>
                 </button>
                 <button type="button" onClick={()=>setPwaOpen(true)}>
                   <Smartphone size={16}/><span>Install & offline settings</span>
@@ -848,7 +852,7 @@ function Product(){
             <Icon size={18}/>{item.label}
           </button>;
         })}
-        <button onClick={()=>{setSetupOpen(true);setMenuOpen(false);}}><Compass size={18}/> Workspace setup</button>
+        <button onClick={openWorkspaceSetup}><Compass size={18}/> Workspace setup</button>
         <button onClick={()=>{setTrainerProfilesOpen(true);setMenuOpen(false);}}><Settings size={18}/> Trainer profiles</button>
         <button onClick={()=>{toggleTheme();setMenuOpen(false);}}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>} {theme==='dark'?'Light theme':'Dark theme'}</button>
         <button onClick={()=>{toggleDensity();setMenuOpen(false);}}><LayoutDashboard size={18}/> {density==='compact'?'Comfortable spacing':'Compact spacing'}</button>

@@ -680,7 +680,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
               <button type="button" className="ios-layers-close" onClick={()=>setLayerMenu(false)} aria-label="Close map layers">
                 <X size={17}/>
               </button>
-              <label className="atlas-map-source-toggle"><input type="checkbox" checked={showLiveMap} onChange={event=>chooseMapSource(event.target.checked)}/> Geographic basemap · streets & cities</label>
               <label><input type="checkbox" checked={showManagers} onChange={e=>setShowManagers(e.target.checked)}/> Territory manager pins</label>
               <label><input type="checkbox" checked={showCounties} onChange={e=>setShowCounties(e.target.checked)}/> County boundaries when focused</label>
               <label><input type="checkbox" checked={showTowns} onChange={e=>setShowTowns(e.target.checked)}/> Cities and Census places</label>
@@ -695,18 +694,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
               <div className="mv-layer-subsection"><span>Airports</span>
                 <select value={airportLayer} onChange={e=>setAirportLayer(e.target.value as 'major'|'all'|'none')} aria-label="Airport detail">
                   <option value="major">Major airport hubs</option><option value="all">All airports</option><option value="none">None</option>
-                </select>
-              </div>
-              <div className="mv-layer-subsection"><span>Jump to state</span>
-                <select value={region?.country==='US'?region.code:'all'} aria-label="Choose state"
-                  onChange={e=>{
-                    const st=STATES.find(s=>s.code===e.target.value);
-                    if(st)handleSelect({code:st.code,name:st.name,country:'US'});
-                    else{setRegion(null);setFocusedManager(null);}
-                    setLayerMenu(false);
-                  }}>
-                  <option value="all">All U.S. states</option>
-                  {STATES.map(st=><option value={st.code} key={st.code}>{st.name}</option>)}
                 </select>
               </div>
               <div className="mv-layer-subsection"><span>Regional emphasis</span>
@@ -752,7 +739,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
          </div>
        </div>
        <div className="atlas-map-view-switch" role="group" aria-label="Choose map or list display">
-         {airportLayer!=='none'&&<span className="atlas-reference-note"><Plane size={13}/> Public airport points, not saved territories</span>}
          <span className="atlas-view-label">View</span>
          <button type="button" data-testid="map-view-map" className={viewMode==='map'?'active':''}
            aria-pressed={viewMode==='map'} onClick={()=>setViewMode('map')}>
@@ -1235,7 +1221,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           </div>
           <div className="atlas-map-key-item">
             <span className="atlas-map-key-airport" aria-hidden="true"><Plane size={13}/></span>
-            <span className="atlas-map-key-copy"><strong>Public airport</strong><small>Location reference, not live flights</small></span>
+            <span className="atlas-map-key-copy"><strong>Public airport</strong><small>Location only—not territory or flight status</small></span>
           </div>
           <div className="atlas-map-key-item">
             <span className={'atlas-map-key-state '+ctx.syncStatus} aria-hidden="true"/>
@@ -1284,6 +1270,8 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           onClick={()=>{setRegion(null);setFocusedManager(null);}}><span aria-hidden="true"/></button>
         <div className="mv-inspector-art">
           <div className="mv-inspector-kicker"><Compass size={14}/> MARKET INTELLIGENCE / {region.code}</div>
+          <button type="button" className="mv-inspector-focus" onClick={()=>setFocusMap(true)}
+            aria-label="Focus map" title="Focus map"><Maximize2 size={18}/></button>
           <button className="mv-inspector-close" onClick={()=>{setRegion(null);setFocusedManager(null);}}
             aria-label="Close destination inspector"><X size={19}/></button>
           <div className="mv-inspector-cover">
@@ -1426,16 +1414,9 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
           <PlaneTakeoff size={22}/> Plan Trip to {region.name}<ArrowRight size={20}/>
         </button>
       </aside>}
-    <div className="atlas-ownership-legend" aria-label="Territory ownership colors">
-      <span><i aria-hidden="true"/>{trainerProfiles[0]?.name||'Trainer 1'}</span>
-      <span className="trainer-b"><i aria-hidden="true"/>{trainerProfiles[1]?.name||'Trainer 2'}</span>
-      <span className="shared"><i aria-hidden="true"/>Shared coverage</span>
-      <span>State & county fills reflect saved assignments, not external territory records.</span>
-    </div>
     <details className="atlas-deep-intelligence">
       <summary>
         <span className="atlas-deep-summary-title"><Sparkles size={18}/> Field intelligence</span>
-        <span className="atlas-deep-summary-meta">{managers.length} managers · {mappedMarkets} mapped markets · {airports.filter(a=>a.scheduled).length} listed gateways</span>
         <span className="atlas-deep-summary-action">Explore insights <ChevronDown size={17}/></span>
       </summary>
       <section className="atlas-telemetry-strip" aria-label="Field intelligence and geographic overview">
@@ -1445,14 +1426,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
       <div className="atlas-telemetry-item"><MapPin size={20}/><span><small>MAPPED MARKETS</small><strong>{mappedMarkets}<em>covered markets</em></strong></span></div>
       <div className="atlas-telemetry-item"><Plane size={20}/><span><small>AIRPORT INTELLIGENCE</small><strong>{airports.filter(a=>a.scheduled).length}<em>{ctx.airportSource==='live'?'Recent public airport feed':ctx.airportSource==='cached'?'Stored airport snapshot':'Starter airport index'}</em></strong></span></div>
       </section>
-    </details>
-    <details className="mv-all-regions">
-      <summary>Browse all U.S. states and Canadian provinces <ChevronDown size={16}/></summary>
-      <div>
-        {[...STATES.map(x=>({code:x.code,name:x.name,country:'US' as const})),...CANADA_REGIONS.map(x=>({code:x.code,name:x.name,country:'CA' as const}))].map(item=>
-          <button key={item.country+item.code} className={region?.code===item.code?'selected':''}
-            onClick={()=>handleSelect(item)} title={item.name}>{item.code}</button>)}
-      </div>
     </details>
   </div>;
 }
