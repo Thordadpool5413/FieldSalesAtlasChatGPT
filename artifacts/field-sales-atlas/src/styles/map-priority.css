@@ -363,6 +363,108 @@ html[data-field-atlas-theme='light'],
   .mv-app.atlas-design-v3 .atlas-map-key-copy strong { font-size: 10px; }
   .mv-app.atlas-design-v3 .atlas-map-key-copy small { font-size: 9px; }
 }
+@media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header {
+    height: 50px !important;
+    min-height: 50px !important;
+    padding-block: 3px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-header .official-atlas-brand {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.mv-theme-mobile, .mv-mobile-menu-trigger) {
+    min-height: 38px;
+    width: 38px;
+    flex-basis: 38px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav {
+    min-height: 42px !important;
+    padding: 2px 6px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button {
+    min-height: 36px;
+    gap: 1px;
+    padding: 1px 2px;
+    font-size: 9px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-bottom-nav button svg {
+    width: 16px;
+    height: 16px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map {
+    padding-bottom: 48px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-map > .atlas-setup {
+    margin: 4px 8px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.vice-atlas {
+    display: block;
+    padding: 0 8px 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page.vice-atlas > .vice-masthead {
+    display: none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-mission-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .fsa-map-heading {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 7px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .fsa-map-heading-text {
+    display: none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-field.atlas-destination {
+    order: 1;
+    flex: 1 1 260px;
+    width: auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-utility {
+    order: 2;
+    flex: 0 0 auto;
+    width: auto;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-utility-actions {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-utility-actions > .atlas-mobile-region {
+    min-height: 38px;
+    max-width: 220px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-v5-lenses {
+    order: 2;
+    min-height: 36px;
+    margin: 0 8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-v5-lenses > button {
+    min-height: 34px;
+    padding-block: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .mv-map-body {
+    order: 3;
+    margin: 4px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-map-key {
+    order: 4;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .atlas-data-sources {
+    order: 5;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .mv-map-frame {
+    height: 180px !important;
+    min-height: 180px !important;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-atlas .mv-map-tools {
+    bottom: 54px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .mv-app.atlas-design-v3 :is(
     .fsa-side-link,

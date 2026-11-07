@@ -36,6 +36,30 @@ for (const viewport of [{ width: 1536, height: 694 }, { width: 1366, height: 768
   });
 }
 
+test('short landscape phones keep the map and zoom controls within reach', async ({ page }) => {
+  const viewport = { width: 844, height: 390 };
+  await page.setViewportSize(viewport);
+  await page.goto('/');
+
+  const map = page.getByRole('group', { name: /Interactive United States map/ });
+  const frame = page.locator('.mv-map-frame');
+  await expect(map).toBeVisible();
+  const frameBounds = (await frame.boundingBox())!;
+  expect(frameBounds.height).toBeGreaterThanOrEqual(180);
+  expect(frameBounds.y).toBeGreaterThanOrEqual(0);
+  expect(frameBounds.y).toBeLessThan(viewport.height);
+
+  const zoomControls = page.getByRole('group', { name: 'Map zoom controls' });
+  const zoomIn = zoomControls.getByRole('button', { name: 'Zoom in' });
+  await expect(zoomIn).toBeInViewport();
+  const zoomBounds = (await zoomIn.boundingBox())!;
+  expect(zoomBounds.x).toBeGreaterThanOrEqual(0);
+  expect(zoomBounds.x + zoomBounds.width).toBeLessThanOrEqual(viewport.width);
+  await zoomIn.click();
+  await expect(zoomControls.getByLabel('Map magnification')).toHaveText('135%');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('short-window forms keep validation, save and close controls visible while fields scroll', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 600 });
   await page.goto('/?page=people');
