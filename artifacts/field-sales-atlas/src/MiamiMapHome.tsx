@@ -600,9 +600,6 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
         <h1>Territory Atlas</h1>
         <p>{region?region.name+' · territory in focus':'Saved coverage, field teams, and public airport references.'}</p>
       </div>
-      <button type="button" className="op-btn primary" onClick={()=>region?continueToTravel(region):ctx.go('air')}>
-        Plan a trip <ArrowRight size={15}/>
-      </button>
     </header>}
     {!focusMap&&showMapWelcome&&<OceanMasthead title="Your field. In perspective."
       description="Explore territories. Connect with your people. Plan the next visit."
