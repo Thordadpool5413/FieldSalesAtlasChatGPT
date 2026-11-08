@@ -11,6 +11,78 @@
   --fao-pink:var(--at-rose);
 }
 
+/* Shared visual roles across every existing destination. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product {
+  --atlas-font:'DM Sans','Avenir Next',system-ui,sans-serif;
+  --vice-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  font-family:var(--atlas-font);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(h1,h2,h3,h4) {
+  font-family:var(--vice-display);
+  text-wrap:balance;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,a) {
+  transition-property:transform,opacity;
+  transition-duration:.14s;
+  transition-timing-function:ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,a):hover:not(:disabled) {
+  transform:translateY(-1px);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,a):active:not(:disabled) {
+  transform:translateY(0);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,input,select,textarea,a,summary):focus-visible {
+  outline:3px solid var(--at-cyan);
+  outline-offset:3px;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--at-cyan) 14%,transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(input,select,textarea):not(:disabled):hover {
+  border-color:var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,input,select,textarea):disabled {
+  cursor:not-allowed;
+  opacity:.52;
+  filter:none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active {
+  color:var(--at-rose);
+  background:var(--at-rose-soft);
+  box-shadow:inset 2px 0 var(--at-rose),0 0 12px color-mix(in srgb,var(--at-rose) 9%,transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fsa-side-link.active,.fsa-hub-tabs>button.is-active,.atlas-v5-lenses>button.is-active) svg {
+  color:currentColor;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary,.fsa-button.primary,.travel-button.primary,.fao-route-primary) {
+  background:var(--at-cyan);
+  border-color:var(--at-cyan);
+  color:#081426;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary,.fsa-button.primary,.travel-button.primary,.fao-route-primary):hover:not(:disabled) {
+  box-shadow:0 0 12px color-mix(in srgb,var(--at-cyan) 20%,transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(310px,370px);
+  align-items:center;
+  gap:16px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry .travel-desk-entry-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  width:100%;
+  gap:8px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry .travel-desk-entry-actions .op-btn {
+  width:100%;
+  justify-content:center;
+}
+@media(max-width:860px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {
   display:flex;
   flex-direction:column;
@@ -222,8 +294,9 @@
   }
 }
 @media(prefers-reduced-motion:reduce) {
-  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-table tbody tr,.fsa-hub-tabs>button,.atlas-map-view-switch>button,.atlas-v5-lenses>button) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,a,.op-table tbody tr,.fsa-hub-tabs>button,.atlas-map-view-switch>button,.atlas-v5-lenses>button) {
     transition:none;
+    transform:none!important;
   }
 }
 

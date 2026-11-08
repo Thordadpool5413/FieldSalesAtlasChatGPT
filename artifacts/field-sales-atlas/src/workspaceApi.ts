@@ -22,8 +22,9 @@ function saveKey(key:string){
 export function getShareUrl(){
   return accessKey?window.location.origin+window.location.pathname+'#workspace='+accessKey:'';
 }
-function url(path:string){
+async function url(path:string){
   if(path.startsWith('/api/geography/')||path.startsWith('/api/travel/aviation/')||path.startsWith('/api/_healthcheck'))return path;
+  if(!accessKey)await initializeWorkspace();
   if(!accessKey)throw Error('Workspace is still opening.');
   let trainerId='trainer_a';
   try{if(window.localStorage.getItem('field-atlas-active-trainer')==='trainer_b')trainerId='trainer_b';}catch{}
@@ -36,10 +37,10 @@ function requireOnlineWrite(){
     throw new Error('You are offline. The change was not saved. Reconnect and try again.');
 }
 export const api={
-  get:(path:string,data?:unknown)=>transport.get(url(path),data),
-  post:(path:string,data?:unknown)=>{requireOnlineWrite();return transport.post(url(path),data);},
-  put:(path:string,data?:unknown)=>{requireOnlineWrite();return transport.put(url(path),data);},
-  delete:(path:string,data?:unknown)=>{requireOnlineWrite();return transport.delete(url(path),data);}
+  get:async(path:string,data?:unknown)=>transport.get(await url(path),data),
+  post:async(path:string,data?:unknown)=>{requireOnlineWrite();return transport.post(await url(path),data);},
+  put:async(path:string,data?:unknown)=>{requireOnlineWrite();return transport.put(await url(path),data);},
+  delete:async(path:string,data?:unknown)=>{requireOnlineWrite();return transport.delete(await url(path),data);}
 };
 export async function createNewWorkspace(){
   const response=await transport.post('/api/guest/create',{});

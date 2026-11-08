@@ -19,7 +19,7 @@ Sun,
 Users,X
 } from 'lucide-react';
 import type { Dispatch,SetStateAction } from 'react';
-import { createContext,lazy,Suspense,useContext,useEffect,useMemo,useRef,useState } from 'react';
+import { Component,createContext,lazy,Suspense,useContext,useEffect,useMemo,useRef,useState } from 'react';
 import AirportAlertRail from './AirportAlertRail';
 import './AtlasFoundation.css';
 import { CANADA_STARTER_AIRPORTS } from './CanadaRegions';
@@ -155,6 +155,31 @@ function errorText(e:unknown):string {
   if(e instanceof Error)return e.message;
   if(e && typeof e==='object' && 'message' in e) return String((e as {message:unknown}).message);
   return 'This operation could not be completed.';
+}
+class RouteErrorBoundary extends Component<
+  {children:React.ReactNode;onReturnToAtlas:()=>void},
+  {hasError:boolean}
+>{
+  state={hasError:false};
+
+  static getDerivedStateFromError(){
+    return {hasError:true};
+  }
+
+  render(){
+    if(!this.state.hasError)return this.props.children;
+    return <section className="atlas-route-error" role="alert" aria-labelledby="atlas-route-error-title">
+      <CircleAlert size={22} aria-hidden="true"/>
+      <div>
+        <h1 id="atlas-route-error-title">This page couldn’t be displayed.</h1>
+        <p>Your saved records have not been changed.</p>
+        <div className="atlas-route-error-actions">
+          <button type="button" className="op-btn" onClick={()=>this.setState({hasError:false})}>Retry page</button>
+          <button type="button" className="op-btn" onClick={this.props.onReturnToAtlas}>Return to Atlas</button>
+        </div>
+      </div>
+    </section>;
+  }
 }
 function Product(){
   const [identity,setIdentity]=useState<Context['identity']>('loading');
@@ -703,11 +728,11 @@ function Product(){
           </div>
           <div className="fsa-sidebar-bottom">
             <div className={'fsa-sidebar-sync atlas-sync-'+syncStatus} role="status"
-              aria-label={'Workspace sync '+syncStatus}
-              title={lastSyncAt?'Last successful workspace refresh: '+new Date(lastSyncAt).toLocaleString():'Waiting for the first successful workspace refresh'}>
+              aria-label={'Workspace connection '+(syncStatus==='live'?'connected':syncStatus)}
+              title={lastSyncAt?'Saved workspace records last refreshed: '+new Date(lastSyncAt).toLocaleString():'Waiting for the first saved-record refresh'}>
               <span className="atlas-sync-dot" aria-hidden="true"/>
-              <span>Workspace · {syncStatus==='live'?'Live':syncStatus==='updated'?'Updated':syncStatus==='connecting'?'Connecting':'Offline'}</span>
-              <small>{lastSyncAt?'Refreshed '+new Date(lastSyncAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Awaiting first refresh'}</small>
+              <span>Workspace · {syncStatus==='live'?'Connected':syncStatus==='updated'?'Updated':syncStatus==='connecting'?'Connecting':'Offline'}</span>
+              <small>{lastSyncAt?'Saved records refreshed '+new Date(lastSyncAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Awaiting first saved-record refresh'}</small>
             </div>
             <details className="fsa-sidebar-controls" onKeyDown={event=>{
               if(event.key==='Escape'){
@@ -880,29 +905,31 @@ function Product(){
           </div>}
           <WorkspaceSetup expanded={setupOpen} onExpandedChange={setSetupOpen}/>
           {identity==='member'&&board.truncated&&<div className="op-alert warn"><CircleAlert size={18}/><span>The workspace has more records than the current data page. Review all records before relying on totals or bulk changes.</span></div>}
-          {view==='plan'&&<PlanHub section={planSection} onSectionChange={changePlanSection} onDestination={startTravel} onCircuit={startCircuit}/>}
-          {view==='people'&&<PeopleHub section={peopleSection} onSectionChange={changePeopleSection}/>}
-          {view==='mission'&&<Suspense fallback={<div className='atlas-screen-loading' role='status'>Opening Mission Control…</div>}>
-            <TodayHub onPlan={startTravel}/>
-          </Suspense>}
-          {view==='home'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening the interactive map…</div>}>
-            <MiamiMapHome theme={theme} atlas={atlas} airports={airports} managers={board.managers||[]}
-              assignments={board.assignments||[]} onDestination={startTravel}
-              onAddManager={code=>{if(code)setState(code);open('manager');}}
-              onStartSetup={openWorkspaceSetup}/>
-          </Suspense>}
-          {view==='air'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening travel planner…</div>}>
-            <AirTravelPage initialTab='discover'/>
-          </Suspense>}
-          {view==='week'&&<Suspense fallback={<p role='status'>Opening the field week…</p>}><TwoTrainerWeek onDestination={startTravel} onCircuit={startCircuit}/></Suspense>}
-          {view==='overview'&&<OverviewPage/>}
-          {view==='map'&&<MapPage/>}
-          {view==='managers'&&<ManagersPage/>}
-          {view==='trips'&&<TripsPage/>}
-          {view==='coaching'&&<CoachingPage/>}
-          {view==='calendar'&&<CalendarPage/>}
-          {view==='data'&&<DataPage/>}
-          {view==='team'&&<SharedWorkspacePage/>}
+          <RouteErrorBoundary key={`${view}:${planSection}:${peopleSection}`} onReturnToAtlas={()=>go('home')}>
+            {view==='plan'&&<PlanHub section={planSection} onSectionChange={changePlanSection} onDestination={startTravel} onCircuit={startCircuit}/>}
+            {view==='people'&&<PeopleHub section={peopleSection} onSectionChange={changePeopleSection}/>}
+            {view==='mission'&&<Suspense fallback={<div className='atlas-screen-loading' role='status'>Opening Mission Control…</div>}>
+              <TodayHub onPlan={startTravel}/>
+            </Suspense>}
+            {view==='home'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening the interactive map…</div>}>
+              <MiamiMapHome theme={theme} atlas={atlas} airports={airports} managers={board.managers||[]}
+                assignments={board.assignments||[]} onDestination={startTravel}
+                onAddManager={code=>{if(code)setState(code);open('manager');}}
+                onStartSetup={openWorkspaceSetup}/>
+            </Suspense>}
+            {view==='air'&&<Suspense fallback={<div className="atlas-screen-loading" role="status">Opening travel planner…</div>}>
+              <AirTravelPage initialTab='discover'/>
+            </Suspense>}
+            {view==='week'&&<Suspense fallback={<p role='status'>Opening the field week…</p>}><TwoTrainerWeek onDestination={startTravel} onCircuit={startCircuit}/></Suspense>}
+            {view==='overview'&&<OverviewPage/>}
+            {view==='map'&&<MapPage/>}
+            {view==='managers'&&<ManagersPage/>}
+            {view==='trips'&&<TripsPage/>}
+            {view==='coaching'&&<CoachingPage/>}
+            {view==='calendar'&&<CalendarPage/>}
+            {view==='data'&&<DataPage/>}
+            {view==='team'&&<SharedWorkspacePage/>}
+          </RouteErrorBoundary>
         </main>
         {view!=='home'&&<footer className="op-footer mv-footer"><span>Field Sales Atlas · Sales Operational Guide</span>
           <span>Shared-link workspace · Only share the access link with trusted colleagues</span>

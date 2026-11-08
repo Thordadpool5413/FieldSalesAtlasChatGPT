@@ -99,6 +99,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .op-alert.warn { background:#fff8eb; border-color:#f3e2bf; color:#946d34; }
 .op-alert.good { background:#eaf8f3; border-color:#c9eadd; color:#3c7d67; }
 .op-alert input { max-width:260px; }
+.atlas-route-error {
+  display:flex; align-items:flex-start; gap:14px; max-width:680px;
+  margin:clamp(24px,6vh,64px) auto; padding:24px;
+  border:1px solid var(--at-border,#e1dce0); border-radius:18px;
+  background:var(--at-surface,#fff); color:var(--at-ink,#24313e);
+}
+.atlas-route-error>svg { flex:none; color:var(--at-rose,#d94e72); }
+.atlas-route-error h1 { margin:0; font-size:20px; }
+.atlas-route-error p { margin:8px 0 18px; color:var(--at-muted,#687481); }
+.atlas-route-error-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.atlas-route-error-actions button { min-height:42px; }
 .op-card { background:white; border:1px solid #e2eaf3; border-radius:13px; box-shadow:0 6px 24px #142e5707; min-width:0; }
 .op-card-header {
   display:flex; justify-content:space-between; align-items:center; gap:16px;
