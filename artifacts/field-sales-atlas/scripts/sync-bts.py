@@ -7,6 +7,8 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import sqlite3
+import fcntl
 import urllib.error
 import urllib.request
 
@@ -22,10 +24,20 @@ def main():
     today = datetime.date.today(); serial = today.year * 12 + today.month - 1 - args.lag
     status = {'attemptedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'state': 'running', 'periods': []}
     imported = 0
+    installed = {}
+    if (base / 'bts.sqlite').exists():
+        with sqlite3.connect('file:' + str(base / 'bts.sqlite') + '?mode=ro', uri=True) as connection:
+            for period, url, checksum, stamp, rows in connection.execute('SELECT period, source_url, sha256, imported_at, rows FROM datasets'):
+                count = connection.execute('SELECT count(*) FROM flights WHERE period=?', (period,)).fetchone()[0]
+                if rows > 0 and count == rows:
+                    installed[period] = {'period': period, 'sourceUrl': url, 'sha256': checksum, 'importedAt': stamp, 'rows': rows, 'state': 'already-installed'}
     for offset in range(args.months):
         year, month = divmod(serial - offset, 12); month += 1
         period = f'{year:04d}-{month:02d}'
-        row = {'period': period, 'state': 'unavailable'}
+        if period in installed:
+            status['periods'].append(installed[period]); imported += 1
+            continue
+        row = {'period': period, 'state': 'unavailable', 'attempts': []}
         with tempfile.TemporaryDirectory(dir=base) as temp:
             package = Path(temp) / 'bts.zip'
             # BTS has used both spellings; accept a successful, schema-validated official file only.
@@ -46,10 +58,11 @@ def main():
                                              '--output', str(base / 'bts.sqlite')], capture_output=True, text=True)
                     if result.returncode:
                         raise ValueError('BTS file failed month/schema/record validation. Existing history was preserved.')
-                    row.update(json.loads(result.stdout)); row['state'] = 'imported'; imported += 1
+                    row.update(json.loads(result.stdout)); row['state'] = 'imported'; row.pop('error', None); imported += 1
                     break
                 except urllib.error.HTTPError as failure:
                     row['error'] = 'Official download returned HTTP ' + str(failure.code)
+                    row['attempts'].append({'sourceUrl': url, 'error': row['error']})
                     if failure.code != 404:
                         break
                 except Exception as failure:
@@ -59,10 +72,18 @@ def main():
         if row['state'] != 'imported' and 'HTTP 403' in row.get('error', ''):
             break
     status['state'] = 'validated' if imported == args.months else 'partial' if imported else 'unavailable'
-    (base / 'bts-sync-status.json').write_text(json.dumps(status, indent=2))
+    temporary_status = base / 'bts-sync-status.partial.json'
+    temporary_status.write_text(json.dumps(status, indent=2))
+    temporary_status.replace(base / 'bts-sync-status.json')
     print(json.dumps(status, indent=2))
     return 0 if imported == args.months else 1
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    base = Path(os.environ.get('ATLAS_DATA_DIR', 'data')).resolve(); base.mkdir(parents=True, exist_ok=True)
+    with (base / 'bts-sync.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit('Another BTS synchronization is already running; existing history was preserved.')
+        sys.exit(main())

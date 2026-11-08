@@ -15,7 +15,8 @@
     "data:check-sources": "node --use-env-proxy --import tsx scripts/check-travel-sources.ts",
     "data:import-bts": "python3 scripts/import-bts.py",
     "data:sync-bts": "python3 scripts/sync-bts.py",
-    "setup:routing": "python3 scripts/setup-routing.py"
+    "setup:routing": "python3 scripts/setup-routing.py",
+    "data:maintain": "node --use-env-proxy --import tsx scripts/maintain-data.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

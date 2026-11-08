@@ -95,6 +95,16 @@ export async function source<T>(request: SourceRequest<T>): Promise<SourceResult
 }
 
 export async function sourceStatuses() {
-  const result = await db.list<{ result: SourceResult<unknown>; lastAttemptAt: string }>(table, { limit: 100 });
-  return result.items.map(row => ({ ...currentEvidence(row.result.evidence), lastAttemptAt: row.lastAttemptAt }));
+  const latest = new Map<string, Evidence & { lastAttemptAt: string }>();
+  let nextToken: string | undefined;
+  do {
+    const result = await db.list<{ result: SourceResult<unknown>; lastAttemptAt: string }>(table, { limit: 1000, nextToken });
+    for (const row of result.items) {
+      const evidence = currentEvidence(row.result.evidence);
+      const key = evidence.provider + '\0' + evidence.subject;
+      if (!latest.has(key) || latest.get(key)!.lastAttemptAt < row.lastAttemptAt) latest.set(key, { ...evidence, lastAttemptAt: row.lastAttemptAt });
+    }
+    nextToken = result.nextToken;
+  } while (nextToken);
+  return [...latest.values()].sort((a, b) => (a.provider + a.subject).localeCompare(b.provider + b.subject));
 }

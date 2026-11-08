@@ -1,3 +1,7 @@
+import { createHash, timingSafeEqual } from "node:crypto";
+import { apiBuildInfo } from "./build-info";
+import { apiContract } from "./api-contract";
+import { runMaintenance } from "./field-atlas/backend/maintenance";
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
@@ -32,6 +36,17 @@ app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/api/build-info', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json(apiBuildInfo); });
+app.get('/api/openapi.json', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json(apiContract()); });
+app.post('/api/maintenance/run', async (req, res) => {
+  const expected = process.env.ATLAS_MAINTENANCE_TOKEN || '';
+  if (expected.length < 32) { res.status(503).json({ error: 'External maintenance trigger is not configured.' }); return; }
+  const actual = req.get('authorization') || '';
+  const digest = (v: string) => createHash('sha256').update(v).digest();
+  if (!timingSafeEqual(digest(actual), digest('Bearer ' + expected))) { res.status(403).json({ error: 'Access denied.' }); return; }
+  try { res.setHeader('Cache-Control', 'no-store'); res.json(await runMaintenance()); }
+  catch { res.status(503).json({ error: 'Maintenance could not complete.' }); }
+});
 app.use("/api", router);
 app.use("/api", async (req, res, next) => {
   if (req.path === "/events" && req.method === "GET") {

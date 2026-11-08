@@ -8,6 +8,9 @@ TicketCheck,
 Wind
 } from 'lucide-react';
 import { useEffect,useMemo,useRef,useState } from 'react';
+import TravelEvidence from './TravelEvidence';
+import type { Evidence } from '../shared/travel/types';
+import { describeEvidence } from '../shared/travel/evidence';
 import FlightDecisionBrief from './FlightDecisionBrief';
 import type { DnaResponse } from './FlightDnaPanel';
 import FlightDnaPanel from './FlightDnaPanel';
@@ -29,6 +32,7 @@ type RouteEntry = {
   connectionMinutes: string;
 };
 type FaaAirport = {
+  evidence?: Evidence;
   code: string;
   level: 'critical' | 'caution' | 'none' | 'unknown';
   headline: string;
@@ -42,6 +46,7 @@ type FaaResult = {
   message?: string;
 };
 type AviationResult = {
+  evidence?: Evidence[];
   icao: string;
   available: boolean;
   checkedAt: string;
@@ -62,10 +67,12 @@ type NwsAlert = {
   area: string; effective: string; expires: string;
 };
 type NwsResult = {
+  evidence?: Evidence;
   available: boolean; checkedAt: string; source: string; sourceUrl: string;
   alerts: NwsAlert[]; message: string;
 };
 type ForecastResult = {
+  evidence?: Evidence;
   available:boolean;checkedAt:string;message:string;source:string;
   periods:Array<{
     number:number;name:string;startTime:string;temperature:number|null;
@@ -122,7 +129,7 @@ function grade(report: AirportResult): { level: Level; findings: string[]; unkno
   let impact = 0;
   let evidence = 0;
   if (!report.airport) unknowns.push('Airport missing from the current directory');
-  if (report.faaAvailable) {
+  if (report.faaAvailable && (!report.faa?.evidence || describeEvidence(report.faa.evidence).state === 'current')) {
     if (report.faa?.level === 'critical') {
       impact = Math.max(impact, 2);
       findings.push('FAA lists a significant airport-wide traffic-management event');
@@ -139,9 +146,9 @@ function grade(report: AirportResult): { level: Level; findings: string[]; unkno
     unknowns.push('FAA live events unavailable');
   }
   const obs = report.aviation?.observation;
-  if (report.aviation?.available && obs) {
+  if (report.aviation?.available && obs && (!report.aviation.evidence?.[0] || describeEvidence(report.aviation.evidence[0]).state === 'current')) {
     const age = ageMinutes(obs.reportTime);
-    if (age === null || age > 180 || age < -10) {
+    if (age === null || age > 90 || age < -5) {
       unknowns.push('Aviation observation time is missing or stale');
     } else {
       evidence += 1;
@@ -164,7 +171,7 @@ function grade(report: AirportResult): { level: Level; findings: string[]; unkno
   } else {
     unknowns.push(report.aviationIssue || 'Current NOAA station observation unavailable');
   }
-  if (report.nws?.available) {
+  if (report.nws?.available && (!report.nws.evidence || describeEvidence(report.nws.evidence).state === 'current')) {
     evidence += 1;
     for (const alert of report.nws.alerts.slice(0, 3)) {
       const severe = alert.severity === 'Severe' || alert.severity === 'Extreme';
@@ -215,6 +222,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const [chosenPlan, setChosenPlan] = useState('');
   const [savedError, setSavedError] = useState('');
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [, refreshAge] = useState(0);
+  useEffect(() => { const timer = setInterval(() => refreshAge(value => value + 1), 60000); return () => clearInterval(timer); }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copyMessage, setCopyMessage] = useState('');
@@ -388,7 +397,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         at: new Date().toISOString(),
         airports: details.map(item => ({
           ...item, faa: byCode.get(item.code),
-          faaAvailable: faa?.available === true,
+          faaAvailable: faa?.available === true && byCode.get(item.code)?.level !== 'unknown',
           faaCheckedAt: faa?.checkedAt || ''
         }))
       });
@@ -399,7 +408,16 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       if (currentRequest === requestId.current) setLoading(false);
     }
   }
-  const rows = analysis?.airports.map(item => ({...item, assessment: grade(item)})) || [];
+  const currentAnalysis = analysis ? { ...analysis, airports: analysis.airports.map(item => {
+    const current = (evidence?: Evidence) => !evidence || describeEvidence(evidence).state === 'current';
+    return { ...item, faaAvailable: item.faaAvailable && current(item.faa?.evidence),
+      aviation: item.aviation ? { ...item.aviation,
+        observation: current(item.aviation.evidence?.[0]) ? item.aviation.observation : null,
+        forecast: current(item.aviation.evidence?.[1]) ? item.aviation.forecast : null } : undefined,
+      nws: item.nws ? { ...item.nws, available: item.nws.available && current(item.nws.evidence) } : undefined,
+      outlook: item.outlook ? { ...item.outlook, available: item.outlook.available && current(item.outlook.evidence) } : undefined };
+  }) } : null;
+  const rows = currentAnalysis?.airports.map(item => ({...item, assessment: grade(item)})) || [];
   const origin = rows.find(item => item.code === route.origin);
   const connection = rows.find(item => item.code === route.connection);
   const destination = rows.find(item => item.code === route.destination);
@@ -650,7 +668,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         ));
       }}>Details <ArrowRight size={15}/></button>
     </section>}
-    {visibleEvidence&&<FlightShowcase route={route} current={analysis} history={historical} travelDate={travelDate}/>}
+    {visibleEvidence&&<FlightShowcase route={route} current={currentAnalysis} history={historical} travelDate={travelDate}/>}
     <button type="button" className="fr-mobile-detail-toggle"
       onClick={()=>setMobileDeepOpen(open=>!open)}
       aria-expanded={mobileDeepOpen}>
@@ -765,6 +783,10 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
             </> : <strong>The selected travel date falls outside the published NWS forecast window.</strong>
               : <strong>{row.outlookIssue}</strong>}
           </div>
+          <details className="fr-unknown"><summary>Source evidence, age and limitations</summary><TravelEvidence evidence={[
+            ...(row.faa?.evidence ? [row.faa.evidence] : []), ...(row.aviation?.evidence || []),
+            ...(row.nws?.evidence ? [row.nws.evidence] : []), ...(row.outlook?.evidence ? [row.outlook.evidence] : [])
+          ]}/><small>Missing or expired evidence does not establish current conditions.</small></details>
           {row.assessment.findings.length > 0 && <div className="fr-findings-list">
             {row.assessment.findings.map((finding, index) =>
               <p key={index}><AlertTriangle size={14}/>{finding}</p>)}
@@ -792,7 +814,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         official aviation conditions and local weather alerts, then explain what warrants attention.</p>
       <button type="button" onClick={() => ctx.go('air')}>Back to travel planning <ArrowRight size={16}/></button>
     </section>}
-    <FlightDecisionBrief route={route} now={analysis} history={historical}/>
+    <FlightDecisionBrief route={route} now={currentAnalysis} history={historical}/>
     </>}
 
     {/* Keep the historical request lifecycle alive while the detailed UI is

@@ -21,7 +21,7 @@ async function reservePort() {
 function start(webPort, apiPort, dataDirectory) {
   const child = spawn(process.execPath, ['scripts/start-local.mjs', '--preview'], {
     cwd: root,
-    env: { ...process.env, PORT: String(webPort), ATLAS_API_PORT: String(apiPort), ATLAS_DATA_DIR: dataDirectory },
+    env: { ...process.env, PORT: String(webPort), ATLAS_API_PORT: String(apiPort), ATLAS_DATA_DIR: dataDirectory, ATLAS_MAINTENANCE_TOKEN: "runtime-test-token-with-at-least-thirty-two-characters" },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let output = '';
@@ -78,6 +78,15 @@ test('combined preview serves the built UI and API, preserves records, and stops
     assert.equal(info.app, 'Field Sales Atlas');
     assert.ok(info.revision === null || /^[a-f0-9]{40}$/.test(info.revision));
     assert.ok(Number.isFinite(Date.parse(info.builtAt)));
+    const backendInfo = await (await fetch(`${base}/api/build-info`)).json();
+    assert.equal(backendInfo.mode, 'build');
+    assert.match(backendInfo.revision, /^[a-f0-9]{40}$/);
+    const contract = await (await fetch(`${base}/api/openapi.json`)).json();
+    assert.ok(contract.paths['/api/operations']);
+    assert.deepEqual(contract.paths['/api/operations'].get.security, [{ workspaceLink: [] }]);
+    const maintenance = await fetch(`${base}/api/maintenance/run`, { method: 'POST', headers: { Authorization: 'Bearer incorrect' } });
+    assert.equal(maintenance.status, 403);
+
 
     const created = await fetch(`${base}/api/guest/create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     assert.equal(created.status, 201);
@@ -115,4 +124,25 @@ test('a service startup failure stops its companion and leaves the occupied port
     await occupied.close();
     await rm(dataDirectory, { recursive: true, force: true });
   }
+});
+
+test('online SQLite backup preserves WAL records and the restore verifier rejects tampering', { timeout: 20000 }, async () => {
+  const { DatabaseSync } = await import('node:sqlite');
+  const { execFileSync } = await import('node:child_process');
+  const { readFile, writeFile } = await import('node:fs/promises');
+  const directory = await mkdtemp(join(tmpdir(), 'atlas-backup-test-'));
+  const source = join(directory, 'source'), target = join(directory, 'backups');
+  const { mkdir } = await import('node:fs/promises'); await mkdir(source);
+  const connection = new DatabaseSync(join(source, 'atlas.sqlite'));
+  try {
+    connection.exec("PRAGMA journal_mode=WAL; CREATE TABLE records(collection TEXT,id TEXT,document TEXT); INSERT INTO records VALUES ('fixture','1','{\"saved\":true}');");
+    const result = JSON.parse(execFileSync(process.execPath, ['scripts/backup-data.mjs', target], { cwd: root, env: { ...process.env, ATLAS_DATA_DIR: source }, encoding: 'utf8' }));
+    const restored = new DatabaseSync(join(result.directory, 'atlas.sqlite'), { readOnly: true });
+    try { assert.equal(restored.prepare('SELECT document FROM records').get().document, '{"saved":true}'); } finally { restored.close(); }
+    const check = JSON.parse(execFileSync(process.execPath, ['scripts/verify-backup.mjs', result.directory], { cwd: root, encoding: 'utf8' }));
+    assert.equal(check.state, 'restore-verified');
+    const manifestPath = join(result.directory, 'manifest.json'), manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    manifest.files[0].sha256 = '0'.repeat(64); await writeFile(manifestPath, JSON.stringify(manifest));
+    assert.throws(() => execFileSync(process.execPath, ['scripts/verify-backup.mjs', result.directory], { cwd: root, stdio: 'pipe' }), /Command failed/);
+  } finally { connection.close(); await rm(directory, { recursive: true, force: true }); }
 });

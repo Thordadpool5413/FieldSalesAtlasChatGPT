@@ -21,12 +21,12 @@ export function json(value: unknown, status = 200): Response {
 }
 export const error = (message: string, status = 500) => json({ error: message, message }, status);
 
-export function router(routes: RouterRoutes) {
+export function router(routes: RouterRoutes, access?: RouterMiddleware) {
   const parsed = Object.entries(routes).map(([route, middleware]) => {
     const [method, pattern] = route.split(' ');
     return { method, parts: pattern.split('/'), middleware };
   });
-  return async (request: Request): Promise<Response> => {
+  const handle = async (request: Request): Promise<Response> => {
     const url = new URL(request.url);
     const parts = url.pathname.split('/');
     const route = parsed.find(candidate => candidate.method === request.method && candidate.parts.length === parts.length &&
@@ -52,4 +52,5 @@ export function router(routes: RouterRoutes) {
       return error('The request could not be completed.', 500);
     }
   };
+  return Object.assign(handle, { routeManifest: Object.entries(routes).map(([route, middleware]) => ({ route, workspaceRequired: !!access && middleware.includes(access) })) });
 }

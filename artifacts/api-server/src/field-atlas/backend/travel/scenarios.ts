@@ -112,7 +112,7 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
   const optimized = await optimize(model);
   const evidence: Evidence[] = [matrix.evidence];
   const reference = await airportReferenceStatus();
-  evidence.push({ id: reference?.checksum || 'bundled-airports-2026', provider: 'OurAirports', subject: 'Airport coordinates', sourceUrl: reference?.sourceUrl || 'https://ourairports.com/data/', kind: 'reference', state: 'reference', retrievedAt: reference?.retrievedAt || '', version: reference?.checksum || 'bundled-102', scope: 'Airport reference coordinates and identifiers.', limitation: 'Reference data is not an airline schedule or an availability check.' });
+  evidence.push({ id: reference?.checksum || 'bundled-airports-2026', provider: 'OurAirports', subject: 'Airport coordinates', sourceUrl: reference?.sourceUrl || 'https://ourairports.com/data/', kind: 'reference', state: 'reference', retrievedAt: reference?.retrievedAt || '', version: reference?.checksum || 'bundled-102', scope: 'Airport reference coordinates and identifiers.', limitation: (reference?.stale ? 'This airport reference is stale or migrated; refresh its identifiers and coordinates before relying on changes. ' : !reference ? 'Limited bundled airport reference; retrieval age is unknown. ' : '') + 'Reference data is not an airline schedule or an availability check.' });
   const flightLegs: JourneyLeg[] = [];
   for (const profile of trainers) {
     const own = flights.filter(flight => flight.trainerId === profile.id);

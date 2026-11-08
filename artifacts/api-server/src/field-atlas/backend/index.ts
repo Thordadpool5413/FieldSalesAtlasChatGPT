@@ -19,6 +19,11 @@ import { createDemoWorkspace } from './demo';
 import { zoneAt } from './travel/zones';
 import { zonedInstant } from '../shared/travel/time';
 import { makeTravelRoutes } from './travel/routes';
+import { curatedAirportDirectory } from './providers/airports';
+import { officialJson } from './providers/evidence';
+import { historyCoverage } from './providers/bts';
+import { roadMatrix } from './providers/routing';
+import { publicAirportEvidence, faa, metar as stationMetar, taf as stationTaf } from './providers/publicTravel';
 import type { ScenarioBoard } from './travel/scenarios';
 
 type Member = { id: string; workspaceId: string; role: 'owner' | 'member' };
@@ -88,16 +93,7 @@ async function currentNas(){
  if(nasCache&&nasCache.expires>Date.now())return {checkedAt:nasCache.checkedAt,data:nasCache.data};
  if(!nasFetch){
    nasFetch=(async()=>{
-     const response=await fetch('https://nasstatus.faa.gov/api/airport-events',{
-       headers:{'Accept':'application/json','User-Agent':'FieldSalesAtlas/1.0 (FAA NAS status monitoring)'},
-       signal:AbortSignal.timeout(12000)
-     });
-     if(!response.ok)throw Error('FAA NAS status unavailable');
-     const contentType=response.headers.get('content-type')||'';
-     if(!contentType.includes('json'))throw Error('FAA NAS did not return JSON');
-     const raw=await response.text();
-     if(raw.length>4_000_000)throw Error('FAA event response exceeds limit');
-     const rows:unknown=JSON.parse(raw);
+     const rows: unknown = await officialJson('https://nasstatus.faa.gov/api/airport-events');
      if(!Array.isArray(rows))throw Error('FAA event feed schema changed');
      const result=new Map<string,NasSignal>();
      for(const rawItem of rows.slice(0,1000)){
@@ -107,14 +103,15 @@ async function currentNas(){
        const events:NasSignal['events']=[];
        let level:NasSignal['level']='none';
        for(const kind of faaEventCodes){
-         if(!item[kind]||typeof item[kind]!=='object')continue;
-         const information=safeAirportEvent(item[kind]);
-         // Do not interpret long-running private/general-aviation freeForm NOTAMs
-         // as closure of the airport to scheduled commercial flights.
-         if(kind==='airportClosure'&&/NON[\s-]?SKED|TRANSIENT\s+GA|PPR\b/i.test(information.reason))continue;
-         events.push({kind:faaEventNames[kind],...information});
-         if(['groundStop','groundDelay','airportClosure'].includes(kind))level='critical';
-         else if(level!=='critical')level='caution';
+         const notices = Array.isArray(item[kind]) ? item[kind] as unknown[] : item[kind] && typeof item[kind] === 'object' ? [item[kind]] : [];
+         for (const notice of notices.slice(0, 8)) {
+           const information=safeAirportEvent(notice);
+           // Private/general-aviation restrictions do not imply closure to scheduled flights.
+           if(kind==='airportClosure'&&/NON[\s-]?SKED|TRANSIENT\s+GA|PPR\b/i.test(information.reason))continue;
+           events.push({kind:faaEventNames[kind],...information});
+           if(['groundStop','groundDelay','airportClosure'].includes(kind))level='critical';
+           else if(level!=='critical')level='caution';
+         }
        }
        const configRaw=bodyOf(item.airportConfig);
        const rateSource=configRaw.arrivalRate;
@@ -141,114 +138,6 @@ async function currentNas(){
  return nasFetch;
 }
 
-type CuratedAirport = {
-  iata:string;name:string;state:string;tier:'Major'|'Secondary'|'Regional';
-  scheduled:boolean;icao:string;lat:number;lon:number;
-};
-/* Durable, global public airport snapshot. No private workspace data here. */
-type AirportSnapshotHead={id:string;revision:string;checkedAt:string;count:number;chunks:number};
-type AirportSnapshotChunk={id:string;revision:string;airports:CuratedAirport[]};
-const airportSnapshotTable='atlas_public_airports_snapshot';
-async function persistAirportReference(airports:CuratedAirport[],checkedAt:string){
-  if(airports.length<150||airports.length>6000)throw Error('Unexpected airport count');
-  const revision=checkedAt;
-  const pieces:AirportSnapshotChunk[]=[];
-  for(let i=0;i<airports.length;i+=80){
-    const content=airports.slice(i,i+80);
-    if(JSON.stringify(content).length>160000)throw Error('Oversized airport snapshot page');
-    pieces.push({id:'part_'+(i/80),revision,airports:content});
-  }
-  await db.tx.add(airportSnapshotTable,[{id:'init',createdAt:checkedAt}]);
-  await db.transact([db.tx.update(airportSnapshotTable,[
-    ...pieces.map(p=>({id:p.id,record:{revision:p.revision,airports:p.airports}})),
-    {id:'head',record:{revision,checkedAt,count:airports.length,chunks:pieces.length}}
-  ])]);
-}
-async function latestAirportReference():Promise<{airports:CuratedAirport[];checkedAt:string}|null>{
-  try{
-    const [head]=await db.get<AirportSnapshotHead>(airportSnapshotTable,['head'],{consistent:true});
-    if(!head||head.count<150||head.count>6000||head.chunks<2||head.chunks>80)return null;
-    const ids=Array.from({length:head.chunks},(_,i)=>'part_'+i);
-    const pages=await db.get<AirportSnapshotChunk>(airportSnapshotTable,ids,{consistent:true});
-    if(pages.some(p=>!p||p.revision!==head.revision||!Array.isArray(p.airports)))return null;
-    const airports=pages.flatMap(p=>p!.airports);
-    if(airports.length!==head.count||airports.some(a=>!/^[A-Z]{3}$/.test(a.iata)||
-      !Number.isFinite(a.lat)||!Number.isFinite(a.lon)))return null;
-    return {airports,checkedAt:head.checkedAt};
-  }catch(e){
-    console.warn('Airport snapshot unavailable:',isAppDatabaseError(e)?e.code:'unknown');
-    return null;
-  }
-}
-let airportDirectoryCache:{
-  expires:number;airports:CuratedAirport[];checkedAt:string;
-}|null=null;
-let airportDirectoryFetch:Promise<{
-  available:boolean;airports:CuratedAirport[];checkedAt:string;message:string;
-  stale?:boolean;mode?:'source'|'memory'|'snapshot';
-}>|null=null;
-
-/* Fetch global source once per server cache window. Devices only transfer
-   ~US/CA selected airports. No external API keys or paid flight endpoints. */
-async function curatedAirportDirectory(){
-  if(airportDirectoryCache&&airportDirectoryCache.expires>Date.now())
-    return {available:true,airports:airportDirectoryCache.airports,
-      checkedAt:airportDirectoryCache.checkedAt,message:'Recently fetched public directory',
-      stale:false,mode:'memory' as const};
-  if(airportDirectoryFetch)return airportDirectoryFetch;
-  airportDirectoryFetch=(async()=>{
-    try{
-      const response=await fetch('https://davidmegginson.github.io/ourairports-data/airports.csv',{
-        headers:{Accept:'text/csv','User-Agent':'FieldSalesAtlas/1.0 (public OurAirports directory)'},
-        signal:AbortSignal.timeout(18000)
-      });
-      if(!response.ok)throw new Error('Public directory unavailable');
-      const csv=await response.text();
-      if(csv.length>26000000)throw new Error('Unexpected source size');
-      const parsed=Papa.parse<Record<string,string>>(csv,{header:true,skipEmptyLines:true});
-      const airports=parsed.data.filter(row=>
-        (row.iso_country==='US'||row.iso_country==='CA')&&
-        /^(US|CA)-[A-Z]{2}$/.test(row.iso_region||'')&&
-        (['large_airport','medium_airport'].includes(row.type)||
-          (row.type==='small_airport'&&row.scheduled_service==='yes'))&&
-        /^[A-Z]{3}$/.test(row.iata_code||'')
-      ).map(row=>({
-        iata:row.iata_code,name:row.name,state:row.iso_region.slice(3),
-        tier:(row.type==='large_airport'?'Major':
-          row.type==='medium_airport'?'Secondary':'Regional') as CuratedAirport['tier'],
-        scheduled:row.scheduled_service==='yes',
-        icao:(row.icao_code||row.gps_code||'').trim().toUpperCase(),
-        lat:Number(row.latitude_deg),lon:Number(row.longitude_deg)
-      })).filter(row=>Number.isFinite(row.lat)&&Number.isFinite(row.lon));
-      if(airports.length<150)throw new Error('Missing expected North American airport coverage');
-      const checkedAt=new Date().toISOString();
-      airportDirectoryCache={expires:Date.now()+6*3600000,airports,checkedAt};
-      try{await persistAirportReference(airports,checkedAt);}
-      catch(e){console.warn('Public airport snapshot not saved:',
-        isAppDatabaseError(e)?e.code:'unknown');}
-      return {available:true,airports,checkedAt,message:'Fresh public directory',
-        stale:false,mode:'source' as const};
-    }catch{
-      if(airportDirectoryCache)
-        return {available:true,airports:airportDirectoryCache.airports,
-          checkedAt:airportDirectoryCache.checkedAt,
-          message:'Public provider unavailable; using the last in-memory reference.',
-          stale:true,mode:'memory' as const};
-      const saved=await latestAirportReference();
-      if(saved){
-        airportDirectoryCache={expires:Date.now()+15*60000,
-          airports:saved.airports,checkedAt:saved.checkedAt};
-        return {available:true,airports:saved.airports,checkedAt:saved.checkedAt,
-          message:'Public provider unavailable; using the last complete stored reference.',
-          stale:true,mode:'snapshot' as const};
-      }
-      return {available:false,airports:[] as CuratedAirport[],checkedAt:'',
-        message:'Public directory and durable snapshot are unavailable. Use the limited starter reference.',
-        stale:true,mode:'snapshot' as const};
-    }
-  })().finally(()=>{airportDirectoryFetch=null;});
-  return airportDirectoryFetch;
-}
 const validStates = new Set(
   'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY AB BC MB NB NL NS NT NU ON PE QC SK YT'.split(
     ' '
@@ -552,28 +441,6 @@ function travelPayload(b:Record<string,unknown>){
 }
 
 
-type AvaPayload={icao:string;source:string;checkedAt:string;available:boolean;message:string;
-  observation:null|{reportTime:string|null;category:string;raw:string;windKnots:number|null;visibility:string|null;temperatureC:number|null};
-  forecast:null|{raw:string;validFrom:string|null;validTo:string|null}};
-const avaCache=new Map<string,{expiresAt:number;data:AvaPayload}>();
-async function fetchAva(name:'metar'|'taf',icao:string):Promise<Record<string,unknown>|null>{
-  const url='https://aviationweather.gov/api/data/'+name+'?ids='+icao+'&format=json';
-  const response=await fetch(url,{
-    headers:{'Accept':'application/json','User-Agent':'FieldAtlas-Travel/1.0 (public weather)'},
-    signal:AbortSignal.timeout(7500)
-  });
-  if(response.status===204)return null;
-  if(!response.ok)throw new Error('Aviation weather HTTP '+response.status);
-  const payload=await response.json();
-  return Array.isArray(payload)&&payload[0]&&typeof payload[0]==='object'?payload[0] as Record<string,unknown>:null;
-}
-const avaText=(v:unknown,max=1200)=>typeof v==='string'?v.slice(0,max):'';
-const avaTime=(v:unknown)=>{
-  if(typeof v==='number'&&Number.isFinite(v))return new Date(v*1000).toISOString();
-  return typeof v==='string'?v.slice(0,40):null;
-};
-
-
 type SharedLink = { id:string; workspaceId:string; actorId:string; createdAt:string; seat?:'trainer_a'|'trainer_b' };
 type TrainerLink = { id:string;seat:'trainer_a'|'trainer_b';actorId:string;createdAt:string;
   status:'active'|'revoked'|'system';revokedAt?:string };
@@ -716,47 +583,41 @@ async function latestSourceReport():Promise<PublicSourceReport|null>{
 }
 async function checkOfficialSources():Promise<PublicSourceReport>{
   const checkedAt=new Date().toISOString();
-  const tasks=await Promise.allSettled([
-    curatedAirportDirectory().then(result=>({
-      id:'airports',label:'OurAirports directory',available:result.available&&!result.stale,
-      details:result.available?result.airports.length+' reference airports ('+(result.stale?'stale snapshot':'recent public source')+')':'Public airport directory unavailable',
-      checkedAt:result.checkedAt||checkedAt,scope:'Directory records only; not actual airline schedules.'
-    })),
-    currentNas().then(result=>({
-      id:'faa',label:'FAA NAS airport advisories',available:true,
-      details:result.data.size+' airports in source response',
-      checkedAt:result.checkedAt,scope:'Airport-wide events only; not live flight tracking.'
-    })),
-    searchCensusZctas('32').then(result=>({
-      id:'census',label:'Census national ZIP tabulation areas',available:result.available,
-      details:result.indexedCount+' ZCTAs indexed, source year '+result.sourceYear,
-      checkedAt:result.checkedAt,scope:'Census geography, not USPS delivery ZIP codes.'
-    })),
-    nwsAirportForecast(28.4312,-81.3081).then(result=>({
-      id:'nws',label:'National Weather Service',available:result.available,
-      details:result.available?'Airport-area sample forecast received':'Orlando sample forecast unavailable',
-      checkedAt:result.checkedAt,scope:'One sampled U.S. airport point; not national forecast reliability.'
-    }))
+  const [directory, census, us, ca, flightArchive, checkpointArchive, routingProbe] = await Promise.all([
+    curatedAirportDirectory(), searchCensusZctas('32').catch(() => ({ available: false, indexedCount: 0, checkedAt })),
+    publicAirportEvidence({ iata: 'MCO', icao: 'KMCO', country: 'US', lat: 28.429, lon: -81.309 }),
+    publicAirportEvidence({ iata: 'YYZ', icao: 'CYYZ', country: 'CA', lat: 43.676, lon: -79.629 }),
+    flightHistory({ origin: 'MCO', destination: 'ATL', connection: '', alternate: '', carrier: '', flightNumber: '', selectedMonth: '' }),
+    securityHistory('MCO', checkedAt.slice(0, 10), 10),
+    roadMatrix([{ id: 'airport', name: 'Orlando airport', lat: 28.4294, lon: -81.309 }, { id: 'city', name: 'Orlando city', lat: 28.5383, lon: -81.3792 }]).catch(() => null),
   ]);
-  const descriptions=[
-    {id:'airports',label:'OurAirports directory',scope:'Airport reference coverage'},
-    {id:'faa',label:'FAA NAS airport advisories',scope:'Airport-wide restriction coverage'},
-    {id:'census',label:'Census national ZCTAs',scope:'Census geographic reference'},
-    {id:'nws',label:'National Weather Service',scope:'One U.S. forecast sample'}
+  const previous = await latestSourceReport();
+  const history = historyCoverage();
+  const sources: PublicSourceProbe[] = [
+    { id: 'airports', label: 'OurAirports reference', available: directory.available && !directory.stale,
+      checkedAt: directory.checkedAt || checkedAt, details: directory.message, scope: directory.limitation },
+    { id: 'census', label: 'Census ZCTAs', available: census.available, checkedAt: census.checkedAt,
+      details: census.available ? census.indexedCount + ' ZCTAs indexed' : 'Census sample unavailable or failed archive validation.', scope: 'Census geography, not USPS delivery ZIPs.' },
+    ...[...us, ...ca].map(row => ({ id: row.evidence.provider + ':' + row.evidence.subject,
+      label: row.evidence.provider + ' · ' + row.evidence.subject, available: row.evidence.state === 'current',
+      checkedAt: row.evidence.retrievedAt, details: row.evidence.state + ': ' + row.evidence.limitation,
+      scope: row.evidence.scope, evidence: row.evidence })),
+    ...flightArchive.sources.map(row => ({ id: 'flyerintel:' + row.name, label: 'Flyerintel ' + row.name,
+      available: row.available, checkedAt: flightArchive.checkedAt,
+      details: row.records + ' aggregate records; coverage ends ' + (row.periodEnd || 'unknown'),
+      scope: 'Independent historical aggregates, not a direct BTS import, live flight status or a prediction. Source issue time may be unknown.' })),
+    { id: 'checkpoint-history', label: 'Open checkpoint history sample', available: checkpointArchive.available && !checkpointArchive.message,
+      checkedAt: checkpointArchive.checkedAt, details: checkpointArchive.rows.length + ' historical queue groups. ' + checkpointArchive.message,
+      scope: checkpointArchive.limitations.join(' ') },
+    { id: 'routing', label: 'Road routing', available: !!routingProbe?.roadBased && routingProbe.evidence.state === 'current' && routingProbe.durations[0][1] !== null, checkedAt,
+      details: routingProbe?.evidence.limitation || 'The configured road probe could not complete.', scope: 'Orlando airport to city reference probe only. Does not validate all regional routes or live traffic.' },
+    { id: 'bts', label: 'Official BTS history', available: history.state === 'historical', checkedAt,
+      details: history.periods.map(row => row.period).join(', ') || 'No imported periods', scope: history.limitation },
   ];
-  const previous=await latestSourceReport().catch(()=>null);
-  const probes:PublicSourceProbe[]=tasks.map((result,i)=>{
-    const fresh=result.status==='fulfilled'?result.value:{
-      ...descriptions[i],available:false,checkedAt,
-      details:'Source connection failed or timed out. Check provider.'
-    };
-    const older=previous?.sources.find(row=>row.id===fresh.id);
-    return {...fresh,lastSuccessAt:fresh.available?fresh.checkedAt:older?.lastSuccessAt||null};
-  });
-  return {
-    id:'current',checkedAt,sources:probes,missingIntegrations:sourceGaps,
-    scope:'Daily and on-demand source reachability snapshots, not guaranteed uptime or verified flight status.'
-  };
+  return { id: 'current', checkedAt, sources: sources.map(row => ({ ...row,
+    lastSuccessAt: row.available ? row.checkedAt : previous?.sources.find(old => old.id === row.id)?.lastSuccessAt || null })),
+    missingIntegrations: sourceGaps,
+    scope: 'Official U.S. and Canadian sample checks with source timestamps. A sample does not establish national coverage or flight-specific status.' };
 }
 async function saveSourceReport(snapshot:PublicSourceReport){
   const prior=await latestSourceReport();
@@ -780,13 +641,8 @@ async function saveSourceReport(snapshot:PublicSourceReport){
 export const refreshPublicSourceStatus=async (_event:{
   type:'cron';name:string;scheduledTime:string;invokedTime:string
 })=>{
-  try{
-    const report=await checkOfficialSources();
-    await saveSourceReport(report);
-  }catch(e){
-    console.warn('Source-health daily scan could not be persisted.',
-      isAppDatabaseError(e)?e.code:e instanceof Error?e.name:'unknown');
-  }
+  const report=await checkOfficialSources();
+  await saveSourceReport(report);
   return {statusCode:200};
 };
 
@@ -2085,14 +1941,14 @@ export const handler = router({
     const codes=[...new Set(raw.split(',').map(x=>x.trim()).filter(x=>/^[A-Z]{3}$/.test(x)))].slice(0,16);
     if(!codes.length)return error('Provide up to 16 valid IATA airport codes.',400);
     try{
-      const snapshot=await currentNas();
+      const [snapshot, checks] = await Promise.all([currentNas(), Promise.all(codes.map(code => faa(code)))]);
       return json({
-        available:true,source:'FAA National Airspace System',sourceUrl:'https://nasstatus.faa.gov/',
+        available:checks.some(row => row.evidence.state === 'current'),source:'FAA National Airspace System',sourceUrl:'https://nasstatus.faa.gov/',
         checkedAt:snapshot.checkedAt,
         scope:'Current airport-wide FAA events; not flight-specific or future-date predictions. FAA feed coverage may be limited for Canadian airports.',
-        airports:codes.map(code=>snapshot.data.get(code)||{
-          code,level:'unknown',headline:'Airport not present in current FAA events feed; status unknown',events:[],config:null
-        })
+        airports:codes.map((code, index) => ({ ...(checks[index].evidence.state === 'current' ? snapshot.data.get(code) : null) || {
+          code,level:'unknown',headline:'Airport status could not be verified from current FAA evidence',events:[],config:null
+        }, evidence: checks[index].evidence }))
       });
     }catch(err){
       console.warn('FAA airport status fetch failed',err instanceof Error?err.name:'unknown');
@@ -2107,32 +1963,18 @@ export const handler = router({
   'GET /api/travel/aviation/:icao': [async ctx=>{
     const icao=safe(ctx.params.icao,4).toUpperCase();
     if(!/^[A-Z]{4}$/.test(icao))return error('Enter a valid four-letter ICAO weather station.',400);
-    const cached=avaCache.get(icao);
-    if(cached&&cached.expiresAt>Date.now())return json(cached.data);
-    const [metarResult,tafResult]=await Promise.allSettled([fetchAva('metar',icao),fetchAva('taf',icao)]);
-    const metar=metarResult.status==='fulfilled'?metarResult.value:null;
-    const taf=tafResult.status==='fulfilled'?tafResult.value:null;
-    const observation=metar?{
-      reportTime:avaTime(metar.reportTime||metar.obsTime),
-      category:avaText(metar.fltCat,12),raw:avaText(metar.rawOb,850),
-      windKnots:typeof metar.wspd==='number'?metar.wspd:null,
-      visibility:metar.visib!==undefined?String(metar.visib).slice(0,30):null,
-      temperatureC:typeof metar.temp==='number'?metar.temp:null,
-    }:null;
-    const forecast=taf?{
-      raw:avaText(taf.rawTAF||taf.rawTaf,1900),
-      validFrom:avaTime(taf.validTimeFrom),validTo:avaTime(taf.validTimeTo)
-    }:null;
-    const failed=metarResult.status==='rejected'&&tafResult.status==='rejected';
-    const payload:AvaPayload={
-      icao,source:'NOAA Aviation Weather Center',checkedAt:new Date().toISOString(),
-      available:!!(observation||forecast),observation,forecast,
-      message:failed?'Official aviation weather service could not be reached.':
-        !observation&&!forecast?'No recent station observation or terminal forecast available.':''
-    };
-    if(avaCache.size>200)avaCache.clear();
-    avaCache.set(icao,{expiresAt:Date.now()+(failed?45000:180000),data:payload});
-    return json(payload);
+    const [metarResult, tafResult] = await Promise.all([stationMetar(icao), stationTaf(icao)]);
+    const metar = metarResult.evidence.state === 'current' ? metarResult.data?.[0] : null;
+    const taf = tafResult.evidence.state === 'current' ? tafResult.data?.[0] : null;
+    return json({ icao, source: 'NOAA Aviation Weather Center', checkedAt: metarResult.evidence.retrievedAt,
+      available: !!(metar || taf),
+      observation: metar ? { reportTime: metarResult.evidence.observedAt || null, category: metar.title,
+        raw: metar.detail, windKnots: metar.observation?.windKnots ?? null,
+        visibility: metar.observation?.visibility ?? null, temperatureC: metar.observation?.temperatureC ?? null } : null,
+      forecast: taf ? { raw: taf.detail, validFrom: taf.validFrom || null, validTo: taf.validTo || null } : null,
+      evidence: [metarResult.evidence, tafResult.evidence],
+      message: [metarResult, tafResult].filter(r => r.evidence.state !== 'current').map(r => r.evidence.limitation).join(' ')
+    });
   }],
 
 
@@ -2235,4 +2077,4 @@ export const handler = router({
     if(!m)return error('Workspace required.',403);
     return error('Commercial flight-offer search is disabled in this free-data-only application.',410);
   }],
-});
+}, workspaceAccess);

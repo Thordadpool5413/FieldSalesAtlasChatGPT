@@ -83,3 +83,13 @@ pnpm run setup:routing --help
 ```
 
 Routing setup requires Docker and suitable map data. These tools are explicit operations; pulling the repository does not load data, create provider subscriptions, or change calendars. Public-source coverage, age, and limitations remain part of the travel evidence; flight availability requires provider verification.
+
+## Backend reliability and deployment verification
+
+See [the operational guide](docs/operations/BACKEND_RELIABILITY.md) for shared
+weather validation, the unified airport reference, complete source checks, daily
+catch-up jobs, optional external scheduling, WAL-safe backups and restore drills.
+`/api/build-info` identifies the running API build; `/build-info.json` identifies
+the web build. `/api/openapi.json` inventories the active routes and access rules.
+Road routing, durable hosting and airline-provider authorization still require
+real deployment configuration; diagnostics keep those limitations explicit.

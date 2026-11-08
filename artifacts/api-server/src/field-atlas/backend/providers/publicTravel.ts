@@ -3,9 +3,15 @@ import type { Evidence } from '../../shared/travel/types';
 
 const object = (v: unknown): Record<string, unknown> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {};
 const text = (v: unknown) => typeof v === 'string' ? v.slice(0, 240) : '';
+// Reject oversized source reports rather than silently cutting off forecast groups.
+const report = (v: unknown): string => {
+  if (typeof v !== 'string') return '';
+  if (v.length > 32768) throw new Error('Official report exceeds the supported text size.');
+  return v;
+};
 const english = (v: unknown) => {
   const row = object(v);
-  return text(row.en ?? row.value ?? v);
+  return report(row.en ?? row.value ?? v);
 };
 const canadianStates = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
 const isCanadianAirport = (airport: { state?: string; country?: string }) => airport.country ? airport.country === 'CA' : canadianStates.includes(airport.state || '');
@@ -18,10 +24,16 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-export type TravelSignal = { title: string; detail: string; validFrom?: string; validTo?: string };
+export type TravelSignal = {
+  title: string; detail: string; validFrom?: string; validTo?: string;
+  observation?: { windKnots: number | null; visibility: string | null; temperatureC: number | null };
+  alert?: { id: string; severity: string; urgency: string; area: string };
+  forecast?: { number: number; isDaytime: boolean; temperature: number | null; temperatureUnit: string;
+    windSpeed: string; windDirection: string; shortForecast: string; probabilityOfPrecipitation: number | null; timeZone: string; startTime: string; endTime: string };
+};
 export function faa(airport: string) {
   return source<TravelSignal[]>({ provider: 'FAA NAS', subject: airport, url: 'https://nasstatus.faa.gov/api/airport-events', kind: 'observation',
-    scope: 'Airport-wide notices only. Not flight-specific status.', ttlMs: 120000, maxAgeMs: 20 * 60000, version: 'faa-1',
+    scope: 'Airport-wide notices only. Not flight-specific status.', ttlMs: 120000, maxAgeMs: 20 * 60000, version: 'faa-2',
     parse(value) {
       if (!Array.isArray(value)) throw new Error('Invalid FAA feed.');
       const record = value.map(object).find(row => row.airportId === airport);
@@ -31,7 +43,9 @@ export function faa(airport: string) {
         const rows = Array.isArray(record[key]) ? record[key] as unknown[] : record[key] ? [record[key]] : [];
         for (const raw of rows.slice(0, 8)) {
           const item = object(raw);
-          result.push({ title: key.replace(/[A-Z]/g, c => ' ' + c.toLowerCase()), detail: text(item.reason || item.simpleText || item.text), validFrom: dated(item.startTime), validTo: dated(item.endTime) });
+          const detail = report(item.reason || item.simpleText || item.text);
+          if (key === 'airportClosure' && /NON[\s-]?SKED|TRANSIENT\s+GA|PPR\b/i.test(detail)) continue;
+          result.push({ title: key.replace(/[A-Z]/g, c => ' ' + c.toLowerCase()), detail, validFrom: dated(item.startTime), validTo: dated(item.endTime) });
         }
       }
       return { data: result, observedAt: dated(record.sourceTimeStamp || record.updatedAt || object(record.airportConfig).sourceTimeStamp), limitation: 'Returned notices describe the airport, not an individual flight.' };
@@ -40,41 +54,45 @@ export function faa(airport: string) {
 }
 export function metar(icao: string) {
   return source<TravelSignal[]>({ provider: 'NOAA Aviation Weather', subject: icao, url: `https://aviationweather.gov/api/data/metar?ids=${encodeURIComponent(icao)}&format=json`,
-    kind: 'observation', scope: 'Aviation weather observation at this reporting airport.', ttlMs: 5 * 60000, maxAgeMs: 90 * 60000, version: 'metar-1',
+    kind: 'observation', scope: 'Aviation weather observation at this reporting airport.', ttlMs: 5 * 60000, maxAgeMs: 90 * 60000, version: 'metar-2',
     parse(value) {
       if (!Array.isArray(value)) throw new Error('Invalid METAR response.');
       const row = value.map(object).find(row => row.icaoId === icao);
       if (!row) throw new Error('No matching observation.');
-      const detail = text(row.rawOb);
+      const detail = report(row.rawOb);
       if (!detail) throw new Error('Observation missing.');
-      return { data: [{ title: text(row.fltCat) || 'Aviation observation', detail }], observedAt: dated(row.obsTime || row.reportTime), limitation: 'Weather observations do not determine airline cancellations or operational safety.' };
+      return { data: [{ title: text(row.fltCat) || 'Aviation observation', detail, observation: { windKnots: typeof row.wspd === 'number' ? row.wspd : null, visibility: row.visib === undefined ? null : String(row.visib), temperatureC: typeof row.temp === 'number' ? row.temp : null } }], observedAt: dated(row.obsTime || row.reportTime), limitation: 'Weather observations do not determine airline cancellations or operational safety.' };
     },
   });
 }
 export function taf(icao: string) {
   return source<TravelSignal[]>({ provider: 'NOAA TAF', subject: icao, url: `https://aviationweather.gov/api/data/taf?ids=${encodeURIComponent(icao)}&format=json`,
-    kind: 'forecast', scope: 'Airport aviation forecast within its published valid period.', ttlMs: 15 * 60000, maxAgeMs: 24 * 3600000, version: 'taf-1',
+    kind: 'forecast', scope: 'Airport aviation forecast within its published valid period.', ttlMs: 15 * 60000, maxAgeMs: 24 * 3600000, version: 'taf-2',
     parse(value) {
       if (!Array.isArray(value)) throw new Error('Invalid TAF response.');
       const row = value.map(object).find(row => row.icaoId === icao);
-      if (!row || !text(row.rawTAF)) throw new Error('No matching TAF.');
+      if (!row || !report(row.rawTAF)) throw new Error('No matching TAF.');
       const validFrom = dated(row.validTimeFrom), validTo = dated(row.validTimeTo);
       if (!validFrom || !validTo || validTo <= validFrom) throw new Error('Missing forecast validity.');
-      return { data: [{ title: 'Published aviation forecast', detail: text(row.rawTAF), validFrom, validTo }], observedAt: dated(row.issueTime), validFrom, validTo, limitation: 'Applies only to the published period and airport; not a flight-delay prediction.' };
+      return { data: [{ title: 'Published aviation forecast', detail: report(row.rawTAF), validFrom, validTo }], observedAt: dated(row.issueTime), validFrom, validTo, limitation: 'Applies only to the published period and airport; not a flight-delay prediction.' };
     },
   });
 }
 export function nws(lat: number, lon: number) {
   const subject = lat.toFixed(3) + ',' + lon.toFixed(3);
   return source<TravelSignal[]>({ provider: 'NWS alerts', subject, url: 'https://api.weather.gov/alerts/active?point=' + subject,
-    kind: 'observation', scope: 'Active U.S. weather alerts for a single location.', ttlMs: 4 * 60000, maxAgeMs: 24 * 3600000, version: 'nws-alerts-1',
+    kind: 'observation', scope: 'Active U.S. weather alerts for a single location.', ttlMs: 4 * 60000, maxAgeMs: 24 * 3600000, version: 'nws-alerts-2',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid alert collection.');
       const rows = root.features.map(v => object(object(v).properties));
+      if (rows.some(row => !text(row.event) || !dated(row.sent) || !dated(row.effective) || !dated(row.expires) || dated(row.expires)! <= dated(row.effective)!)) throw new Error('Invalid NWS alert fields.');
       const dates = rows.map(row => dated(row.sent)).filter((v): v is string => !!v).sort();
-      return { data: rows.slice(0, 15).map(row => ({ title: text(row.event), detail: text(row.headline), validFrom: dated(row.effective), validTo: dated(row.expires) })),
-        observedAt: dates.at(-1), limitation: rows.length ? 'Location-specific alerts, not conditions along the entire flight path.' : 'No active alerts were returned at retrieval; an observation timestamp was not supplied for an empty collection.' };
+      const observedAt = dated(root.updated) || dates.at(-1);
+      const weight = (row: Record<string, unknown>) => ['Unknown', 'Minor', 'Moderate', 'Severe', 'Extreme'].indexOf(text(row.severity));
+      rows.sort((a, b) => weight(b) - weight(a));
+      return { data: rows.slice(0, 15).map(row => ({ title: text(row.event), detail: report(row.headline), validFrom: dated(row.effective), validTo: dated(row.expires), alert: { id: text(row.id), severity: text(row.severity) || 'Unknown', urgency: text(row.urgency) || 'Unknown', area: report(row.areaDesc) } })),
+        observedAt, limitation: rows.length ? 'Location-specific alerts, not conditions along the entire flight path.' + (rows.length > 15 ? ' Showing the 15 highest-severity alerts from this collection.' : '') : observedAt ? 'No active alerts returned at the source publication time for this point. Conditions outside this point or after publication remain unknown.' : 'No active alerts were returned at retrieval; an observation timestamp was not supplied for an empty collection.' };
     },
   });
 }
@@ -116,7 +134,7 @@ export function canadianForecast(lat: number, lon: number) {
   const subject = lat.toFixed(3) + ',' + lon.toFixed(3);
   const bbox = airportBbox(lat, lon, 1.25);
   return source<TravelSignal[]>({ provider: 'ECCC City Page Weather', subject, url: `https://api.weather.gc.ca/collections/citypageweather-realtime/items?bbox=${bbox}&limit=25&f=json`,
-    kind: 'forecast', scope: 'Nearest available ECCC city-page forecast within 150 km of the airport coordinates; regional forecast, not an airport observation or aviation forecast.', ttlMs: 15 * 60000, maxAgeMs: 12 * 3600000, version: 'eccc-citypage-1',
+    kind: 'forecast', scope: 'Nearest available ECCC city-page forecast within 150 km of the airport coordinates; regional forecast, not an airport observation or aviation forecast.', ttlMs: 15 * 60000, maxAgeMs: 12 * 3600000, version: 'eccc-citypage-2',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid ECCC city forecast collection.');
@@ -152,7 +170,7 @@ export function canadianWarnings(lat: number, lon: number) {
   const subject = lat.toFixed(3) + ',' + lon.toFixed(3);
   const bbox = airportBbox(lat, lon, .75);
   return source<TravelSignal[]>({ provider: 'ECCC Weather Alerts', subject, url: `https://api.weather.gc.ca/collections/weather-alerts/items?bbox=${bbox}&limit=100&sortby=-publication_datetime&f=json`,
-    kind: 'observation', scope: 'Active ECCC warning polygons intersecting the 0.75-degree bounding box around the airport; warnings are regional, not airport-specific.', ttlMs: 5 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-alerts-1',
+    kind: 'observation', scope: 'Active ECCC warning polygons intersecting the 0.75-degree bounding box around the airport; warnings are regional, not airport-specific.', ttlMs: 5 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-alerts-2',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid ECCC weather alert collection.');
@@ -178,7 +196,7 @@ export function canadianWarnings(lat: number, lon: number) {
         if (Date.parse(expiration) <= now) continue;
         const name = text(row.alert_name_en) || 'Weather warning';
         const area = text(row.feature_name_en) || text(row.province);
-        const detail = text(row.alert_text_en);
+        const detail = report(row.alert_text_en);
         if (!detail) throw new Error('ECCC warning text is missing.');
         warnings.push({ title: area ? `${name} — ${area}` : name, detail, validFrom, validTo });
       }
@@ -193,16 +211,19 @@ export function canadianWarnings(lat: number, lon: number) {
 export function nwsForecast(lat: number, lon: number) {
   const subject = lat.toFixed(3) + ',' + lon.toFixed(3);
   return source<TravelSignal[]>({ provider: 'NWS point forecast', subject, url: 'https://api.weather.gov/points/' + subject,
-    kind: 'forecast', scope: 'Published U.S. point forecast; not an aviation forecast or airline-delay prediction.', ttlMs: 15 * 60000, maxAgeMs: 18 * 3600000, version: 'nws-forecast-1',
+    kind: 'forecast', scope: 'Published U.S. point forecast; not an aviation forecast or airline-delay prediction.', ttlMs: 15 * 60000, maxAgeMs: 18 * 3600000, version: 'nws-forecast-2',
     async parse(value) {
       const point = object(object(value).properties);
-      if (typeof point.forecast !== 'string' || !point.forecast.startsWith('https://api.weather.gov/gridpoints/')) throw new Error('Invalid forecast discovery URL.');
+      if (typeof point.forecast !== 'string') throw new Error('Missing forecast discovery URL.');
+      const target = new URL(point.forecast);
+      if (target.protocol !== 'https:' || target.hostname !== 'api.weather.gov' || !/^\/gridpoints\/[A-Za-z0-9]+\/\d+,\d+\/forecast$/.test(target.pathname) || target.search || target.username || target.password) throw new Error('Invalid forecast discovery URL.');
       const forecast = object(object(await officialJson(point.forecast)).properties);
       if (!Array.isArray(forecast.periods) || !forecast.periods.length) throw new Error('Forecast periods are missing.');
-      const periods = forecast.periods.map(object);
+      const periods = forecast.periods.slice(0, 16).map(object);
+      if (periods.some(row => !dated(row.startTime) || !dated(row.endTime) || dated(row.endTime)! <= dated(row.startTime)!)) throw new Error('Invalid forecast period.');
       const validFrom = dated(periods[0].startTime), validTo = dated(periods.at(-1)!.endTime);
       if (!validFrom || !validTo || validTo <= validFrom) throw new Error('Invalid forecast validity.');
-      return { data: periods.slice(0, 16).map(row => ({ title: text(row.name), detail: text(row.detailedForecast || row.shortForecast), validFrom: dated(row.startTime), validTo: dated(row.endTime) })),
+      return { data: periods.slice(0, 16).map(row => ({ title: text(row.name), detail: report(row.detailedForecast || row.shortForecast), validFrom: dated(row.startTime), validTo: dated(row.endTime), forecast: { startTime: String(row.startTime), endTime: String(row.endTime), number: Number(row.number) || 1, isDaytime: row.isDaytime === true, temperature: typeof row.temperature === 'number' ? row.temperature : null, temperatureUnit: text(row.temperatureUnit), windSpeed: text(row.windSpeed), windDirection: text(row.windDirection), shortForecast: report(row.shortForecast), probabilityOfPrecipitation: typeof object(row.probabilityOfPrecipitation).value === 'number' ? Math.max(0, Math.min(100, Number(object(row.probabilityOfPrecipitation).value))) : null, timeZone: text(point.timeZone) } })),
         observedAt: dated(forecast.updateTime || forecast.updated), validFrom, validTo, limitation: 'Forecast applies to this point and its published validity period. Check destination conditions separately from airport aviation weather.' };
     },
   });

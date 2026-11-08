@@ -585,3 +585,30 @@ test('shared readiness persists transport and equipment checks for both trainers
   await page.screenshot({path:join(tmpdir(),'field-atlas-'+info.project.name+'-shared-readiness.png'),fullPage:false,scale:'css'});
   expect(errors).toEqual([]);
 });
+
+test('flight intelligence displays source age and stops using expired station evidence', async ({ page }) => {
+  await page.goto('/?page=plan&tool=radar');
+  const now = Date.now();
+  await page.clock.install({ time: now });
+  const evidence = (provider: string, subject: string, id: string) => ({ id, provider, subject, sourceUrl: 'https://aviationweather.gov/', kind: 'observation', state: 'current', retrievedAt: new Date(now).toISOString(), observedAt: new Date(now).toISOString(), expiresAt: new Date(now + 30000).toISOString(), version: 'fixture', scope: 'Fixture station observation', limitation: 'Fixture evidence is not airline status.' });
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({ json: { available: false, checkedAt: new Date(now).toISOString(), airports: [] } }));
+  await page.route('**/api/travel/aviation/*', route => {
+    const icao = new URL(route.request().url()).pathname.split('/').at(-1)!;
+    return route.fulfill({ json: { icao, available: true, checkedAt: new Date(now).toISOString(), source: 'NOAA', message: '', observation: { reportTime: new Date(now).toISOString(), category: 'IFR', raw: 'METAR fixture', windKnots: 5, visibility: '3', temperatureC: 20 }, forecast: null, evidence: [evidence('NOAA Aviation Weather', icao, 'fixture-' + icao)] } });
+  });
+  await page.route('**/api/travel/weather-alerts?*', route => route.fulfill({ json: { available: false, alerts: [], message: 'No validated alert timestamp' } }));
+  await page.route('**/api/travel/point-forecast?*', route => route.fulfill({ json: { available: false, periods: [], message: 'No forecast fixture' } }));
+  await page.route('**/api/travel/flight-history?*', route => route.fulfill({ json: { available: false, checkedAt: new Date(now).toISOString(), source: 'Fixture', sourceUrl: '', attribution: 'Fixture', license: '', period: null, sources: [], legs: [], alternatePaths: [], alternateArrival: null, selectedMonth: '', monthly: [], notes: [] } }));
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  await page.getByRole('region', { name: 'Public flight evidence at a glance' }).getByRole('button', { name: 'Details', exact: true }).click();
+  const operations = page.locator('#atlas-airport-operations');
+  await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true }).first()).toBeVisible();
+  const source = operations.locator('details').filter({ has: page.locator('summary', { hasText: 'Source evidence, age and limitations' }) }).first();
+  await source.locator('summary').click();
+  await expect(source).toContainText('Under a minute old');
+  await page.clock.fastForward(61000);
+  await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true })).toHaveCount(0);
+  await expect(source.locator('.journey-state')).toHaveText('stale');
+});

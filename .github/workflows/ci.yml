@@ -32,6 +32,7 @@ jobs:
           Path(os.environ['PIP_CONFIG_FILE']).write_text('[install]\nuser = true\n')
           PY
           pnpm run setup:optimizer
+      - run: python artifacts/field-sales-atlas/scripts/test-bts-sync.py
       - run: pnpm test
       - run: pnpm run build
       - run: pnpm run test:api

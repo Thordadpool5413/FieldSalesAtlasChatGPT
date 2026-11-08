@@ -1,3 +1,4 @@
+import { buildIdentity } from "../../scripts/build-identity.mjs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -111,6 +112,7 @@ async function buildAll() {
       "puppeteer-core",
       "electron",
     ],
+    define: { __ATLAS_BUILD_INFO__: JSON.stringify(buildIdentity(artifactDir)) },
     minify: true,
     sourcemap: "linked",
     plugins: [

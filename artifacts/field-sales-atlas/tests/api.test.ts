@@ -686,3 +686,161 @@ test('recovery refuses a known missed pickup deadline and preserves the calendar
   assert.equal(approve.status,409);assert.match(approve.data.error,/journey requirement/);
   assert.deepEqual((await request('GET','/api/operations',key)).data.visits,before.visits);
 });
+
+test('legacy aviation rejects another station and stale observations; full TAF survives both APIs', async () => {
+  const original = globalThis.fetch;
+  const longTaf = 'TAF KZZB ' + 'FM090600 22015KT P6SM SCT025 '.repeat(20) + 'TEMPO 0908/0910 3SM SHRA BKN012';
+  globalThis.fetch = async input => {
+    const url = String(input);
+    const station = new URL(url).searchParams.get('ids');
+    if (url.includes('/metar')) return new Response(JSON.stringify([{ icaoId: station === 'KZZA' ? 'KJFK' : station, rawOb: 'METAR ' + station, obsTime: Date.now() / 1000 - 4 * 3600, fltCat: 'VFR' }]));
+    return new Response(JSON.stringify(station === 'KZZB' ? [{ icaoId: station, rawTAF: longTaf, issueTime: Date.now() / 1000, validTimeFrom: Date.now() / 1000, validTimeTo: Date.now() / 1000 + 7200 }] : []));
+  };
+  try {
+    const wrong = (await request('GET', '/api/travel/aviation/KZZA')).data;
+    assert.equal(wrong.available, false); assert.equal(wrong.observation, null);
+    const partial = (await request('GET', '/api/travel/aviation/KZZB')).data;
+    assert.equal(partial.observation, null); assert.equal(partial.forecast.raw, longTaf);
+    assert.equal(partial.evidence[0].state, 'stale');
+    const { taf } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+    assert.equal((await taf('KZZB')).data?.[0].detail, longTaf);
+  } finally { globalThis.fetch = original; }
+});
+
+test('legacy NWS shares evidence validation and does not treat an undated empty response as clear', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ features: [] }));
+  try {
+    const { nwsPointAlerts } = await import('../../api-server/src/field-atlas/backend/nwsAlerts');
+    const result = await nwsPointAlerts(35.111, -80.222);
+    assert.equal(result.available, false); assert.equal(result.evidence?.state, 'partial');
+    assert.match(result.message, /timestamp/);
+    globalThis.fetch = async () => new Response(JSON.stringify({ updated: new Date().toISOString(), features: [] }));
+    const published = await nwsPointAlerts(35.112, -80.223);
+    assert.equal(published.available, true); assert.equal(published.evidence?.state, 'current');
+    assert.match(published.evidence!.limitation, /source publication time/);
+    assert.doesNotMatch(published.evidence!.limitation, /timestamp was not supplied/);
+  } finally { globalThis.fetch = original; }
+});
+
+test('both NWS forecast APIs retain source fields and full detail while validating every period', async () => {
+  const original = globalThis.fetch, now = Date.now(), detail = 'Full official detail. '.repeat(30);
+  const offsetStart = new Date(now).toISOString().replace('Z', '+00:00');
+  globalThis.fetch = async input => new Response(JSON.stringify(String(input).includes('/points/')
+    ? { properties: { forecast: 'https://api.weather.gov/gridpoints/ZZZ/1,2/forecast', timeZone: 'America/New_York' } }
+    : { properties: { updateTime: new Date(now).toISOString(), periods: [{ number: 1, name: 'Tonight', startTime: offsetStart, endTime: new Date(now + 3600000).toISOString(), temperature: 65, temperatureUnit: 'F', windSpeed: '5 mph', windDirection: 'NW', shortForecast: 'Clear', detailedForecast: detail }] } }));
+  try {
+    const { nwsForecast } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+    const { nwsAirportForecast } = await import('../../api-server/src/field-atlas/backend/nwsForecast');
+    assert.equal((await nwsForecast(35.333, -80.444)).data?.[0].detail, detail);
+    const legacy = await nwsAirportForecast(35.333, -80.444);
+    assert.equal(legacy.available, true); assert.equal(legacy.periods[0].temperature, 65);
+    assert.equal(legacy.periods[0].startTime, offsetStart);
+    assert.equal(legacy.evidence?.state, 'current'); assert.equal(legacy.timeZone, 'America/New_York');
+  } finally { globalThis.fetch = original; }
+});
+
+test('airport snapshot migration joins map and planner and preserves staleness on repeated reads', async () => {
+  const key = await workspace();
+  const original = globalThis.fetch;
+  const codes = Array.from({ length: 150 }, (_, i) => 'Q' + String.fromCharCode(65 + Math.floor(i / 26)) + String.fromCharCode(65 + i % 26));
+  const rows = codes.map(iata => ({ iata, name: iata + ' fixture', lat: 28, lon: -81, state: 'FL', country: 'US', icao: 'K' + iata, scheduled: true, tier: 'Major' }));
+  const checkedAt = '2000-01-01T00:00:00.000Z';
+  const legacy = 'atlas_public_airports_snapshot', canonical = 'atlas_airport_reference_global';
+  await db.tx.update(legacy, [
+    { id: 'head', record: { revision: 'fixture', checkedAt, count: rows.length, chunks: 2 } },
+    { id: 'part_0', record: { revision: 'fixture', airports: rows.slice(0, 80) } },
+    { id: 'part_1', record: { revision: 'fixture', airports: rows.slice(80) } },
+  ]);
+  globalThis.fetch = async () => { throw new Error('Offline fixture'); };
+  try {
+    const first = (await request('GET', '/api/airports/curated', key)).data;
+    const second = (await request('GET', '/api/airports/curated', key)).data;
+    assert.equal(first.stale, true); assert.equal(second.stale, true);
+    assert.equal(second.checkedAt, checkedAt); assert.equal(second.airports.length, 150);
+    const { lookupAirports } = await import('../../api-server/src/field-atlas/backend/providers/airports');
+    assert.equal((await lookupAirports(['QAA']))[0].name, 'QAA fixture');
+  } finally {
+    globalThis.fetch = original;
+    await db.delete(legacy, ['head', 'part_0', 'part_1']);
+    await db.delete(canonical, [...codes, '_head', '_refresh']);
+  }
+});
+
+test('durable maintenance leases prevent concurrent work and restart replay, and catch up across DST', async () => {
+  const { runDurableJob, dailyMaintenanceKey } = await import('../../api-server/src/field-atlas/backend/runtime/jobs');
+  const id = 'fixture-' + randomUUID(); let calls = 0;
+  let finish!: () => void;
+  const waiting = new Promise<void>(resolve => { finish = resolve; });
+  const first = runDurableJob(id, '2026-11-08', async () => { calls++; await waiting; });
+  await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(await runDurableJob(id, '2026-11-08', async () => { calls++; }), false);
+  finish(); assert.equal(await first, true);
+  assert.equal(await runDurableJob(id, '2026-11-08', async () => { calls++; }), false);
+  assert.equal(calls, 1);
+  assert.equal(dailyMaintenanceKey(new Date('2026-11-08T10:59:00Z')), '2026-11-07');
+  assert.equal(dailyMaintenanceKey(new Date('2026-11-08T11:00:00Z')), '2026-11-08');
+  assert.equal(dailyMaintenanceKey(new Date('2026-07-01T09:59:00Z')), '2026-06-30');
+});
+
+test('runtime route contract matches actual registered routes and access middleware', async () => {
+  const { apiContract } = await import('../../api-server/src/api-contract');
+  const contract = apiContract();
+  assert.ok(Object.keys(contract.paths).length > 60);
+  assert.deepEqual((contract.paths['/api/operations'].get as { security: unknown }).security, [{ workspaceLink: [] }]);
+  assert.deepEqual((contract.paths['/api/travel/aviation/{icao}'].get as { security: unknown }).security, []);
+  for (const { route } of handler.routeManifest) assert.ok(contract.paths[route.split(' ')[1].replace(/:([A-Za-z0-9_]+)/g, '{$1}')]);
+});
+
+test('source diagnostics paginate all stations and retain only the latest check per provider and subject', async () => {
+  const prefix = 'status-fixture-' + randomUUID();
+  const table = 'atlas_public_evidence_v1', ids = Array.from({ length: 125 }, (_, i) => prefix + i);
+  const retrievedAt = new Date().toISOString();
+  const base = { provider: prefix, sourceUrl: 'https://example.org/', kind: 'observation', state: 'partial', retrievedAt, version: 'fixture', scope: 'Fixture', limitation: 'Fixture' };
+  await db.tx.update(table, ids.map((id, i) => ({ id, record: { lastAttemptAt: '2026-11-08T12:00:00Z', result: { data: [], evidence: { ...base, id, subject: String(i) } } } })));
+  await db.tx.update(table, [{ id: prefix + '-newer', record: { lastAttemptAt: '2026-11-08T13:00:00Z', result: { data: [], evidence: { ...base, id: prefix + '-newer', subject: '0', version: 'newer' } } } }]);
+  try {
+    const { sourceStatuses } = await import('../../api-server/src/field-atlas/backend/providers/evidence');
+    const results = (await sourceStatuses()).filter(row => row.provider === prefix);
+    assert.equal(results.length, 125); assert.equal(results.find(row => row.subject === '0')?.version, 'newer');
+  } finally { await db.delete(table, [...ids, prefix + '-newer']); }
+});
+
+test('FAA legacy route preserves array notices and leaves an omitted airport unknown', async () => {
+  const original = globalThis.fetch, key = await workspace();
+  const sourceTimeStamp = new Date().toISOString();
+  globalThis.fetch = async () => new Response(JSON.stringify([{ airportId: 'ZZA', sourceTimeStamp,
+    groundDelay: [{ reason: 'Weather fixture', avgDelayMinutes: 35 }], airportConfig: { sourceTimeStamp, arrivalRate: 40 } }]));
+  try {
+    const result = await request('GET', '/api/travel/disruptions?airports=ZZA,ZZB', key);
+    assert.equal(result.status, 200);
+    assert.equal(result.data.airports[0].level, 'critical');
+    assert.equal(result.data.airports[0].events[0].avgMinutes, 35);
+    assert.equal(result.data.airports[0].evidence.state, 'current');
+    assert.equal(result.data.airports[1].level, 'unknown');
+    assert.equal(result.data.airports[1].evidence.state, 'partial');
+  } finally { globalThis.fetch = original; }
+});
+
+test('full source scan includes each historical dataset and flags an incomplete checkpoint sample', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async input => {
+    const url = new URL(String(input));
+    if (url.hostname === 'flyerintel.com') return new Response(JSON.stringify({ meta: { dataset: url.pathname.split('/').at(-1)!.replace('.json', ''), license: 'CC BY 4.0', period: { start: '2026-08-01', end: '2026-08-31' } }, rows: [] }));
+    if (url.hostname === 'datasets-server.huggingface.co') {
+      if (url.searchParams.get('where')?.includes('precheck')) throw Error('Fixture unavailable queue');
+      return new Response(JSON.stringify({ rows: [{ row: { airport: 'MCO', queue_type: 'standard', terminal: 'A', p50_wait: 10, p75_wait: 15, p95_wait: 20, hour_et: '2026-08-02T10:00:00' } }], partial: false, num_rows_total: 1 }));
+    }
+    return new Response('{}');
+  };
+  try {
+    const { refreshPublicSourceStatus } = await import('../../api-server/src/field-atlas/backend/index');
+    const now = new Date().toISOString();
+    await refreshPublicSourceStatus({ type: 'cron', name: 'fixture', scheduledTime: now, invokedTime: now });
+    const [health] = await db.get<{ sources: Array<{ id: string; available: boolean; details: string }> }>('atlas_public_source_health', ['current']);
+    assert.equal(health!.sources.filter(row => row.id.startsWith('flyerintel:')).length, 4);
+    const checkpoint = health!.sources.find(row => row.id === 'checkpoint-history')!;
+    assert.equal(checkpoint.available, false); assert.match(checkpoint.details, /1 historical queue groups/);
+    assert.match(checkpoint.details, /PreCheck historical queue feed unavailable/);
+  } finally { globalThis.fetch = original; }
+});

@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { refreshPublicSourceStatus } from "./field-atlas/backend/index";
+import { runMaintenance } from "./field-atlas/backend/maintenance";
 import { closeEvents } from "./field-atlas/backend/runtime/events";
 import { db } from "./field-atlas/backend/runtime/sdk";
 import { runTravelReviews } from "./field-atlas/backend/travel/watch";
@@ -26,39 +26,11 @@ const travelReviews = setInterval(() => {
 }, 30_000);
 travelReviews.unref();
 
-let lastScan = "";
-let scanning = false;
+// Startup catches up a missed daily pass; persisted completion keys prevent replay.
+void runMaintenance().catch(err => logger.error({ err }, 'Maintenance catch-up failed'));
 const sourceHealthSchedule = setInterval(() => {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-CA", {
-      timeZone: "America/New_York",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    })
-      .formatToParts(new Date())
-      .map((part) => [part.type, part.value]),
-  );
-  const day = `${parts.year}-${parts.month}-${parts.day}`;
-  if (parts.hour !== "06" || parts.minute !== "00" || day === lastScan || scanning) {
-    return;
-  }
-
-  lastScan = day;
-  scanning = true;
-  const now = new Date().toISOString();
-  void refreshPublicSourceStatus({
-    type: "cron",
-    name: "field-atlas-daily-source-health",
-    scheduledTime: now,
-    invokedTime: now,
-  }).finally(() => {
-    scanning = false;
-  });
-}, 30_000);
+  void runMaintenance().catch(err => logger.error({ err }, 'Maintenance pass failed'));
+}, 60_000);
 sourceHealthSchedule.unref();
 
 const server = app.listen(port, (err) => {

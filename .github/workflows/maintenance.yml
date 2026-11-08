@@ -1,0 +1,47 @@
+name: Wake scheduled data maintenance
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: atlas-host-maintenance
+  cancel-in-progress: false
+jobs:
+  maintain:
+    if: ${{ vars.ATLAS_MAINTENANCE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Invoke configured host; skip until credentials are supplied
+        env:
+          ATLAS_MAINTENANCE_URL: ${{ secrets.ATLAS_MAINTENANCE_URL }}
+          ATLAS_MAINTENANCE_TOKEN: ${{ secrets.ATLAS_MAINTENANCE_TOKEN }}
+        run: |
+          if [ -z "$ATLAS_MAINTENANCE_URL" ] || [ -z "$ATLAS_MAINTENANCE_TOKEN" ]; then
+            echo 'Skipped: external maintenance URL/token secrets are not configured.'
+            exit 0
+          fi
+          python - <<'PY'
+          import os, urllib.parse
+          target = urllib.parse.urlparse(os.environ['ATLAS_MAINTENANCE_URL'])
+          assert target.scheme == 'https' and target.hostname and not target.username and not target.password and not target.query and not target.fragment
+          assert target.path == '/api/maintenance/run'
+          assert len(os.environ['ATLAS_MAINTENANCE_TOKEN']) >= 32
+          PY
+          curl --fail --silent --show-error --max-time 1680 \
+            -H "Authorization: Bearer $ATLAS_MAINTENANCE_TOKEN" \
+            -H 'Content-Type: application/json' -d '{}' "$ATLAS_MAINTENANCE_URL" \
+            -o /tmp/atlas-maintenance-result.json
+          python - <<'PY'
+          import json
+          with open('/tmp/atlas-maintenance-result.json') as response:
+              report = json.load(response)
+          outcomes = report.get('outcomes', [])
+          if not outcomes:
+              raise SystemExit('Host returned no maintenance outcomes.')
+          for row in outcomes:
+              print(row['job'] + ': ' + row['state'])
+          if any(row['state'] == 'failed' for row in outcomes):
+              raise SystemExit('A maintenance job failed. Inspect host diagnostics.')
+          PY
