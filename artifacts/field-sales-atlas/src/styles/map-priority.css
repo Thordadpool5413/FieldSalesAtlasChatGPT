@@ -75,8 +75,8 @@ html[data-field-atlas-theme='light'],
   background:
     linear-gradient(90deg, #071226f2 0%, #071226c9 28%, #07122635 66%, #07122608 100%),
     linear-gradient(130deg,
-      color-mix(in srgb, var(--at-rose) 18%, transparent) 0%,
-      color-mix(in srgb, var(--at-sunset) 18%, transparent) 48%,
+      color-mix(in srgb, var(--at-rose) 9%, transparent) 0%,
+      color-mix(in srgb, var(--at-sunset) 10%, transparent) 48%,
       transparent 82%);
 }
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-primary {
@@ -235,9 +235,22 @@ html[data-field-atlas-theme='light'],
   fill: var(--at-airport-reference);
   stroke: var(--at-surface);
 }
+.mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark.primary .mv-airport-bubble,
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark.chosen .mv-airport-bubble {
-  fill: var(--at-cyan);
-  stroke: #fff;
+  fill: var(--at-airport-reference);
+  stroke: var(--at-airport-secondary);
+  stroke-width: 2.2;
+}
+.mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark .atlas-airport-halo {
+  fill: color-mix(in srgb, var(--at-airport-reference) 16%, transparent);
+  stroke: color-mix(in srgb, var(--at-airport-secondary) 48%, transparent);
+}
+.mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark .mv-airport-glyph {
+  fill: var(--at-bg);
+}
+.mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark .mv-airport-code {
+  fill: var(--at-map-label);
+  stroke: var(--at-map-outline);
 }
 .mv-app.atlas-design-v3 .vice-atlas .mv-airport-mark:is(:hover, :focus-visible) .mv-airport-bubble {
   stroke: #fff;
