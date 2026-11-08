@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 // This is the sole final appearance layer, after all feature/component CSS imports.
@@ -7,10 +8,15 @@ import './AtlasAtelier.css';
 import './WorkspaceExperience.css';
 import './styles/miami-vice-system.css';
 import './styles/map-priority.css';
+import './styles/operational-polish.css';
+
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </StrictMode>
 );
 

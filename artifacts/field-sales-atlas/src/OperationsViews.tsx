@@ -293,14 +293,15 @@ export function ManagersPage(){
   const filtered=managers.filter(m=>(m.name+' '+m.trainer+' '+m.baseCity+' '+m.email).toLowerCase().includes(search.toLowerCase())&&(!trainerFilter||m.trainer===trainerFilter));
   return <>
     <PageTitle label="MANAGER INTELLIGENCE" title="Territory managers" description="Territory ownership, coaching cadence, base airports and commitments in one manager profile.">
-      <button className="op-btn primary" disabled={ctx.identity!=='member'} onClick={()=>ctx.open('manager')}><Plus size={16}/> Add manager</button>
+      {managers.length>0&&<button className="op-btn primary" data-testid="button-add-manager"
+        disabled={ctx.identity!=='member'} onClick={()=>ctx.open('manager')}><Plus size={16}/> Add manager</button>}
     </PageTitle>
-    <div className="op-toolbar">
+    {managers.length>0&&<div className="op-toolbar">
       <div className="op-search" style={{maxWidth:430}}><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search names, trainers, locations..." aria-label="Search territory managers"/></div>
       <select value={trainerFilter} onChange={e=>setTrainerFilter(e.target.value)}><option value="">All trainers</option>{trainerList.map(t=><option key={t}>{t}</option>)}</select>
       <span className="op-subtle">{filtered.length} managers shown</span>
-    </div>
-    {!managers.length?<div className="op-card"><Empty icon={Users} title="Start your manager directory" description="Every manager can own several states and counties. Profiles connect coaching and travel." action={ctx.identity==='member'?<button className="op-btn primary" onClick={()=>ctx.open('manager')}><Plus size={15}/> Add manager</button>:undefined}/></div>:
+    </div>}
+    {!managers.length?<div className="op-card"><Empty icon={Users} title="Start your manager directory" description="Every manager can own several states and counties. Profiles connect coaching and travel." action={ctx.identity==='member'?<button className="op-btn primary" data-testid="button-add-manager-empty" onClick={()=>ctx.open('manager')}><Plus size={15}/> Add manager</button>:undefined}/></div>:
     <div className="op-overview-split">
       <section className="op-card fsa-manager-directory" aria-label="Territory manager directory">
         <div className="op-card-header">

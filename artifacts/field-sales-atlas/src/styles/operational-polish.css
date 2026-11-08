@@ -1,0 +1,256 @@
+/* Operational polish: a single, quiet system across the existing Atlas tools. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='dark'] {
+  --at-cyan:#56e4e5;
+  --at-rose:#ff5f91;
+  --at-sunset:#ffb26f;
+  --at-airport-reference:#ffc49b;
+  --at-airport-secondary:#e5a06e;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao {
+  --fao-cyan:var(--at-cyan);
+  --fao-pink:var(--at-rose);
+}
+
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content > :is(.op-error,.op-notice,.op-alert) {
+  flex:0 0 auto;
+  margin-block:0;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-error,.op-notice,.op-alert) {
+  border-radius:9px;
+  line-height:1.5;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-error {
+  border-color:color-mix(in srgb,var(--at-rose) 55%,var(--at-border));
+  background:color-mix(in srgb,var(--at-rose) 9%,var(--at-surface));
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-notice {
+  border-color:color-mix(in srgb,var(--at-cyan) 48%,var(--at-border));
+  background:color-mix(in srgb,var(--at-cyan) 7%,var(--at-surface));
+}
+
+/* Working destinations use one compact editorial strip; the Atlas keeps its photo hero. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) {
+  position:relative;
+  min-height:66px;
+  margin:0;
+  padding:10px 15px 11px 18px;
+  border:1px solid var(--at-border-soft);
+  border-radius:9px;
+  background:linear-gradient(105deg,var(--at-surface),color-mix(in srgb,var(--at-field) 75%,var(--at-surface)));
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head)::before {
+  position:absolute;
+  inset:10px auto 10px 0;
+  width:3px;
+  border-radius:0 3px 3px 0;
+  background:var(--at-rose);
+  content:'';
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) h1 {
+  font-family:var(--vice-display);
+  font-size:clamp(24px,2vw,31px);
+  line-height:1.04;
+  font-weight:700;
+  letter-spacing:.012em;
+  text-transform:uppercase;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) .op-eyebrow {
+  margin:0 0 2px;
+  color:var(--at-cyan);
+  font-size:9px;
+  font-weight:750;
+  letter-spacing:.1em;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) .op-subtitle {
+  margin:4px 0 0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--at-muted);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-head-actions {
+  gap:8px;
+  flex-wrap:wrap;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao .fao-route-primary {
+  background:var(--at-cyan);
+  color:#07192c;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fao .fao-route-primary:hover:not(:disabled) {
+  background:color-mix(in srgb,var(--at-cyan) 82%,white);
+}
+
+/* Repeatable card and data-table rhythm, without changing their feature behavior. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(
+  .op-card,.fsa-hub-head,.fsa-health-panel,.fsa-report-panel,.fsa-report-upcoming,
+  .atlas-guided,.op-modal
+) {
+  border-color:var(--at-border-soft);
+  box-shadow:0 7px 24px color-mix(in srgb,var(--at-bg) 16%,transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-table-scroll,.op-table-wrap) {
+  border:1px solid var(--at-border-soft);
+  border-radius:9px;
+  background:var(--at-surface);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table th {
+  color:var(--at-muted);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table :is(td,th) {
+  border-color:var(--at-border-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table tbody tr {
+  transition:opacity .14s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table tbody tr:hover {
+  background:color-mix(in srgb,var(--at-cyan) 5%,var(--at-surface));
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-empty {
+  min-height:160px;
+  padding:24px;
+  border:1px dashed var(--at-border);
+  border-radius:11px;
+  background:color-mix(in srgb,var(--at-field) 74%,var(--at-surface));
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-empty > svg {
+  color:var(--at-cyan);
+}
+
+/* Tabs and action controls share the cyan action / flamingo selection language. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(
+  .fsa-hub-tabs>button,.atlas-map-view-switch>button,.atlas-v5-lenses>button
+) {
+  transition:opacity .14s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-hub-tabs>button.is-active {
+  color:var(--at-rose);
+  border-bottom-color:var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn,.fsa-button,.travel-button):hover:not(:disabled) {
+  border-color:var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button,input,select,textarea):disabled {
+  filter:saturate(.55);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-screen-loading {
+  min-height:150px;
+  border-color:var(--at-border-soft);
+  border-radius:10px;
+  background:
+    linear-gradient(90deg,transparent, color-mix(in srgb,var(--at-cyan) 5%,transparent),transparent),
+    var(--at-field);
+  color:var(--at-muted);
+}
+
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-api-health {
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:26px;
+  margin-top:7px;
+  padding:4px 8px;
+  border:1px solid var(--at-border-soft);
+  border-radius:99px;
+  background:var(--at-field);
+  color:var(--at-muted);
+  font-size:11px;
+  line-height:1.35;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-api-health>span {
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  border-radius:50%;
+  background:var(--at-cyan);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-api-health.is-error {
+  border-color:color-mix(in srgb,var(--at-rose) 48%,var(--at-border));
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-api-health.is-error>span {
+  background:var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-api-health.is-loading>span {
+  background:var(--at-sunset);
+}
+
+@media(max-width:900px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {
+    gap:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) {
+    min-height:54px;
+    padding:7px 10px 8px 13px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head)::before {
+    inset-block:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) h1 {
+    font-size:23px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) .op-subtitle {
+    font-size:11px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-empty {
+    min-height:130px;
+    padding:18px 14px;
+  }
+}
+@media(max-width:600px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) {
+    gap:8px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) h1 {
+    font-size:21px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content :is(.op-head,.atlas-editorial-head) .op-subtitle {
+    display:none;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-head-actions>.op-btn {
+    min-height:40px;
+    padding-inline:10px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-table-scroll,.op-table-wrap) {
+    max-width:100%;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-table tbody tr,.fsa-hub-tabs>button,.atlas-map-view-switch>button,.atlas-v5-lenses>button) {
+    transition:none;
+  }
+}
+
+/* Keep the first-run map useful in short windows without removing its welcome content. */
+@media(min-width:901px) and (max-height:700px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page:not(.atlas-focused)>.vice-masthead {
+    min-height:106px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page:not(.atlas-focused)>.vice-masthead .vice-masthead-content {
+    padding-block:14px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-map-page:not(.atlas-focused)>.vice-masthead h1 {
+    font-size:clamp(30px,3.5vw,44px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-first-use-guide {
+    gap:8px 12px;
+    padding:9px 12px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-first-use-actions .op-btn {
+    min-height:34px;
+    padding-block:6px;
+  }
+}
+
+/* Short landscape screens already retain the setup chip; keep the map-first quick guide out of the way. */
+@media(max-width:900px) and (max-height:500px) and (orientation:landscape) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-first-use-guide {
+    display:none;
+  }
+}

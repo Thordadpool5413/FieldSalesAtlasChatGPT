@@ -8,7 +8,6 @@ TicketCheck,Waypoints
 import { readBookedFlights } from './BookedFlightLogic';
 import FieldMissionBrief from './FieldMissionBrief';
 import MobileJourneyPeek from './MobileJourneyPeek';
-import OceanMasthead from './OceanMasthead';
 import { useOp } from './Operations';
 import type { Manager } from './opsModels';
 import { dateLabel,today } from './opsModels';
@@ -128,9 +127,19 @@ export default function TravelStart({ onSectionChange,onDestination,onCircuit }:
 
   return (
     <main className='fao' aria-label='Field Atlas travel desk'>
-      <OceanMasthead title="Make the next move count."
-        description="Plan the field. Protect the trip. Stay in sync."
-        action="New trip" onAction={()=>onSectionChange('travel')}/>
+      <header className="op-head atlas-editorial-head fao-workbench-head">
+        <div>
+          <p className="op-eyebrow"><span className="atlas-beacon" aria-hidden="true"/> FIELD TRAVEL / PLANNING</p>
+          <h1>Make the next move count<span className="atlas-page-period" aria-hidden="true">.</span></h1>
+          <p className="op-subtitle">Plan the field. Protect the trip. Stay in sync.</p>
+        </div>
+        <div className="op-head-actions">
+          <button type="button" className="op-btn primary" data-testid="button-new-trip"
+            onClick={()=>onSectionChange('travel')}>
+            New trip <ArrowRight size={16}/>
+          </button>
+        </div>
+      </header>
       <div className="vice-travel-context"><span>{activeName} · {dateLabel(currentDate,{weekday:'short',month:'short',day:'numeric'})}</span>
         <button type="button" onClick={()=>onSectionChange('radar')}><Radar size={16}/> Flight DNA <ArrowRight size={16}/></button></div>
 

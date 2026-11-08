@@ -112,6 +112,29 @@ test('empty calendar has one time-block action and a header that fits the window
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('empty manager directory offers one clear action and no unused filters', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?page=people');
+
+  await expect(page.getByRole('button', { name: 'Add manager', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('textbox', { name: 'Search territory managers' })).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'All trainers' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Add manager', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Add territory manager' })).toBeVisible();
+});
+
+test('travel start uses a compact working header instead of the photo hero', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/?page=plan&tool=start');
+
+  const header = page.locator('.fao-workbench-head');
+  await expect(header).toBeVisible();
+  await expect(page.getByTestId('button-new-trip')).toBeVisible();
+  await expect(header.locator('.vice-masthead-image')).toHaveCount(0);
+  expect((await header.boundingBox())!.height).toBeLessThan(120);
+});
+
 test('a direct data-page link waits for workspace access before opening diagnostics', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -121,7 +144,10 @@ test('a direct data-page link waits for workspace access before opening diagnost
   });
   await page.goto('/?page=data');
   await expect(page.getByRole('heading', { name: 'Data & exports' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Backend integrity and live data-source diagnostics' })).toBeVisible();
+  const diagnostics = page.getByRole('region', { name: 'Backend integrity and live data-source diagnostics' });
+  await expect(diagnostics).toBeVisible();
+  await expect(diagnostics.getByTestId('status-api-health'))
+    .toContainText(/API responding|API availability could not be confirmed/);
   await expect(page.getByText('Empty workspace', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -372,9 +398,9 @@ test('phone users can browse an accessible, searchable map list with source deta
   await expect(filter).toHaveValue('California');
   await expect(page.getByTestId('region-row-CA')).toBeVisible();
 
-  const sources = page.getByTestId('data-sources');
+  const sources = page.locator('.atlas-data-sources:visible').first();
   await sources.locator('summary').click();
-  const airportSource = page.getByTestId('source-airports');
+  const airportSource = sources.getByTestId('source-airports');
   await expect(airportSource).toContainText('OurAirports reference directory');
   await expect(airportSource).toContainText('not live flights');
 

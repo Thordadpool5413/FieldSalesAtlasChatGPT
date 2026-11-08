@@ -1,5 +1,6 @@
 import { Activity,AlertTriangle,CheckCircle2,DatabaseZap,RefreshCw,ShieldCheck,Wifi,WifiOff } from 'lucide-react';
 import { useCallback,useEffect,useState } from 'react';
+import { getHealthCheckQueryKey,useHealthCheck } from '../../../lib/api-client-react/src/generated/api';
 import './BackendReadiness.css';
 import { api } from './workspaceApi';
 
@@ -13,6 +14,9 @@ const labels:Record<string,string>={
 };
 
 export default function BackendReadiness(){
+  const {data:apiHealth,isLoading:apiHealthLoading,isError:apiHealthError}=useHealthCheck({
+    query:{staleTime:30_000,queryKey:getHealthCheckQueryKey()}
+  });
   const [health,setHealth]=useState<Health|null>(null);
   const [sources,setSources]=useState<Sources|null>(null);
   const [checking,setChecking]=useState(false);
@@ -57,6 +61,13 @@ export default function BackendReadiness(){
         <span className='fsa-health-eyebrow'>SYSTEM DIAGNOSTICS · SOURCE BACKED</span>
         <h2>Intelligence health</h2>
         <p>Check your saved workspace for missing relationships, schedule collisions and external source outages.</p>
+        <div className={'fsa-api-health'+(apiHealthError?' is-error':apiHealthLoading?' is-loading':' is-ready')}
+          role='status' data-testid='status-api-health' aria-live='polite'>
+          <span aria-hidden='true'/>
+          {apiHealthLoading?'Checking API availability…':apiHealthError
+            ?'API availability could not be confirmed'
+            :'API responding · '+(apiHealth?.status||'Status not reported')}
+        </div>
       </div>
     </header>
     <div className='fsa-health-grid'>
