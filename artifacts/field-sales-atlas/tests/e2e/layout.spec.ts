@@ -231,6 +231,61 @@ test('desktop navigation and workspace search explain specialized tools without 
   await expect(page).toHaveURL(/page=plan&tool=radar/);
 });
 
+test('tool purpose copy stays the same in desktop, phone, search and Travel tabs', async ({ page }) => {
+  const travelTools = [
+    { label: 'Flight DNA', description: 'Check past flights, airport alerts, and weather.' },
+    { label: 'Booked flights', description: 'Review imported itineraries and flight details.' },
+    { label: 'Airport & route planner', description: 'Compare airports and routes for a trip.' },
+    { label: 'Itineraries', description: 'Review saved trip plans.' },
+    { label: 'Our Week', description: 'See the team’s weekly schedule.' },
+    { label: 'Coordinate trainers', description: 'Balance trainer coverage and find better visit options.' },
+  ];
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/?page=plan&tool=radar');
+  const desktopInsights = page.getByRole('navigation', { name: 'insights sections' });
+  for (const item of travelTools.filter(tool => ['Flight DNA', 'Booked flights'].includes(tool.label))) {
+    const button = desktopInsights.getByRole('button', { name: item.label, exact: true });
+    await expect(button.locator('small')).toHaveText(item.description);
+  }
+  const desktopTeam = page.getByRole('navigation', { name: 'team sections' });
+  const coordinate = desktopTeam.getByRole('button', { name: 'Coordinate trainers', exact: true });
+  await expect(coordinate.locator('small')).toHaveText(travelTools[5].description);
+  await page.getByText('More tools', { exact: true }).click();
+  const desktopMore = page.getByRole('navigation', { name: 'Additional workspace tools' });
+  const planner = desktopMore.getByRole('button', { name: 'Airport & route planner', exact: true });
+  await expect(planner.locator('small')).toHaveText(travelTools[2].description);
+
+  const tabs = page.getByRole('tablist', { name: 'Planning tools' });
+  for (const [index, item] of travelTools.entries()) {
+    const tab = tabs.getByRole('tab').nth(index);
+    await expect(tab.locator('strong')).toHaveText(item.label);
+    await expect(tab.locator('small')).toHaveText(item.description);
+  }
+
+  await page.keyboard.press('Control+k');
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
+  const searchInput = search.getByRole('combobox');
+  for (const item of travelTools) {
+    await searchInput.fill(item.label);
+    const result = search.getByRole('option').filter({ hasText: item.label }).last();
+    await expect(result.locator('small')).toHaveText(item.description);
+  }
+  await search.getByRole('button', { name: 'Close search' }).click();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?page=plan&tool=radar');
+  await page.getByRole('button', { name: 'Open tools and navigation' }).click();
+  const drawer = page.getByRole('dialog', { name: 'Field Sales Atlas tools and navigation' });
+  for (const item of travelTools.filter(tool => ['Flight DNA', 'Booked flights', 'Coordinate trainers'].includes(tool.label))) {
+    const button = drawer.getByRole('button', { name: item.label, exact: true });
+    await expect(button.locator('small')).toHaveText(item.description);
+  }
+  const phonePlanner = drawer.getByRole('group', { name: 'More tools' })
+    .getByRole('button', { name: 'Airport & route planner', exact: true });
+  await expect(phonePlanner.locator('small')).toHaveText(travelTools[2].description);
+});
+
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
   test(`first-time visitors can choose setup, map or travel at ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);

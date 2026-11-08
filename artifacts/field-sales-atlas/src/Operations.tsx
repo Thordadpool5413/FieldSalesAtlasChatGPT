@@ -1,24 +1,20 @@
 
 import {
-Activity,
 ArrowRight,
 CalendarDays,
 CheckCircle2,
 ChevronDown,ChevronLeft,
 CircleAlert,
 ClipboardCheck,
-Compass,Database,LayoutDashboard,Map as MapIcon,
+Compass,LayoutDashboard,
 Moon,
 MoreHorizontal,
 PanelLeftClose,PanelLeftOpen,
 Plane,Plus,
 RefreshCw,
-Route,
 Settings,
 Share2,
-ShieldCheck,
 Smartphone,
-Sparkles,
 Sun,
 Users,X
 } from 'lucide-react';
@@ -49,6 +45,8 @@ import './SharedWorkspace.css';
 import SharedWorkspacePage from './SharedWorkspacePage';
 import TrainerProfilesEditor from './TrainerProfilesEditor';
 import WorkspaceSetup from './WorkspaceSetup';
+import { workspaceTool } from './workspaceTools';
+import type { WorkspaceTool } from './workspaceTools';
 import localUsAtlas from './us-states-10m.json';
 import { api,createNewWorkspace,getShareUrl,initializeWorkspace } from './workspaceApi';
 const AirTravelPage = lazy(() => import('./AirTravel'));
@@ -98,39 +96,20 @@ export function useOp():Context {
   return context;
 }
 // The Atlas is the application's home. Travel remains a separate working tool.
-const MIAMI_NAV: Array<{id:Page;label:string;icon:typeof Plane}>=[
-  {id:'home',label:'Atlas',icon:MapIcon},
-  {id:'plan',label:'Travel',icon:Plane},
-  {id:'people',label:'People',icon:Users},
-  {id:'calendar',label:'Calendar',icon:CalendarDays},
-];
+const MIAMI_NAV=[workspaceTool('atlas'),workspaceTool('travel'),workspaceTool('people'),workspaceTool('calendar')];
 const QUICK_NAV=MIAMI_NAV;
 // Surface existing working tools without changing the four-tab phone navigation.
-type NavItem={id:Page;label:string;icon:typeof Plane;description?:string};
-const FIELD_SHORTCUTS: NavItem[]=[
-  {id:'mission',label:'Mission Control',icon:Sparkles,description:'Review field readiness and find work that needs attention.'},
-  {id:'radar',label:'Flight DNA',icon:Activity,description:'Check past flights, airport alerts, and weather.'},
-  {id:'booked',label:'Booked flights',icon:Plane,description:'Review imported itineraries and flight details.'},
-  {id:'coordinate',label:'Coordinate trainers',icon:Route,description:'Balance trainer coverage and find better visit options.'},
-  {id:'coaching',label:'Coaching desk',icon:ClipboardCheck,description:'Review coaching notes and follow-up commitments.'},
-];
-const MIAMI_MORE: NavItem[]=[
-  {id:'overview',label:'Reports',icon:Activity,description:'See regional coverage and manager activity.'},
-  {id:'air',label:'Airport & route planner',icon:Plane,description:'Compare airports and routes for a trip.'},
-  {id:'map',label:'County & ZIP explorer',icon:Compass,description:'Explore counties, towns, and ZIP territories.'},
-  {id:'data',label:'Data & exports',icon:Database,description:'Import or download workspace records.'},
-  {id:'team',label:'Sharing & recovery',icon:ShieldCheck,description:'Manage sharing and restore workspace data.'},
-];
+type NavItem=WorkspaceTool;
 const DESKTOP_NAV_GROUPS:Array<{label:string;items:NavItem[]}>=[
-  {label:'PLAN',items:[MIAMI_NAV[0],MIAMI_NAV[1],MIAMI_NAV[3]]},
-  {label:'TEAM',items:[MIAMI_NAV[2],FIELD_SHORTCUTS[3],FIELD_SHORTCUTS[4]]},
-  {label:'INSIGHTS',items:[FIELD_SHORTCUTS[0],FIELD_SHORTCUTS[1],FIELD_SHORTCUTS[2],MIAMI_MORE[0]]},
+  {label:'PLAN',items:[workspaceTool('atlas'),workspaceTool('travel'),workspaceTool('calendar')]},
+  {label:'TEAM',items:[workspaceTool('people'),workspaceTool('coordinate'),workspaceTool('coaching')]},
+  {label:'INSIGHTS',items:[workspaceTool('mission'),workspaceTool('radar'),workspaceTool('booked'),workspaceTool('reports')]},
 ];
-const PRIMARY_NAV_IDS=new Set<Page>(MIAMI_NAV.map(item=>item.id));
+const PRIMARY_NAV_IDS=new Set<Page>(MIAMI_NAV.map(item=>item.page));
 const MOBILE_TOOL_GROUPS=DESKTOP_NAV_GROUPS
-  .map(group=>({label:group.label,items:group.items.filter(item=>!PRIMARY_NAV_IDS.has(item.id))}))
+  .map(group=>({label:group.label,items:group.items.filter(item=>!PRIMARY_NAV_IDS.has(item.page))}))
   .filter(group=>group.items.length>0);
-const ADDITIONAL_TOOLS=MIAMI_MORE.filter(item=>item.id!=='overview');
+const ADDITIONAL_TOOLS=[workspaceTool('air'),workspaceTool('map'),workspaceTool('data'),workspaceTool('sharing')];
 function isNavItemActive(id:Page,view:Page,planSection:string,peopleSection:string){
   if(id==='mission')return view==='mission';
   if(id==='coaching')return view==='people'&&peopleSection==='coaching';
@@ -688,34 +667,34 @@ function Product(){
             <nav className="fsa-side-nav fsa-side-tools" aria-label={group.label.toLowerCase()+' sections'}>
               {group.items.map(item=>{
               const Icon=item.icon;
-              const active=isNavItemActive(item.id,view,planSection,peopleSection);
+              const active=isNavItemActive(item.page,view,planSection,peopleSection);
               return <button type="button" key={item.id}
                 className={'fsa-side-link fsa-tool-link'+(active?' active':'')}
                 aria-current={active?'page':undefined}
                 aria-label={item.label}
                 aria-describedby={item.description?'fsa-tool-description-desktop-'+item.id:undefined}
-                title={item.label} onClick={()=>go(item.id)}>
+                title={item.label} onClick={()=>go(item.page)}>
                 <Icon size={19}/><span className="fsa-tool-copy">
                   <strong id={'fsa-tool-label-desktop-'+item.id}>{item.label}</strong>
-                  {item.description&&<small id={'fsa-tool-description-desktop-'+item.id}>{item.description}</small>}
+                  <small id={'fsa-tool-description-desktop-'+item.id}>{item.description}</small>
                 </span>
               </button>;
             })}
             </nav>
           </section>)}
-          <details className="fsa-more-tools" key={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.id,view,planSection,peopleSection))?'more-active':'more-inactive'}
-            open={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.id,view,planSection,peopleSection))?true:undefined}>
+          <details className="fsa-more-tools" key={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.page,view,planSection,peopleSection))?'more-active':'more-inactive'}
+            open={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.page,view,planSection,peopleSection))?true:undefined}>
             <summary><Settings size={19}/><span>More tools</span><ChevronDown size={15}/></summary>
             <nav aria-label="Additional workspace tools">
               {ADDITIONAL_TOOLS.map(item=>{
                 const Icon=item.icon;
-                const active=isNavItemActive(item.id,view,planSection,peopleSection);
-                return <button key={item.id} type="button" onClick={()=>go(item.id)}
+                const active=isNavItemActive(item.page,view,planSection,peopleSection);
+                return <button key={item.id} type="button" onClick={()=>go(item.page)}
                   className={active?'active':''} aria-current={active?'page':undefined} aria-label={item.label}
-                  aria-describedby={item.description?'fsa-tool-description-more-'+item.id:undefined}>
+                  aria-describedby={'fsa-tool-description-more-'+item.id}>
                   <Icon size={16}/><span className="fsa-tool-copy">
                     <strong id={'fsa-tool-label-more-'+item.id}>{item.label}</strong>
-                    {item.description&&<small id={'fsa-tool-description-more-'+item.id}>{item.description}</small>}
+                    <small id={'fsa-tool-description-more-'+item.id}>{item.description}</small>
                   </span>
                 </button>;
               })}
@@ -854,14 +833,14 @@ function Product(){
           <span className="fsa-drawer-section" role="heading" aria-level={2}>{group.label}</span>
           {group.items.map(item=>{
             const Icon=item.icon;
-            const active=isNavItemActive(item.id,view,planSection,peopleSection);
+            const active=isNavItemActive(item.page,view,planSection,peopleSection);
             return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
               aria-label={item.label}
-              aria-describedby={item.description?'fsa-tool-description-mobile-'+item.id:undefined}
-              onClick={()=>go(item.id)}>
+              aria-describedby={'fsa-tool-description-mobile-'+item.id}
+              onClick={()=>go(item.page)}>
               <Icon size={18}/><span className="fsa-mobile-tool-copy">
                 <strong id={'fsa-tool-label-mobile-'+item.id}>{item.label}</strong>
-                <small id={'fsa-tool-description-mobile-'+item.id}>{item.description}</small>
+              <small id={'fsa-tool-description-mobile-'+item.id}>{item.description}</small>
               </span>
             </button>;
           })}
@@ -870,11 +849,11 @@ function Product(){
         <span className="fsa-drawer-section" role="heading" aria-level={2}>MORE TOOLS</span>
         {ADDITIONAL_TOOLS.map(item=>{
           const Icon=item.icon;
-          const active=isNavItemActive(item.id,view,planSection,peopleSection);
+          const active=isNavItemActive(item.page,view,planSection,peopleSection);
           return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
             aria-label={item.label}
-            aria-describedby={item.description?'fsa-tool-description-mobile-more-'+item.id:undefined}
-            onClick={()=>go(item.id)}>
+            aria-describedby={'fsa-tool-description-mobile-more-'+item.id}
+            onClick={()=>go(item.page)}>
             <Icon size={18}/><span className="fsa-mobile-tool-copy">
               <strong id={'fsa-tool-label-mobile-more-'+item.id}>{item.label}</strong>
               <small id={'fsa-tool-description-mobile-more-'+item.id}>{item.description}</small>
@@ -932,10 +911,10 @@ function Product(){
       <nav className="mv-bottom-nav ios-tab-bar" aria-label="Primary iPhone tabs">
         {QUICK_NAV.map(item=>{
           const Icon=item.icon;
-          return <button key={item.id} type="button" className={view===item.id?'active':''}
-            aria-label={item.label} aria-current={view===item.id?'page':undefined}
-            onClick={()=>go(item.id)}>
-            <span className="ios-tab-icon"><Icon size={22} strokeWidth={view===item.id?2.2:1.85}/></span>
+          return <button key={item.id} type="button" className={view===item.page?'active':''}
+            aria-label={item.label} aria-current={view===item.page?'page':undefined}
+            onClick={()=>go(item.page)}>
+            <span className="ios-tab-icon"><Icon size={22} strokeWidth={view===item.page?2.2:1.85}/></span>
             <span className="ios-tab-label">{item.label}</span>
           </button>;
         })}

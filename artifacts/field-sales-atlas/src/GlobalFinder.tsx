@@ -6,6 +6,7 @@ import type { Page } from './Operations';
 import { useOp } from './Operations';
 import type { Visit } from './opsModels';
 import { STATES,dateLabel } from './opsModels';
+import { WORKSPACE_TOOLS } from './workspaceTools';
 import { api } from './workspaceApi';
 
 type Result = {
@@ -16,24 +17,7 @@ type Result = {
 };
 
 
-const TOOL_CATALOG:Array<{page:Page;label:string;detail:string;terms:string}> = [
-  {page:'home',label:'Atlas map',detail:'Interactive territory geography',terms:'states map geography'},
-  {page:'mission',label:'Mission Control',detail:'Review field readiness and find work that needs attention',terms:'dashboard mission overview'},
-  {page:'plan',label:'Travel',detail:'Field travel workspace',terms:'travel booking flight planning'},
-  {page:'radar',label:'Flight DNA',detail:'Check past flights, airport alerts, and weather',terms:'weather delays flight radar'},
-  {page:'booked',label:'Booked Flights',detail:'Review imported itineraries and flight details',terms:'flight guardian ticket'},
-  {page:'air',label:'Airport & route planner',detail:'Compare airports and routes for a trip',terms:'route airports comparison'},
-  {page:'coordinate',label:'Trainer Coordination',detail:'Balance trainer coverage and find better visit options',terms:'two-trainer availability work'},
-  {page:'week',label:'Our Week',detail:'Team weekly schedule',terms:'shared weekly agenda'},
-  {page:'people',label:'People',detail:'Manager directory',terms:'contacts roster'},
-  {page:'coaching',label:'Coaching Desk',detail:'Review coaching notes and follow-up commitments',terms:'ride along notes follow-up'},
-  {page:'calendar',label:'Calendar',detail:'Visits and availability',terms:'appointments agenda'},
-  {page:'overview',label:'Reports and Coverage Pulse',detail:'See regional coverage and manager activity',terms:'dashboard charts distribution metrics'},
-  {page:'map',label:'County & ZIP explorer',detail:'Explore counties, towns, and ZIP territories',terms:'geography county drilldown'},
-  {page:'data',label:'Data & Exports',detail:'Import or download workspace records',terms:'csv download backup'},
-  {page:'team',label:'Sharing & Recovery',detail:'Manage sharing and restore workspace data',terms:'shared access restore'}
-];
-const LAUNCH_TOOLS:Page[]=['home','mission','radar','coordinate','overview','calendar'];
+const LAUNCH_TOOLS=['atlas','mission','radar','coordinate','reports','calendar'];
 
 type Props = { enableKeyboardShortcut?: boolean };
 export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
@@ -177,10 +161,10 @@ export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
         detail:item.year+' U.S. Census · Nationwide geographic reference · Open ZCTA Explorer',
         areaCode:item.code
       }));
-    const toolMatches=TOOL_CATALOG
-      .filter(x=>(x.label+' '+x.detail+' '+x.terms).toLowerCase().includes(value))
+    const toolMatches=WORKSPACE_TOOLS
+      .filter(x=>(x.label+' '+x.description+' '+x.terms).toLowerCase().includes(value))
       .slice(0,7).map(x=>({id:'tool:'+x.page,kind:'tool' as const,
-        label:x.label,detail:x.detail,page:x.page}));
+        label:x.label,detail:x.description,page:x.page}));
     return [...censusZctas,...people,...region,...airports,...toolMatches,...zipAreas,...counties,...places,...savedVisits,...savedTrips].slice(0,30);
   },[query,nationalZctas,ctx.board.managers,ctx.board.visits,ctx.board.trips,ctx.airports,ctx.geo.state,ctx.geo.counties,ctx.geo.places,ctx.board.assignments,ctx.state]);
   function choose(result:Result){
@@ -242,10 +226,10 @@ export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
             <strong>People, places and plans. One search.</strong>
             <p>Find managers, flights, tools, and nationwide Census ZIP tabulation areas.</p>
              <div className='fsa-command-shortcuts' role='group' aria-label='Launch a field tool'>
-               {TOOL_CATALOG.filter(item=>LAUNCH_TOOLS.includes(item.page)).map(item=>
-                 <button type='button' key={item.page}
+               {WORKSPACE_TOOLS.filter(item=>LAUNCH_TOOLS.includes(item.id)).map(item=>
+                 <button type='button' key={item.id}
                    onClick={()=>{ctx.go(item.page);setOpen(false);setQuery('');setIndex(0);}}>
-                   <Command size={15}/><span><strong>{item.label}</strong><small>{item.detail}</small></span><ArrowRight size={14}/>
+                   <Command size={15}/><span><strong>{item.label}</strong><small>{item.description}</small></span><ArrowRight size={14}/>
                  </button>)}
              </div>
           </div>:results.length?results.map((result,i)=>{

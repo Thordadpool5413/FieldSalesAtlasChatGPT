@@ -1,9 +1,11 @@
-import { ArrowLeft,CalendarDays,ClipboardCheck,PlaneTakeoff,Radar,Route,TicketCheck,Users,Waypoints } from 'lucide-react';
+import { ArrowLeft,ClipboardCheck,Route,Users,Waypoints } from 'lucide-react';
 import { lazy,Suspense } from 'react';
 import { TripsPage } from './OperationsTrip';
 import { CoachingPage,ManagersPage } from './OperationsViews';
 import type { Manager } from './opsModels';
 import TravelStart from './TravelStart';
+import { workspaceTool } from './workspaceTools';
+import type { TravelTool } from './workspaceTools';
 const TripPlanningExperience = lazy(() => import('./TripPlanningExperience'));
 const TwoTrainerWeek = lazy(() => import('./TwoTrainerWeek'));
 const TrainerCoordination = lazy(() => import('./TrainerCoordination'));
@@ -11,7 +13,7 @@ const FlightRadar = lazy(() => import('./FlightRadar'));
 const FlightGuardian = lazy(() => import('./FlightGuardian'));
 
 type Region = { code:string; name:string; country:'US'|'CA' };
-type Tab = 'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips';
+type Tab = 'start'|TravelTool;
 type Props = {
   section:Tab;
   onSectionChange:(section:Tab)=>void;
@@ -21,13 +23,8 @@ type Props = {
 
 export default function PlanHub({section,onSectionChange,onDestination,onCircuit}:Props){
   const sections=[
-    {id:'start' as const,label:'Home',icon:Route,detail:'See your travel plans and next steps'},
-    {id:'radar' as const,label:'Flight DNA',icon:Radar,detail:'Check past flights, airport alerts, and weather'},
-    {id:'booked' as const,label:'Booked Flights',icon:TicketCheck,detail:'Review imported itineraries and flight details'},
-    {id:'travel' as const,label:'Plan Travel',icon:PlaneTakeoff,detail:'Compare airports and routes for a trip'},
-    {id:'trips' as const,label:'Itineraries',icon:Route,detail:'Review saved trip plans'},
-    {id:'week' as const,label:'Our Week',icon:CalendarDays,detail:'See the team’s weekly schedule'},
-    {id:'coordinate' as const,label:'Coordinate',icon:Waypoints,detail:'Balance trainer coverage and visit plans'},
+    workspaceTool('radar'),workspaceTool('booked'),workspaceTool('air'),
+    workspaceTool('itineraries'),workspaceTool('week'),workspaceTool('coordinate'),
   ];
   return <section className={'fsa-hub fsa-plan-hub'+(section==='radar'?' fs-flight-focused':'')+(section==='start'?' fsa-plan-home':'')} aria-label='Field planning'>
     {section!=='start'&&<header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>
@@ -44,20 +41,21 @@ export default function PlanHub({section,onSectionChange,onDestination,onCircuit
         <span className='sr-only'>Travel tool</span>
         <select value={section} aria-label='Choose travel tool'
           onChange={event=>onSectionChange(event.target.value as Tab)}>
-          {sections.filter(item=>item.id!=='start').map(item=>
-            <option value={item.id} key={item.id}>{item.label}</option>)}
+          {sections.map(item=>
+            <option value={item.travelTool} key={item.id}>{item.label}</option>)}
         </select>
       </label>
     </div>}
     {section!=='start'&&<div className='fsa-hub-tabs' role='tablist' aria-label='Planning tools'>
       {sections.map(item=>{
         const Icon=item.icon;
-        return <button type='button' role='tab' aria-selected={section===item.id} key={item.id}
-          className={section===item.id?'is-active':''}
+        const id=item.travelTool!;
+        return <button type='button' role='tab' aria-selected={section===id} key={item.id}
+          className={section===id?'is-active':''}
           onClick={()=>{
-            onSectionChange(item.id);
-          }} onKeyDown={event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const i=sections.findIndex(s=>s.id===section);const next=(i+(event.key==='ArrowRight'?1:-1)+sections.length)%sections.length;onSectionChange(sections[next].id);event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button[role="tab"]')[next]?.focus();}}}>
-          <Icon size={20}/><span><strong>{item.label}</strong><small>{item.detail}</small></span>
+            onSectionChange(id);
+          }} onKeyDown={event=>{if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const i=sections.findIndex(s=>s.travelTool===section);const next=(i+(event.key==='ArrowRight'?1:-1)+sections.length)%sections.length;onSectionChange(sections[next].travelTool!);event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button[role="tab"]')[next]?.focus();}}}>
+          <Icon size={20}/><span><strong>{item.label}</strong><small>{item.description}</small></span>
         </button>;
       })}
     </div>}
