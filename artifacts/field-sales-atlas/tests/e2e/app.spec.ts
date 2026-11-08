@@ -179,7 +179,7 @@ test('map symbols and controls stay clear in both map modes and themes', async (
   await expect(mapKey).toContainText('Saved territory');
   await expect(mapKey).toContainText('Workspace assignment');
   await expect(mapKey).toContainText('Public airport');
-  await expect(mapKey).toContainText('Location reference, not live flights');
+  await expect(mapKey).toContainText('Location only—not territory or flight status');
   await expect(mapKey).toContainText('Workspace records');
   await expect(assignedRegion).toHaveCount(1);
   await expect(airportMarker).toHaveCount(1);
@@ -298,9 +298,9 @@ test('first visit welcomes; returning visit keeps the map compact and usable', a
 
   await page.reload();
   await expect(welcome).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
   await expect(page.locator('.fsa-map-heading')).toBeVisible();
   await expect(page.locator('.fsa-map-heading-text')).toHaveCount(0);
-  await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
   await expectMapProminentAndUsable(true);
   expect(await page.evaluate(() => localStorage.getItem('field-atlas-map-welcome-v1'))).toBe('seen');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
@@ -345,7 +345,7 @@ test('saved territory stays selected in the compact map after reload', async ({ 
 
   await expect(regionPicker).toHaveValue('FL');
   if (mobile) {
-    const focusMap = page.getByRole('button', { name: 'Focus', exact: true });
+    const focusMap = page.getByRole('button', { name: 'Focus map', exact: true });
     await expect(focusMap).toBeVisible();
     await focusMap.click();
     await expect(inspector).toBeHidden();

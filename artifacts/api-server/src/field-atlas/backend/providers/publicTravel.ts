@@ -106,7 +106,7 @@ export function canadianObservations(lat: number, lon: number) {
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');
-      if (!root.features.length) return { data: [], limitation: 'No Canadian surface observations were returned; current status is unknown.' };
+      if (!root.features.length) return { data: [], limitation: 'No nearby surface observations were returned; current Canadian weather status is unknown.' };
       return parseCanadianObservations(value, Date.now(), { allowStaleFallback: true });
     },
   });
