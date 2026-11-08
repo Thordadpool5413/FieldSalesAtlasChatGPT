@@ -9,6 +9,7 @@ import { territoryPeople } from './fieldExperience';
 import type { LiveMapHandle } from './LiveTerritoryMap';
 import './MapIntelligence.css';
 import OceanMasthead from './OceanMasthead';
+import { trackEvent } from './analytics';
 import { useOp } from './Operations';
 import type { Airport,Assignment,Manager } from './opsModels';
 import { STATES,coachingPriority,dateLabel,today } from './opsModels';
@@ -360,10 +361,12 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
     onDestination(target,person,referenceForRegion(target),arrivalAirport);
   }
   function startSetupFromWelcome(){
+    trackEvent('onboarding_path_selected',{path:'setup'});
     setShowMapWelcome(false);
     onStartSetup();
   }
   function exploreMapFromWelcome(){
+    trackEvent('onboarding_path_selected',{path:'map'});
     setShowMapWelcome(false);
     window.requestAnimationFrame(()=>{
       const picker=document.getElementById('atlas-region-picker');
@@ -376,6 +379,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
     });
   }
   function planTravelFromWelcome(){
+    trackEvent('onboarding_path_selected',{path:'travel'});
     setShowMapWelcome(false);
     ctx.go('air');
   }

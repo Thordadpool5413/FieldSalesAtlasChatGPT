@@ -1,10 +1,31 @@
 import { ArrowRight, Check, ChevronDown, CircleAlert, Compass, Minus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { trackEvent } from './analytics';
 import { useOp } from './Operations';
 import { canReturnFromDemo, openDemoWorkspace, returnFromDemo } from './workspaceApi';
 
 export default function WorkspaceSetup({ expanded, onExpandedChange }: { expanded: boolean; onExpandedChange: (value: boolean) => void }) {
   const ctx = useOp();
+  const demo = ctx.board.team?.name === 'Field Sales Atlas demo';
+  const stepCompletion = {
+    manager: !!ctx.board.managers?.length,
+    territory: !!ctx.board.assignments?.length,
+    visit: !!ctx.board.visits?.length,
+  };
+  const previousCompletion = useRef(stepCompletion);
+  useEffect(() => {
+    const steps = [
+      ['manager', stepCompletion.manager],
+      ['territory', stepCompletion.territory],
+      ['visit', stepCompletion.visit],
+    ] as const;
+    for (const [step, done] of steps) {
+      if (!demo && !previousCompletion.current[step] && done) {
+        trackEvent('onboarding_setup_step_completed', { step });
+      }
+    }
+    previousCompletion.current = stepCompletion;
+  }, [demo, stepCompletion.manager, stepCompletion.territory, stepCompletion.visit]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const workspaceId = ctx.board.team?.id || '';
@@ -21,7 +42,6 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
     try { return localStorage.getItem(dismissalKey) ? workspaceId : ''; } catch { return ''; }
   });
   if (ctx.identity !== 'member') return null;
-  const demo = ctx.board.team?.name === 'Field Sales Atlas demo';
   if (demo) return <section className="atlas-demo-notice" aria-label="Demo workspace">
     <div><strong>Demo workspace</strong><span>Sample people and territories. Your original workspace is separate.</span></div>
     {canReturnFromDemo() && <button className="op-btn" onClick={() => { returnFromDemo(); window.location.reload(); }}>Return to my workspace <ArrowRight size={16}/></button>}
