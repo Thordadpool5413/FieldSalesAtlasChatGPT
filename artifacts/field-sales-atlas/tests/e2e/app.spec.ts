@@ -612,3 +612,23 @@ test('flight intelligence displays source age and stops using expired station ev
   await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true })).toHaveCount(0);
   await expect(source.locator('.journey-state')).toHaveText('stale');
 });
+
+test('a failed page module keeps Atlas recovery navigation and saved workspace records available', async ({ page }) => {
+  await page.route('**/assets/FlightRadar-*.js', route => route.fulfill({
+    contentType: 'application/javascript', body: "throw new Error('Fixture page module failure'); export default function FailedPage() {}"
+  }));
+  await page.goto('/?page=plan&tool=radar');
+  const failure = page.getByRole('alert').filter({ has: page.getByRole('heading', { name: /This page couldn.t be displayed/ }) });
+  await expect(failure).toBeVisible();
+  await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
+  const key = new URL(page.url()).hash.slice('#workspace='.length);
+  const before = await (await page.request.get('/api/operations?workspaceKey=' + key)).json();
+  await failure.getByRole('button', { name: 'Return to Atlas', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
+  await expect(failure).toHaveCount(0);
+  expect(new URL(page.url()).hash).toBe('#workspace=' + key);
+  const after = await (await page.request.get('/api/operations?workspaceKey=' + key)).json();
+  expect(after.managers).toEqual(before.managers);
+  expect(after.visits).toEqual(before.visits);
+  expect(after.trips).toEqual(before.trips);
+});

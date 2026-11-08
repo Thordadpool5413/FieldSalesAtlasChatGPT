@@ -1,58 +1,82 @@
-# Replit and GitHub merge recovery
+# Replit and GitHub synchronization
 
-Repaired main preserves the readiness recovery (**3037c98** and **4bd95c7**) and all subsequent uploaded Replit snapshots. The latest branch, **replit-recovery-mobile-menu**, points to **1c1385b**, which commits the previously interrupted merge and the mobile menu/search edits. Earlier recovery branches remain available as backups.
+GitHub main combines the backend reliability changes at **6a4328f** with the
+complete Replit snapshot at **c5ccd68**. That snapshot includes the four local
+Replit commits ending at **4dd8059**, plus the saved Flight DNA CSS, generated
+mockup registry and both mockup source files. It was uploaded through
+`replit-recovery-after-6a4328f` and merged by GitHub PR #1 at **29b3a8c**. The
+original Replit commits remain ancestors of main even if GitHub removes the
+recovery branch after merging.
 
-The resolution combines structured provider failures and explicit stale/unknown messages, preserves Canadian forecasts/warnings and bounded observation validation, and keeps the UI travel types connected to the canonical API contract. Replit's map, navigation and source-information changes are retained.
+The reconciliation retains the workspace initialization fix, page error boundary,
+connection wording, theme/layout changes and mockups alongside the shared source
+validation, maintenance, backup and build-verification work. No application is
+published by synchronizing Git.
 
-The map key and source details follow the map so the phone layout keeps the map in its first viewport. Replit's newer theme tokens, restrained map styling and first-visit/returning-visit checks are retained. Browser checks cover grouped navigation, collapsed phone setup and a searchable map list alongside booking readiness and shared-trainer recovery.
+## Finish the current synchronization
 
-The latest Replit changes remove the returning-user header row and its trip button. The map controls and main Travel navigation remain available; browser checks validate both after reloading.
+1. Stop any active task using **Stop in Replit's Agent panel**. Stop **Run** too.
+   Stopping Run alone does not stop an Agent task from creating more source commits.
+2. Keep Agent and manual source edits paused until the status check below completes.
+3. From Replit's Shell, run:
 
-The subsequent Replit snapshot also preserves setup reopening from People, a compact landscape layout, a saved region after reload, shared airport-color tokens for both map modes, and clearer tool names. The Canadian observation adapter retains bounded queries, validated timestamps and explicit stale/unknown results.
+```bash
+git pull --ff-only origin main && git status -sb && git log -1 --oneline
+```
 
-The phone Focus action is inside the territory panel. The background toolbar stays behind that panel, leaving its Close button and other panel controls reachable.
+The reconciled main contains `c5ccd68`, so that exact Replit snapshot can
+fast-forward. A clean result shows `## main...origin/main` without ahead/behind
+counts or modified paths. Then restart Run once with `pnpm run replit`.
+Publication remains a separate action.
 
-The mobile menu shares the desktop TEAM and INSIGHTS groups and keeps Atlas, Travel, People and Calendar in the bottom bar. The workspace search and map search retain distinct scopes. One map key and one source-details panel remain below the map; duplicate copies introduced during reconciliation are removed.
+Fast-forwarding depends on commit ancestry. A clean working tree alone does not
+prove the branches are synchronized. If Replit creates another commit after the
+snapshot was uploaded, stop and preserve that newer version before proceeding.
 
-## Synchronize the recovered workspace
+## If the branches diverge again
 
-Pause Replit Agent edits and stop the current Run process while synchronizing. If there is no pending merge and the working tree is clean, run these commands one line at a time:
+Inspect the exact state first:
 
-Replit snapshot **1c1385b** has already completed its merge and has a clean working tree, so it uses this normal synchronization flow.
-
-~~~bash
-git pull --ff-only origin main
+```bash
+git fetch origin
 git status -sb
 git log -1 --oneline
-~~~
+git rev-list --left-right --count HEAD...origin/main
+```
 
-The pull can fast-forward because repaired main contains the uploaded Replit snapshot. The final status should show main tracking origin/main without ahead/behind counts or unmerged paths. Restart Run once after synchronization. Source synchronization does not publish the app.
+If both counts are nonzero, each side has commits missing from the other.
+`git pull --ff-only` will correctly refuse to discard either history. Repeating
+that command does not reconcile them.
 
-## Recover from an interrupted merge
+Preserve the committed Replit version on a **new, uniquely named recovery branch**:
 
-After the exact Replit snapshot has been reconciled into GitHub main, use this block if a previous pull stopped with conflicts. It backs up tracked changes and aborts only when a merge is actually active. The subshell stops on failure without changing the interactive shell's options:
+```bash
+git push origin HEAD:refs/heads/replit-recovery-UNIQUE-NAME
+```
 
-~~~bash
-(
-  set -e
-  atlas_merge_backup=$(mktemp /tmp/atlas-replit-merge.XXXXXX)
-  git diff --binary HEAD > "$atlas_merge_backup"
-  printf 'Saved pending changes: %s\n' "$atlas_merge_backup"
-  if git rev-parse --verify -q MERGE_HEAD >/dev/null; then
-    git merge --abort
-  fi
-  git pull --ff-only origin main
-  git status -sb
-  git log -1 --oneline
-)
-~~~
+A push of HEAD includes committed files only. It does **not** include unstaged,
+staged-but-uncommitted or untracked files. Inspect `git status` and save any such
+source edits deliberately before claiming that the recovery snapshot is complete.
+When a generated registry imports new components, preserve those components with
+it. Do not stage private databases, credentials or unrelated local files.
 
-The temporary patch is an additional copy of the pending tracked changes, including any conflict markers or manual edits. The backup file is outside Git. The committed Replit work is also preserved on the recovery branch and as an ancestor of repaired main.
+Reconcile and validate the complete snapshot against current GitHub main before
+updating main. Preserve its actual commits as ancestors of the result; copying
+files or cherry-picking alone does not make Replit's existing history eligible
+for a fast-forward. Record the recovery commit ID until the workspace and GitHub both report the
+same main commit. If the recovery branch is deleted after a PR merge, verify
+that its snapshot remains an ancestor of main.
 
-If any command fails, the chain stops. Keep its output and the temporary patch; do not use force push, hard reset or clean to bypass the failure.
+## Pending merges and local data
 
-## Future updates
+If status reports unmerged paths, preserve the conflict resolutions and any
+subsequent edits before attempting an abort. `git merge --abort` can fail when
+working files changed after the merge began. Inspect the failing paths and save
+those edits rather than forcing the abort. An extra `git diff --binary HEAD`
+patch can preserve tracked edits, but it is not a backup of untracked or ignored
+files and should not be treated as the complete workspace snapshot.
 
-Start with a clean working tree and a fast-forward-only pull. If Replit and GitHub both have new commits, preserve the committed Replit work on a separate recovery branch and reconcile the exact histories before pulling again. A blind normal merge can stop with content conflicts; a force reset can discard local work.
-
-Private SQLite records, ignored data files and untracked files are outside this source reconciliation. Do not add database files or credentials to a recovery commit.
+Do not use force push, hard reset or clean to bypass divergence. Private SQLite
+records, ignored data files and untracked files are separate from committed
+source history and must be preserved independently. A successful source pull is
+not a database migration or a deployment publication.
