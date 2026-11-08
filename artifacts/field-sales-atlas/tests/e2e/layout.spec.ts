@@ -412,12 +412,13 @@ test('phone users can browse an accessible, searchable map list with source deta
 for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 664 }]) {
   test(`travel preferences keep their actions visible at ${viewport.width} × ${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    page.on('pageerror', error => console.log('travel page error', error.message));
-    page.on('console', message => { if (message.type() === 'error') console.log('travel browser error', message.text()); });
+    const workspaceErrors:string[]=[];
+    page.on('pageerror', error => workspaceErrors.push(error.message));
     await page.goto('/?page=plan&tool=travel');
-    await page.waitForTimeout(1200);
-    console.log('travel route diagnostics', page.url(), await page.locator('body').innerText());
-    await page.getByRole('button', { name: 'Advanced comparison', exact: false }).click();
+    const comparison=page.getByRole('button', { name: 'Advanced comparison', exact: false });
+    await expect(comparison).toBeVisible();
+    expect(workspaceErrors).not.toContain('Workspace is still opening.');
+    await comparison.click();
     await page.getByTitle('Edit travel preferences').click();
     const dialog = page.getByRole('dialog', { name: 'Personal travel settings' });
     const save = dialog.getByRole('button', { name: 'Save personal travel profile' });

@@ -5,3 +5,4 @@
 - [Atlas visual language](atlas-visual-language.md) — Preserve distinct cyan action, flamingo selected-state, sunset highlight, and warm airport-reference color roles.
 - [Atlas first-use guidance](atlas-first-use-guidance.md) — Keep first-visit choices in the welcome; reuse Workspace setup for resumable guidance so repeat maps stay compact.
 - [Playwright browser in Replit](playwright-browser.md) — When Playwright’s cached browser is missing, use the workspace Chromium executable through its path override.
+- [Workspace API initialization](workspace-api-initialization.md) — Private requests can start before the workspace key is ready; join the shared initializer instead of throwing.

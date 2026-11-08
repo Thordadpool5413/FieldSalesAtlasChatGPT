@@ -703,11 +703,11 @@ function Product(){
           </div>
           <div className="fsa-sidebar-bottom">
             <div className={'fsa-sidebar-sync atlas-sync-'+syncStatus} role="status"
-              aria-label={'Workspace sync '+syncStatus}
-              title={lastSyncAt?'Last successful workspace refresh: '+new Date(lastSyncAt).toLocaleString():'Waiting for the first successful workspace refresh'}>
+              aria-label={'Workspace connection '+(syncStatus==='live'?'connected':syncStatus)}
+              title={lastSyncAt?'Saved workspace records last refreshed: '+new Date(lastSyncAt).toLocaleString():'Waiting for the first saved-record refresh'}>
               <span className="atlas-sync-dot" aria-hidden="true"/>
-              <span>Workspace · {syncStatus==='live'?'Live':syncStatus==='updated'?'Updated':syncStatus==='connecting'?'Connecting':'Offline'}</span>
-              <small>{lastSyncAt?'Refreshed '+new Date(lastSyncAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Awaiting first refresh'}</small>
+              <span>Workspace · {syncStatus==='live'?'Connected':syncStatus==='updated'?'Updated':syncStatus==='connecting'?'Connecting':'Offline'}</span>
+              <small>{lastSyncAt?'Saved records refreshed '+new Date(lastSyncAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'Awaiting first saved-record refresh'}</small>
             </div>
             <details className="fsa-sidebar-controls" onKeyDown={event=>{
               if(event.key==='Escape'){

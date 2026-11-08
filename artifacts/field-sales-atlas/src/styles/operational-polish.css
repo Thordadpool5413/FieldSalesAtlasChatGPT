@@ -61,6 +61,27 @@
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary,.fsa-button.primary,.travel-button.primary,.fao-route-primary):hover:not(:disabled) {
   box-shadow:0 0 12px color-mix(in srgb,var(--at-cyan) 20%,transparent);
 }
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(310px,370px);
+  align-items:center;
+  gap:16px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry .travel-desk-entry-actions {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  width:100%;
+  gap:8px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry .travel-desk-entry-actions .op-btn {
+  width:100%;
+  justify-content:center;
+}
+@media(max-width:860px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .journey-entry {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
 
 .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {
   display:flex;
