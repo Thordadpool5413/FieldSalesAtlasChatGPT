@@ -146,6 +146,16 @@ before dependency installation. It recognizes a clean, matching development app;
 stale, differently configured or unrelated listeners require stopping the existing
 workflow/Shell process first. It never kills arbitrary port owners.
 
+Read `runtime.checks` and `runtime.issues` before taking action. Matching revisions
+with an `uncommitted-changes` state means the working tree has edits; it does not
+by itself mean the API is old. `modifiedPaths` identifies those tracked files.
+Review them with `git diff` and preserve intended changes instead of repeatedly
+restarting or discarding configuration. A `configuration-mismatch` names the
+settings that differ between Shell and services without printing their values.
+An actual revision/build mismatch, failed health check and unverified build each
+have separate states and instructions. Source checks remain conservative: an
+unverified working tree is not silently accepted as a reproducible build.
+
 In another Shell:
 
 ```bash

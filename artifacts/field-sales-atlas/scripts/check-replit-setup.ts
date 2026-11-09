@@ -27,11 +27,12 @@ try {
     },
     {
       component: "Private record backups",
-        state: report.maintenance.backups.recordBackupFresh
+      state: report.maintenance.backups.recordBackupFresh
         ? "record-restore-verified"
         : "needs-setup",
-      action:
-        "Create a private App Storage bucket, set bucket ID and scope, then run data:backup-records. A full disaster-recovery drill remains separate.",
+      action: report.maintenance.backups.recordBackupFresh
+        ? "A recent private record-backup receipt matches this bucket and scope. Keep scheduled backups running; a full disaster-recovery drill remains separate."
+        : "Configure the private bucket and scope, then run data:backup-records. A full disaster-recovery drill remains separate.",
     },
     {
       component: "Road routing",

@@ -14,4 +14,8 @@ export function inspectRuntime(
   webPort: number;
   apiPort: number;
   next?: string;
+  checks?: Record<string, boolean>;
+  issues?: Array<{ code: string; message: string }>;
+  modifiedPaths?: string[];
+  configurationDifferences?: string[];
 }>;

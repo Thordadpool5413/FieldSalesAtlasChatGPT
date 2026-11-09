@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { inspectRuntime, runtimeConfiguration } from "./runtime-state.mjs";
 
-test("runtime inspection distinguishes a current app from a stale API, changed settings and unrelated ports", async () => {
+test("runtime inspection separates service, configuration, source-edit and build-identity failures", async () => {
   const root = await mkdtemp(join(tmpdir(), "atlas-runtime-inspect-"));
   const git = (args) =>
     execFileSync("git", args, {
@@ -21,7 +21,11 @@ test("runtime inspection distinguishes a current app from a stale API, changed s
   try {
     git(["init"]);
     await writeFile(join(root, "fixture.txt"), "fixture");
-    git(["add", "fixture.txt"]);
+    await writeFile(
+      join(root, ".replit"),
+      '[nix]\npackages = ["glibcLocales", "unicon-lang"]\n',
+    );
+    git(["add", "fixture.txt", ".replit"]);
     git([
       "-c",
       "user.name=Runtime Test",
@@ -41,21 +45,29 @@ test("runtime inspection distinguishes a current app from a stale API, changed s
       configuration,
     };
     let servedApi = info;
-    const serve = (req, res) => {
+    let servedProxyApi;
+    let healthReady = true;
+    let webModified = false;
+    const serve = (req, res, proxy = false) => {
       res.setHeader("Content-Type", "application/json");
+      if (req.url === "/api/_healthcheck" && !healthReady) res.statusCode = 503;
       res.end(
         JSON.stringify(
           req.url === "/api/_healthcheck"
-            ? { status: "ready" }
+            ? { status: healthReady ? "ready" : "not-ready" }
             : req.url === "/build-info.json"
-              ? { ...info, mode: "development" }
-              : servedApi,
+              ? { ...info, mode: "development", sourceModified: webModified }
+              : proxy
+                ? servedProxyApi || servedApi
+                : servedApi,
         ),
       );
     };
     api = http.createServer(serve).listen(0, "127.0.0.1");
     await once(api, "listening");
-    web = http.createServer(serve).listen(0, "127.0.0.1");
+    web = http
+      .createServer((req, res) => serve(req, res, true))
+      .listen(0, "127.0.0.1");
     await once(web, "listening");
     const env = {
       PORT: String(web.address().port),
@@ -63,7 +75,10 @@ test("runtime inspection distinguishes a current app from a stale API, changed s
     };
     assert.equal((await inspectRuntime(root, env)).state, "ready");
     servedApi = { ...info, revision: "a".repeat(40) };
-    assert.equal((await inspectRuntime(root, env)).state, "occupied-or-stale");
+    assert.equal(
+      (await inspectRuntime(root, env)).state,
+      "revision-or-build-mismatch",
+    );
     servedApi = info;
     assert.equal(
       (
@@ -72,10 +87,61 @@ test("runtime inspection distinguishes a current app from a stale API, changed s
           ATLAS_DATABASE_ENGINE: "postgres",
         })
       ).state,
-      "occupied-or-stale",
+      "configuration-mismatch",
     );
-    await writeFile(join(root, "fixture.txt"), "modified");
-    assert.equal((await inspectRuntime(root, env)).state, "occupied-or-stale");
+    servedProxyApi = {
+      ...info,
+      configuration: {
+        ...configuration,
+        backupScope: "synthetic-secret-not-for-logs",
+      },
+    };
+    const mismatch = await inspectRuntime(root, env);
+    assert.equal(mismatch.state, "configuration-mismatch");
+    assert.deepEqual(mismatch.configurationDifferences, [
+      "proxyApi.backupScope",
+    ]);
+    assert.ok(
+      !JSON.stringify(mismatch).includes("synthetic-secret-not-for-logs"),
+    );
+    servedProxyApi = undefined;
+    healthReady = false;
+    assert.equal((await inspectRuntime(root, env)).state, "not-ready");
+    healthReady = true;
+    // Reproduce the reported case: all revisions and environment settings match,
+    // API is healthy, and only the accidental .replit package entry was removed.
+    await writeFile(
+      join(root, ".replit"),
+      '[nix]\npackages = ["glibcLocales"]\n',
+    );
+    webModified = true;
+    const edited = await inspectRuntime(root, env);
+    assert.equal(edited.state, "uncommitted-changes");
+    assert.deepEqual(edited.modifiedPaths, [".replit"]);
+    assert.equal(edited.checks.revisionsMatch, true);
+    assert.equal(edited.checks.apiHealthReady, true);
+    assert.equal(edited.checks.configurationMatches, true);
+    assert.equal(edited.checks.buildSourceClean, true);
+    assert.match(edited.next, /restart alone cannot resolve/);
+    git(["add", ".replit"]);
+    assert.deepEqual((await inspectRuntime(root, env)).modifiedPaths, [
+      ".replit",
+    ]);
+    git(["reset", "--quiet", "HEAD", "--", ".replit"]);
+    await writeFile(
+      join(root, ".replit"),
+      '[nix]\npackages = ["glibcLocales", "unicon-lang"]\n',
+    );
+    webModified = false;
+    servedApi = { ...info, sourceModified: true };
+    assert.equal((await inspectRuntime(root, env)).state, "unverified-build");
+    servedApi = { ...info, app: "Other service" };
+    assert.equal(
+      (await inspectRuntime(root, env)).state,
+      "occupied-or-unrecognized",
+    );
+    servedApi = info;
+    assert.equal((await inspectRuntime(root, env)).state, "ready");
     assert.equal(api.listening, true);
     assert.equal(web.listening, true);
     await new Promise((resolve) => api.close(resolve));
