@@ -163,6 +163,88 @@ html[data-field-atlas-theme='light'],
   background: linear-gradient(180deg, var(--at-cyan), var(--at-rose));
 }
 
+/* Workspace surfaces use the full desktop canvas; each destination keeps its
+   own internal geometry (the Atlas map and flight research are separate). */
+@media (min-width: 901px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {
+    width: 100%;
+    max-width: none;
+    padding-inline: clamp(16px, 1.75vw, 30px);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-people-hub,
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-people-hub .fsa-hub-body {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-people-hub .op-overview-split {
+    width: 100%;
+    max-width: none;
+    grid-template-columns: minmax(0, 1.35fr) minmax(340px, .9fr);
+    align-items: start;
+    gap: clamp(12px, 1.2vw, 18px);
+  }
+}
+@media (min-width: 901px) and (max-width: 1120px) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-people-hub .op-overview-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Selected states are flamingo; cyan remains the action/live/focus signal. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(
+  .fsa-side-link.active,
+  .mv-bottom-nav button.active,
+  .fsa-hub-tabs > button.is-active,
+  .atlas-v5-lenses > button.is-active,
+  .op-detail-tabs button.active,
+  .op-segment button.active
+) {
+  color: var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(
+  .fsa-hub-tabs > button.is-active,
+  .atlas-v5-lenses > button.is-active,
+  .op-detail-tabs button.active,
+  .op-segment button.active
+) {
+  border-color: color-mix(in srgb, var(--at-rose) 68%, var(--at-border-soft));
+  background: var(--at-rose-soft);
+  box-shadow: inset 0 -2px 0 var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active {
+  color: var(--at-rose);
+  background: var(--at-rose-soft);
+  border-color: color-mix(in srgb, var(--at-rose) 48%, var(--at-border-soft));
+  box-shadow: inset 2px 0 var(--at-rose), 0 0 10px color-mix(in srgb, var(--at-rose) 8%, transparent);
+}
+
+/* Quiet controls stay quiet; reserve accent light for an intentional action. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn, .fsa-button, .travel-button, .fao-route-primary, .vice-primary) {
+  transition: transform .14s ease, opacity .14s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn:not(.primary):not(.danger), .fsa-button:not(.primary), .travel-button:not(.primary)):hover:not(:disabled) {
+  border-color: var(--at-border);
+  background-color: var(--at-raised);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary, .fsa-button.primary, .travel-button.primary, .fao-route-primary, .vice-primary):hover:not(:disabled) {
+  border-color: var(--at-action-hover);
+  background: var(--at-action-hover);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--at-cyan) 18%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fsa-hub-tabs > button, .atlas-v5-lenses > button, .op-detail-tabs button, .op-segment button) {
+  transition: transform .14s ease, opacity .14s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(input, select, textarea):focus-visible {
+  border-color: var(--at-cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--at-cyan) 14%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button, input, select, textarea):disabled {
+  opacity: .5;
+  filter: none;
+  box-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button, a, input, select, textarea, summary, .op-table tbody tr) {
     transition: none !important;

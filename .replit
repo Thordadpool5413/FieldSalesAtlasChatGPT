@@ -41,3 +41,6 @@ timeoutMs = 120000
 [nix]
 channel = "stable-25_05"
 packages = ["glibcLocales"]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-8c5b7e61-c745-4a30-b9a8-7caa1d2bc838"
