@@ -14,7 +14,9 @@ for (const [source, original] of [['app-icon.png', 'app-icon-original.png'], ['f
 }
 const png = (await readFile(resolve(root, 'docs/export/app-icon-original.png'))).toString('base64');
 const jpeg = (await readFile(resolve(root, 'docs/export/brand-original.jpg'))).toString('base64');
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined) });
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+  ['/usr/bin/chromium', '/repl/tools/bin/chromium'].find(existsSync);
+const browser = await chromium.launch({ executablePath });
 try {
   const page = await browser.newPage();
   for (const [name, size, type] of [

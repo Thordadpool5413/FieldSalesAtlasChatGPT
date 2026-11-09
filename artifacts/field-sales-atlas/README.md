@@ -67,7 +67,7 @@ npm run test:e2e
 - `.github/workflows/ci.yml` runs these checks for pushes to `main` and pull requests.
 - The exported `tests/tests.json` remains a **manual acceptance checklist**, not an executable test suite.
 
-Browser tests use bundled Playwright Chromium, or `/usr/bin/chromium` if present. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to select another compatible Chromium. Test output and screenshots go under the operating system's temporary directory.
+Browser tests use bundled Playwright Chromium, or `/usr/bin/chromium` or `/repl/tools/bin/chromium` if present. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to select another compatible Chromium. Test output and screenshots go under the operating system's temporary directory.
 
 ## Production deployment
 

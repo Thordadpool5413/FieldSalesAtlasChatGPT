@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const dataDirectory = mkdtempSync(join(tmpdir(), 'atlas-browser-'));
-const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+  ['/usr/bin/chromium', '/repl/tools/bin/chromium'].find(existsSync);
 
 export default defineConfig({
   testDir: './tests/e2e',

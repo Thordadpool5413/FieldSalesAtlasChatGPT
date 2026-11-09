@@ -587,9 +587,9 @@ test('shared readiness persists transport and equipment checks for both trainers
 });
 
 test('flight intelligence displays source age and stops using expired station evidence', async ({ page }) => {
-  await page.goto('/?page=plan&tool=radar');
   const now = Date.now();
   await page.clock.install({ time: now });
+  await page.goto('/?page=plan&tool=radar');
   const evidence = (provider: string, subject: string, id: string) => ({ id, provider, subject, sourceUrl: 'https://aviationweather.gov/', kind: 'observation', state: 'current', retrievedAt: new Date(now).toISOString(), observedAt: new Date(now).toISOString(), expiresAt: new Date(now + 30000).toISOString(), version: 'fixture', scope: 'Fixture station observation', limitation: 'Fixture evidence is not airline status.' });
   await page.route('**/api/travel/disruptions?*', route => route.fulfill({ json: { available: false, checkedAt: new Date(now).toISOString(), airports: [] } }));
   await page.route('**/api/travel/aviation/*', route => {
