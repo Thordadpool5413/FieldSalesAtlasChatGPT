@@ -9,6 +9,7 @@ import './WorkspaceExperience.css';
 import './styles/miami-vice-system.css';
 import './styles/map-priority.css';
 import './styles/operational-polish.css';
+import './styles/atlas-final-theme.css';
 
 const queryClient = new QueryClient();
 

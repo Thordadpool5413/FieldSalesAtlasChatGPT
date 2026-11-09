@@ -1,0 +1,171 @@
+/* Field Sales Atlas — shared final appearance layer.
+   Keep workflow geometry and map data encoding in their existing owners. */
+html[data-field-atlas-theme='dark'],
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='dark'] {
+  --at-bg: #081426;
+  --at-rail: #0b1b2e;
+  --at-stage: #0d1d32;
+  --at-surface: #102238;
+  --at-raised: #172b42;
+  --at-field: #0b1a2d;
+  --at-text: #f1f5f8;
+  --at-muted: #bdcad7;
+  --at-subtle: #9cafc1;
+  --at-border: #344a60;
+  --at-border-soft: #263b50;
+  --at-cyan: #56e4e5;
+  --at-rose: #ff5f91;
+  --at-sunset: #ffb26f;
+  --at-action: #56e4e5;
+  --at-action-fg: #081426;
+  --at-action-hover: #8cf0ed;
+  --at-aqua-soft: #153340;
+  --at-rose-soft: #382333;
+  --at-map-water: #0a182a;
+}
+
+html[data-field-atlas-theme='light'],
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='light'] {
+  --at-bg: #edf3f5;
+  --at-rail: #e3ecef;
+  --at-stage: #f7faf9;
+  --at-surface: #fbfdfc;
+  --at-raised: #e8f0f1;
+  --at-field: #f5f9f8;
+  --at-text: #183144;
+  --at-muted: #4f6879;
+  --at-subtle: #647d8c;
+  --at-border: #a9bbc1;
+  --at-border-soft: #d0dce0;
+  --at-cyan: #087887;
+  --at-rose: #b42b66;
+  --at-sunset: #a9502c;
+  --at-action: #087887;
+  --at-action-fg: #f7fbfa;
+  --at-action-hover: #075f6e;
+  --at-aqua-soft: #d8eeee;
+  --at-rose-soft: #f7e1e9;
+  --at-map-water: #dcebf0;
+}
+
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product {
+  --atlas-font: 'DM Sans', 'Avenir Next', system-ui, sans-serif;
+  --vice-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  color: var(--at-text);
+  background: var(--at-bg);
+  font-family: var(--atlas-font);
+  line-height: 1.5;
+}
+
+/* Clear editorial hierarchy without turning every working screen into a hero. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(h1, h2, h3, h4) {
+  font-family: var(--vice-display);
+  font-weight: 700;
+  letter-spacing: .01em;
+  text-wrap: balance;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(p, small, label, td, th) {
+  text-wrap: pretty;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-content-inner.op-content {
+  color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-card, .travel-panel, .coord-panel, .studio-panel, .fg-panel, .fsa-hub-head, .fsa-health-panel, .fsa-report-panel, .fsa-report-upcoming, .op-modal) {
+  color: var(--at-text);
+  background-color: var(--at-surface);
+  border-color: var(--at-border-soft);
+  box-shadow: none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-card-header, .studio-panel-header, .op-section-head, .op-detail-tabs, .op-manager-header) {
+  border-color: var(--at-border-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-card-header h2, .op-section-head h2, .op-table td strong, .op-list-item strong, .op-queue-main strong, .op-manager-header h2) {
+  color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-subtitle, .op-card-header p, .op-section-head p, .op-table td small, .op-list-item p, .op-queue-main small) {
+  color: var(--at-muted);
+}
+
+/* Panels and tables are consistent, quiet working surfaces across destinations. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-table-scroll, .op-table-wrap) {
+  overflow-x: auto;
+  border: 1px solid var(--at-border-soft);
+  border-radius: 9px;
+  background: var(--at-surface);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table {
+  color: var(--at-text);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table th {
+  color: var(--at-muted);
+  background: var(--at-raised);
+  border-color: var(--at-border-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table td {
+  color: var(--at-muted);
+  border-color: var(--at-border-soft);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-table tbody tr:hover {
+  background: color-mix(in srgb, var(--at-cyan) 5%, var(--at-surface));
+}
+
+/* Consistent interaction language: cyan action/focus, flamingo selection. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn, .fsa-button, .travel-button, .fao-route-primary, .vice-primary) {
+  border-radius: 7px;
+  transition: color .14s ease, background-color .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease, opacity .14s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary, .fsa-button.primary, .travel-button.primary, .fao-route-primary, .vice-primary) {
+  background: var(--at-action);
+  border-color: var(--at-action);
+  color: var(--at-action-fg);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.op-btn.primary, .fsa-button.primary, .travel-button.primary, .fao-route-primary, .vice-primary):hover:not(:disabled) {
+  background: var(--at-action-hover);
+  border-color: var(--at-action-hover);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--at-cyan) 18%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(.fsa-side-link.active, .mv-bottom-nav button.active, .fsa-hub-tabs > button.is-active, .atlas-v5-lenses > button.is-active) {
+  color: var(--at-rose);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .fsa-side-link.active {
+  background: var(--at-rose-soft);
+  box-shadow: inset 2px 0 var(--at-rose), 0 0 10px color-mix(in srgb, var(--at-rose) 8%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(input, select, textarea) {
+  color: var(--at-text);
+  background-color: var(--at-field);
+  border-color: var(--at-border);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+  opacity: .52;
+  box-shadow: none;
+  transform: none;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--at-cyan);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--at-cyan) 14%, transparent);
+}
+
+/* Warmth belongs to the welcome surface; the map's existing airport colors and
+   category shapes/labels are intentionally untouched. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .vice-masthead {
+  background-image: linear-gradient(115deg,
+    color-mix(in srgb, var(--at-rose) 15%, transparent),
+    color-mix(in srgb, var(--at-sunset) 13%, transparent) 48%,
+    transparent 78%);
+  background-color: var(--at-bg);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-working-title::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .op-head::before,
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product .atlas-editorial-head::before {
+  background: linear-gradient(180deg, var(--at-cyan), var(--at-rose));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product :is(button, a, input, select, textarea, summary, .op-table tbody tr) {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
