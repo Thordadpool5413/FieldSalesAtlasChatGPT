@@ -1,5 +1,58 @@
 # Replit and GitHub synchronization
 
+## PostgreSQL setup recovery
+
+The recovery bundle `atlas-replit-recovery-78c2589.bundle` preserves the exact
+Replit commit **78c25893ef00bffb640f50a89dca87dcab950c5c**, based on **c3cc706**.
+It contains the two publication marker commits, Flight DNA wording changes, the
+on-demand aircraft observation panel/provider and generated API definitions.
+The reconciliation merges that actual history with the PostgreSQL/backup/routing
+setup at **2c9e1fc**. Both tips remain ancestors; no force push or replacement of
+the local Replit branch is needed.
+
+Validation also preserves unknown ADS-B numeric fields instead of converting null
+to zero, rejects missing/old position ages, and checks the production gate using
+Replit's deployment flag as well as `NODE_ENV`. Aircraft observations stay separate
+from airline or booking status. The panel labels position ages relative to its
+snapshot check and shows the provider timestamp separately from retrieval time.
+These changes do not provision any external provider or publish the application.
+
+Keep Agent and source edits paused, stop Run and any Shell app, then run:
+
+```bash
+git pull --ff-only origin main &&
+git status -sb &&
+git log -1 --oneline &&
+pnpm install --frozen-lockfile
+```
+
+This can fast-forward a clean Replit checkout still at `78c2589`. If Agent creates
+another commit afterward, inspect and preserve that newer history first. The
+downloaded `.bundle` recovery file is now ignored so it stays out of source commits.
+Continue with [Replit setup](operations/REPLIT_SETUP.md) only after synchronization.
+Pulling does not migrate data or publish the app.
+
+### When the recovery push lacks GitHub workflow scope
+
+An OAuth recovery push can be rejected when its workflow files differ from those
+on GitHub main, even if the local commits do not edit workflows. Do not remove CI
+or rewrite the source history to make that transfer succeed. A Git bundle can
+transfer the committed history directly to the authorized reconciliation checkout:
+
+```bash
+git bundle create atlas-replit-recovery.bundle HEAD ^origin/main &&
+git bundle verify atlas-replit-recovery.bundle
+```
+
+The receiver must have the prerequisite commit printed by `git bundle verify`.
+Transfer the file privately; it contains Git-tracked history, not uncommitted or
+ignored workspace files. Verify it again in the receiving repository, import its
+HEAD into a recovery ref, and merge/validate before updating main. Creating a bundle
+leaves the sender's branch and tracked files untouched. Use a fresh file name for
+a later snapshot.
+
+## Earlier recovery history
+
 GitHub main combines the backend reliability changes at **6a4328f** with the
 complete Replit snapshot at **c5ccd68**. That snapshot includes the four local
 Replit commits ending at **4dd8059**, plus the saved Flight DNA CSS, generated
@@ -13,7 +66,7 @@ connection wording, theme/layout changes and mockups alongside the shared source
 validation, maintenance, backup and build-verification work. No application is
 published by synchronizing Git.
 
-## Finish the current synchronization
+## Earlier synchronization from c5ccd68
 
 1. Stop any active task using **Stop in Replit's Agent panel**. Stop **Run** too.
    Stopping Run alone does not stop an Agent task from creating more source commits.

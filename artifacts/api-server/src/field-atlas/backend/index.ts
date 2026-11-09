@@ -20,8 +20,9 @@ import { createDemoWorkspace } from './demo';
 import { zoneAt } from './travel/zones';
 import { zonedInstant } from '../shared/travel/time';
 import { makeTravelRoutes } from './travel/routes';
-import { curatedAirportDirectory } from './providers/airports';
+import { curatedAirportDirectory, lookupAirports } from './providers/airports';
 import { officialJson } from './providers/evidence';
+import { liveAircraftNearAirport, liveAircraftProductionGate } from './providers/liveAircraft';
 import { historyCoverage } from './providers/bts';
 import { roadMatrix } from './providers/routing';
 import { publicAirportEvidence, faa, metar as stationMetar, taf as stationTaf } from './providers/publicTravel';
@@ -1979,6 +1980,19 @@ export const handler = router({
       evidence: [metarResult.evidence, tafResult.evidence],
       message: [metarResult, tafResult].filter(r => r.evidence.state !== 'current').map(r => r.evidence.limitation).join(' ')
     });
+  }],
+  'GET /api/travel/live-aircraft': [workspaceAccess,async ctx=>{
+    const membership=await member(ctx.user!.userId);
+    if(!membership)return error('Shared workspace required.',403);
+    const airportCode=String(ctx.query?.airport||'').trim().toUpperCase();
+    if(!/^[A-Z]{3}$/.test(airportCode))return error('Provide a three-letter airport code.',400);
+    const [airport]=await lookupAirports([airportCode]);
+    if(!airport||!Number.isFinite(airport.lat)||!Number.isFinite(airport.lon))
+      return error('This airport is not in the validated reference directory.',404);
+    const gate=liveAircraftProductionGate(airport.iata,airport.name,airport.lat!,airport.lon!);
+    return json(gate||await liveAircraftNearAirport({
+      iata:airport.iata,name:airport.name,lat:airport.lat!,lon:airport.lon!
+    }));
   }],
 
 

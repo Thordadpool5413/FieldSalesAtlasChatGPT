@@ -9,7 +9,7 @@ A shared field-sales workspace for territories, coaching visits, calendars, and 
 
 ## Update the existing Replit workspace
 
-GitHub `main` includes the original application history and the recovered Replit work. The Replit app keeps its pnpm workspace and separate web/API services. The recovery snapshots remain available as backups; the latest is `replit-recovery-mobile-menu` at `1c1385b`.
+GitHub `main` includes the original application history and the recovered Replit work, including the exact `78c2589` aircraft-observation/API snapshot alongside the setup at `2c9e1fc`. The Replit app keeps its pnpm workspace and separate web/API services. Earlier recovery branches and the uploaded Git bundle preserve source history; private application records need their separate data backups.
 
 Stop the current Run process, then use the Replit Shell:
 

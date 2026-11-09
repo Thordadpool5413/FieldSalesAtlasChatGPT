@@ -69,3 +69,4 @@ playwright-report/
 test-results/
 *.log
 .replit.local-backup
+*.bundle

@@ -890,3 +890,73 @@ test('hosted routing validates units and unreachable pairs, protects its key and
     if (previousKey === undefined) delete process.env.ATLAS_ORS_API_KEY; else process.env.ATLAS_ORS_API_KEY = previousKey;
   }
 });
+
+test('aircraft observations require workspace access and honor the production gate without a provider request', async () => {
+  const previousMode = process.env.NODE_ENV, previousApproval = process.env.ADSB_LOL_PRODUCTION_APPROVED;
+  const previousDeployment = process.env.REPLIT_DEPLOYMENT;
+  const original = globalThis.fetch;
+  const key = await workspace();
+  process.env.NODE_ENV = 'production'; delete process.env.ADSB_LOL_PRODUCTION_APPROVED;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; throw Error('No provider call expected.'); };
+  try {
+    assert.equal((await request('GET', '/api/travel/live-aircraft?airport=MCO')).status, 403);
+    assert.equal((await request('GET', '/api/travel/live-aircraft?airport=invalid', key)).status, 400);
+    assert.equal((await request('GET', '/api/travel/live-aircraft?airport=ZZZ', key)).status, 404);
+    const result = await request('GET', '/api/travel/live-aircraft?airport=MCO', key);
+    assert.equal(result.status, 200); assert.equal(result.data.available, false);
+    assert.equal(result.data.evidence.state, 'unavailable'); assert.equal(calls, 0);
+    assert.match(result.data.message, /disabled in production/);
+    process.env.NODE_ENV = 'development'; process.env.REPLIT_DEPLOYMENT = '1';
+    const published = await request('GET', '/api/travel/live-aircraft?airport=MCO', key);
+    assert.equal(published.data.available, false); assert.equal(calls, 0);
+  } finally {
+    globalThis.fetch = original;
+    if (previousMode === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previousMode;
+    if (previousApproval === undefined) delete process.env.ADSB_LOL_PRODUCTION_APPROVED; else process.env.ADSB_LOL_PRODUCTION_APPROVED = previousApproval;
+    if (previousDeployment === undefined) delete process.env.REPLIT_DEPLOYMENT; else process.env.REPLIT_DEPLOYMENT = previousDeployment;
+  }
+});
+
+test('aircraft API preserves unknown numbers and rejects unknown or old positions without inventing flight status', async () => {
+  const original = globalThis.fetch;
+  const previousMode = process.env.NODE_ENV;
+  const key = await workspace(); process.env.NODE_ENV = 'development';
+  let calls = 0;
+  const row = { hex: 'a1b2c3', lat: 28.429, lon: -81.309, seen_pos: 1, flight: ' DAL123 ', alt_baro: null, gs: null, track: '' };
+  globalThis.fetch = async input => {
+    calls++; assert.match(String(input), /^https:\/\/api\.adsb\.lol\/v2\/lat\//);
+    return new Response(JSON.stringify({ now: Date.now() - 30000, ac: [row,
+      { ...row, hex: 'a1b2c4', seen_pos: null }, { ...row, hex: 'a1b2c5', seen_pos: 100 },
+      { ...row, hex: 'a1b2c6', lat: null }, { ...row, hex: 'a1b2c7', lon: false },
+      { ...row, hex: 'a1b2c8', lat: 33.64, lon: -84.42 }] }));
+  };
+  try {
+    const result = await request('GET', '/api/travel/live-aircraft?airport=MCO', key);
+    assert.equal(result.status, 200); assert.equal(result.data.available, true);
+    assert.equal(result.data.aircraft.length, 1);
+    assert.equal(result.data.aircraft[0].callsign, 'DAL123');
+    for (const name of ['altitudeFt', 'groundSpeedKnots', 'trackDegrees']) assert.equal(result.data.aircraft[0][name], null);
+    assert.ok(result.data.aircraft[0].lastPositionSeconds >= 31);
+    assert.match(result.data.evidence.limitation, /do not confirm an airline/);
+    const { GetLiveAircraftResponse } = await import('../../../lib/api-zod/src/generated/api');
+    assert.equal(GetLiveAircraftResponse.safeParse(result.data).success, true);
+    await request('GET', '/api/travel/live-aircraft?airport=MCO', key); assert.equal(calls, 1);
+    globalThis.fetch = async () => new Response(JSON.stringify({ now: Date.now() - 600000, ac: [] }));
+    const stale = await request('GET', '/api/travel/live-aircraft?airport=ATL', key);
+    assert.equal(stale.data.available, false); assert.equal(stale.data.evidence.state, 'stale');
+    globalThis.fetch = async () => new Response('{}', { status: 503 });
+    const failed = await request('GET', '/api/travel/live-aircraft?airport=LAX', key);
+    assert.equal(failed.data.available, false); assert.equal(failed.data.evidence.state, 'unavailable');
+    globalThis.fetch = async () => new Response(JSON.stringify({ now: Date.now() + 60000, ac: [] }));
+    const future = await request('GET', '/api/travel/live-aircraft?airport=ORD', key);
+    assert.equal(future.data.available, false); assert.equal(future.data.evidence.state, 'unavailable');
+    globalThis.fetch = async () => new Response(JSON.stringify({ ac: [{ ...row, lat: 25.793, lon: -80.291 }] }));
+    const undated = await request('GET', '/api/travel/live-aircraft?airport=MIA', key);
+    assert.equal(undated.data.available, false); assert.equal(undated.data.evidence.state, 'partial');
+    assert.equal(undated.data.aircraft[0].lastPositionSeconds, null);
+  } finally {
+    globalThis.fetch = original;
+    if (previousMode === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previousMode;
+  }
+});
