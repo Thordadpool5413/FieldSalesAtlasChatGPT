@@ -3,7 +3,7 @@ import { journeyRequirementsSchema } from './readinessSchema';
 import { changedContext } from './recovery';
 import { zonedInstant } from '../../shared/travel/time';
 import { randomUUID } from 'node:crypto';
-import { db, json, error, AppDatabaseError, type RouterMiddleware, type RouterRoutes } from '../runtime/sdk';
+import { db, workspaceGuard, json, error, type RouterMiddleware, type RouterRoutes } from '../runtime/sdk';
 import { buildScenarios, scenarioInput, flightInput, type ScenarioBoard } from './scenarios';
 import type { ScenarioReport } from '../../shared/travel/types';
 import { sourceStatuses, evidenceState } from '../providers/evidence';
@@ -58,7 +58,7 @@ export function makeTravelRoutes(deps: {
         const board = await deps.load(m.workspaceId), context = await planContext(m.workspaceId, ctx.params.id, board);
         const effective = context.pendingChange ? await changedContext(context, context.pendingChange) : { input: context.input, board: context.analysisBoard };
         const result = await journeyReadiness(effective.input, effective.board, context.pending);
-        if (db.workspaceRevision(m.workspaceId) !== board.revision) return error('Calendar changed. Refresh the readiness report.', 409);
+        if (await db.workspaceRevision(m.workspaceId) !== board.revision) return error('Calendar changed. Refresh the readiness report.', 409);
         return json({ ...result, itineraryVersion: itineraryVersion(context.input.flights), workspaceRevision: board.revision, requirements: context.input.requirements || { trainers: [] } });
       } catch (failure) { return error(failure instanceof Error ? failure.message : 'Readiness could not be calculated.', 422); }
     }],
@@ -75,9 +75,7 @@ export function makeTravelRoutes(deps: {
         for (const row of parsed.data.trainers) if (row.pickup) zonedInstant(row.pickup.date, row.pickup.time, row.pickup.timeZone);
         const input = { ...context.input, requirements: parsed.data };
         const update = context.saved.currentPlan ? { currentPlan: { ...context.saved.currentPlan, input } } : { input };
-        await db.transact([db.tx.update(reportTable(m.workspaceId), [{ id: ctx.params.id, record: update }], { patch: true }), db.tx.add('atlas_itinerary_updates_' + m.workspaceId, [{ id: randomUUID(), reportId: ctx.params.id, at: new Date().toISOString(), purpose: 'requirements-reviewed' }])], () => {
-          if (db.workspaceRevision(m.workspaceId) !== board.revision) throw new AppDatabaseError('AppDatabaseConflict', 'Calendar changed.');
-        });
+        await db.transact([db.tx.update(reportTable(m.workspaceId), [{ id: ctx.params.id, record: update }], { patch: true }), db.tx.add('atlas_itinerary_updates_' + m.workspaceId, [{ id: randomUUID(), reportId: ctx.params.id, at: new Date().toISOString(), purpose: 'requirements-reviewed' }])], workspaceGuard(m.workspaceId, board.revision, 'Calendar changed.'));
         await deps.activityLog(m.workspaceId, ctx.query.trainerId || 'trainer_a', 'updated', 'journey-requirements', 'Transport, equipment and pickup requirements reviewed; appointments unchanged');
         return json({ saved: true });
       } catch (failure) { return error(failure instanceof Error ? failure.message : 'Requirements could not be saved.', 409); }
@@ -150,13 +148,13 @@ export function makeTravelRoutes(deps: {
       if (!m) return error('Workspace required.', 403);
       const parsed = scenarioInput.safeParse(ctx.body);
       if (!parsed.success) return error('Review the trip inputs: ' + parsed.error.issues.slice(0, 3).map(issue => issue.path.join('.') + ' ' + issue.message).join('; '), 400);
-      const revision = db.workspaceRevision(m.workspaceId);
+      const revision = await db.workspaceRevision(m.workspaceId);
       const board = await deps.load(m.workspaceId);
       if (board.truncated) return error('Complete workspace records are required before optimizing.', 409);
       try {
         parsed.data.flights = parsed.data.flights.map(flight => ({ ...flight, providedAt: flight.providedAt || new Date().toISOString() }));
         const report = await buildScenarios(parsed.data, board, revision);
-        if (db.workspaceRevision(m.workspaceId) !== revision) return error('The shared calendar changed while solving. Build a fresh preview.', 409);
+        if (await db.workspaceRevision(m.workspaceId) !== revision) return error('The shared calendar changed while solving. Build a fresh preview.', 409);
         await db.tx.add(reports(m.workspaceId), [{ id: report.id, report, input: parsed.data }]);
         return json(report, 201);
       } catch (failure) { return error(failure instanceof Error ? failure.message : 'Unable to build scenarios.', 422); }
@@ -194,9 +192,7 @@ export function makeTravelRoutes(deps: {
         const operations = [db.tx.add(deps.extraTables(m.workspaceId).trips, trips), db.tx.add(deps.tables(m.workspaceId).visits, visits),
           db.tx.update(table, [{ id: saved.id, record: { ...saved, approval }, if: { approval: undefined } }])];
         if (body?.monitor === true) operations.push(queueWatch(m.workspaceId, saved.report, approval.tripIds));
-        await db.transact(operations, () => {
-          if (db.workspaceRevision(m.workspaceId) !== saved.report.workspaceRevision) throw new AppDatabaseError('AppDatabaseConflict', 'Workspace changed.');
-        });
+        await db.transact(operations, workspaceGuard(m.workspaceId, saved.report.workspaceRevision, 'Workspace changed.'));
       } catch {
         const [fresh] = await db.get<SavedReport>(table, [saved.id]);
         if (fresh?.approval?.scenarioId === scenario.id) return json({ ...fresh.approval, replayed: true });

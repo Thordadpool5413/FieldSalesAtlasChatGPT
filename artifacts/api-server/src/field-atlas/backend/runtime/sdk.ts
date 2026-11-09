@@ -1,10 +1,16 @@
+import { PostgresDatabase } from './postgres';
+import type { RecordStore } from './store';
+export { workspaceGuard } from './store';
 import { AtlasDatabase, AppDatabaseError } from './database';
 import { workspacePath } from './paths';
 export { AppDatabaseError } from './database';
 export { ws } from './events';
 
 const dataDirectory = workspacePath(process.env.ATLAS_DATA_DIR || 'artifacts/field-sales-atlas/data');
-export const db = new AtlasDatabase(workspacePath(`${dataDirectory}/atlas.sqlite`));
+const engine = process.env.ATLAS_DATABASE_ENGINE || 'sqlite';
+if (!['sqlite', 'postgres'].includes(engine)) throw new Error('ATLAS_DATABASE_ENGINE must be sqlite or postgres.');
+if (engine === 'postgres' && !process.env.DATABASE_URL) throw new Error('Connect the Replit PostgreSQL database so DATABASE_URL is available before selecting PostgreSQL.');
+export const db: RecordStore = engine === 'postgres' ? new PostgresDatabase(process.env.DATABASE_URL!) : new AtlasDatabase(workspacePath(`${dataDirectory}/atlas.sqlite`));
 export const isAppDatabaseError = (value: unknown): value is AppDatabaseError => value instanceof AppDatabaseError;
 
 export type RouterContext = {

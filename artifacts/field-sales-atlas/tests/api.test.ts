@@ -7,9 +7,21 @@ import { randomUUID } from 'node:crypto';
 
 const directory = mkdtempSync(join(tmpdir(), 'atlas-api-'));
 process.env.ATLAS_DATA_DIR = directory;
+let cleanPostgres: (() => Promise<void>) | undefined;
+if (process.env.ATLAS_DATABASE_ENGINE === 'postgres') {
+  if (!process.env.ATLAS_TEST_POSTGRES_URL) throw Error('PostgreSQL API tests require ATLAS_TEST_POSTGRES_URL for an isolated test schema.');
+  const { createPostgresPool } = await import('../../../lib/db/src/driver');
+  const admin = createPostgresPool({ connectionString: process.env.ATLAS_TEST_POSTGRES_URL });
+  const schema = 'atlas_api_' + randomUUID().replaceAll('-', '');
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  const url = new URL(process.env.ATLAS_TEST_POSTGRES_URL);
+  url.searchParams.set('options', '-c search_path=' + schema);
+  process.env.DATABASE_URL = url.toString();
+  cleanPostgres = async () => { await admin.query(`DROP SCHEMA ${schema} CASCADE`); await admin.end(); };
+}
 const { handler } = await import('../../api-server/src/field-atlas/backend/index');
 const { db } = await import('../../api-server/src/field-atlas/backend/runtime/sdk');
-after(() => { db.close(); rmSync(directory, { recursive: true, force: true }); });
+after(async () => { await db.close(); await cleanPostgres?.(); rmSync(directory, { recursive: true, force: true }); });
 
 async function request(method: string, path: string, key?: string, body?: unknown) {
   const url = new URL(path, 'http://localhost');
@@ -843,4 +855,38 @@ test('full source scan includes each historical dataset and flags an incomplete 
     assert.equal(checkpoint.available, false); assert.match(checkpoint.details, /1 historical queue groups/);
     assert.match(checkpoint.details, /PreCheck historical queue feed unavailable/);
   } finally { globalThis.fetch = original; }
+});
+
+test('hosted routing validates units and unreachable pairs, protects its key and hides private routes from shared diagnostics', async () => {
+  const { roadMatrix } = await import('../../api-server/src/field-atlas/backend/providers/routing');
+  const { sourceStatuses } = await import('../../api-server/src/field-atlas/backend/providers/evidence');
+  const original = globalThis.fetch;
+  const previousProvider = process.env.ATLAS_ROUTING_PROVIDER, previousKey = process.env.ATLAS_ORS_API_KEY;
+  process.env.ATLAS_ROUTING_PROVIDER = 'openrouteservice'; process.env.ATLAS_ORS_API_KEY = 'synthetic-server-key';
+  const points = [{ id: 'home', name: 'Home', lat: 28.42941, lon: -81.30901 }, { id: 'visit', name: 'Visit', lat: 28.53831, lon: -81.37921 }];
+  let calls = 0;
+  globalThis.fetch = async (input, init) => {
+    calls++;
+    assert.equal(String(input), 'https://api.openrouteservice.org/v2/matrix/driving-car');
+    assert.equal(init?.redirect, 'error');
+    assert.equal((init?.headers as Record<string, string>).Authorization, 'synthetic-server-key');
+    assert.deepEqual(JSON.parse(String(init?.body)).locations, [[-81.30901, 28.42941], [-81.37921, 28.53831]]);
+    return new Response(JSON.stringify({ durations: [[0, 901], [null, 0]], distances: [[0, 1609.344], [null, 0]] }));
+  };
+  try {
+    const route = await roadMatrix(points);
+    assert.equal(route.roadBased, true); assert.equal(route.durations[0][1], 16); assert.equal(route.distances[0][1], 1); assert.equal(route.durations[1][0], null);
+    assert.ok(!JSON.stringify(route).includes('synthetic-server-key'));
+    await roadMatrix(points); assert.equal(calls, 1);
+    assert.ok(!(await sourceStatuses()).some(evidence => evidence.provider.includes('road routing')));
+    globalThis.fetch = async () => new Response('{}', { status: 429 });
+    const failed = await roadMatrix(points.map(p => ({ ...p, lat: p.lat + .01 })));
+    assert.equal(failed.roadBased, false); assert.match(failed.evidence.limitation, /HTTP 429/);
+    globalThis.fetch = async () => new Response(JSON.stringify({ durations: [[0, -10], [0, 0]], distances: [[0, 1], [1, 0]] }));
+    assert.equal((await roadMatrix(points.map(p => ({ ...p, lat: p.lat + .02 })))).roadBased, false);
+  } finally {
+    globalThis.fetch = original;
+    if (previousProvider === undefined) delete process.env.ATLAS_ROUTING_PROVIDER; else process.env.ATLAS_ROUTING_PROVIDER = previousProvider;
+    if (previousKey === undefined) delete process.env.ATLAS_ORS_API_KEY; else process.env.ATLAS_ORS_API_KEY = previousKey;
+  }
 });

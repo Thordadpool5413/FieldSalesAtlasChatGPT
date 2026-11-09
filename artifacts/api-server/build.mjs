@@ -33,6 +33,7 @@ async function buildAll() {
       // their implementation/data into the API bundle. Workspace packages and
       // Pino remain bundled so package resolution and worker assets stay stable.
       "@js-temporal/polyfill",
+      "@replit/object-storage",
       "cookie-parser",
       "cors",
       "drizzle-orm",

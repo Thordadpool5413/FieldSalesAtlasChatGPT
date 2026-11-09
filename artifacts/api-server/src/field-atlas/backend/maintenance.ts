@@ -11,6 +11,10 @@ import {
   maintenanceStatus,
 } from "./runtime/jobs";
 import { workspacePath } from "./runtime/paths";
+import { db } from './runtime/sdk';
+import { PostgresDatabase } from './runtime/postgres';
+import { runPrivateBackup } from './runtime/backup';
+import { archiveBtsCache } from './runtime/btsArchive';
 
 const execute = promisify(execFile);
 let running: Promise<unknown> | null = null;
@@ -38,7 +42,11 @@ export function runMaintenance() {
         },
       ],
     ];
-    if (process.env.ATLAS_BACKUP_DIR)
+    if (process.env.ATLAS_BACKUP_BUCKET_ID) jobs.push(['private-record-backup', async () => {
+      if (!(db instanceof PostgresDatabase)) throw Error('Private record backup requires the migrated PostgreSQL store.');
+      await runPrivateBackup(db);
+    }]);
+    if (process.env.ATLAS_BACKUP_DIR && db.kind === 'sqlite')
       jobs.push([
         "database-backup",
         async () => {
@@ -71,6 +79,7 @@ export function runMaintenance() {
             timeout: 25 * 60000,
             maxBuffer: 1024 * 1024,
           });
+          await archiveBtsCache();
         },
       ]);
     const outcomes = await Promise.allSettled([

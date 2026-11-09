@@ -19,10 +19,14 @@
     "data:import-bts": "pnpm --filter @workspace/field-sales-atlas run data:import-bts",
     "data:sync-bts": "pnpm --filter @workspace/field-sales-atlas run data:sync-bts",
     "setup:routing": "pnpm --filter @workspace/field-sales-atlas run setup:routing",
-    "test:runtime": "node --test scripts/local-runtime.test.mjs",
+    "test:runtime": "node --test scripts/*runtime*.test.mjs",
     "data:backup": "node scripts/backup-data.mjs",
     "data:verify-backup": "node scripts/verify-backup.mjs",
-    "data:maintain": "pnpm --filter @workspace/field-sales-atlas run data:maintain"
+    "data:maintain": "pnpm --filter @workspace/field-sales-atlas run data:maintain",
+    "data:migrate-records": "pnpm --filter @workspace/field-sales-atlas run data:migrate-records",
+    "data:backup-records": "pnpm --filter @workspace/field-sales-atlas run data:backup-records",
+    "data:archive-bts": "pnpm --filter @workspace/field-sales-atlas run data:archive-bts",
+    "replit:check": "pnpm --filter @workspace/field-sales-atlas run replit:check"
   },
   "private": true,
   "dependencies": {

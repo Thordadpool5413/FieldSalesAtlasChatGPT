@@ -1,5 +1,10 @@
 # Field Sales Atlas
 
+For PostgreSQL migration, private backups, hosted routing and runtime verification
+in Replit, follow [Replit setup and verified cutover](docs/operations/REPLIT_SETUP.md).
+The official weather feeds need no API keys; infrastructure and flight-specific
+provider access are separate configuration steps. No publication is automatic.
+
 A shared field-sales workspace for territories, coaching visits, calendars, and evidence-backed travel planning for two trainers.
 
 ## Update the existing Replit workspace
@@ -43,7 +48,7 @@ The web app uses port 24397; the API uses port 8080. `PORT` and `ATLAS_API_PORT`
 - `research/` and `docs/research/` — preserved Replit research and the latest free-travel-data audit.
 - `artifacts/field-sales-atlas/docs/` — original app documentation and design references. Older standalone `npm` commands should be replaced with the root pnpm commands here.
 
-The post-merge hook installs dependencies only. It does not run a database schema push, copy a database, or delete saved records. Publishing or autoscaling still needs durable storage for SQLite; Git synchronization does not provide persistent storage across deployment instances.
+The post-merge hook installs dependencies only. It does not run a database schema push, copy a database, or delete saved records. Published Replit filesystems are not durable record storage. Use the opt-in, verified PostgreSQL migration and private App Storage setup above; Git synchronization does not configure those services. Live events still require one application instance.
 
 ## Journey readiness
 

@@ -15,8 +15,8 @@ export const assistantInput = z.object({ reportId: z.string().min(1).max(100), q
   deadlineDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), deadlineTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
   allowHandoffs: z.boolean().default(false) });
 export async function answerTravelQuestion(workspaceId: string, request: z.infer<typeof assistantInput>, board: ScenarioBoard): Promise<AssistantAnswer> {
-  const revision = board.revision ?? db.workspaceRevision(workspaceId);
-  if (db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed. Refresh before asking again.');
+  const revision = board.revision ?? await db.workspaceRevision(workspaceId);
+  if (await db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed. Refresh before asking again.');
   const context = await planContext(workspaceId, request.reportId, board);
   const workEvidence = workspaceEvidence(board, revision), policy = policyEvidence(context.input);
   const answer: AssistantAnswer = { id: randomUUID(), question: request.question, createdAt: new Date().toISOString(), workspaceRevision: revision,
@@ -86,6 +86,6 @@ export async function answerTravelQuestion(workspaceId: string, request: z.infer
   answer.followups = [unknownHome || knownLate ? 'Supply a return itinerary that reaches each trainer’s home airport by the requested deadline.' : 'Verify flight operation and confirm the proposed appointments.',
     request.allowHandoffs ? 'Review the proposed trainer assignments before changing the calendar.' : 'Allow trainer handoffs to compare whether sharing the remaining visits helps.',
     context.pendingChange ? 'Open disruption recovery to review and explicitly apply any calendar changes.' : 'Use a reviewed travel preview to apply changes; this answer has not edited the calendar.'];
-  if (db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed during calculation. Ask again using the latest records.');
+  if (await db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed during calculation. Ask again using the latest records.');
   return answer;
 }

@@ -4,6 +4,11 @@ import { runMaintenance } from "./field-atlas/backend/maintenance";
 import { closeEvents } from "./field-atlas/backend/runtime/events";
 import { db } from "./field-atlas/backend/runtime/sdk";
 import { runTravelReviews } from "./field-atlas/backend/travel/watch";
+import { restoreBtsCache } from './field-atlas/backend/runtime/btsArchive';
+import { existsSync } from 'node:fs';
+import { workspacePath } from './field-atlas/backend/runtime/paths';
+import { PostgresDatabase } from './field-atlas/backend/runtime/postgres';
+import { assertMigratedWorkspaces } from './field-atlas/backend/runtime/migrate';
 
 const rawPort = process.env["PORT"];
 
@@ -18,6 +23,13 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+await db.ready();
+const oldStore = workspacePath((process.env.ATLAS_DATA_DIR || 'artifacts/field-sales-atlas/data') + '/atlas.sqlite');
+if (db instanceof PostgresDatabase && existsSync(oldStore)) await assertMigratedWorkspaces(oldStore, db);
+// BTS is rebuildable reference data. Failure leaves history unavailable and never
+// prevents access to the durable workspace records.
+await restoreBtsCache().catch(() => logger.warn('Private BTS cache restoration failed; historical coverage remains unavailable.'));
 
 const travelReviews = setInterval(() => {
   void runTravelReviews().catch((err) =>
@@ -49,8 +61,8 @@ function shutdown() {
   clearInterval(travelReviews);
   clearInterval(sourceHealthSchedule);
   closeEvents();
-  server.close(() => {
-    db.close();
+  server.close(async () => {
+    await db.close();
   });
   setTimeout(() => process.exit(), 5_000).unref();
 }

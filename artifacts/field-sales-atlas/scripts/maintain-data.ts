@@ -6,5 +6,5 @@ try {
   if (result.outcomes.some((row) => row.state === "failed"))
     process.exitCode = 1;
 } finally {
-  db.close();
+  await db.close();
 }

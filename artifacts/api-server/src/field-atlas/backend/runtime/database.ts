@@ -2,9 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-type RecordData = { id: string; [key: string]: unknown };
-type Change = { id: string; record: Record<string, unknown>; if?: Record<string, unknown> };
-type WriteOptions = { patch?: boolean };
+import { revisionCollections, type RecordData, type Change, type WriteOptions, type DatabaseOperation, type RecordStore, type TransactionGuard } from './store';
 
 export class AppDatabaseError extends Error {
   constructor(public readonly code: string, message: string) {
@@ -26,7 +24,9 @@ class Operation<T> implements PromiseLike<T> {
   }
 }
 
-export class AtlasDatabase {
+export class AtlasDatabase implements RecordStore {
+  readonly kind = 'sqlite' as const;
+  async ready() {}
   private readonly connection: DatabaseSync;
 
   constructor(filename: string) {
@@ -52,8 +52,7 @@ export class AtlasDatabase {
   close() { this.connection.close(); }
 
   workspaceRevision(workspaceId: string): number {
-    const suffix = '_' + workspaceId;
-    const collections = ['managers', 'assignments', 'visits', 'trips', 'coaching', 'trainer_profiles', 'availability', 'travel_plans', 'travel_prefs', 'flight_changes', 'itinerary_updates'].map(name => 'atlas_' + name + suffix);
+    const collections = revisionCollections(workspaceId);
     const statement = this.connection.prepare('SELECT revision FROM collection_revisions WHERE collection = ?');
     return collections.reduce((sum, name) => sum + Number(statement.get(name)?.revision || 0), 0);
   }
@@ -139,11 +138,12 @@ export class AtlasDatabase {
 
   delete(table: string, ids: string[]) { return this.tx.delete(table, ids); }
 
-  async transact(operations: Operation<boolean[]>[], guard?: () => void): Promise<boolean[][]> {
-    if (operations.some(operation => operation.store !== this)) throw new Error('Cross-database transaction is unsupported.');
+  async transact(operations: DatabaseOperation[], guard?: TransactionGuard): Promise<boolean[][]> {
+    if (operations.some(operation => !(operation instanceof Operation) || operation.store !== this)) throw new Error('Cross-database transaction is unsupported.');
     return this.write(() => {
-      guard?.();
-      return operations.map(operation => {
+      if (typeof guard === 'function') guard();
+      else if (guard && this.workspaceRevision(guard.workspaceId) !== guard.revision) throw new AppDatabaseError('AppDatabaseConflict', guard.message);
+      return (operations as Operation<boolean[]>[]).map(operation => {
       const result = operation.execute();
       if (result.some(success => !success)) {
         throw new AppDatabaseError('AppDatabaseConflict', 'Transaction conflicted with an existing or changed record.');

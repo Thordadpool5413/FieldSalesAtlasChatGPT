@@ -1,7 +1,7 @@
 import { journeyReadiness } from './readiness';
 import { z } from 'zod';
 import { createHash, randomUUID } from 'node:crypto';
-import { db, AppDatabaseError } from '../runtime/sdk';
+import { db, workspaceGuard } from '../runtime/sdk';
 import { flightInput, normalizeFlights, buildScenarios, type ScenarioBoard, type ScenarioInput } from './scenarios';
 import { allRecords, changeTable, planContext, recoveryTable, reportTable, workspaceEvidence, policyEvidence, type PlanContext } from './context';
 import { lookupAirports } from '../providers/airports';
@@ -24,7 +24,7 @@ export async function reportFlightChange(workspaceId: string, body: ChangeInput,
   const requestHash = createHash('sha256').update(JSON.stringify(body)).digest('hex');
   const [previous] = await db.get<StoredChange>(changeTable(workspaceId), [body.id]);
   if (previous) { if (previous.requestHash !== requestHash) throw new Error('This report ID already belongs to a different flight change.'); return previous; }
-  const revision = board.revision ?? db.workspaceRevision(workspaceId), context = await planContext(workspaceId, body.reportId, board);
+  const revision = board.revision ?? await db.workspaceRevision(workspaceId), context = await planContext(workspaceId, body.reportId, board);
   if (context.pendingChange) throw new Error('This plan already has a pending flight change. Review or retract that report first.');
   if (!context.pending.length) throw new Error('This plan has no pending visits to recover.');
   if (!context.input.trainerIds.includes(body.originalLeg.trainerId as 'trainer_a' | 'trainer_b')) throw new Error('Choose a trainer from this approved plan.');
@@ -42,9 +42,7 @@ export async function reportFlightChange(workspaceId: string, body: ChangeInput,
     id: 'flight-change-' + body.id, provider: 'Traveler-reported flight change', subject: `${body.originalLeg.origin}–${body.originalLeg.destination} · ${body.status}`,
     sourceUrl: '', kind: 'traveler', state: 'reference', observedAt: body.checkedAt, retrievedAt: now, version: body.id,
     scope: 'The traveler supplied these flight fields and the check time.', limitation: 'Not independently confirmed by an airline or flight-status provider. Alternative seats, fares and rebooking eligibility remain unverified.' } };
-  await db.transact([db.tx.add(changeTable(workspaceId), [change])], () => {
-    if (db.workspaceRevision(workspaceId) !== revision) throw new AppDatabaseError('AppDatabaseConflict', 'The shared plan changed. Refresh before reporting.');
-  });
+  await db.transact([db.tx.add(changeTable(workspaceId), [change])], workspaceGuard(workspaceId, revision, 'The shared plan changed. Refresh before reporting.'));
   return change;
 }
 
@@ -109,7 +107,7 @@ async function assessImpacts(context: PlanContext, change: FlightChange, board: 
 }
 
 export async function buildRecovery(workspaceId: string, changeId: string, board: ScenarioBoard, includeHandoffs: boolean) {
-  const revision = board.revision ?? db.workspaceRevision(workspaceId);
+  const revision = board.revision ?? await db.workspaceRevision(workspaceId);
   const [change] = await db.get<FlightChange>(changeTable(workspaceId), [changeId]);
   if (!change || change.state !== 'pending') throw new Error('Choose a pending flight change in this workspace.');
   const context = await planContext(workspaceId, change.reportId, board);
@@ -152,7 +150,7 @@ export async function buildRecovery(workspaceId: string, changeId: string, board
   const preview: StoredRecovery = { id: randomUUID(), changeId, reportId: change.reportId, workspaceRevision: revision, createdAt: now,
     expiresAt: new Date(Date.now() + 15 * 60000).toISOString(), change, impacts, options, inputs, unresolvedTrainerIds: changed.unresolvedTrainerIds,
     limitations: ['Flight status is traveler-reported. Seats, fares, airline connection requirements and rebooking eligibility require verification.', 'Recovery changes only this plan’s remaining visits. Other shared commitments and completed history stay reserved.', 'Alternate airport pairs require a new itinerary with routed transfers. No meetings or bookings have changed yet.'] };
-  if (db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed during analysis. Refresh and build recovery options again.');
+  if (await db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed during analysis. Refresh and build recovery options again.');
   await db.tx.add(recoveryTable(workspaceId), [preview]);
   return publicRecovery(preview);
 }
@@ -203,7 +201,7 @@ export async function approveRecovery(workspaceId: string, previewId: string, op
     ...(await watchReplacementOperations(workspaceId, context.tripIds))];
   if (monitor) operations.push(queueWatch(workspaceId, option.report, activeTripIds));
   try {
-    await db.transact(operations, () => { if (db.workspaceRevision(workspaceId) !== preview.workspaceRevision) throw new AppDatabaseError('AppDatabaseConflict', 'Calendar changed after review.'); });
+    await db.transact(operations, workspaceGuard(workspaceId, preview.workspaceRevision, 'Calendar changed after review.'));
   } catch (failure) {
     const [fresh] = await db.get<StoredRecovery>(recoveryTable(workspaceId), [preview.id]);
     if (fresh?.receipt?.optionId === optionId) return { ...fresh.receipt, replayed: true };

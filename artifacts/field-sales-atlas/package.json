@@ -16,7 +16,11 @@
     "data:import-bts": "python3 scripts/import-bts.py",
     "data:sync-bts": "python3 scripts/sync-bts.py",
     "setup:routing": "python3 scripts/setup-routing.py",
-    "data:maintain": "node --use-env-proxy --import tsx scripts/maintain-data.ts"
+    "data:maintain": "node --use-env-proxy --import tsx scripts/maintain-data.ts",
+    "data:migrate-records": "node --use-env-proxy --import tsx scripts/migrate-records.ts",
+    "data:backup-records": "node --use-env-proxy --import tsx scripts/backup-records.ts",
+    "data:archive-bts": "node --use-env-proxy --import tsx scripts/archive-bts.ts",
+    "replit:check": "node --use-env-proxy --import tsx scripts/check-replit-setup.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

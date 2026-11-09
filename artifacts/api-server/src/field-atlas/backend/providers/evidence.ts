@@ -7,6 +7,7 @@ type Parsed<T> = { data: T; observedAt?: string; validFrom?: string; validTo?: s
 type SourceRequest<T> = {
   provider: string; subject: string; url: string; kind: Evidence['kind']; scope: string;
   ttlMs: number; maxAgeMs: number; version: string; parse: (value: unknown) => Parsed<T> | Promise<Parsed<T>>;
+  load?: () => Promise<unknown>;
 };
 class ProviderFailure extends Error {
   constructor(readonly code: Evidence['failureCode'], message: string) { super(message); }
@@ -39,8 +40,8 @@ function currentEvidence(evidence: Evidence, now = Date.now()): Evidence {
   return { ...evidence, state, limitation };
 }
 const inFlightJson = new Map<string, Promise<unknown>>();
-async function fetchJson(url: string): Promise<unknown> {
-  const response = await fetch(url, { headers: { Accept: 'application/json, application/geo+json', 'User-Agent': 'FieldSalesAtlas/2.0 (https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT)' }, signal: AbortSignal.timeout(8500) }).catch((failure: unknown) => {
+export async function officialRequest(url: string, init: RequestInit = {}): Promise<unknown> {
+  const response = await fetch(url, { ...init, headers: { Accept: 'application/json, application/geo+json', 'User-Agent': 'FieldSalesAtlas/2.0 (https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT)', ...init.headers }, signal: AbortSignal.timeout(8500) }).catch((failure: unknown) => {
     const timeout = failure instanceof Error && ['TimeoutError', 'AbortError'].includes(failure.name);
     throw new ProviderFailure(timeout ? 'timeout' : 'network', timeout ? 'Provider request timed out.' : 'Provider network request failed.');
   });
@@ -53,7 +54,7 @@ async function fetchJson(url: string): Promise<unknown> {
 export function officialJson(url: string): Promise<unknown> {
   const running = inFlightJson.get(url);
   if (running) return running;
-  const work = fetchJson(url).finally(() => inFlightJson.delete(url));
+  const work = officialRequest(url).finally(() => inFlightJson.delete(url));
   inFlightJson.set(url, work);
   return work;
 }
@@ -67,7 +68,7 @@ export async function source<T>(request: SourceRequest<T>): Promise<SourceResult
     const now = new Date().toISOString();
     let result: SourceResult<T>;
     try {
-      const parsed = await request.parse(await officialJson(request.url));
+      const parsed = await request.parse(await (request.load ? request.load() : officialJson(request.url)));
       const issueTime = parsed.observedAt ? Date.parse(parsed.observedAt) : NaN;
       const sourceTimeValid = Number.isFinite(issueTime) && issueTime <= Date.now() + 300000 && Date.now() - issueTime <= request.maxAgeMs;
       const expiresAt = new Date(Math.min(Date.now() + request.ttlMs, Number.isFinite(issueTime) ? issueTime + request.maxAgeMs : Infinity, parsed.validTo ? Date.parse(parsed.validTo) : Infinity)).toISOString();
@@ -101,6 +102,9 @@ export async function sourceStatuses() {
     const result = await db.list<{ result: SourceResult<unknown>; lastAttemptAt: string }>(table, { limit: 1000, nextToken });
     for (const row of result.items) {
       const evidence = currentEvidence(row.result.evidence);
+      // Routing evidence contains private journey coordinates. Never enumerate it
+      // in the shared diagnostics returned to other workspaces.
+      if (evidence.kind === 'estimate') continue;
       const key = evidence.provider + '\0' + evidence.subject;
       if (!latest.has(key) || latest.get(key)!.lastAttemptAt < row.lastAttemptAt) latest.set(key, { ...evidence, lastAttemptAt: row.lastAttemptAt });
     }

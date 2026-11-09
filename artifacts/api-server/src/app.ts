@@ -1,5 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { apiBuildInfo } from "./build-info";
+// Shared with the local startup check; never includes secret values or host URLs.
+import { runtimeConfiguration } from '../../../scripts/runtime-state.mjs';
 import { apiContract } from "./api-contract";
 import { runMaintenance } from "./field-atlas/backend/maintenance";
 import express, { type Express } from "express";
@@ -36,7 +38,7 @@ app.use(cors());
 app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/api/build-info', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json(apiBuildInfo); });
+app.get('/api/build-info', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ ...apiBuildInfo, configuration: runtimeConfiguration() }); });
 app.get('/api/openapi.json', (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json(apiContract()); });
 app.post('/api/maintenance/run', async (req, res) => {
   const expected = process.env.ATLAS_MAINTENANCE_TOKEN || '';

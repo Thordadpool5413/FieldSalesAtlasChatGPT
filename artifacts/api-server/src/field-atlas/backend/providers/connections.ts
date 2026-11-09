@@ -8,6 +8,7 @@ import { maintenanceStatus } from '../runtime/jobs';
 import { sourceStatuses } from './evidence';
 import { workspacePath } from '../runtime/paths';
 import { db } from '../runtime/sdk';
+import { reconcileHistorySync } from './historySync';
 
 function setupStatus(file: string) {
   const path = workspacePath(`${process.env.ATLAS_DATA_DIR || 'artifacts/field-sales-atlas/data'}/${file}`);
@@ -15,7 +16,8 @@ function setupStatus(file: string) {
 }
 export async function connectionStatus() {
   const [sourceHealth] = await db.get('atlas_public_source_health', ['current']);
-  return { sourceHealth, checkedAt: new Date().toISOString(), airports: await airportReferenceStatus(), history: historyCoverage(), historySync: setupStatus('bts-sync-status.json'),
+  const history = historyCoverage();
+  return { sourceHealth, checkedAt: new Date().toISOString(), airports: await airportReferenceStatus(), history, historySync: reconcileHistorySync(setupStatus('bts-sync-status.json'), history.periods),
     maintenance: await maintenanceStatus(), sourceStatuses: await sourceStatuses(),
     routing: publicRoutingStatus(), routingSetup: setupStatus('routing/setup-status.json'),
     providers: [

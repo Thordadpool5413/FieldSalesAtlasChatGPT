@@ -3,6 +3,13 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (major !== 24 || minor < 10) { console.error("Field Sales Atlas requires Node 24.10 or newer within Node 24."); process.exit(1); }'
+if node scripts/replit-preflight.mjs; then
+  :
+else
+  atlas_preflight_status=$?
+  if [ "$atlas_preflight_status" -eq 10 ]; then exit 0; fi
+  exit "$atlas_preflight_status"
+fi
 pnpm install --frozen-lockfile
 pnpm run setup:optimizer
 exec pnpm run dev

@@ -126,6 +126,14 @@ jobs retain the last successful data and retry after 15 minutes.
 
 ## Durable records and recovery
 
+For Replit, use [the PostgreSQL migration and private App Storage setup](REPLIT_SETUP.md).
+Published Replit filesystems are not durable, including on a Reserved VM. The
+following local SQLite instructions apply to a host with independently verified
+persistent storage, and remain useful for making a pre-migration copy. The active
+store stays SQLite until `ATLAS_DATABASE_ENGINE=postgres` is explicitly selected
+after migration. PostgreSQL transactions preserve workspace revision checks and
+compare-and-swap leases. Event connections still require one app instance.
+
 Local SQLite WAL is supported for a **single application instance on a persistent
 volume**. Independent autoscale filesystems are not a shared database and SSE
 connections are process-local. This repository cannot prove or provision the
@@ -159,6 +167,11 @@ the backup, and restore into a **new** data directory before switching the host'
 The app never automatically overwrites a database to restore a backup.
 
 ## Road routing: activation still requires a host
+
+Replit can now use the hosted openrouteservice adapter without Docker. See the
+[setup guide](REPLIT_SETUP.md#4-enable-real-road-routes-without-docker) for account,
+key, quotas and limitations. The OSRM steps below remain an alternative for a
+separately maintained routing host.
 
 For an environment with a persistent Docker daemon and sufficient resources:
 

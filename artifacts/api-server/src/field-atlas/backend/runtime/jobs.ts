@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { db } from "./sdk";
+import { backupReceiptTable, recentBackup } from './backup';
 
 export const jobTable = "atlas_maintenance_jobs";
 export type JobState = {
@@ -13,8 +14,7 @@ export type JobState = {
   state: string;
   error?: string | null;
 };
-// Compare-and-swap leases survive restarts and coordinate processes sharing this SQLite file.
-// They cannot coordinate independent autoscaling filesystems.
+// Compare-and-swap leases coordinate processes sharing the selected record store.
 export async function runDurableJob(
   id: string,
   key: string,
@@ -97,6 +97,7 @@ export async function runDurableJob(
   return true;
 }
 export async function maintenanceStatus() {
+  const [backupReceipt] = await db.get<{ createdAt: string; state: string; scope: string; limitation: string; destinationFingerprint?: string | null }>(backupReceiptTable, ['latest']);
   const jobs = (await db.list<JobState>(jobTable, { limit: 100 })).items.map(
     ({
       id,
@@ -122,12 +123,12 @@ export async function maintenanceStatus() {
     checkedAt: new Date().toISOString(),
     jobs,
     storage: {
-      engine: "SQLite WAL",
+      engine: db.kind === 'postgres' ? 'PostgreSQL' : 'SQLite WAL',
       deployment:
-        "Single application instance with a persistent volume required",
-      durability: "unverified",
+        db.kind === 'postgres' ? 'External database; use one app instance until cross-instance live events are implemented' : 'Local file; published Replit filesystem is not durable storage',
+      durability: db.kind === 'postgres' ? 'external-database-connected; host-recovery-unverified' : 'unverified',
       limitation:
-        "A writable local file does not prove deployment persistence. Verify the mounted volume and restoration on the actual host.",
+        db.kind === 'postgres' ? 'Database connectivity is verified by this query. Production database selection and disaster recovery still require host verification.' : 'A writable local file does not prove persistence. Migrate private records to PostgreSQL before relying on a published Replit deployment.',
     },
     scheduling: {
       mode: "In-process catch-up with durable leases",
@@ -138,10 +139,13 @@ export async function maintenanceStatus() {
         "Timers run only while an instance is awake. Configure an external scheduled trigger for sleeping deployments; a configured token does not prove delivery.",
     },
     backups: {
-      configured: !!process.env.ATLAS_BACKUP_DIR,
+      configured: !!process.env.ATLAS_BACKUP_BUCKET_ID || !!process.env.ATLAS_BACKUP_DIR,
       restoreVerified: false,
+      recordRestoreVerifiedAt: backupReceipt?.createdAt || null,
+      recordBackupFresh: recentBackup(backupReceipt),
+      recordBackup: backupReceipt || null,
       limitation:
-        "Backup files must be copied to separate durable storage and restoration verified on the deployment host.",
+        'A private-backup receipt verifies only its recorded object round trip and temporary-table restore. Complete host disaster recovery remains unverified.',
     },
     btsAutoSync: process.env.ATLAS_BTS_AUTO_SYNC === "1",
   };

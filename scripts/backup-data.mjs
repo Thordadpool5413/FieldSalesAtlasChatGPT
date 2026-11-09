@@ -11,6 +11,7 @@ async function sha256(path) {
   return hash.digest("hex");
 }
 const root = fileURLToPath(new URL("../", import.meta.url));
+if (process.env.ATLAS_DATABASE_ENGINE === 'postgres') throw Error('The active record store is PostgreSQL. Use pnpm run data:backup-records; this SQLite command cannot back up active PostgreSQL records.');
 const source = resolve(
   root,
   process.env.ATLAS_DATA_DIR || "artifacts/field-sales-atlas/data",

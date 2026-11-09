@@ -1,5 +1,5 @@
 import type { Matrix, Point } from '../../shared/travel/types';
-import { source, sourceId } from './evidence';
+import { officialRequest, source, sourceId } from './evidence';
 import { routingConfiguration, withinRoutingCoverage } from './routingConfig';
 
 function miles(a: Point, b: Point) {
@@ -10,7 +10,29 @@ function miles(a: Point, b: Point) {
 }
 export async function roadMatrix(points: Point[]): Promise<Matrix> {
   if (!points.length || points.length > 26 || points.some(p => !Number.isFinite(p.lat) || !Number.isFinite(p.lon) || Math.abs(p.lat) > 90 || Math.abs(p.lon) > 180)) throw new Error('Routing requires 1–26 valid locations.');
-  const { endpoint, graph } = routingConfiguration();
+  const { provider, endpoint, graph } = routingConfiguration();
+  let roadFailure = '';
+  if (provider === 'openrouteservice' && endpoint) {
+    const response = await source<{ durations: Matrix['durations']; distances: Matrix['distances'] }>({
+      provider: 'openrouteservice road routing', subject: points.map(p => p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';'),
+      url: endpoint, kind: 'estimate', scope: 'Driving-car road matrix. Duration is a model estimate, not live traffic or a guaranteed arrival time.',
+      ttlMs: 24 * 3600000, maxAgeMs: 24 * 3600000, version: 'ors-matrix-1',
+      load: () => officialRequest(endpoint, { method: 'POST', redirect: 'error', headers: { Authorization: process.env.ATLAS_ORS_API_KEY!, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations: points.map(p => [Number(p.lon.toFixed(5)), Number(p.lat.toFixed(5))]), metrics: ['duration', 'distance'], units: 'm' }) }),
+      parse(value) {
+        const data = value as { durations?: unknown[][]; distances?: unknown[][]; sources?: Array<{ snapped_distance?: number }>; destinations?: Array<{ snapped_distance?: number }> };
+        const valid = (matrix?: unknown[][]) => Array.isArray(matrix) && matrix.length === points.length && matrix.every(row => Array.isArray(row) && row.length === points.length && row.every(v => v === null || (typeof v === 'number' && Number.isFinite(v) && v >= 0)));
+        if (!valid(data.durations) || !valid(data.distances)) throw new Error('Invalid openrouteservice matrix.');
+        const far = (i: number) => Number(data.sources?.[i]?.snapped_distance || 0) > 1500 || Number(data.destinations?.[i]?.snapped_distance || 0) > 1500;
+        return { observedAt: new Date().toISOString(), data: {
+          durations: data.durations!.map((row, a) => row.map((v, b) => v === null || far(a) || far(b) ? null : Math.ceil(Number(v) / 60))),
+          distances: data.distances!.map((row, a) => row.map((v, b) => v === null || far(a) || far(b) ? null : Number(v) / 1609.344)),
+        }, limitation: 'Calculated at retrieval; hosted graph age and coverage are not independently verified. No live traffic, border queues or flight availability. Quotas apply. © openrouteservice, Heidelberg Institute for Geoinformation Technology; © OpenStreetMap contributors, ODbL.' };
+      },
+    });
+    if (response.data && response.evidence.state === 'current') return { ...response.data, evidence: response.evidence, roadBased: true };
+    roadFailure = response.evidence.limitation;
+  }
   if (graph && points.some(point => !withinRoutingCoverage(point.lat, point.lon, graph))) {
     const supported = points.flatMap((point, index) => withinRoutingCoverage(point.lat, point.lon, graph) ? [index] : []);
     const subset = supported.length > 1 ? await roadMatrix(supported.map(index => points[index])) : null;
@@ -20,7 +42,7 @@ export async function roadMatrix(points: Point[]): Promise<Matrix> {
         sourceUrl: graph.sources[0], state: 'partial' as const, retrievedAt: graph.installedAt, version: graph.sha256, scope: 'OpenStreetMap regional road graph.' }),
         state: 'partial', limitation: 'Some locations are outside the installed routing extract. Transfers to or from those locations are unavailable; no geographic substitute is used.' } };
   }
-  if (endpoint) {
+  if (provider === 'osrm' && endpoint) {
     const base = new URL(endpoint.endsWith('/') ? endpoint : endpoint + '/');
     if (base.username || base.password || (base.protocol !== 'https:' && !(base.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].includes(base.hostname)))) throw new Error('Configure an HTTPS routing endpoint, or a local HTTP OSRM service, without URL credentials.');
     const coords = points.map(p => `${p.lon.toFixed(5)},${p.lat.toFixed(5)}`).join(';');
@@ -38,11 +60,12 @@ export async function roadMatrix(points: Point[]): Promise<Matrix> {
       },
     });
     if (response.data && response.evidence.state === 'current') return { ...response.data, evidence: response.evidence, roadBased: true };
+    roadFailure = response.evidence.limitation;
   }
   return {
     roadBased: false,
     distances: points.map(a => points.map(b => miles(a, b) * 1.3)),
     durations: points.map(a => points.map(b => a.id === b.id ? 0 : Math.ceil(miles(a, b) * 1.3 / 47 * 60))),
-    evidence: { id: sourceId('geographic-estimate', points.map(p => p.id).join(',')), provider: 'Geographic fallback', subject: 'Journey transfers', sourceUrl: '', kind: 'estimate', state: 'partial', retrievedAt: new Date().toISOString(), version: 'straight-line-1', scope: 'Straight-line distance × 1.3 at an assumed 47 mph.', limitation: endpoint ? 'The configured road service is unavailable. Geographic estimates cannot establish drivable-route feasibility.' : 'No road-routing service is configured. Geographic estimates cannot establish drivable-route feasibility.' },
+    evidence: { id: sourceId('geographic-estimate', points.map(p => p.id).join(',')), provider: 'Geographic fallback', subject: 'Journey transfers', sourceUrl: '', kind: 'estimate', state: 'partial', retrievedAt: new Date().toISOString(), version: 'straight-line-1', scope: 'Straight-line distance × 1.3 at an assumed 47 mph.', limitation: (endpoint ? 'The configured road service is unavailable. ' + roadFailure + ' ' : 'No road-routing service is configured. ') + 'Geographic estimates cannot establish drivable-route feasibility.' },
   };
 }

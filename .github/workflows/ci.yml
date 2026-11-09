@@ -8,6 +8,20 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: atlas
+          POSTGRES_PASSWORD: ci-test-only
+          POSTGRES_DB: atlas_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U atlas -d atlas_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ATLAS_TEST_POSTGRES_URL: postgresql://atlas:ci-test-only@127.0.0.1:5432/atlas_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -34,6 +48,11 @@ jobs:
           pnpm run setup:optimizer
       - run: python artifacts/field-sales-atlas/scripts/test-bts-sync.py
       - run: pnpm test
+      - name: Verify the complete API against PostgreSQL
+        env:
+          ATLAS_DATABASE_ENGINE: postgres
+          DATABASE_URL: postgresql://atlas:ci-test-only@127.0.0.1:5432/atlas_test
+        run: pnpm --filter @workspace/field-sales-atlas exec node --use-env-proxy --import tsx --test --test-isolation=none tests/api.test.ts
       - run: pnpm run build
       - run: pnpm run test:api
       - run: pnpm run test:runtime

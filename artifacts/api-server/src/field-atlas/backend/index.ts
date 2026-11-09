@@ -1,5 +1,6 @@
 import {
   router,
+  workspaceGuard,
   AppDatabaseError,
   json,
   error,
@@ -148,7 +149,7 @@ const safe = (value: string, max: number = 180) =>
     .trim()
     .slice(0, max);
 function guardRevision(workspaceId:string,revision:number){
-  return ()=>{if(db.workspaceRevision(workspaceId)!==revision)throw new AppDatabaseError('AppDatabaseConflict','Workspace changed during scheduling.');};
+  return workspaceGuard(workspaceId,revision,'Workspace changed during scheduling.');
 }
 const tables = (workspaceId: string) => {
   const id = workspaceId.replace(/[^A-Za-z0-9_-]/g, '');
@@ -647,7 +648,7 @@ export const refreshPublicSourceStatus=async (_event:{
 };
 
 async function travelBoard(workspaceId:string):Promise<ScenarioBoard>{
-  const revision=db.workspaceRevision(workspaceId);
+  const revision=await db.workspaceRevision(workspaceId);
   const t=tables(workspaceId),x=extraTables(workspaceId);
   const [managers,assignments,visits,coaching,trips,availability,trainerProfiles]=await Promise.all([
     pageAll(t.managers),pageAll(t.assignments),pageAll(t.visits),pageAll(x.coaching),pageAll(x.trips),pageAll(x.trainerAvailability),trainerProfilesFor(workspaceId)
@@ -659,7 +660,10 @@ export const handler = router({
   ...makeTravelRoutes({workspaceAccess,member,load:travelBoard,tables,extraTables,activityLog}),
   ...makeRestoreRoutes({workspaceAccess,member,tables,extraTables}),
 
-  'GET /api/_healthcheck': [async () => json({ status: 'ready' })],
+  'GET /api/_healthcheck': [async () => {
+    try { await db.get('atlas_health_probe', ['ready']); return json({ status: 'ready' }); }
+    catch { return json({ status: 'not-ready', limitation: 'The configured record store is not responding.' }, 503); }
+  }],
   'POST /api/demo/create': [createDemoWorkspace],
   'POST /api/guest/create': [async () => {
     // A workspace is usable only when all three records commit together.
@@ -1011,7 +1015,7 @@ export const handler = router({
     async ctx => {
       const m = await member(ctx.user!.userId);
       if (!m) return error('Team required.', 403);
-      const revision=db.workspaceRevision(m.workspaceId);
+      const revision=await db.workspaceRevision(m.workspaceId);
       const b = bodyOf(ctx.body);
       const t = tables(m.workspaceId);
       const managerId = str(b, 'managerId', 90);
@@ -1111,7 +1115,7 @@ export const handler = router({
   'GET /api/operations': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId);
     if (!m) return json({ needsTeam: true });
-    const revision = db.workspaceRevision(m.workspaceId);
+    const revision = await db.workspaceRevision(m.workspaceId);
     const t = tables(m.workspaceId);
     const x = extraTables(m.workspaceId);
     const [team, managers, assignments, visits, coaching, trips, activity,trainerProfiles,availability] = await Promise.all([
@@ -1335,7 +1339,7 @@ export const handler = router({
   }],
   'PUT /api/visits/:id': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId); if (!m) return error('Team required.',403);
-    const revision=db.workspaceRevision(m.workspaceId);
+    const revision=await db.workspaceRevision(m.workspaceId);
     const table = tables(m.workspaceId).visits;
     const [existing] = await db.get<Visit>(table,[ctx.params.id],{consistent:true});
     if (!existing) return error('Visit not found.',404);
@@ -1387,7 +1391,7 @@ export const handler = router({
     // visits together. If the transaction fails, neither record group is committed.
     const membership=await member(ctx.user!.userId);
     if(!membership)return error('Shared workspace required.',403);
-    const revision = db.workspaceRevision(membership.workspaceId);
+    const revision = await db.workspaceRevision(membership.workspaceId);
     const b=bodyOf(ctx.body);
     const requestId=strField(b,'requestId',64);
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId))
@@ -1479,7 +1483,7 @@ export const handler = router({
       await db.transact([
         db.tx.add(tripTable,[trip]),
         db.tx.add(visitTable,scheduled)
-      ],()=>{if(db.workspaceRevision(membership.workspaceId)!==revision)throw new AppDatabaseError("AppDatabaseConflict","Workspace changed during approval.");});
+      ],workspaceGuard(membership.workspaceId, revision, "Workspace changed during approval."));
     }catch(e:unknown){
       if(isAppDatabaseError(e)&&(
         e.code==='AppDatabaseDuplicateId'||e.code==='AppDatabaseUnknownOutcome'
@@ -1496,7 +1500,7 @@ export const handler = router({
   }],
   'POST /api/trips': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId); if (!m) return error('Team required.',403);
-    const revision=db.workspaceRevision(m.workspaceId);
+    const revision=await db.workspaceRevision(m.workspaceId);
     const b = bodyOf(ctx.body);
     const title = strField(b,'title',150), startDate=normalizeDate(b.startDate), endDate=normalizeDate(b.endDate);
     if (!title || !startDate || !endDate || startDate>endDate) return error('Trip requires a title and valid dates.',400);
@@ -1536,7 +1540,7 @@ export const handler = router({
   }],
   'PUT /api/trips/:id': [workspaceAccess, async ctx => {
     const m = await member(ctx.user!.userId); if (!m) return error('Team required.',403);
-    const revision=db.workspaceRevision(m.workspaceId);
+    const revision=await db.workspaceRevision(m.workspaceId);
     const table=extraTables(m.workspaceId).trips;
     const [existing]=await db.get<Trip>(table,[ctx.params.id],{consistent:true});
     if (!existing) return error('Trip not found.',404);

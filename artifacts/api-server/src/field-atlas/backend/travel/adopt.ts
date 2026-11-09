@@ -1,6 +1,6 @@
 import { itineraryVersion } from './readiness';
 import { createHash, randomUUID } from 'node:crypto';
-import { db, AppDatabaseError } from '../runtime/sdk';
+import { db, workspaceGuard } from '../runtime/sdk';
 import { scenarioInput, normalizeFlights, type ScenarioBoard } from './scenarios';
 import { allRecords, planContext, reportTable, workspaceEvidence, type SavedReport } from './context';
 import { zoneAt } from './zones';
@@ -8,7 +8,7 @@ import type { FlightInput, Scenario, ScenarioReport } from '../../shared/travel/
 import { lookupAirports } from '../providers/airports';
 
 export async function adoptSavedTrips(workspaceId: string, tripIds: string[], board: ScenarioBoard) {
-  const revision = board.revision ?? db.workspaceRevision(workspaceId);
+  const revision = board.revision ?? await db.workspaceRevision(workspaceId);
   const trips = (board.trips || []).filter(trip => tripIds.includes(trip.id) && trip.status === 'Planned');
   if (trips.length !== new Set(tripIds).size || !trips.length || trips.length > 2) throw new Error('Choose one or two planned trips in this workspace.');
   const existing = (await allRecords<SavedReport>(reportTable(workspaceId))).find(saved => saved.approval && tripIds.every(id => (saved.currentPlan?.tripIds || saved.approval!.tripIds).includes(id)));
@@ -39,7 +39,7 @@ export async function adoptSavedTrips(workspaceId: string, tripIds: string[], bo
   return { reportId: report.id, reused: !created };
 }
 export async function attachItinerary(workspaceId: string, reportId: string, flights: FlightInput[], board: ScenarioBoard, expectedItineraryVersion?: string) {
-  const revision = board.revision ?? db.workspaceRevision(workspaceId), context = await planContext(workspaceId, reportId, board);
+  const revision = board.revision ?? await db.workspaceRevision(workspaceId), context = await planContext(workspaceId, reportId, board);
   if (expectedItineraryVersion !== undefined && expectedItineraryVersion !== itineraryVersion(context.input.flights)) throw new Error('Itinerary changed. Refresh before replacing flight fields.');
   if (context.pendingChange) throw new Error('Resolve or retract the pending flight change before replacing booking fields.');
   if (flights.some(flight => !context.input.trainerIds.includes(flight.trainerId))) throw new Error('Booking legs must belong to this plan’s trainers.');
@@ -53,8 +53,6 @@ export async function attachItinerary(workspaceId: string, reportId: string, fli
   const input = { ...context.input, requirements, flights: flights.map(flight => ({ ...flight, providedAt: flight.providedAt || new Date().toISOString() })) };
   const update = context.saved.currentPlan ? { currentPlan: { ...context.saved.currentPlan, input } } : { input };
   await db.transact([db.tx.update(reportTable(workspaceId), [{ id: reportId, record: update }], { patch: true }),
-    db.tx.add('atlas_itinerary_updates_' + workspaceId, [{ id: randomUUID(), reportId, at: new Date().toISOString(), legCount: flights.length, previousVersion: itineraryVersion(context.input.flights), version: itineraryVersion(input.flights) }])], () => {
-      if (db.workspaceRevision(workspaceId) !== revision) throw new AppDatabaseError('AppDatabaseConflict', 'Plan changed while attaching the itinerary.');
-    });
+    db.tx.add('atlas_itinerary_updates_' + workspaceId, [{ id: randomUUID(), reportId, at: new Date().toISOString(), legCount: flights.length, previousVersion: itineraryVersion(context.input.flights), version: itineraryVersion(input.flights) }])], workspaceGuard(workspaceId, revision, 'Plan changed while attaching the itinerary.'));
   return { attached: flights.length, itineraryVersion: itineraryVersion(input.flights) };
 }
