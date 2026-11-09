@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: travel
+    description: Travel and aviation evidence
 paths:
   /healthz:
     get:
@@ -24,6 +26,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /travel/live-aircraft:
+    get:
+      operationId: getLiveAircraft
+      tags: [travel]
+      summary: Get nearby live aircraft observations
+      description: Returns observed ADS-B positions near a validated airport. It does not provide airline flight status.
+      parameters:
+        - name: airport
+          in: query
+          required: true
+          description: Three-letter airport code.
+          schema:
+            type: string
+            pattern: "^[A-Z]{3}$"
+        - name: workspaceKey
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: trainerId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aircraft observations or an explicit unavailable/disabled state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveAircraftResponse"
+        "400":
+          description: Invalid airport code.
+        "403":
+          description: Workspace access denied.
+        "404":
+          description: Airport is not in the reference directory.
 components:
   schemas:
     HealthStatus:
@@ -33,4 +72,56 @@ components:
           type: string
       required:
         - status
+    LiveAircraft:
+      type: object
+      properties:
+        hex: { type: string }
+        callsign: { type: ["string", "null"] }
+        registration: { type: ["string", "null"] }
+        aircraftType: { type: ["string", "null"] }
+        lat: { type: number }
+        lon: { type: number }
+        altitudeFt: { type: ["number", "null"] }
+        onGround: { type: boolean }
+        groundSpeedKnots: { type: ["number", "null"] }
+        trackDegrees: { type: ["number", "null"] }
+        lastPositionSeconds: { type: ["number", "null"] }
+        distanceNm: { type: number }
+      required: [hex, callsign, registration, aircraftType, lat, lon, altitudeFt, onGround, groundSpeedKnots, trackDegrees, lastPositionSeconds, distanceNm]
+    LiveAircraftEvidence:
+      type: object
+      properties:
+        id: { type: string }
+        provider: { type: string }
+        subject: { type: string }
+        sourceUrl: { type: string }
+        kind: { type: string, enum: [observation] }
+        state: { type: string, enum: [current, partial, stale, unavailable, reference] }
+        retrievedAt: { type: string, format: date-time }
+        observedAt: { type: ["string", "null"], format: date-time }
+        expiresAt: { type: ["string", "null"], format: date-time }
+        version: { type: string }
+        scope: { type: string }
+        limitation: { type: string }
+      required: [id, provider, subject, sourceUrl, kind, state, retrievedAt, version, scope, limitation]
+    LiveAircraftResponse:
+      type: object
+      properties:
+        airport: { type: string }
+        airportName: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        radiusNm: { type: number }
+        available: { type: boolean }
+        checkedAt: { type: string, format: date-time }
+        source: { type: string }
+        sourceUrl: { type: string }
+        license: { type: string }
+        attribution: { type: string }
+        message: { type: string }
+        aircraft:
+          type: array
+          items: { $ref: "#/components/schemas/LiveAircraft" }
+        evidence: { $ref: "#/components/schemas/LiveAircraftEvidence" }
+      required: [airport, airportName, latitude, longitude, radiusNm, available, checkedAt, source, sourceUrl, license, attribution, message, aircraft, evidence]
 

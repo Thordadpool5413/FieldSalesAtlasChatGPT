@@ -17,6 +17,7 @@ import FlightDnaPanel from './FlightDnaPanel';
 import './FlightRadar.css';
 import './FlightRadarForecast.css';
 import FlightShowcase from './FlightShowcase';
+import ObservedAircraftPanel from './ObservedAircraftPanel';
 import { useOp } from './Operations';
 import type { Airport } from './opsModels';
 import { STATES,today } from './opsModels';
@@ -517,6 +518,10 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     }
   }
   const visibleEvidence=Boolean(analysis||historical);
+  const aircraftAirports=useMemo(()=>codes.flatMap(code=>{
+    const airport=airportIndex.get(code);
+    return /^[A-Z]{3}$/.test(code)?[{code,name:airport?.name||code}]:[];
+  }),[codes,airportIndex]);
   return <main className={'fr-page'+(mobileDeepOpen?' fr-deep-open':' fr-deep-collapsed')}
     onClickCapture={event=>{
       if(mobileDeepOpen)return;
@@ -676,6 +681,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       }}>Details <ArrowRight size={15}/></button>
     </section>}
     {visibleEvidence&&<FlightShowcase route={route} current={currentAnalysis} history={historical} travelDate={travelDate}/>}
+    {visibleEvidence&&aircraftAirports.length>0&&<ObservedAircraftPanel airports={aircraftAirports}/>}
     <button type="button" className="fr-mobile-detail-toggle"
       onClick={()=>setMobileDeepOpen(open=>!open)}
       aria-expanded={mobileDeepOpen}>

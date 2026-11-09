@@ -1,0 +1,116 @@
+.mv-app .oap-panel {
+  --oap-ink: var(--at-text);
+  --oap-muted: var(--at-muted);
+  --oap-line: var(--at-border-soft);
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: clamp(16px, 2.2vw, 23px);
+  border: 1px solid color-mix(in srgb, var(--at-cyan) 32%, var(--at-border-soft));
+  border-radius: 15px;
+  color: var(--oap-ink);
+  background:
+    radial-gradient(ellipse at 94% 0%, color-mix(in srgb, var(--at-rose) 9%, transparent), transparent 32%),
+    linear-gradient(145deg, color-mix(in srgb, var(--at-stage) 34%, var(--at-surface)), var(--at-surface) 54%);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--at-rail) 15%, transparent);
+}
+.mv-app .oap-header { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; }
+.mv-app .oap-heading { min-width:0; }
+.mv-app .oap-kicker { display:flex; align-items:center; gap:7px; color:var(--at-cyan); font-size:10px; font-weight:850; letter-spacing:1.2px; }
+.mv-app .oap-heading h2 { margin:7px 0 4px; font:800 clamp(23px, 2.5vw, 30px)/1.1 'Barlow Condensed','Arial Narrow',sans-serif; letter-spacing:.01em; }
+.mv-app .oap-heading p { margin:0; color:var(--oap-muted); font-size:12px; line-height:1.5; }
+.mv-app .oap-status { display:flex; align-items:center; gap:8px; flex:none; padding:8px 10px; border:1px solid var(--oap-line); border-radius:99px; background:var(--at-field); color:var(--oap-muted); font-size:10px; font-weight:800; }
+.mv-app .oap-status>span { width:7px; height:7px; border-radius:50%; background:var(--oap-muted); }
+.mv-app .oap-status-success>span,.mv-app .oap-status-loading>span { background:var(--at-cyan); }
+.mv-app .oap-status-success { color:var(--at-cyan); }
+.mv-app .oap-status-partial>span,.mv-app .oap-status-stale>span,.mv-app .oap-status-unavailable>span,.mv-app .oap-status-error>span { background:var(--at-rose); }
+.mv-app .oap-status-partial,.mv-app .oap-status-stale,.mv-app .oap-status-unavailable,.mv-app .oap-status-error { border-color:color-mix(in srgb,var(--at-rose) 45%,var(--oap-line)); }
+.mv-app .oap-controls { margin-top:19px; padding:13px; border:1px solid var(--oap-line); border-radius:11px; background:color-mix(in srgb,var(--at-field) 70%,transparent); }
+.mv-app .oap-controls>label { display:block; margin:0 0 7px; color:var(--oap-muted); font-size:10px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; }
+.mv-app .oap-control-row { display:flex; gap:9px; }
+.mv-app .oap-control-row select { flex:1; min-width:0; min-height:43px; padding:9px 12px; border:1px solid var(--at-border); border-radius:8px; background:var(--at-surface); color:var(--oap-ink); font:700 12px 'DM Sans',sans-serif; }
+.mv-app .oap-fetch { display:flex; align-items:center; justify-content:center; gap:8px; min-height:43px; padding:9px 15px; border:1px solid var(--at-cyan); border-radius:8px; background:var(--at-cyan); color:var(--at-action-fg); font:800 11px 'DM Sans',sans-serif; white-space:nowrap; transition:transform .16s ease,background-color .16s ease; }
+.mv-app .oap-fetch:hover:not(:disabled) { background:var(--at-action-hover); transform:translateY(-1px); }
+.mv-app .oap-fetch:disabled { opacity:.58; cursor:not-allowed; }
+.mv-app .oap-controls :is(select,button):focus-visible,.mv-app .oap-message button:focus-visible,.mv-app .oap-attribution a:focus-visible { outline:2px solid var(--at-rose); outline-offset:3px; }
+.mv-app .oap-control-note { margin:7px 0 0; color:var(--oap-muted); font-size:10px; }
+.mv-app .oap-idle { display:flex; align-items:center; gap:13px; margin-top:14px; padding:16px; border:1px dashed var(--oap-line); border-radius:10px; background:color-mix(in srgb,var(--at-aqua-soft) 24%,transparent); }
+.mv-app .oap-idle-mark { display:grid; flex:0 0 40px; width:40px; height:40px; place-items:center; border:1px solid color-mix(in srgb,var(--at-cyan) 38%,var(--oap-line)); border-radius:50%; color:var(--at-cyan); }
+.mv-app .oap-idle strong,.mv-app .oap-message strong { display:block; font-size:12px; }
+.mv-app .oap-idle p,.mv-app .oap-message p { margin:4px 0 0; color:var(--oap-muted); font-size:11px; line-height:1.55; }
+.mv-app .oap-loading { display:grid; grid-template-columns:minmax(180px,.78fr) 1fr; gap:16px; margin-top:15px; }
+.mv-app .oap-skeleton { border:1px solid var(--oap-line); border-radius:11px; background:linear-gradient(110deg,var(--at-field) 20%,color-mix(in srgb,var(--at-cyan) 10%,var(--at-field)) 40%,var(--at-field) 60%); background-size:220% 100%; animation:oap-shimmer 1.6s ease-in-out infinite; }
+.mv-app .oap-skeleton-map { min-height:206px; aspect-ratio:1.2; }
+.mv-app .oap-skeleton-lines { display:flex; flex-direction:column; gap:10px; padding-top:12px; }
+.mv-app .oap-skeleton-lines i { display:block; height:36px; border:1px solid var(--oap-line); border-radius:8px; background:var(--at-field); }
+.mv-app .oap-message { display:flex; align-items:flex-start; gap:11px; margin-top:14px; padding:13px; border:1px solid var(--oap-line); border-radius:10px; background:var(--at-field); }
+.mv-app .oap-message>svg { flex:none; margin-top:1px; color:var(--at-cyan); }
+.mv-app .oap-message-warning { border-color:color-mix(in srgb,var(--at-rose) 40%,var(--oap-line)); background:color-mix(in srgb,var(--at-rose-soft) 48%,var(--at-field)); }
+.mv-app .oap-message-warning>svg { color:var(--at-rose); }
+.mv-app .oap-message-caution { border-color:color-mix(in srgb,var(--at-rose) 40%,var(--oap-line)); }
+.mv-app .oap-message button { display:flex; align-items:center; gap:6px; flex:none; min-height:34px; margin-left:auto; padding:6px 9px; border:1px solid var(--at-border); border-radius:7px; background:var(--at-surface); color:var(--at-cyan); font-size:10px; font-weight:800; }
+.mv-app .oap-meta { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin-top:14px; }
+.mv-app .oap-meta>div { display:flex; flex-direction:column; justify-content:center; gap:5px; min-width:0; min-height:57px; padding:9px 11px; border:1px solid var(--oap-line); border-radius:9px; background:color-mix(in srgb,var(--at-field) 75%,transparent); }
+.mv-app .oap-meta span { color:var(--oap-muted); font-size:9px; font-weight:800; letter-spacing:.55px; text-transform:uppercase; }
+.mv-app .oap-meta strong { overflow-wrap:anywhere; color:var(--oap-ink); font-size:11px; line-height:1.35; }
+.mv-app .oap-meta em { display:block; color:var(--oap-muted); font-size:9px; font-style:normal; font-weight:500; }
+.mv-app .oap-results { display:grid; grid-template-columns:minmax(230px,.84fr) minmax(0,1.16fr); gap:14px; margin-top:14px; }
+.mv-app .oap-plot-wrap,.mv-app .oap-aircraft-list { min-width:0; padding:13px; border:1px solid var(--oap-line); border-radius:11px; background:color-mix(in srgb,var(--at-field) 58%,var(--at-surface)); }
+.mv-app .oap-plot-heading { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.mv-app .oap-plot-heading>div { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.mv-app .oap-plot-heading strong { font-size:11px; }
+.mv-app .oap-plot-scale { color:var(--at-cyan); font-size:9px; font-weight:800; white-space:nowrap; }
+.mv-app .oap-plot { display:block; width:min(100%,320px); margin:8px auto 0; overflow:visible; color:var(--at-cyan); }
+.mv-app .oap-range-ring { fill:color-mix(in srgb,var(--at-cyan) 3%,transparent); stroke:color-mix(in srgb,var(--at-cyan) 73%,transparent); stroke-width:1.4; stroke-dasharray:3 4; }
+.mv-app .oap-inner-ring { fill:none; stroke:currentColor; stroke-opacity:.22; stroke-width:1; }
+.mv-app .oap-crosshair { stroke:currentColor; stroke-opacity:.14; stroke-width:.7; stroke-dasharray:2 5; }
+.mv-app .oap-map-label { fill:var(--at-muted); font:700 8px 'DM Sans',sans-serif; letter-spacing:.4px; }
+.mv-app .oap-airport-dot { fill:var(--at-rose); stroke:var(--at-rose); stroke-width:1.4; }
+.mv-app .oap-airport-dot path { stroke:var(--at-surface); stroke-width:1.3; }
+.mv-app .oap-aircraft-point circle { fill:var(--at-cyan); stroke:var(--at-surface); stroke-width:2; }
+.mv-app .oap-aircraft-point path { fill:var(--at-cyan); opacity:.84; }
+.mv-app .oap-aircraft-point:hover circle { fill:var(--at-rose); }
+.mv-app .oap-plot-footnote { margin:4px 0 0; color:var(--oap-muted); font-size:9px; line-height:1.45; }
+.mv-app .oap-aircraft-list h3 { display:flex; justify-content:space-between; align-items:center; margin:0 0 7px; padding-bottom:9px; border-bottom:1px solid var(--oap-line); font-size:12px; }
+.mv-app .oap-aircraft-list h3 span { display:grid; min-width:23px; height:23px; padding:0 5px; place-items:center; border-radius:20px; background:var(--at-aqua-soft); color:var(--at-cyan); font-size:10px; }
+.mv-app .oap-aircraft-list ul { max-height:350px; margin:0; padding:0; overflow:auto; list-style:none; }
+.mv-app .oap-aircraft-list li { display:grid; grid-template-columns:26px minmax(0,1fr) auto; align-items:center; gap:9px; padding:9px 2px; border-bottom:1px solid color-mix(in srgb,var(--oap-line) 75%,transparent); }
+.mv-app .oap-aircraft-list li:last-child { border-bottom:0; }
+.mv-app .oap-list-index { color:var(--at-cyan); font:700 10px 'DM Sans',sans-serif; }
+.mv-app .oap-aircraft-primary,.mv-app .oap-aircraft-detail { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.mv-app .oap-aircraft-primary strong,.mv-app .oap-aircraft-detail strong { overflow:hidden; color:var(--oap-ink); font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.mv-app .oap-aircraft-primary span,.mv-app .oap-aircraft-detail span { overflow:hidden; color:var(--oap-muted); font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.mv-app .oap-aircraft-detail { text-align:right; }
+.mv-app .oap-disclaimer { margin:14px 0 0; padding:10px 11px; border-left:2px solid var(--at-rose); background:color-mix(in srgb,var(--at-rose-soft) 32%,transparent); color:var(--oap-muted); font-size:10px; line-height:1.55; }
+.mv-app .oap-attribution { display:flex; flex-wrap:wrap; align-items:center; gap:8px 13px; margin-top:10px; color:var(--oap-muted); font-size:9px; }
+.mv-app .oap-attribution a { color:var(--at-cyan); font-weight:750; text-decoration:underline; text-underline-offset:2px; }
+@keyframes oap-shimmer { from { background-position:100% 0; } to { background-position:-120% 0; } }
+@media(max-width:760px) {
+  .mv-app .oap-header { flex-direction:column; gap:11px; }
+  .mv-app .oap-results { grid-template-columns:1fr; }
+  .mv-app .oap-plot-wrap { display:grid; grid-template-columns:minmax(0,1fr) minmax(130px,.8fr); align-items:center; gap:8px; }
+  .mv-app .oap-plot-heading { grid-column:1/-1; }
+  .mv-app .oap-plot { grid-column:1; grid-row:2; }
+  .mv-app .oap-plot-footnote { grid-column:2; grid-row:2; }
+}
+@media(max-width:520px) {
+  .mv-app .oap-panel { padding:14px; }
+  .mv-app .oap-control-row { flex-direction:column; }
+  .mv-app .oap-fetch { width:100%; }
+  .mv-app .oap-meta { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .mv-app .oap-plot-wrap { display:block; }
+  .mv-app .oap-plot { width:min(100%,300px); }
+  .mv-app .oap-plot-footnote { margin-top:4px; }
+  .mv-app .oap-aircraft-list li { grid-template-columns:23px minmax(0,1fr); }
+  .mv-app .oap-aircraft-detail { grid-column:2; flex-direction:row; text-align:left; }
+  .mv-app .oap-message { flex-wrap:wrap; }
+  .mv-app .oap-message button { margin-left:28px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .mv-app .oap-panel *, .mv-app .oap-panel *::before, .mv-app .oap-panel *::after {
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}

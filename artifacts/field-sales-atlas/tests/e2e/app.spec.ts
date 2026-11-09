@@ -613,6 +613,58 @@ test('flight intelligence displays source age and stops using expired station ev
   await expect(source.locator('.journey-state')).toHaveText('stale');
 });
 
+test('live ADS-B observations stay separate from airline flight status', async ({ page }) => {
+  await page.goto('/?page=plan&tool=radar');
+  let liveRequests = 0;
+  const checkedAt = new Date().toISOString();
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({
+    json: { available: false, checkedAt, airports: [], message: 'No current FAA entries.' },
+  }));
+  await page.route('**/api/travel/aviation/*', route => route.fulfill({
+    json: { available: false, checkedAt, message: 'Fixture observation unavailable.', observation: null, forecast: null, evidence: [] },
+  }));
+  await page.route('**/api/travel/weather-alerts?*', route => route.fulfill({
+    json: { available: false, checkedAt, alerts: [], message: 'Fixture alerts unavailable.' },
+  }));
+  await page.route('**/api/travel/point-forecast?*', route => route.fulfill({
+    json: { available: false, checkedAt, periods: [], message: 'Fixture forecast unavailable.' },
+  }));
+  await page.route('**/api/travel/flight-history?*', route => route.fulfill({
+    json: { available: true, checkedAt, source: 'Fixture', sourceUrl: '', attribution: 'Fixture', license: '',
+      period: { start: '2026-01-01', end: '2026-08-31' }, sources: [], legs: [], alternatePaths: [],
+      alternateArrival: null, selectedMonth: '2026-11', monthly: [], notes: [] },
+  }));
+  await page.route('**/api/travel/live-aircraft?*', route => {
+    liveRequests++;
+    return route.fulfill({ json: {
+      airport: 'MCO', airportName: 'Orlando International Airport', latitude: 28.4294,
+      longitude: -81.309, radiusNm: 25, available: true, checkedAt, source: 'adsb.lol',
+      sourceUrl: 'https://adsb.lol/docs/open-data/api', license: 'Open Database License (ODbL)',
+      attribution: 'Aircraft observations from the adsb.lol community network.',
+      message: '', evidence: { state: 'current', retrievedAt: checkedAt, observedAt: checkedAt,
+        limitation: 'Observed aircraft positions only.' },
+      aircraft: [{ hex: 'A1B2C3', callsign: 'DAL123', registration: 'N123AA',
+        aircraftType: 'B738', lat: 28.42, lon: -81.3, altitudeFt: 12000,
+        onGround: false, groundSpeedKnots: 250, trackDegrees: 120,
+        lastPositionSeconds: 1, distanceNm: 1 }],
+    }});
+  });
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  const panel = page.getByTestId('observed-aircraft-panel');
+  await expect(panel).toBeVisible();
+  await expect(panel.getByTestId('text-aircraft-disclaimer')).toContainText('cannot confirm a particular flight’s status');
+  await panel.getByTestId('button-fetch-aircraft').click();
+  await expect(panel.getByTestId('status-aircraft-observations')).toHaveText('Observations available');
+  await expect(panel.getByTestId('aircraft-evidence-meta')).toContainText('adsb.lol');
+  await expect(panel.getByTestId('plot-aircraft-observations')).toBeVisible();
+  await expect(panel.getByTestId('list-aircraft-observations')).toContainText('DAL123');
+  await expect(panel.getByTestId('text-aircraft-attribution')).toContainText('ODbL');
+  await page.waitForTimeout(1200);
+  expect(liveRequests).toBe(1);
+});
+
 test('a failed page module keeps Atlas recovery navigation and saved workspace records available', async ({ page }) => {
   await page.route('**/assets/FlightRadar-*.js', route => route.fulfill({
     contentType: 'application/javascript', body: "throw new Error('Fixture page module failure'); export default function FailedPage() {}"
