@@ -401,7 +401,14 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           faaCheckedAt: faa?.checkedAt || ''
         }))
       });
-      if (!faa?.available) setError('FAA events are unavailable. Other official observations are shown where returned.');
+      if (!faa) {
+        setError('The FAA check could not be reached. Airport status remains unknown; other official observations are shown separately.');
+      } else if (!faa.available && faa.airports.length > 0) {
+        setError('The FAA returned no current airport listing for ' + codes.join(', ') +
+          '. Their FAA status remains unknown; other official observations are shown separately.');
+      } else if (!faa.available) {
+        setError(faa.message || 'The FAA source did not return current airport evidence. Airport status remains unknown.');
+      }
     } catch {
       if (currentRequest === requestId.current) setError('The free public feeds could not be queried. Try refreshing.');
     } finally {
@@ -719,7 +726,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           <div className="fr-evidence">
             <div className="fr-evidence-label"><Activity size={16}/> FAA airport events</div>
             <strong>{row.faaAvailable ? row.faa?.headline ||
-              'No FAA entry; event status unknown' : 'FAA feed unavailable'}</strong>
+              'No FAA entry; event status unknown' : row.faa?.headline ||
+                'FAA feed unavailable; airport status unknown'}</strong>
             {row.faa?.events.slice(0, 3).map((event, idx) => <small key={idx}>
               {event.kind}{event.reason ? ' · ' + event.reason : ''}
               {event.avgMinutes !== null ? ' · FAA average ' + event.avgMinutes + ' min' : ''}
