@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, AlertTriangle, LocateFixed, Radar, RotateCw } from 'lucide-react';
 import { api } from './workspaceApi';
 import './ObservedAircraftPanel.css';
@@ -60,11 +60,14 @@ function isProductionDisabled(message: string) {
   return /production.{0,24}(disabled|off)|disabled.{0,24}production|not enabled in production/i.test(message);
 }
 
-export default function ObservedAircraftPanel({ airports }: { airports: AirportOption[] }) {
+export default function ObservedAircraftPanel({
+  airports, autoCheckToken = 0
+}: { airports: AirportOption[]; autoCheckToken?: number }) {
   const [selectedCode, setSelectedCode] = useState(airports[0]?.code || '');
   const [result, setResult] = useState<AircraftResponse | null>(null);
   const [state, setState] = useState<PanelState>('idle');
   const [error, setError] = useState('');
+  const lastAutoCheck = useRef(0);
 
   useEffect(() => {
     if (!airports.some(airport => airport.code === selectedCode)) {
@@ -104,6 +107,14 @@ export default function ObservedAircraftPanel({ airports }: { airports: AirportO
     }
   }
 
+  useEffect(() => {
+    if (autoCheckToken < 1 || autoCheckToken === lastAutoCheck.current ||
+      state === 'loading' || !selectedCode ||
+      !airports.some(airport => airport.code === selectedCode)) return;
+    lastAutoCheck.current = autoCheckToken;
+    void fetchObservations();
+  }, [airports, autoCheckToken, selectedCode, state]);
+
   const statusText = state === 'idle' ? 'Ready when you are'
     : state === 'loading' ? 'Checking community observations'
       : state === 'error' ? 'Source could not be reached'
@@ -128,7 +139,7 @@ export default function ObservedAircraftPanel({ airports }: { airports: AirportO
       <div className="oap-heading">
         <span className="oap-kicker"><Radar size={15} aria-hidden="true" /> FIELD OBSERVATIONS / ADS-B</span>
         <h2 id="oap-title">Aircraft nearby</h2>
-        <p>One on-demand look at community-reported positions around a route airport.</p>
+        <p>Live community ADS-B positions around a route airport. This is not airline flight status.</p>
       </div>
       <div className={'oap-status oap-status-' + state} data-testid="status-aircraft-observations" role="status">
         <span aria-hidden="true" />
@@ -156,7 +167,7 @@ export default function ObservedAircraftPanel({ airports }: { airports: AirportO
           {state === 'loading' ? 'Checking…' : 'Check observations'}
         </button>
       </div>
-      <p className="oap-control-note">No background polling. A request is made only when you check.</p>
+      <p className="oap-control-note">Analyze flight requests one live snapshot for the selected airport. Use Check observations to refresh; no background polling.</p>
     </div>
 
     {state === 'idle' && <div className="oap-idle" data-testid="state-aircraft-idle">

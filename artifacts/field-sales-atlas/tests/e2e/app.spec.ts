@@ -729,14 +729,17 @@ test('live ADS-B observations stay separate from airline flight status', async (
   const panel = page.getByTestId('observed-aircraft-panel');
   await expect(panel).toBeVisible();
   await expect(panel.getByTestId('text-aircraft-disclaimer')).toContainText('cannot confirm a particular flight’s status');
+  await expect(panel.getByTestId('status-aircraft-observations')).toHaveText('Observations available');
+  await expect(panel.getByTestId('aircraft-evidence-meta')).toContainText('adsb.lol');
+  await expect(panel.getByTestId('list-aircraft-observations')).toContainText('DAL123');
+  expect(liveRequests).toBe(1);
   await panel.getByTestId('button-fetch-aircraft').click();
   await expect(panel.getByTestId('status-aircraft-observations')).toHaveText('Observations available');
   await expect(panel.getByTestId('aircraft-evidence-meta')).toContainText('adsb.lol');
   await expect(panel.getByTestId('plot-aircraft-observations')).toBeVisible();
-  await expect(panel.getByTestId('list-aircraft-observations')).toContainText('DAL123');
   await expect(panel.getByTestId('text-aircraft-attribution')).toContainText('ODbL');
   await page.waitForTimeout(1200);
-  expect(liveRequests).toBe(1);
+  expect(liveRequests).toBe(2);
 });
 
 test('a failed page module keeps Atlas recovery navigation and saved workspace records available', async ({ page }) => {

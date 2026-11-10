@@ -44,3 +44,8 @@ packages = ["glibcLocales"]
 
 [objectStorage]
 defaultBucketID = "replit-objstore-8c5b7e61-c745-4a30-b9a8-7caa1d2bc838"
+
+[userenv]
+
+[userenv.production]
+ADSB_LOL_PRODUCTION_APPROVED = "true"

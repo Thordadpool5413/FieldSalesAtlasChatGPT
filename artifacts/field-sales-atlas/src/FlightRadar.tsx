@@ -693,7 +693,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     </section>}
     {visibleEvidence&&<FlightShowcase route={route} current={currentAnalysis} history={historical}
       historyStatus={historyStatus} historyError={historyError} travelDate={travelDate}/>}
-    {visibleEvidence&&aircraftAirports.length>0&&<ObservedAircraftPanel airports={aircraftAirports}/>}
+    {visibleEvidence&&aircraftAirports.length>0&&
+      <ObservedAircraftPanel airports={aircraftAirports} autoCheckToken={researchRun}/>}
     <button type="button" className="fr-mobile-detail-toggle"
       onClick={()=>setMobileDeepOpen(open=>!open)}
       aria-expanded={mobileDeepOpen}>
