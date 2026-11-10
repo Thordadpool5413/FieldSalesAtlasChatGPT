@@ -44,6 +44,10 @@ additional work; its entries do not activate providers.
 - Excluded expired FAA/alert snapshots from the visible recommendations and
   regional warnings outside their published times. Source cards retain evidence
   age and limitations.
+- Constrained expanded Flight DNA panels to the available workspace width.
+  Phone overflow clipping had hidden part of the evidence despite a passing
+  document-width check. Browser checks now measure the evidence panels themselves
+  at phone, landscape and laptop widths.
 - Exposed per-dataset daily checks and the distinction between implemented
   adapters and research-only integrations. Diagnostics no longer list road
   configuration as missing when routing is configured; live traffic remains a gap.

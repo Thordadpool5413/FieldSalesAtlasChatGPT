@@ -359,6 +359,16 @@
   }
 }
 
+/* Constrain the workspace on phones too: expanded source records must not
+   determine the flex child's width while the app clips document overflow. */
+.mv-app.atlas-product-v4 .fsa-plan-hub.fs-flight-focused,
+.mv-app.atlas-product-v4 .fsa-plan-hub.fs-flight-focused > .fsa-hub-body {
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
 /* Keep the focused workspace inside the available column. The travel tab row
    otherwise sets a larger min-content width than the main column at 1024px. */
 @media (min-width:901px) {

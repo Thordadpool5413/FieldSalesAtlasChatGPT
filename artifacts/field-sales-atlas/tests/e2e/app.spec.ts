@@ -698,6 +698,17 @@ test('Canadian weather and official BTS remain usable when independent history f
   await expect(official).toContainText('2026-08');
   await official.getByText('Official history source, age and limitations', { exact: true }).click();
   await expect(official).toContainText('Historical outcomes do not predict this flight.');
+  const originalViewport = page.viewportSize()!;
+  for (const viewport of [originalViewport, { width: 1280, height: 600 }, { width: 844, height: 390 }, { width: 390, height: 664 }]) {
+    await page.setViewportSize(viewport);
+    for (const selector of ['.fr-page', '#atlas-flight-dna', '.fd-official-history', '.fd-official-history .travel-evidence-grid']) {
+      const bounds = await page.locator(selector).boundingBox();
+      expect(bounds, selector + ' has visible bounds').not.toBeNull();
+      expect(bounds!.x, selector + ' starts within the viewport').toBeGreaterThanOrEqual(-1);
+      expect(bounds!.x + bounds!.width, selector + ' fits without clipping at ' + viewport.width).toBeLessThanOrEqual(viewport.width + 1);
+    }
+  }
+  await page.setViewportSize(originalViewport);
   await official.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-official-history-detail.png`), scale: 'css' });
   await expect(page.locator('vite-error-overlay')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
