@@ -227,6 +227,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   useEffect(() => { const timer = setInterval(() => refreshAge(value => value + 1), 60000); return () => clearInterval(timer); }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [routeAttempted, setRouteAttempted] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
   const [historical, setHistorical] = useState<DnaResponse|null>(null);
   const [historyStatus,setHistoryStatus]=useState<DnaStatus>('idle');
@@ -236,6 +237,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const [offlineNotice,setOfflineNotice] = useState('');
   const requestId = useRef(0);
   const guardianStarted=useRef(false);
+  const originInputRef=useRef<HTMLInputElement>(null);
+  const destinationInputRef=useRef<HTMLInputElement>(null);
   const onHistoricalAnalysis=useCallback((data:DnaResponse|null,status:DnaStatus,message='')=>{
     setHistorical(data);
     setHistoryStatus(status);
@@ -254,7 +257,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       route.alternate !== route.connection)) &&
     (route.connectionMinutes===''||(Number(route.connectionMinutes)>=1&&Number(route.connectionMinutes)<=600));
   const routeHint=!airportCode(route.origin)||!airportCode(route.destination)
-    ?'Enter three-letter codes for departure and arrival.'
+    ?'Enter a three-letter departure and arrival airport code to run live checks.'
     :route.origin===route.destination?'Departure and arrival airports must differ.'
     :route.connection&&(!airportCode(route.connection)||[route.origin,route.destination].includes(route.connection))
       ?'The connecting airport must differ from departure and arrival.'
@@ -302,6 +305,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   }
   function setField(key: keyof RouteEntry, value: string) {
     invalidateResearch();
+    setRouteAttempted(false);
     setRoute(previous => ({ ...previous, [key]: key === 'connectionMinutes'
       ? value.replace(/[^\d]/g, '').slice(0, 3) : isoAirport(value) }));
   }
@@ -328,7 +332,15 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     }));
   }
   async function analyze() {
-    if (!valid || loading) return;
+    if (loading) return;
+    if (!valid) {
+      setRouteAttempted(true);
+      const invalidOrigin=!airportCode(route.origin);
+      const invalidDestination=!airportCode(route.destination);
+      (invalidOrigin?originInputRef:invalidDestination?destinationInputRef:null)
+        ?.current?.focus();
+      return;
+    }
     const currentRequest = ++requestId.current;
     setLoading(true);
     setError('');
@@ -581,18 +593,20 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     </div>}
     <section id="flight-route-composer" className="fr-card fr-builder fs-ref-route" aria-label="Flight research route and date">
       <div className="fs-route-primary">
-        <label><span><PlaneTakeoff size={17}/> From</span>
+        <label><span><PlaneTakeoff size={17}/> From <small>(required)</small></span>
           <input type="text" maxLength={3} list="fr-known-airports" placeholder="MCO"
             aria-label="Departure IATA airport code" autoCapitalize="characters"
+            aria-required="true" ref={originInputRef}
             autoCorrect="off" spellCheck={false} value={route.origin}
             onChange={e=>setField('origin',e.target.value)}/>
         </label>
         <button className="fs-route-swap" type="button"
           onClick={swapRoute} aria-label="Swap departure and arrival airports"
           title="Swap airports"><Route size={20}/></button>
-        <label><span><PlaneLanding size={17}/> To</span>
+        <label><span><PlaneLanding size={17}/> To <small>(required)</small></span>
           <input type="text" maxLength={3} list="fr-known-airports" placeholder="ATL"
             aria-label="Arrival IATA airport code" autoCapitalize="characters"
+            aria-required="true" ref={destinationInputRef}
             autoCorrect="off" spellCheck={false} value={route.destination}
             onChange={e=>setField('destination',e.target.value)}/>
         </label>
@@ -601,7 +615,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
             aria-label="Travel date for planning and historical context"
             onChange={e=>{invalidateResearch();setTravelDate(e.target.value);}}/>
         </label>
-        <button className="fr-check-button" type="button" disabled={!valid||loading}
+        <button className="fr-check-button" type="button" disabled={loading}
+          aria-describedby="fr-route-guidance"
           onClick={()=>void analyze()}>
           {loading?<RefreshCw size={17} className="fr-spinning"/>:<Radar size={18}/>}
           {loading?'Checking…':analysis?'Refresh flight brief':'Analyze flight'}
@@ -669,7 +684,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         </select>
       </label>}
       {savedError&&<p className="fr-note">{savedError}</p>}
-      {!valid&&(route.origin||route.destination)&&<p className="fr-validation" role="status">
+      {!valid&&(routeAttempted||route.origin||route.destination)&&<p className="fr-validation" id="fr-route-guidance" role="status">
         {routeHint}
       </p>}
     </section>
