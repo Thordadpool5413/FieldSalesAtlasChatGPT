@@ -89,7 +89,7 @@ export async function curatedAirportDirectory() {
     sourceUrl, stale, mode, message: !airports.length ? 'Public directory unavailable. Use the limited starter reference.' : stale ? 'Using the last stored airport reference; freshness is unverified.' : 'Validated public airport reference',
     limitation: 'Airport reference data does not establish airline service, flight schedules or seat availability.', lastAttemptAt: refresh?.lastAttemptAt, lastError: refresh?.lastError || null };
 }
-export async function lookupAirports(codes: string[]): Promise<Airport[]> {
+export async function lookupAirports(codes: string[]): Promise<Array<Airport & { country?: string }>> {
   const unique = [...new Set(codes)];
   const head = await referenceHead();
   const rows = await db.get<ReferenceAirport>(table, unique);

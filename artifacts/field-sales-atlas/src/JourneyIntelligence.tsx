@@ -18,7 +18,7 @@ function nextWeek() {
   return { start, end: day.toISOString().slice(0, 10) };
 }
 function stamp(value?: string) { return value ? new Date(value).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Not supplied'; }
-type Watch = { id: string; airport: string; state: string; nextRun: string; reviewedAt?: string; review?: { message: string; evidence: Evidence[] } };
+type Watch = { id: string; airport: string; airports?: string[]; state: string; nextRun: string; reviewedAt?: string; review?: { message: string; evidence: Evidence[] } };
 export default function JourneyIntelligence({ onBack }: { onBack: () => void }) {
   const ctx = useOp();
   const defaults = useRef(nextWeek()).current;
@@ -128,7 +128,7 @@ export default function JourneyIntelligence({ onBack }: { onBack: () => void }) 
     <HistoricalRouteCheck/>
     <details className="journey-reviews journey-details" open={watches.some(watch => !['stopped', 'complete'].includes(watch.state))}><summary>Ongoing travel reviews ({watches.filter(watch => !['stopped', 'complete'].includes(watch.state)).length})</summary><button className="op-btn" onClick={() => void loadReviews()}><RefreshCw size={14}/> Refresh reviews</button>
       {reviewError && <p role="alert">{reviewError}</p>}{!watches.length && <p>No watches yet. Enable public-source reviews when approving a plan.</p>}
-      {watches.map(watch => <article className="journey-source" key={watch.id}><div><strong>{watch.airport}</strong><span className="journey-state">{watch.state}</span></div><p>{watch.review?.message || 'First review is queued. No current conclusion is available yet.'}</p><small>Last review: {stamp(watch.reviewedAt)} · Next attempt: {['stopped', 'complete'].includes(watch.state) ? 'None' : stamp(watch.nextRun)}</small>{!['stopped', 'complete'].includes(watch.state) && <button className="op-btn" onClick={async () => { try { await api.delete('/api/travel/reviews/' + watch.id); await loadReviews(); } catch { setReviewError('Could not stop this review. Refresh and try again.'); } }}>Stop reviews</button>}{!!watch.review?.evidence.length && <details><summary>Review evidence</summary><TravelEvidence evidence={watch.review.evidence}/></details>}</article>)}
+      {watches.map(watch => <article className="journey-source" key={watch.id}><div><strong>{watch.airports?.join(' · ') || watch.airport}</strong><span className="journey-state">{watch.state}</span></div><p>{watch.review?.message || 'First review is queued. No current conclusion is available yet.'}</p><small>Last review: {stamp(watch.reviewedAt)} · Next attempt: {['stopped', 'complete'].includes(watch.state) ? 'None' : stamp(watch.nextRun)}</small>{!['stopped', 'complete'].includes(watch.state) && <button className="op-btn" onClick={async () => { try { await api.delete('/api/travel/reviews/' + watch.id); await loadReviews(); } catch { setReviewError('Could not stop this review. Refresh and try again.'); } }}>Stop reviews</button>}{!!watch.review?.evidence.length && <details><summary>Review evidence</summary><TravelEvidence evidence={watch.review.evidence}/></details>}</article>)}
     </details>
   </section>;
 }

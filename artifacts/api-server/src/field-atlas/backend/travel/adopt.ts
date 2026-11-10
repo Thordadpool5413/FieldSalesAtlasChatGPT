@@ -6,6 +6,7 @@ import { allRecords, planContext, reportTable, workspaceEvidence, type SavedRepo
 import { zoneAt } from './zones';
 import type { FlightInput, Scenario, ScenarioReport } from '../../shared/travel/types';
 import { lookupAirports } from '../providers/airports';
+import { watchItineraryOperations } from './watch';
 
 export async function adoptSavedTrips(workspaceId: string, tripIds: string[], board: ScenarioBoard) {
   const revision = board.revision ?? await db.workspaceRevision(workspaceId);
@@ -53,6 +54,7 @@ export async function attachItinerary(workspaceId: string, reportId: string, fli
   const input = { ...context.input, requirements, flights: flights.map(flight => ({ ...flight, providedAt: flight.providedAt || new Date().toISOString() })) };
   const update = context.saved.currentPlan ? { currentPlan: { ...context.saved.currentPlan, input } } : { input };
   await db.transact([db.tx.update(reportTable(workspaceId), [{ id: reportId, record: update }], { patch: true }),
-    db.tx.add('atlas_itinerary_updates_' + workspaceId, [{ id: randomUUID(), reportId, at: new Date().toISOString(), legCount: flights.length, previousVersion: itineraryVersion(context.input.flights), version: itineraryVersion(input.flights) }])], workspaceGuard(workspaceId, revision, 'Plan changed while attaching the itinerary.'));
+    db.tx.add('atlas_itinerary_updates_' + workspaceId, [{ id: randomUUID(), reportId, at: new Date().toISOString(), legCount: flights.length, previousVersion: itineraryVersion(context.input.flights), version: itineraryVersion(input.flights) }]),
+    ...(await watchItineraryOperations(workspaceId, context.tripIds, input.flights))], workspaceGuard(workspaceId, revision, 'Plan changed while attaching the itinerary.'));
   return { attached: flights.length, itineraryVersion: itineraryVersion(input.flights) };
 }

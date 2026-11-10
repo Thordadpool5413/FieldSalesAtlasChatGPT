@@ -1,5 +1,9 @@
 # Aviation data connections across Field Sales Atlas
 
+For the current provider → API → screen inventory and remaining gaps, see
+[Active travel data map](ACTIVE_TRAVEL_DATA_MAP.md). This older expansion
+blueprint retains its proposed status where the active inventory says otherwise.
+
 Status: **implementation blueprint, not activated integrations**. Reviewed November 6, 2026 against repository revision `070b644`. This change adds the connection map and source research; it does not install feeds, import production data, enable commercial services, change appointments or publish the app.
 
 Read the [aviation research](../research/AVIATION_DATA_AND_AI_RESEARCH_2026-11-06.md) and [28-source catalog](../research/aviation-source-catalog.csv) for source evidence and restrictions. The [machine-readable connection map](aviation-connections.json) records existing owners, proposed routes, source-to-screen connections, dependencies and activation blockers. It is a planning artifact, not runtime configuration. Earlier [travel implementation notes](../../artifacts/field-sales-atlas/docs/TRAVEL_INTELLIGENCE_IMPLEMENTATION.md) describe the existing foundation; this document specifies its aviation expansion.

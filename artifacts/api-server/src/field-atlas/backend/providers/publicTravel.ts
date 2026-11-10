@@ -1,5 +1,6 @@
 import { source, dated, officialJson, type SourceResult } from './evidence';
 import type { Evidence } from '../../shared/travel/types';
+import type { AirportSignal } from '../../shared/travel/airportBrief';
 
 const object = (v: unknown): Record<string, unknown> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {};
 const text = (v: unknown) => typeof v === 'string' ? v.slice(0, 240) : '';
@@ -24,13 +25,7 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-export type TravelSignal = {
-  title: string; detail: string; validFrom?: string; validTo?: string;
-  observation?: { windKnots: number | null; visibility: string | null; temperatureC: number | null };
-  alert?: { id: string; severity: string; urgency: string; area: string };
-  forecast?: { number: number; isDaytime: boolean; temperature: number | null; temperatureUnit: string;
-    windSpeed: string; windDirection: string; shortForecast: string; probabilityOfPrecipitation: number | null; timeZone: string; startTime: string; endTime: string };
-};
+export type TravelSignal = AirportSignal;
 export function faa(airport: string) {
   return source<TravelSignal[]>({ provider: 'FAA NAS', subject: airport, url: 'https://nasstatus.faa.gov/api/airport-events', kind: 'observation',
     scope: 'Airport-wide notices only. Not flight-specific status.', ttlMs: 120000, maxAgeMs: 20 * 60000, version: 'faa-2',
@@ -108,9 +103,25 @@ export function parseCanadianObservations(value: unknown, now = Date.now(), opti
   const rows = recent.length ? recent : options.allowStaleFallback ? datedRows : [];
   if (!rows.length) throw new Error('No recent Canadian observation with validated source timestamps.');
   return {
-    data: rows.map(({ row, at }) => ({ title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station', detail: 'Published surface observation at ' + at })),
+    data: rows.map(({ row, at }) => {
+      const measurements: string[] = [];
+      for (const [key, label, unit, min, max] of [
+        ['air_temp', 'Air temperature', '°C', -100, 70],
+        ['rel_hum', 'Relative humidity', '%', 0, 100],
+        ['avg_wnd_spd_10m_pst10mts', '10-minute mean wind', 'km/h', 0, 500],
+        ['avg_wnd_dir_10m_pst10mts', '10-minute mean wind direction', '°', 0, 360],
+        ['stn_pres', 'Station pressure', 'hPa', 300, 1100],
+      ] as const) {
+        const value = row[key], quality = row[key + '-qa'] ?? row[key + '-data_flag-value'];
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max || row[key + '-uom'] !== unit || (typeof quality === 'number' && quality < 0)) continue;
+        measurements.push(`${label}: ${value} ${unit}${typeof quality === 'number' ? ' (source quality code ' + quality + ')' : ' (source quality not supplied)'}`);
+      }
+      return { title: text(row['stn_nam-value'] || row.stn_nam || row.station_name) || 'Nearby surface station',
+        detail: ['Published surface observation at ' + at, ...measurements, ...(!measurements.length ? ['Weather measurements with recognized units were not available.'] : [])].join('. ') };
+    }),
     observedAt: rows.map(item => item.at).sort()[0],
     limitation: 'Nearby Canadian surface stations, not necessarily the airport. Each observation keeps its source time. Weather warnings and forecasts are separate products.'
+      + ' Measurement units and source quality codes are preserved; codes are not an independent quality assessment.'
       + (!recent.length ? ' Only older validated observations are available; current status is unknown.' : ''),
   };
 }
@@ -120,7 +131,7 @@ export function canadianObservations(lat: number, lon: number) {
   const since = new Date(Math.floor(Date.now() / 3600000) * 3600000 - 2 * 3600000).toISOString();
   const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?bbox=' + bbox + '&datetime=' + encodeURIComponent(since + '/..') + '&sortby=-obs_date_tm&limit=5&f=json';
   return source<TravelSignal[]>({ provider: 'ECCC GeoMet', subject, url, kind: 'observation',
-    scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-3',
+    scope: 'Nearby Canadian surface observations; not airport-specific warnings or forecasts.', ttlMs: 10 * 60000, maxAgeMs: 2 * 3600000, version: 'eccc-swob-4',
     parse(value) {
       const root = object(value);
       if (!Array.isArray(root.features)) throw new Error('Invalid GeoMet features.');

@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import type { Evidence } from '../shared/travel/types';
 import { describeEvidence } from '../shared/travel/evidence';
+import './TravelEvidence.css';
 
 export function EvidenceLinks({ ids, evidence }: { ids: string[]; evidence: Evidence[] }) {
   return <span className="travel-citations" aria-label="Supporting evidence">{[...new Set(ids)].map(id => {

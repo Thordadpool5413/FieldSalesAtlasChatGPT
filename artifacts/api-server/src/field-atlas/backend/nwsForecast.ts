@@ -1,5 +1,6 @@
 import { nwsForecast } from "./providers/publicTravel";
 import type { Evidence } from "../shared/travel/types";
+import { weatherSignals } from '../shared/travel/weather';
 /* NOAA / National Weather Service point forecast.
    Public U.S. weather, not flight status or an airline disruption prediction.
    Inputs are airport coordinates; no manager/employee details leave the workspace. */
@@ -29,19 +30,6 @@ export type PointForecast = {
   message: string;
   evidence?: Evidence;
 };
-function weatherSignals(detail: string, wind: string, precip: number | null) {
-  const desc = detail.toLowerCase(),
-    alerts: string[] = [];
-  if (/thunderstorm|tornado/.test(desc)) alerts.push("Thunderstorm conditions");
-  if (/snow|ice|sleet|freezing rain|blizzard/.test(desc))
-    alerts.push("Winter conditions");
-  if (/fog/.test(desc)) alerts.push("Reduced visibility possible");
-  const speeds = (wind.match(/\d+/g) || []).map(Number);
-  if (speeds.length && Math.max(...speeds) >= 25)
-    alerts.push("Wind at least 25 mph");
-  if (precip !== null && precip >= 70) alerts.push("High precipitation chance");
-  return alerts.slice(0, 4);
-}
 export async function nwsAirportForecast(
   lat: number,
   lon: number,

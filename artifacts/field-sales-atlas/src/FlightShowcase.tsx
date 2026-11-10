@@ -4,6 +4,9 @@ Compass,Info,Layers3,Plane,Radar,Route,ShieldCheck,Sparkles
 } from 'lucide-react';
 import { useEffect,useMemo,useRef,useState } from 'react';
 import type { DnaResponse,DnaStatus } from './FlightDnaPanel';
+import type { AirportProduct } from '../shared/travel/airportBrief';
+import { describeEvidence } from '../shared/travel/evidence';
+import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 import FlightNetworkMap from './FlightNetworkMap';
 import './FlightShowcase.css';
 
@@ -16,6 +19,7 @@ type RouteInput = {
 };
 type AirportSignal = {
   code:string;
+  regional?: AirportProduct[];
   faaAvailable:boolean;
   faa?:{
     level:'critical'|'caution'|'none'|'unknown';
@@ -58,19 +62,20 @@ function dateLabel(value:string){
 function freshObservation(at:string|null|undefined,now:number){
   if(!at)return false;
   const t=Date.parse(at);
-  return Number.isFinite(t)&&now-t>=-60000&&now-t<=180*60000;
+  return Number.isFinite(t)&&now-t>=-60000&&now-t<=90*60000;
 }
 function valueKind(kind:Tile['state']){
   return kind==='review'?'fsc-review':kind==='known'?'fsc-known':'fsc-pending';
 }
 
 export default function FlightShowcase({
-  route, current, history, historyStatus, historyError, travelDate
+  route, current, history, historyStatus, historyError, travelDate, officialHistory
 }:{
   route:RouteInput;
   current:OfficialCheck|null;
   history:DnaResponse|null;
   historyStatus:DnaStatus;
+  officialHistory?: OfficialHistoryLeg[] | null;
   historyError:string;
   travelDate:string;
 }){
@@ -115,8 +120,16 @@ export default function FlightShowcase({
     if(obs&&freshObservation(obs.reportTime,now)&&['LIFR','IFR','MVFR'].includes(obs.category)){
       notices.push({severity:obs.category==='LIFR'?'high' as const:'review' as const,text:item.code+' '+obs.category+' weather'});
     }
-    const severe=item.nws?.alerts.find(a=>['Severe','Extreme'].includes(a.severity));
+    const severe=item.nws?.available && item.nws.alerts.find(a=>['Severe','Extreme'].includes(a.severity));
     if(severe)notices.push({severity:'high' as const,text:item.code+' '+severe.event});
+    for (const product of item.regional || []) {
+      if (product.evidence.provider !== 'ECCC Weather Alerts' || describeEvidence(product.evidence, now).state !== 'current') continue;
+      for (const signal of product.data || []) {
+        if (signal.validFrom && Date.parse(signal.validFrom) > now) continue;
+        if (signal.validTo && Date.parse(signal.validTo) <= now) continue;
+        notices.push({ severity: 'review' as const, text: item.code + ' ECCC regional warning' });
+      }
+    }
     return notices;
   });
   const high=reported.some(item=>item.severity==='high');
@@ -127,6 +140,10 @@ export default function FlightShowcase({
   const severeWx=airports.flatMap(a=>a.nws?.available?a.nws.alerts.filter(
     alert=>alert.severity==='Severe'||alert.severity==='Extreme'
   ).map(alert=>a.code+' '+alert.event):[]);
+  const regionalWarnings = airports.flatMap(airport => (airport.regional || []).flatMap(product =>
+    product.evidence.provider === 'ECCC Weather Alerts' && describeEvidence(product.evidence, now).state === 'current'
+      ? (product.data || []).filter(signal => (!signal.validFrom || Date.parse(signal.validFrom) <= now) && (!signal.validTo || Date.parse(signal.validTo) > now)).map(signal => airport.code + ' ' + signal.title) : []));
+  const weatherAlerts = [...severeWx, ...regionalWarnings];
   const histories=history?.available?history.legs:[];
   const firstSpecific=histories.find(leg=>leg.match?.basis==='flight number'||leg.match?.basis==='route')?.match;
   const fallback=histories.find(leg=>leg.match?.basis==='airport')?.match;
@@ -134,12 +151,12 @@ export default function FlightShowcase({
   // A connecting journey is not represented by the rate of its first leg.
   const multiLeg=histories.length>1;
   const ontime=multiLeg?null:percent(metric?.onTimePct);
-  const dnaValue=historyStatus==='loading'?'Loading historical results…':
+  const aggregateDnaValue=historyStatus==='loading'?'Loading historical results…':
     historyStatus==='error'?'History temporarily unavailable':
     historyStatus==='unavailable'?'No history feed available':
     history?.available&&multiLeg?'Review each leg':
     history?.available&&metric?
-      (percent(metric.onTimePct)||'Rate unavailable')+' arrived ≤15 min late':
+      (percent(metric.onTimePct)||'Rate unavailable')+' arrived under 15 min late':
     history?.available?'No covered route sample':'Not analyzed';
   const dnaDetails=historyStatus==='loading'?'Checking published history separately from current conditions.':
     historyStatus==='error'?'The historical source could not be reached. Current airport checks remain separate.':
@@ -147,7 +164,7 @@ export default function FlightShowcase({
     history?.available&&multiLeg?histories.map(leg=>{
       const row=leg.match;
       return `${leg.origin}–${leg.destination}: ${row
-        ?`${percent(row.onTimePct)||'rate unavailable'} arrived ≤15 min late · ${row.flights.toLocaleString('en-US')} flights`
+        ?`${percent(row.onTimePct)||'rate unavailable'} arrived under 15 min late · ${row.flights.toLocaleString('en-US')} flights`
         :'no covered sample'}`;
     }).join(' · '):
     history?.available&&metric?
@@ -165,7 +182,13 @@ export default function FlightShowcase({
       metric?.periodEnd?`Historical data through ${dateLabel(metric.periodEnd)}; not a travel-date forecast.`:
         'The source did not provide a reporting cutoff.'
     :'';
-  const dnaTileDetail=[dnaDetails,dnaRateDetail,dnaDateDetail].filter(Boolean).join(' · ');
+  const officialLegs = officialHistory?.filter(leg => (leg.result?.summary?.sampleSize || 0) > 0) || [];
+  const officialOne = officialLegs.length === 1 && !route.connection ? officialLegs[0].result : null;
+  const officialRate = officialOne?.summary?.onTimeRate;
+  const dnaValue = officialLegs.length ? officialRate !== null && officialRate !== undefined ? percent(officialRate * 100) + ' observed on-time · BTS' :
+    `Official history: ${officialLegs.length} of ${route.connection ? 2 : 1} legs` : aggregateDnaValue;
+  const officialDetail = officialLegs.map(leg => `${leg.origin}–${leg.destination}: ${leg.result!.summary!.sampleSize.toLocaleString()} official records; reporting months ${leg.result!.coverage.periods.map(period => period.period).join(', ')}`).join(' · ');
+  const dnaTileDetail=officialDetail ? officialDetail + '. Historical samples, not a forecast. Independent aggregates: ' + dnaDetails : [dnaDetails,dnaRateDetail,dnaDateDetail].filter(Boolean).join(' · ');
   const sourceCount=history?.sources.filter(source=>source.available).length||0;
   const sourceTotal=history?.sources.length||0;
   const evidencePoints=airports.filter(a=>
@@ -207,7 +230,7 @@ export default function FlightShowcase({
       subtitle:'Published flight, route and airport patterns',
       detail:dnaTileDetail,
       value:dnaValue,
-      state:historyStatus==='ready'&&history?.available?'known':'pending',link:'#atlas-flight-dna'
+      state:officialLegs.length || (historyStatus==='ready'&&history?.available)?'known':'pending',link:'#atlas-flight-dna'
     },
     {
       slug:'pressure',eyebrow:'FAA / CAPACITY',
@@ -224,18 +247,18 @@ export default function FlightShowcase({
         destinationFaa?.level==='none'?'known':'pending',link:'#atlas-airport-operations'
     },
     {
-      slug:'weather',eyebrow:'NOAA / NWS',
+      slug:'weather',eyebrow:'NOAA / NWS / ECCC',
       icon:CloudLightning,title:'Weather risk',
       subtitle:'Aviation observations and active severe alerts',
-      detail:severeWx[0]||(
+      detail:weatherAlerts[0]||(
         destinationWeather&&freshObservation(destinationWeather.reportTime,now)?
           'Observed '+weatherAirport?.code+' flight category':'No fresh forecast is inferred'
       ),
-      value:severeWx[0]?'Severe alert':
+      value:severeWx[0]?'Severe alert':regionalWarnings[0]?'Regional warning':
         destinationWeather&&freshObservation(destinationWeather.reportTime,now)?
           destinationWeather.category||'Observed':
           'Check weather',
-      state:severeWx[0]?'review':
+      state:weatherAlerts[0]?'review':
         destinationWeather&&freshObservation(destinationWeather.reportTime,now)?'known':'pending',
       link:'#atlas-airport-operations'
     },
@@ -273,10 +296,10 @@ export default function FlightShowcase({
     {
       label:'Historical performance',
       icon:Activity,
-      detail:multiLeg?'Connecting journey: inspect each leg separately; no combined rate calculated':
+      detail:officialDetail || (multiLeg?'Connecting journey: inspect each leg separately; no combined rate calculated':
         ontime?(ontime+' arrivals on-time · '+metric!.flights.toLocaleString('en-US')+
-        ' flights · '+metric!.basis+' sample'):'No matched history analyzed',
-      state:ontime?'known' as const:'pending' as const,
+        ' flights · '+metric!.basis+' sample'):'No matched history analyzed'),
+      state:officialLegs.length || ontime?'known' as const:'pending' as const,
       target:'atlas-flight-dna'
     },
     {
@@ -285,17 +308,17 @@ export default function FlightShowcase({
       detail:operationsChecked?(coverage+' of '+airports.length+
         ' mapped airports have FAA status · '+riskLabel):
         staleCurrent?'Official checks expired; refresh':'Official FAA check pending',
-      state:review?'review' as const:operationsChecked?'known' as const:'pending' as const,
+      state:airports.some(airport => airport.faaAvailable && ['critical','caution'].includes(airport.faa?.level || ''))?'review' as const:coverage === airports.length && coverage > 0?'known' as const:'pending' as const,
       target:'atlas-airport-operations'
     },
     {
       label:'Weather observations',
       icon:CloudLightning,
-      detail:severeWx[0]||(
+      detail:weatherAlerts[0]||(
         metar.length?metar.map(item=>item.code+' '+item.aviation?.observation?.category).join(' · '):
           'No fresh airport weather observation checked'
       ),
-      state:severeWx[0]?'review' as const:metar.length?'known' as const:'pending' as const,
+      state:weatherAlerts[0]?'review' as const:metar.length?'known' as const:'pending' as const,
       target:'atlas-airport-operations'
     },
     {
@@ -344,17 +367,17 @@ export default function FlightShowcase({
       </div>
       <div className="fsc-brief-column">
         <span className="fsc-mini-label">HISTORICAL EVIDENCE</span>
-        <strong className={historyStatus==='error'||historyStatus==='unavailable'?'fsc-gold':'fsc-cyan'}
+        <strong className={!officialLegs.length&&(historyStatus==='error'||historyStatus==='unavailable')?'fsc-gold':'fsc-cyan'}
           data-testid="flight-history-value">{dnaValue}</strong>
         <span className="fsc-brief-sub" data-testid="flight-history-detail" aria-live="polite">
-          {dnaDetails}
+          {officialDetail || dnaDetails}
         </span>
         {dnaRateDetail&&<span className="fsc-brief-sub">{dnaRateDetail}</span>}
         {dnaDateDetail&&<span className="fsc-brief-sub">{dnaDateDetail}</span>}
         {historyStatus==='ready'&&history?.available&&sourceTotal>0&&
           <span className="fsc-brief-sub">{sourceCount} of {sourceTotal} historical datasets available · lookup completed {new Date(history.checkedAt).toLocaleString()}</span>}
         {historyStatus==='error'&&historyError&&
-          <span className="fsc-brief-sub">Details: {historyError}</span>}
+          <span className="fsc-brief-sub">Independent aggregate feed: {historyError}</span>}
         <a className="fsc-history-action" href="#atlas-flight-dna">
           Open full Flight DNA evidence <ArrowRight size={13}/>
         </a>

@@ -199,7 +199,7 @@ export async function approveRecovery(workspaceId: string, previewId: string, op
     db.tx.update(recoveryTable(workspaceId), [{ id: preview.id, record: { receipt }, if: { receipt: undefined } }], { patch: true }),
     db.tx.update(changeTable(workspaceId), [{ id: preview.changeId, record: { state: 'applied', appliedRecoveryId: preview.id }, if: { state: 'pending' } }], { patch: true }),
     ...(await watchReplacementOperations(workspaceId, context.tripIds))];
-  if (monitor) operations.push(queueWatch(workspaceId, option.report, activeTripIds));
+  if (monitor) operations.push(queueWatch(workspaceId, option.report, activeTripIds, preview.inputs[optionId].flights));
   try {
     await db.transact(operations, workspaceGuard(workspaceId, preview.workspaceRevision, 'Calendar changed after review.'));
   } catch (failure) {

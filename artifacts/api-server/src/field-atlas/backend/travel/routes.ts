@@ -7,7 +7,8 @@ import { db, workspaceGuard, json, error, type RouterMiddleware, type RouterRout
 import { buildScenarios, scenarioInput, flightInput, type ScenarioBoard } from './scenarios';
 import type { ScenarioReport } from '../../shared/travel/types';
 import { sourceStatuses, evidenceState } from '../providers/evidence';
-import { airportReferenceStatus } from '../providers/airports';
+import { airportReferenceStatus, lookupAirports } from '../providers/airports';
+import { publicAirportEvidence } from '../providers/publicTravel';
 import { queueWatch, watchesFor, cancelWatch } from './watch';
 import { historyCoverage, routeHistory } from '../providers/bts';
 import { allRecords, planContext, reportTable, changeTable, type SavedReport } from './context';
@@ -29,6 +30,15 @@ export function makeTravelRoutes(deps: {
 }): RouterRoutes {
   const access = deps.workspaceAccess;
   return {
+    'GET /api/travel/airports/:iata/brief': [access, async ctx => {
+      const code = String(ctx.params.iata).toUpperCase();
+      if (!/^[A-Z]{3}$/.test(code)) return error('Provide a three-letter airport code.', 400);
+      const [airport] = await lookupAirports([code]);
+      if (!airport) return error('Airport not found in the validated reference.', 404);
+      const products = await publicAirportEvidence(airport);
+      return json({ airport: { iata: airport.iata, name: airport.name, country: airport.country, state: airport.state, icao: airport.icao },
+        checkedAt: new Date().toISOString(), products });
+    }],
     'POST /api/travel/journeys/adopt': [access, async ctx => {
       const m = await deps.member(ctx.user!.userId); if (!m) return error('Workspace required.', 403);
       const body = ctx.body as { tripIds?: unknown } | null;
@@ -191,7 +201,7 @@ export function makeTravelRoutes(deps: {
       try {
         const operations = [db.tx.add(deps.extraTables(m.workspaceId).trips, trips), db.tx.add(deps.tables(m.workspaceId).visits, visits),
           db.tx.update(table, [{ id: saved.id, record: { ...saved, approval }, if: { approval: undefined } }])];
-        if (body?.monitor === true) operations.push(queueWatch(m.workspaceId, saved.report, approval.tripIds));
+        if (body?.monitor === true) operations.push(queueWatch(m.workspaceId, saved.report, approval.tripIds, saved.input.flights));
         await db.transact(operations, workspaceGuard(m.workspaceId, saved.report.workspaceRevision, 'Workspace changed.'));
       } catch {
         const [fresh] = await db.get<SavedReport>(table, [saved.id]);

@@ -6,9 +6,13 @@ ShieldAlert,Sparkles
 import { useEffect,useState } from 'react';
 import './FlightDecisionBrief.css';
 import type { DnaResponse } from './FlightDnaPanel';
+import type { AirportProduct } from '../shared/travel/airportBrief';
+import { describeEvidence } from '../shared/travel/evidence';
+import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 
 type AirportSignal = {
   code:string;
+  regional?: AirportProduct[];
   faa?: {level:'critical'|'caution'|'none'|'unknown';headline:string};
   aviation?: {
     available:boolean;
@@ -23,7 +27,7 @@ function currentObservation(report:AirportSignal):boolean{
   const raw=report.aviation?.observation;
   if(!raw?.reportTime)return false;
   const age=Date.now()-Date.parse(raw.reportTime);
-  return Number.isFinite(age)&&age>=-600000&&age<=180*60000;
+  return Number.isFinite(age)&&age>=-300000&&age<=90*60000;
 }
 function qualify(sig:AirportSignal){
   const notices:Signal[]=[];
@@ -41,15 +45,24 @@ function qualify(sig:AirportSignal){
       body:'Current aviation visibility/cloud category. This is not evidence of a specific flight cancellation.'
     });
   }
-  const severe=sig.nws?.alerts.find(alert=>alert.severity==='Extreme'||alert.severity==='Severe');
+  const severe=sig.nws?.available && sig.nws.alerts.find(alert=>alert.severity==='Extreme'||alert.severity==='Severe');
   if(severe)notices.push({
     kind:'critical',title:severe.event+' near '+sig.code,
     body:'An active severe local National Weather Service warning affects the airport point. Verify timing and airline guidance.'
   });
+  for (const product of sig.regional || []) {
+    if (product.evidence.provider !== 'ECCC Weather Alerts' || describeEvidence(product.evidence).state !== 'current') continue;
+    for (const signal of product.data || []) {
+      if (signal.validFrom && Date.parse(signal.validFrom) > Date.now()) continue;
+      if (signal.validTo && Date.parse(signal.validTo) <= Date.now()) continue;
+      notices.push({ kind: 'review', title: 'ECCC regional warning near ' + sig.code,
+        body: signal.title + '. This warning covers a regional query area; airport and individual flight impact remain unverified.' });
+    }
+  }
   return notices;
 }
-export default function FlightDecisionBrief({route,now,history}:{
-  route:Route;now:Now|null;history:DnaResponse|null
+export default function FlightDecisionBrief({route,now,history,officialHistory}:{
+  route:Route;now:Now|null;history:DnaResponse|null;officialHistory?:OfficialHistoryLeg[]|null
 }){
   const [checkedClock,setCheckedClock]=useState(()=>Date.now());
   useEffect(()=>{
@@ -77,7 +90,8 @@ export default function FlightDecisionBrief({route,now,history}:{
   });
   const highRate = actual.find(leg=>leg.match?.severePct !== null &&
     leg.match!.severePct!>=10);
-  const historicalAvailability = history?.available && actual.length>0;
+  const officialCovered = officialHistory?.length === (route.connection ? 2 : 1) && officialHistory.every(leg => (leg.result?.summary?.outcomeSampleSize || 0) >= 30);
+  const historicalAvailability = officialCovered || (history?.available && actual.length>0);
   const hasScenario = Number(route.connectionMinutes)>0&&Boolean(route.connection);
   const layover = Number(route.connectionMinutes);
   const tightConnection = hasScenario && layover < 90;
@@ -150,7 +164,7 @@ export default function FlightDecisionBrief({route,now,history}:{
   const coverage=[];
   coverage.push(freshNow?'Airport observation checked in the last 15 minutes':
     now?'Airport observations expired: last checked '+new Date(now.at).toLocaleString():'Current operating conditions not checked');
-  coverage.push(history?.available?'Historical samples loaded':'History not yet available');
+  coverage.push(officialCovered ? 'Official BTS samples loaded for each leg; reporting months shown below' : history?.available?'Independent historical samples loaded':'Complete route history not yet available');
   if(missingOperational)coverage.push('Some airport operating observations may be missing');
   if(history?.available&&missing)coverage.push(missing+' leg(s) lack a matched directional route');
   return <section className={'fdb-root fdb-'+status} aria-label="Combined flight decision intelligence">

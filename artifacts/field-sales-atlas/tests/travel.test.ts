@@ -96,6 +96,11 @@ test('BTS importer preserves null outcomes, verifies schema/month, and replaces 
       assert.equal(history.summary!.sampleSize, 40); assert.equal(history.summary!.outcomeSampleSize, 37);
       assert.equal(history.summary!.cancellationRate, 1 / 40);
       assert.equal(history.summary!.onTimeRate, 18 / 37);
+      assert.equal(history.evidence.provider, 'U.S. DOT / BTS');
+      assert.match(history.evidence.scope, /2026-01/);
+      assert.match(history.evidence.subject, /MIA → MCO \/ AA/);
+      assert.equal(history.evidence.kind, 'historical');
+      assert.notEqual(history.evidence.id, routeHistory('MCO', 'MIA', 'AA').evidence.id);
       assert.equal(routeHistory('MIA', 'MCO', 'AA', '1').summary!.cancellationRate, null);
       assert.equal(routeHistory('YYZ', 'YVR').state, 'unavailable');
     } finally { if (previousDataDir === undefined) delete process.env.ATLAS_DATA_DIR; else process.env.ATLAS_DATA_DIR = previousDataDir; }

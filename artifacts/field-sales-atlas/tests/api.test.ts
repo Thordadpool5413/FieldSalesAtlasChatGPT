@@ -40,6 +40,50 @@ async function addManager(key: string, name = 'Alex Manager') {
   return (await request('GET', '/api/operations', key)).data.managers[0];
 }
 
+test('airport brief selects country products, preserves normalized evidence and enforces workspace access', async () => {
+  const key = await workspace();
+  assert.equal((await request('GET', '/api/travel/airports/YYZ/brief')).status, 403);
+  assert.equal((await request('GET', '/api/travel/airports/bad-code/brief', key)).status, 400);
+  const [head] = await db.get<{ checksum: string }>('atlas_airport_reference_global', ['_head']);
+  const checksum = head?.checksum || 'brief-fixture';
+  if (!head) await db.tx.update('atlas_airport_reference_global', [{ id: '_head', record: { checksum, count: 2, retrievedAt: new Date().toISOString() } }]);
+  await db.tx.update('atlas_airport_reference_global', ['CA', 'US'].map((country, index) => ({ id: index ? 'XUS' : 'XCA', record: {
+    iata: index ? 'XUS' : 'XCA', name: country + ' fixture airport', icao: index ? 'KXUS' : 'CXCA', country,
+    state: index ? 'FL' : 'ON', lat: index ? 28.432 : 43.831, lon: index ? -81.312 : -79.613, referenceVersion: checksum,
+  } })));
+  const original = globalThis.fetch, calls: string[] = [], now = new Date().toISOString();
+  globalThis.fetch = async input => {
+    const url = new URL(String(input)); calls.push(url.href);
+    if (url.pathname.endsWith('/metar')) return new Response(JSON.stringify([{ icaoId: url.searchParams.get('ids'), obsTime: now, rawOb: 'METAR fixture', fltCat: 'IFR' }]));
+    if (url.pathname.endsWith('/taf')) return new Response(JSON.stringify([{ icaoId: url.searchParams.get('ids'), issueTime: now, rawTAF: 'TAF fixture', validTimeFrom: now, validTimeTo: new Date(Date.now() + 3600000).toISOString() }]));
+    if (url.pathname.includes('swob-realtime')) return new Response(JSON.stringify({ features: [{ properties: { obs_date_tm: now, stn_nam: 'Regional fixture' } }] }));
+    if (url.pathname.includes('citypageweather-realtime')) return new Response(JSON.stringify({ features: [{ geometry: { type: 'Point', coordinates: [-79.61, 43.83] }, properties: {
+      name: { en: 'Test City' }, forecastGroup: { timestamp: now, forecasts: [{ period: { textForecastName: { en: 'Tonight' } }, textSummary: { en: 'Regional snow showers.' } }] },
+    } }] }));
+    if (url.pathname.includes('weather-alerts')) return new Response(JSON.stringify({ timeStamp: now, features: [] }));
+    if (url.hostname === 'nasstatus.faa.gov') return new Response(JSON.stringify([{ airportId: 'XUS', sourceTimeStamp: now }]));
+    if (url.pathname.startsWith('/alerts/')) return new Response(JSON.stringify({ updated: now, features: [] }));
+    if (url.pathname.startsWith('/points/')) return new Response(JSON.stringify({ properties: { forecast: 'https://api.weather.gov/gridpoints/TEST/1,1/forecast', timeZone: 'America/New_York' } }));
+    if (url.pathname.endsWith('/forecast')) return new Response(JSON.stringify({ properties: { updateTime: now, periods: [{ number: 1, name: 'Today', startTime: now, endTime: new Date(Date.now() + 3600000).toISOString(), detailedForecast: 'Sunny.', shortForecast: 'Sunny' }] } }));
+    throw Error('Unexpected URL ' + url.hostname);
+  };
+  try {
+    const ca = await request('GET', '/api/travel/airports/XCA/brief', key);
+    assert.equal(ca.status, 200); assert.equal(ca.data.airport.country, 'CA');
+    assert.deepEqual(ca.data.products.map((row: { evidence: { provider: string } }) => row.evidence.provider), ['NOAA Aviation Weather', 'NOAA TAF', 'ECCC GeoMet', 'ECCC City Page Weather', 'ECCC Weather Alerts']);
+    assert.ok(ca.data.products.every((row: { evidence: { state: string } }) => row.evidence.state === 'current'));
+    assert.ok(calls.every(url => !url.includes('api.weather.gov') && !url.includes('nasstatus.faa.gov')));
+    const us = await request('GET', '/api/travel/airports/XUS/brief', key);
+    assert.equal(us.status, 200);
+    assert.ok(us.data.products.some((row: { evidence: { provider: string } }) => row.evidence.provider === 'NWS alerts'));
+    assert.ok(!us.data.products.some((row: { evidence: { provider: string } }) => row.evidence.provider.startsWith('ECCC')));
+    assert.equal((await request('GET', '/api/travel/airports/ZZZ/brief', key)).status, 404);
+  } finally {
+    globalThis.fetch = original;
+    await db.delete('atlas_airport_reference_global', ['XCA', 'XUS', ...(!head ? ['_head'] : [])]);
+  }
+});
+
 test('health works without credentials; private API rejects missing and invalid workspace links', async () => {
   assert.equal((await request('GET', '/api/_healthcheck')).data.status, 'ready');
   assert.equal((await request('GET', '/api/operations')).status, 403);
@@ -183,6 +227,43 @@ async function demoScenario() {
   assert.equal(result.status, 201, JSON.stringify(result.data));
   return { key, report: result.data, board };
 }
+
+test('journeys check every supplied itinerary airport and refresh opted-in monitoring when flights change', async () => {
+  const { key, board } = await demoScenario();
+  const flights = [
+    { trainerId: 'trainer_a', carrier: 'AA', flightNumber: '10', origin: 'MIA', destination: 'ATL', departDate: '2026-12-07', departTime: '05:00', arriveDate: '2026-12-07', arriveTime: '06:30' },
+    { trainerId: 'trainer_a', carrier: 'AA', flightNumber: '11', origin: 'ATL', destination: 'MCO', departDate: '2026-12-07', departTime: '08:00', arriveDate: '2026-12-07', arriveTime: '09:30' },
+    { trainerId: 'trainer_a', carrier: 'AA', flightNumber: '12', origin: 'MCO', destination: 'MIA', departDate: '2026-12-10', departTime: '19:00', arriveDate: '2026-12-10', arriveTime: '20:00' },
+    { trainerId: 'trainer_b', carrier: 'AA', flightNumber: '20', origin: 'CLT', destination: 'MCO', departDate: '2026-12-07', departTime: '06:00', arriveDate: '2026-12-07', arriveTime: '07:30' },
+  ];
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => { throw Error('Provider outage fixture'); };
+  try {
+    const result = await request('POST', '/api/travel/scenarios', key, { managerIds: board.managers.filter((person: { baseState: string }) => person.baseState === 'FL').map((person: { id: string }) => person.id), trainerIds: ['trainer_a', 'trainer_b'],
+      startDate: '2026-12-07', endDate: '2026-12-10', arrivalAirport: 'MCO', flights, checkPublicSources: true });
+    assert.equal(result.status, 201, JSON.stringify(result.data));
+    assert.deepEqual(new Set(result.data.checkedAirports), new Set(['MCO', 'MIA', 'ATL', 'CLT']));
+    for (const code of result.data.checkedAirports) assert.ok(result.data.evidence.some((row: { provider: string; subject: string }) => row.provider === 'FAA NAS' && row.subject === code), code);
+    assert.ok(result.data.scenarios[0].gaps.some((gap: string) => gap.includes('ATL: no current forecast')));
+    const option = result.data.scenarios.find((row: { feasible: boolean }) => row.feasible); assert.ok(option);
+    const approval = await request('POST', '/api/travel/scenarios/' + result.data.id + '/approve', key, { scenarioId: option.id, acknowledgeGaps: true, monitor: true });
+    assert.equal(approval.status, 201, JSON.stringify(approval.data));
+    const before = (await request('GET', '/api/travel/reviews', key)).data.watches[0];
+    assert.deepEqual(new Set(before.airports), new Set(['MCO', 'MIA', 'ATL', 'CLT']));
+    await db.tx.update('atlas_journey_watches_v1', [{ id: before.id, record: { airports: null } }], { patch: true });
+    const { runTravelReviews } = await import('../../api-server/src/field-atlas/backend/travel/watch');
+    await runTravelReviews();
+    const legacyReview = (await request('GET', '/api/travel/reviews', key)).data.watches[0];
+    assert.deepEqual(new Set(legacyReview.airports), new Set(['MCO', 'MIA', 'ATL', 'CLT']));
+    const plans = (await request('GET', '/api/travel/journeys', key)).data.plans;
+    const replaced = flights.map(flight => ({ ...flight, origin: flight.origin === 'ATL' ? 'DTW' : flight.origin, destination: flight.destination === 'ATL' ? 'DTW' : flight.destination }));
+    const saved = await request('POST', '/api/travel/journeys/' + result.data.id + '/itinerary', key, { flights: replaced, expectedItineraryVersion: plans[0].itineraryVersion });
+    assert.equal(saved.status, 200, JSON.stringify(saved.data));
+    const updated = (await request('GET', '/api/travel/reviews', key)).data.watches[0];
+    assert.deepEqual(new Set(updated.airports), new Set(['MCO', 'MIA', 'DTW', 'CLT']));
+    assert.equal(updated.state, 'queued'); assert.equal(updated.review, null);
+  } finally { globalThis.fetch = original; }
+});
 
 test('joint preview shows evidence gaps; approval is isolated, atomic, timezone aware and replay safe', async () => {
   const { key, report } = await demoScenario();
@@ -437,6 +518,23 @@ test('Canadian airports request ECCC forecasts and warnings even when only the c
     assert.ok(requested.some(url => url.includes('weather-alerts')));
     assert.ok(requested.every(url => url.includes('api.weather.gc.ca')));
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test('Canadian surface measurements retain units, zero values and source quality without fabricating missing numbers', async () => {
+  const { parseCanadianObservations } = await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+  const now = Date.now();
+  const parsed = parseCanadianObservations({ features: [{ properties: { obs_date_tm: new Date(now).toISOString(), stn_nam: 'Test station',
+    air_temp: 0, 'air_temp-uom': '°C', 'air_temp-qa': 100,
+    rel_hum: null, 'rel_hum-uom': '%',
+    avg_wnd_spd_10m_pst10mts: 23.2, 'avg_wnd_spd_10m_pst10mts-uom': 'km/h', 'avg_wnd_spd_10m_pst10mts-data_flag-value': 1,
+    avg_wnd_dir_10m_pst10mts: 276, 'avg_wnd_dir_10m_pst10mts-uom': '°',
+    stn_pres: 999, 'stn_pres-uom': 'hPa', 'stn_pres-qa': -1,
+  } }] }, now);
+  assert.match(parsed.data[0].detail, /Air temperature: 0 °C \(source quality code 100\)/);
+  assert.match(parsed.data[0].detail, /10-minute mean wind: 23.2 km\/h/);
+  assert.ok(!parsed.data[0].detail.includes('Relative humidity'));
+  assert.ok(!parsed.data[0].detail.includes('Station pressure'));
+  assert.match(parsed.limitation, /not an independent quality assessment/);
 });
 
 test('road matrices preserve unreachable pairs and failed providers fall back with an explicit warning', async () => {

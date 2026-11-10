@@ -7,6 +7,12 @@ test.beforeEach(async ({ context, baseURL }) => {
   // Exercise the bundled-map fallback deterministically, without third-party uptime.
   await context.route('**/*', route => new URL(route.request().url()).origin === baseURL ? route.continue() : route.abort());
   await context.addInitScript(() => localStorage.setItem('field-atlas-map-source-v9', 'outline'));
+  // Backend adapter contracts are tested separately. Browser fixtures exercise
+  // unavailable products without depending on third-party weather uptime.
+  await context.route('**/api/travel/airports/*/brief*', route => route.fulfill({ json: {
+    airport: { iata: new URL(route.request().url()).pathname.split('/').at(-2), name: 'Fixture airport' },
+    checkedAt: new Date().toISOString(), products: [],
+  } }));
 });
 
 test('Atlas loads; manager creation persists across a reload; navigation works', async ({ page }, info) => {
@@ -399,6 +405,25 @@ test('advanced comparison retains the people and dates chosen in the guide', asy
   await expect(advanced.getByLabel('Depart', { exact: true })).toHaveValue(start);
   await expect(advanced.getByLabel('Return', { exact: true })).toHaveValue(end);
   await expect(advanced.getByRole('button', { name: 'Demo · Jordan Ellis', exact: true })).toBeVisible();
+  const checkedAt = new Date().toISOString();
+  await page.route('**/api/travel/airports/YYZ/brief*', route => route.fulfill({ json: {
+    airport: { iata: 'YYZ', icao: 'CYYZ', name: 'Toronto fixture', country: 'CA' }, checkedAt,
+    products: [{ data: [{ title: 'Tonight', detail: 'Toronto regional forecast detail.' }], evidence: {
+      id: 'advanced-canadian-forecast', provider: 'ECCC City Page Weather', subject: 'Toronto region', sourceUrl: 'https://api.weather.gc.ca/',
+      kind: 'forecast', state: 'current', retrievedAt: checkedAt, observedAt: checkedAt, expiresAt: new Date(Date.now() + 300000).toISOString(),
+      version: 'fixture', scope: 'Regional forecast.', limitation: 'No exact validity timestamps; trip-window coverage is unknown.',
+    } }],
+  } }));
+  await advanced.getByRole('button', { name: 'Find another airport or enter a code' }).click();
+  await advanced.getByPlaceholder('Known IATA code').fill('YYZ');
+  await advanced.getByRole('button', { name: 'Use code', exact: true }).click();
+  const weather = advanced.locator('.fsa-destination-weather');
+  await weather.getByRole('button', { name: 'Check current weather and seven-day outlook' }).click();
+  await weather.getByText('Read published regional forecast', { exact: true }).click();
+  await expect(weather).toContainText('Toronto regional forecast detail.');
+  await expect(weather).toContainText('trip-window coverage is unknown');
+  await weather.getByText('Weather source evidence, age and limitations', { exact: true }).click();
+  await expect(weather).toContainText('ECCC City Page Weather');
 });
 
 test('joint travel intelligence compares options, discloses evidence gaps and saves both trainers atomically', async ({ page }, info) => {
@@ -591,10 +616,12 @@ test('flight intelligence displays source age and stops using expired station ev
   await page.clock.install({ time: now });
   await page.goto('/?page=plan&tool=radar');
   const evidence = (provider: string, subject: string, id: string) => ({ id, provider, subject, sourceUrl: 'https://aviationweather.gov/', kind: 'observation', state: 'current', retrievedAt: new Date(now).toISOString(), observedAt: new Date(now).toISOString(), expiresAt: new Date(now + 30000).toISOString(), version: 'fixture', scope: 'Fixture station observation', limitation: 'Fixture evidence is not airline status.' });
-  await page.route('**/api/travel/disruptions?*', route => route.fulfill({ json: { available: false, checkedAt: new Date(now).toISOString(), airports: [] } }));
-  await page.route('**/api/travel/aviation/*', route => {
-    const icao = new URL(route.request().url()).pathname.split('/').at(-1)!;
-    return route.fulfill({ json: { icao, available: true, checkedAt: new Date(now).toISOString(), source: 'NOAA', message: '', observation: { reportTime: new Date(now).toISOString(), category: 'IFR', raw: 'METAR fixture', windKnots: 5, visibility: '3', temperatureC: 20 }, forecast: null, evidence: [evidence('NOAA Aviation Weather', icao, 'fixture-' + icao)] } });
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({ json: { available: true, checkedAt: new Date(now).toISOString(), airports: [{ code: 'MCO', level: 'critical', headline: 'Fixture ground stop', events: [], evidence: { ...evidence('FAA NAS', 'MCO', 'fixture-faa'), sourceUrl: 'https://nasstatus.faa.gov/' } }] } }));
+  await page.route('**/api/travel/airports/*/brief*', route => {
+    const code = new URL(route.request().url()).pathname.split('/').at(-2)!;
+    return route.fulfill({ json: { airport: { iata: code, icao: 'K' + code }, checkedAt: new Date(now).toISOString(), products: [
+      { evidence: evidence('NOAA Aviation Weather', 'K' + code, 'fixture-' + code), data: [{ title: 'IFR', detail: 'METAR fixture', observation: { windKnots: 5, visibility: '3', temperatureC: 20 } }] },
+    ] } });
   });
   await page.route('**/api/travel/weather-alerts?*', route => route.fulfill({ json: { available: false, alerts: [], message: 'No validated alert timestamp' } }));
   await page.route('**/api/travel/point-forecast?*', route => route.fulfill({ json: { available: false, periods: [], message: 'No forecast fixture' } }));
@@ -605,12 +632,79 @@ test('flight intelligence displays source age and stops using expired station ev
   await page.getByRole('region', { name: 'Public flight evidence at a glance' }).getByRole('button', { name: 'Details', exact: true }).click();
   const operations = page.locator('#atlas-airport-operations');
   await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Combined flight decision intelligence' }).getByText('FAA restriction at MCO', { exact: true })).toBeVisible();
   const source = operations.locator('details').filter({ has: page.locator('summary', { hasText: 'Source evidence, age and limitations' }) }).first();
   await source.locator('summary').click();
   await expect(source).toContainText('Under a minute old');
   await page.clock.fastForward(61000);
   await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true })).toHaveCount(0);
-  await expect(source.locator('.journey-state')).toHaveText('stale');
+  await expect(source.locator('.journey-state')).toHaveText(['stale', 'stale']);
+  await expect(page.getByRole('region', { name: 'Combined flight decision intelligence' }).getByText('FAA restriction at MCO', { exact: true })).toHaveCount(0);
+});
+
+test('Canadian weather and official BTS remain usable when independent history fails', async ({ page }, info) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  const now = Date.now(), checkedAt = new Date(now).toISOString();
+  const evidence = (provider: string, id: string, kind = 'observation') => ({ id, provider, subject: 'YYZ regional fixture', sourceUrl: 'https://api.weather.gc.ca/', kind, state: 'current', retrievedAt: checkedAt, observedAt: checkedAt, expiresAt: new Date(now + 300000).toISOString(), version: 'fixture', scope: 'Regional coverage only.', limitation: 'Regional forecast has no exact validity timestamps; airport and flight impacts are unverified.' });
+  await page.route('**/api/travel/airports/*/brief*', route => {
+    const code = new URL(route.request().url()).pathname.split('/').at(-2)!;
+    return route.fulfill({ json: { airport: { iata: code, country: code === 'YYZ' ? 'CA' : 'US', name: code + ' fixture' }, checkedAt,
+      products: code === 'YYZ' ? [
+        { evidence: evidence('ECCC GeoMet', 'ca-observation'), data: [{ title: 'Toronto surface station', detail: 'Published surface observation.' }] },
+        { evidence: evidence('ECCC City Page Weather', 'ca-forecast', 'forecast'), data: [{ title: 'Tonight', detail: 'Snow showers in the Toronto regional forecast.' }] },
+        { evidence: evidence('ECCC Weather Alerts', 'ca-warning'), data: [{ title: 'Snow warning — Toronto', detail: 'Regional snow warning; check the official polygon.', validFrom: checkedAt, validTo: new Date(now + 300000).toISOString() }] },
+      ] : [] } });
+  });
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({ json: { available: false, checkedAt, airports: [] } }));
+  await page.route('**/api/travel/live-aircraft?*', route => route.abort('failed'));
+  await page.route('**/api/travel/flight-history?*', route => route.abort('failed'));
+  await page.route('**/api/travel/history?*', route => {
+    const params = new URL(route.request().url()).searchParams;
+    const domestic = params.get('origin') !== 'YYZ' && params.get('destination') !== 'YYZ';
+    return route.fulfill({ json: { state: domestic ? 'historical' : 'unavailable', coverage: { state: 'historical', periods: [{ period: '2026-08', sourceUrl: 'https://www.transtats.bts.gov/' }], limitation: 'Fixture U.S. domestic records only.' },
+      evidence: { ...evidence('U.S. DOT / BTS', 'official-fixture', 'historical'), state: 'reference', sourceUrl: 'https://www.transtats.bts.gov/', subject: params.get('origin') + ' → ' + params.get('destination'), observedAt: undefined, scope: 'Reporting months: 2026-08', limitation: 'Historical outcomes do not predict this flight.' },
+      summary: { origin: params.get('origin'), destination: params.get('destination'), sampleSize: domestic ? 40 : 0, outcomeSampleSize: domestic ? 40 : 0, cancellationSampleSize: domestic ? 40 : 0, onTimeRate: domestic ? .8 : null, cancellationRate: domestic ? .025 : null, p90ArrivalDelayMinutes: domestic ? 42 : null, definition: 'Rates require at least 30 eligible observations.' } } });
+  });
+  await page.goto('/?page=plan&tool=radar');
+  await expect(page).toHaveTitle(/Field Sales Atlas/);
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Departure IATA airport code' })).toBeFocused();
+  await expect(page.getByRole('alert')).toContainText('Enter a three-letter departure and arrival airport code');
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('YYZ');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('MCO');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Flight evidence at a glance', exact: true })).toContainText('Review airport conditions');
+  await page.getByRole('region', { name: 'Public flight evidence at a glance' }).getByRole('button', { name: 'Details', exact: true }).click();
+  const regional = page.getByRole('region', { name: 'Canadian regional weather' });
+  await expect(page.getByRole('heading', { name: 'YYZ fixture', exact: true })).toBeVisible();
+  await expect(regional).toContainText('ECCC Weather Alerts');
+  await expect(regional).toContainText('Snow warning — Toronto');
+  await regional.getByText('Read published regional forecast', { exact: true }).click();
+  await expect(regional).toContainText('Snow showers in the Toronto regional forecast.');
+  await expect(regional).toContainText('no exact validity timestamps');
+  await regional.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-canadian-weather-detail.png`), scale: 'css' });
+  const official = page.getByRole('region', { name: 'Official BTS route history' });
+  await expect(official).toContainText('Insufficient evidence');
+  await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-canadian-weather.png`), fullPage: true, scale: 'css' });
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  await expect(page.locator('.fsc-card-dna')).toContainText('80% observed on-time · BTS');
+  await expect(page.locator('.fsc-card-dna')).toContainText('40 official records');
+  await expect(page.getByRole('region', { name: 'Travel intelligence summary' }).getByRole('link', { name: /Historical performance/ })).toContainText('40 official records');
+  await expect(official).toContainText('2.5%');
+  await expect(official).toContainText('2026-08');
+  await official.getByText('Official history source, age and limitations', { exact: true }).click();
+  await expect(official).toContainText('Historical outcomes do not predict this flight.');
+  await official.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-official-history-detail.png`), scale: 'css' });
+  await expect(page.locator('vite-error-overlay')).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(errors).toEqual([]);
+  await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-data-wiring.png`), fullPage: true, scale: 'css' });
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('DFW');
+  await expect(official).toHaveCount(0);
 });
 
 test('Flight DNA makes route history, sample size and reporting cutoff visible after analysis', async ({ page }) => {
@@ -652,7 +746,7 @@ test('Flight DNA makes route history, sample size and reporting cutoff visible a
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
   const dnaCard=page.locator('.fsc-card-dna');
   await expect(dnaCard).toBeVisible();
-  await expect(dnaCard).toContainText('84.2% arrived ≤15 min late');
+  await expect(dnaCard).toContainText('84.2% arrived under 15 min late');
   await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('Directional route · 27,428 past flights');
   await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('0.9% cancelled');
   await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('4.1% 60+ min late');

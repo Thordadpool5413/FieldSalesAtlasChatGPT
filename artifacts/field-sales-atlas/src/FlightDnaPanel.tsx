@@ -8,6 +8,8 @@ TrendingUp
 import { useEffect,useMemo,useRef,useState } from 'react';
 import './FlightDnaPanel.css';
 import { api } from './workspaceApi';
+import OfficialFlightHistory from './OfficialFlightHistory';
+import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 
 type Metric = {
   basis: 'flight number'|'route'|'airport';
@@ -34,6 +36,7 @@ export type DnaResponse = {
 };
 export type DnaStatus = 'idle'|'loading'|'ready'|'unavailable'|'error';
 type Props = {
+  onOfficialAnalyzed?: (legs: OfficialHistoryLeg[] | null) => void;
   origin: string; destination: string; connection: string;
   alternate: string; connectionMinutes: string;
   travelDate:string;
@@ -89,7 +92,7 @@ function MetricCard({metric,subtitle}:{metric:Metric|null;subtitle:string}) {
 
 export default function FlightDnaPanel({
   origin,destination,connection,alternate,connectionMinutes,onAnalyzed,travelDate,onDateChange,
-  analysisToken=0,initialCarrier='',initialFlightNumber=''
+  analysisToken=0,initialCarrier='',initialFlightNumber='',onOfficialAnalyzed
 }: Props) {
   const [carrier,setCarrier] = useState(initialCarrier);
   const [flightNumber,setFlightNumber] = useState(initialFlightNumber);
@@ -98,6 +101,7 @@ export default function FlightDnaPanel({
   const [busy,setBusy] = useState(false);
   const [error,setError] = useState('');
   const [copied,setCopied] = useState(false);
+  const [officialRun, setOfficialRun] = useState({ key: '', run: 0 });
   const request = useRef(0);
   const sourceKey = [origin,destination,connection,alternate,travelDate,carrier,flightNumber].join('|');
   useEffect(() => {
@@ -125,6 +129,7 @@ export default function FlightDnaPanel({
     if (!valid || (busy && !automatic)) return;
     const token = ++request.current;
     setBusy(true);
+    setOfficialRun(previous => ({ key: sourceKey, run: previous.run + 1 }));
     setReport(null);
     setError('');
     onAnalyzed?.(null,'loading');
@@ -142,9 +147,9 @@ export default function FlightDnaPanel({
         onAnalyzed?.(data,data.available?'ready':'unavailable',
           data.available?'':'No historical flight dataset is currently available.');
       }
-    } catch(err) {
+    } catch {
       if (token === request.current) {
-        const message=err instanceof Error ? err.message : 'Historical data could not be loaded.';
+        const message='Independent historical data could not be loaded. Check the separate official records and current airport evidence.';
         onAnalyzed?.(null,'error',message);
         setError(message);
       }
@@ -217,12 +222,14 @@ export default function FlightDnaPanel({
       If you leave it blank, Atlas uses available route or airport history instead.
     </p>
     {error && <div className="fd-error" role="alert">{error}</div>}
+    <OfficialFlightHistory origin={origin} destination={destination} connection={connection} carrier={carrier} flightNumber={flightNumber} analysisToken={officialRun.key === sourceKey ? officialRun.run : 0} onAnalyzed={onOfficialAnalyzed}/>
     {report && !report.available && <div className="fd-error" role="status">
-      <strong>No historical source returned.</strong> Atlas has not generated fallback statistics.
+      <strong>Independent historical aggregates are unavailable.</strong> Check the separate official BTS results above.
       {report.sources.length>0&&<ul>{report.sources.map(source=><li key={source.name}>
         {source.name.replaceAll('-',' ')}: {source.available?'available':'unavailable'}
       </li>)}</ul>}
-      Try again later. Current FAA and weather checks are separate.
+      Try again later. Current airport and weather checks are separate.
+
     </div>}
     {report?.available && <div className="fd-results" aria-live="polite">
       <div className="fd-results-head">

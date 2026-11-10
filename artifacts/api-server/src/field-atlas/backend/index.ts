@@ -25,6 +25,7 @@ import { officialJson } from './providers/evidence';
 import { liveAircraftNearAirport, liveAircraftProductionGate } from './providers/liveAircraft';
 import { historyCoverage } from './providers/bts';
 import { roadMatrix } from './providers/routing';
+import { publicRoutingStatus } from './providers/routingConfig';
 import { publicAirportEvidence, faa, metar as stationMetar, taf as stationTaf } from './providers/publicTravel';
 import type { ScenarioBoard } from './travel/scenarios';
 
@@ -573,8 +574,8 @@ type PublicSourceReport={
   missingIntegrations:string[];scope:string
 };
 const publicSourceTable='atlas_public_source_health';
-const sourceGaps=[
-  'Verified road-network routes and traffic ETA',
+const sourceGaps=()=>[
+  publicRoutingStatus().configured ? 'Live traffic ETA and route-wide closure coverage' : 'Configured road-network routing and live traffic ETA',
   'Live flight-specific status and airfare inventory',
   'Two-way Outlook and Google Calendar authorization',
   'Individually authenticated trainer access'
@@ -618,7 +619,7 @@ async function checkOfficialSources():Promise<PublicSourceReport>{
   ];
   return { id: 'current', checkedAt, sources: sources.map(row => ({ ...row,
     lastSuccessAt: row.available ? row.checkedAt : previous?.sources.find(old => old.id === row.id)?.lastSuccessAt || null })),
-    missingIntegrations: sourceGaps,
+    missingIntegrations: sourceGaps(),
     scope: 'Official U.S. and Canadian sample checks with source timestamps. A sample does not establish national coverage or flight-specific status.' };
 }
 async function saveSourceReport(snapshot:PublicSourceReport){
@@ -1235,8 +1236,8 @@ export const handler = router({
       return json(snapshot);
     }
     const previous=await latestSourceReport();
-    return json(previous||{
-      id:'current',checkedAt:'',sources:[],missingIntegrations:sourceGaps,
+    return json(previous ? { ...previous, missingIntegrations: sourceGaps() } : {
+      id:'current',checkedAt:'',sources:[],missingIntegrations:sourceGaps(),
       scope:'No daily source scan has completed yet. Select Test sources to run a current check.'
     });
   }],

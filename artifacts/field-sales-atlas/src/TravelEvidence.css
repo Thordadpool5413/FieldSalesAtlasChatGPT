@@ -1,0 +1,10 @@
+.mv-app .travel-evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin:14px 0;min-width:0}
+.mv-app .travel-evidence-grid>.journey-source{min-width:0;padding:16px;border:1px solid var(--at-border);border-radius:12px;background:var(--at-field);overflow-wrap:anywhere;scroll-margin:24px}
+.mv-app .travel-evidence-grid>.journey-source>div{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+.mv-app .travel-evidence-grid .journey-state{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--at-border-soft);border-radius:20px;font-size:10px;font-weight:700;line-height:1.5;text-transform:uppercase;color:var(--at-muted)}
+.mv-app .travel-evidence-grid .state-current{color:var(--at-cyan)}
+.mv-app .travel-evidence-grid :is(.state-stale,.state-partial){color:var(--at-accent)}
+.mv-app .travel-evidence-grid .state-unavailable{color:var(--at-rose)}
+.mv-app .travel-evidence-grid :is(p,small){display:block;margin:8px 0;font-size:12px;line-height:1.6;color:var(--at-muted)}
+.mv-app .travel-evidence-grid a{display:inline-flex;align-items:center;min-height:44px;color:var(--at-cyan);font-size:13px;text-underline-offset:4px}
+.mv-app .travel-evidence-grid>.journey-source:focus{outline:2px solid var(--at-cyan);outline-offset:3px}

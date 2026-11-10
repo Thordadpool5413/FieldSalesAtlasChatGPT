@@ -89,3 +89,11 @@
 @media(prefers-reduced-motion:reduce){.mv-app .fd-spin{animation:none}}
 
 .mv-app .fr-configuration-change{color:var(--at-rose);font-size:11px;line-height:1.5;margin:5px 0}
+.mv-app .fd-official-history{margin:20px 0;padding:20px;border:1px solid var(--at-border);border-radius:14px;background:var(--at-surface)}
+.mv-app .fd-official-history>h3{margin:0 0 8px;font-size:20px}
+.mv-app .fd-official-history>p{color:var(--at-muted);line-height:1.6}
+.mv-app .fd-official-history .fd-metric-card+.fd-metric-card{margin-top:14px}
+.mv-app .fd-official-history .journey-costs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mv-app .fd-official-history dt{font-size:12px;color:var(--at-muted);line-height:1.5}
+.mv-app .fd-official-history dd{margin:6px 0 0;font-size:22px;color:var(--at-cyan)}
+@media(max-width:580px){.mv-app .fd-official-history{padding:14px}.mv-app .fd-official-history .journey-costs{grid-template-columns:1fr}}

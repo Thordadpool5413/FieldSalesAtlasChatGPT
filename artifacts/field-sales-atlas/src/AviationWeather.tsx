@@ -5,12 +5,19 @@ CloudRain,
 CloudSun,
 ExternalLink,RefreshCw,ShieldCheck,Wind
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect,useRef,useState } from 'react';
 import type { Airport } from './opsModels';
 import './TravelForecast.css';
 import { api } from './workspaceApi';
+import { flightAirportData } from './FlightAirportData';
+import RegionalAirportWeather from './RegionalAirportWeather';
+import TravelEvidence from './TravelEvidence';
+import type { AirportBrief } from '../shared/travel/airportBrief';
+import type { Evidence } from '../shared/travel/types';
+import { describeEvidence } from '../shared/travel/evidence';
 
 type AviationWeatherData={
+  evidence?: Evidence[];
   icao:string;source:string;checkedAt:string;available:boolean;message:string;
   observation?:null|{
     reportTime:string|null;category:string;raw:string;
@@ -25,6 +32,7 @@ type Period={
   probabilityOfPrecipitation:number|null;signals:string[];
 };
 type Outlook={
+  evidence?: Evidence;
   available:boolean;checkedAt:string;issuedAt:string;timeZone:string;
   source:string;sourceUrl:string;scope:string;periods:Period[];message:string;
 };
@@ -43,8 +51,11 @@ export default function AviationWeather({
   airport,travelDate
 }:{airport?:Airport;travelDate?:string}){
   const [station,setStation]=useState('');
-  const [weather,setWeather]=useState<AviationWeatherData|null>(null);
-  const [outlook,setOutlook]=useState<Outlook|null>(null);
+  const [storedWeather,setWeather]=useState<AviationWeatherData|null>(null);
+  const [storedOutlook,setOutlook]=useState<Outlook|null>(null);
+  const [brief, setBrief] = useState<AirportBrief | null>(null);
+  const [now, setNow] = useState(Date.now);
+  const request = useRef(0);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   const icao=station||airport?.icao||'';
@@ -53,8 +64,18 @@ export default function AviationWeather({
     Number.isFinite(airport.lon);
   const stationAvailable=/^[A-Z]{4}$/.test(icao.trim().toUpperCase());
   const canCheck=stationAvailable||coordinates;
+  const current = (item?: Evidence) => !item || describeEvidence(item, now).state === 'current';
+  const weather = storedWeather ? { ...storedWeather,
+    observation: current(storedWeather.evidence?.[0]) ? storedWeather.observation : null,
+    forecast: current(storedWeather.evidence?.[1]) ? storedWeather.forecast : null,
+    available: !!((current(storedWeather.evidence?.[0]) && storedWeather.observation) || (current(storedWeather.evidence?.[1]) && storedWeather.forecast)),
+    message: 'Current aviation conditions are unverified; inspect source age and recheck.',
+  } : null;
+  const outlook = storedOutlook ? { ...storedOutlook, available: storedOutlook.available && current(storedOutlook.evidence) } : null;
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer); }, []);
   useEffect(()=>{
-    setStation('');setWeather(null);setOutlook(null);setError('');
+    request.current += 1;
+    setStation('');setWeather(null);setOutlook(null);setBrief(null);setBusy(false);setError('');
   },[airport?.iata,airport?.icao,airport?.lat,airport?.lon]);
 
   async function check(){
@@ -62,23 +83,30 @@ export default function AviationWeather({
       setError('Select an airport with coordinates or enter a valid ICAO station.');
       return;
     }
-    setBusy(true);setError('');setWeather(null);setOutlook(null);
-    const stationRequest=stationAvailable?
+    const token = ++request.current;
+    setBusy(true);setError('');setWeather(null);setOutlook(null);setBrief(null);
+    const useBrief = /^[A-Z]{3}$/.test(airport?.iata || '');
+    const stationRequest=stationAvailable && (!useBrief || (station && station !== airport?.icao))?
       api.get('/api/travel/aviation/'+icao.trim().toUpperCase()):Promise.resolve(null);
-    const outlookRequest=coordinates?
-      api.get('/api/travel/point-forecast?lat='+airport!.lat+'&lon='+airport!.lon):
+    const briefRequest=useBrief?
+      api.get('/api/travel/airports/' + airport!.iata + '/brief'):
       Promise.resolve(null);
     try{
-      const [observation,point]=await Promise.allSettled([stationRequest,outlookRequest]);
+      const [observation,point]=await Promise.allSettled([stationRequest,briefRequest]);
+      if (token !== request.current) return;
+      if (point.status === 'fulfilled' && point.value) {
+        const next = point.value.data as AirportBrief, data = flightAirportData(next);
+        setBrief(next); setWeather(data.aviation);
+        if (data.outlook) setOutlook({ ...data.outlook, issuedAt: data.outlook.evidence.observedAt || '',
+          timeZone: data.outlook.periods[0]?.timeZone || '', sourceUrl: data.outlook.evidence.sourceUrl, scope: data.outlook.evidence.scope });
+      }
       if(observation.status==='fulfilled'&&observation.value)
         setWeather(observation.value.data as AviationWeatherData);
-      if(point.status==='fulfilled'&&point.value)
-        setOutlook(point.value.data as Outlook);
       if((stationAvailable&&observation.status==='rejected')||
          (coordinates&&point.status==='rejected')){
         setError('Some official weather information could not be loaded. Unavailable data is not treated as clear weather.');
       }
-    }finally{setBusy(false);}
+    }finally{if (token === request.current) setBusy(false);}
   }
   const matching=Boolean(travelDate&&outlook?.periods.some(p=>windowDate(p.startTime)===travelDate));
   const weatherSignals=outlook?.periods.filter(p=>p.signals.length)||[];
@@ -89,7 +117,7 @@ export default function AviationWeather({
     <div className='travel-section-line'>
       <div>
         <h3>Destination Weather Intelligence</h3>
-        <p>Current aviation conditions plus the official seven-day forecast for your selected airport.</p>
+        <p>Airport aviation weather, U.S. point forecasts or Canadian regional products, with source age and coverage.</p>
       </div>
       <CloudSun size={22}/>
     </div>
@@ -98,7 +126,7 @@ export default function AviationWeather({
         <label htmlFor='travel-weather-station'>ICAO weather station</label>
         <input id='travel-weather-station' maxLength={4}
           placeholder='e.g. KMCO' value={icao}
-          onChange={e=>{setStation(e.target.value.toUpperCase().replace(/[^A-Z]/g,''));setWeather(null);}}
+          onChange={e=>{request.current += 1;setBusy(false);setStation(e.target.value.toUpperCase().replace(/[^A-Z]/g,''));setWeather(null);}}
         />
         <button className='op-btn tiny' type='button' onClick={check}
           disabled={busy||!canCheck}
@@ -133,7 +161,7 @@ export default function AviationWeather({
       </>:<p className='travel-note caution'><CircleAlert size={14}/>{weather.message||'No current aviation observation.'}</p>)}
       {busy&&<div className='fsa-outlook-loading' role='status'>
         <RefreshCw className='fsa-weather-spin' size={18}/>
-        Retrieving official National Weather Service forecast…
+        Retrieving official weather products…
       </div>}
       {outlook&&<section className='fsa-outlook' aria-labelledby='fsa-outlook-title'>
         <header className='fsa-outlook-head'>
@@ -182,6 +210,10 @@ export default function AviationWeather({
           {outlook.message||'No U.S. NWS point forecast exists for this airport.'}
         </p>}
       </section>}
+      {!!brief?.products.some(product => product.evidence.provider.startsWith('ECCC ')) && <RegionalAirportWeather products={brief.products.filter(product => product.evidence.provider.startsWith('ECCC '))}/>}
+      {(brief || storedWeather?.evidence) && <details className="journey-details"><summary>Weather source evidence, age and limitations</summary>
+        <TravelEvidence evidence={[...new Map([...(brief?.products.map(product => product.evidence) || []), ...(storedWeather?.evidence || [])].map(item => [item.id, item])).values()]}/>
+      </details>}
       <p className='travel-microcopy'>
         Weather cues come from public forecast text and simple transparent thresholds.
         They are not airline cancellation probabilities, flight availability, confirmed road conditions,

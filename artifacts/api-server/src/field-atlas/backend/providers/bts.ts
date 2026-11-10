@@ -18,7 +18,11 @@ export function historyCoverage() {
 }
 export function routeHistory(origin: string, destination: string, carrier = '', flightNumber = '') {
   const coverage = historyCoverage(), connection = open();
-  if (!connection) return { coverage, summary: null, state: 'unavailable' };
+  const evidence = historyEvidence(coverage);
+  const filter = [origin, destination, carrier, flightNumber].join('/');
+  evidence.id += '-' + createHash('sha256').update(filter).digest('hex').slice(0, 12);
+  evidence.subject = `${origin} → ${destination}${carrier ? ' / ' + carrier : ''}${flightNumber ? ' ' + flightNumber : ''}`;
+  if (!connection) return { coverage, summary: null, state: 'unavailable', evidence };
   try {
     const rows = connection.prepare(`SELECT cancelled,diverted,arrival_delay FROM flights WHERE origin=? AND destination=?${carrier ? ' AND carrier=?' : ''}${flightNumber ? ' AND number=?' : ''}`)
       .all(origin, destination, ...(carrier ? [carrier] : []), ...(flightNumber ? [String(Number(flightNumber))] : []));
@@ -26,7 +30,7 @@ export function routeHistory(origin: string, destination: string, carrier = '', 
     const completed = rows.filter(row => row.cancelled === 0 && row.diverted === 0 && typeof row.arrival_delay === 'number');
     const delays = completed.map(row => Number(row.arrival_delay)).sort((a, b) => a - b);
     const enough = rows.length >= 30;
-    return { coverage, state: enough ? 'historical' : rows.length ? 'sparse' : 'unavailable', summary: {
+    return { coverage, evidence, state: enough ? 'historical' : rows.length ? 'sparse' : 'unavailable', summary: {
       origin, destination, carrier: carrier || null, flightNumber: flightNumber || null, sampleSize: rows.length, outcomeSampleSize: completed.length,
       cancellationSampleSize: cancellationKnown.length,
       cancelled: cancellationKnown.filter(row => row.cancelled === 1).length,
@@ -40,17 +44,21 @@ export function routeHistory(origin: string, destination: string, carrier = '', 
   } finally { connection.close(); }
 }
 
-export function itineraryHistory(flights: FlightInput[]): { evidence: Evidence[]; notes: string[] } {
-  const coverage = historyCoverage();
+function historyEvidence(coverage: ReturnType<typeof historyCoverage>): Evidence {
   const periods = coverage.periods as Array<{ period: string; sourceUrl: string; sha256: string; importedAt: string }>;
   const id = 'bts-' + createHash('sha256').update(JSON.stringify(periods.map(period => [period.period, period.sha256]))).digest('hex').slice(0, 20);
-  const evidence: Evidence = { id, provider: 'U.S. DOT / BTS', subject: 'Imported reporting-carrier flight outcomes', sourceUrl: periods.at(-1)?.sourceUrl || 'https://www.transtats.bts.gov/ONTIME/',
+  return { id, provider: 'U.S. DOT / BTS', subject: 'Imported reporting-carrier flight outcomes', sourceUrl: periods.at(-1)?.sourceUrl || 'https://www.transtats.bts.gov/ONTIME/',
     kind: 'historical', state: periods.length ? 'reference' : 'unavailable', retrievedAt: periods.map(period => period.importedAt).sort().at(-1) || '', version: id,
     validFrom: periods[0]?.period ? periods[0].period + '-01T00:00:00Z' : undefined,
     scope: periods.length ? `Reporting months: ${periods.map(period => period.period).join(', ')}. U.S. domestic reporting carriers only.` : 'No official monthly dataset is installed.',
     limitation: coverage.limitation + ' Data-import age is distinct from the reporting period. Rates require 30 eligible observations; missing coverage is unknown.' };
+}
+
+export function itineraryHistory(flights: FlightInput[]): { evidence: Evidence[]; notes: string[] } {
+  const coverage = historyCoverage();
+  const evidence = historyEvidence(coverage);
   const unique = flights.filter((flight, index, all) => all.findIndex(other => other.origin === flight.origin && other.destination === flight.destination && other.carrier === flight.carrier) === index);
-  const notes = periods.length ? unique.map(flight => {
+  const notes = coverage.periods.length ? unique.map(flight => {
     const summary = routeHistory(flight.origin, flight.destination, flight.carrier).summary;
     return `${flight.origin}–${flight.destination}${flight.carrier ? ' / ' + flight.carrier : ''}: ${summary?.sampleSize || 0} matching historical records; ${summary?.outcomeSampleSize || 0} eligible arrival outcomes. ${summary?.cancellationRate === null || summary?.cancellationRate === undefined ? 'Cancellation-rate evidence is insufficient.' : 'Observed cancellation rate ' + (summary.cancellationRate * 100).toFixed(1) + '%.'} This is not a prediction or evidence of today’s service.`;
   }) : ['BTS historical outcomes are unavailable; no reliability score or replacement-flight availability was inferred.'];

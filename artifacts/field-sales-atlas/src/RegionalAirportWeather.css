@@ -1,0 +1,7 @@
+.mv-app .regional-airport-weather{display:grid;gap:12px;min-width:0;margin:16px 0}
+.mv-app .regional-airport-weather>.fr-evidence{padding:14px;border:1px solid var(--at-border-soft);border-radius:12px;background:var(--at-field);min-width:0;overflow-wrap:anywhere}
+.mv-app .regional-airport-weather .fr-evidence-label{color:var(--at-cyan);font-size:12px;font-weight:700;line-height:1.5}
+.mv-app .regional-airport-weather p{margin:8px 0;font-size:13px;line-height:1.65;color:var(--at-muted)}
+.mv-app .regional-airport-weather summary{padding:10px 0;min-height:44px;cursor:pointer;color:var(--at-cyan);font-size:13px;font-weight:600}
+.mv-app .regional-airport-weather strong{display:block;margin-top:10px;font-size:13px;line-height:1.6}
+.mv-app .regional-airport-weather small{display:block;margin-top:5px;color:var(--at-muted);font-size:12px}

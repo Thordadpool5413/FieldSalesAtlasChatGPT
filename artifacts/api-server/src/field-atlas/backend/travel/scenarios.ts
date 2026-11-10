@@ -152,16 +152,26 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
     }
   }
   const signals: NonNullable<ScenarioReport['signals']> = [];
+  const checkedAirports = [...new Set([input.arrivalAirport, ...flights.flatMap(flight => [flight.origin, flight.destination])])];
   if (input.checkPublicSources) {
-    const sources = await publicAirportEvidence(airport);
+    const referenced = checkedAirports.flatMap(code => airports.find(item => item.iata === code) || []);
+    for (const code of checkedAirports.filter(code => !referenced.some(item => item.iata === code))) gaps.push(`${code}: airport reference unavailable; operational and weather coverage is unknown.`);
+    const byAirport = await Promise.all(referenced.map(async item => ({ airport: item, sources: await publicAirportEvidence(item) })));
+    const sources = byAirport.flatMap(item => item.sources);
     evidence.push(...sources.map(result => result.evidence));
-    signals.push(...sources.flatMap(result => (result.data || []).map(signal => ({ ...signal, kind: result.evidence.kind, sourceId: result.evidence.id }))));
+    signals.push(...byAirport.flatMap(item => item.sources.flatMap(result => (result.data || []).map(signal => ({ ...signal, title: item.airport.iata + ' · ' + signal.title, kind: result.evidence.kind, sourceId: result.evidence.id })))));
     if (sources.some(result => !['current', 'reference'].includes(result.evidence.state))) gaps.push('Some official operational or weather evidence is incomplete or stale.');
     const start = zonedInstant(input.startDate, '00:00', hubZone), end = zonedInstant(input.endDate, '23:59', hubZone);
-    if (!sources.some(result => result.evidence.kind === 'forecast' && result.evidence.validFrom && result.evidence.validTo && result.evidence.validFrom <= start && result.evidence.validTo >= end)) {
+    if (!byAirport.find(item => item.airport.iata === airport.iata)?.sources.some(result => result.evidence.kind === 'forecast' && result.evidence.validFrom && result.evidence.validTo && result.evidence.validFrom <= start && result.evidence.validTo >= end)) {
       gaps.push(['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].includes(airport.state || '')
         ? 'The ECCC city forecast is regional and has no exact period timestamps; coverage for the full field-trip window is unknown.'
         : 'A validated airport forecast does not cover the full field-trip period.');
+    }
+    for (const flight of flights) for (const [code, instant] of [[flight.origin, flight.departure], [flight.destination, flight.arrival]]) {
+      const products = byAirport.find(item => item.airport.iata === code)?.sources || [];
+      if (!products.some(result => result.evidence.state === 'current' && result.evidence.kind === 'forecast' && result.evidence.validFrom && result.evidence.validTo && result.evidence.validFrom <= instant && result.evidence.validTo >= instant)) {
+        gaps.push(`${code}: no current forecast with exact validity covers the supplied flight time ${instant}. Recheck closer to travel.`);
+      }
     }
   } else gaps.push('Current official weather and airport notices have not been requested for this preview.');
   const scenarios: Scenario[] = optimized.solutions.map(solution => {
@@ -208,5 +218,6 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
   const history = itineraryHistory(input.flights);
   evidence.push(...history.evidence); notes.push(...history.notes);
   return { id: randomUUID(), createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 15 * 60000).toISOString(), workspaceRevision: revision, startDate: input.startDate, endDate: input.endDate, arrivalAirport: airport.iata,
-    scenarios, evidence, signals, notes, optimizer: optimized.engine, sourceStatus: input.checkPublicSources ? 'Requested official checks are individually labeled below.' : 'Public-source checks were not requested.' };
+    scenarios, evidence: [...new Map(evidence.map(item => [item.id, item])).values()], signals, notes, checkedAirports: input.checkPublicSources ? checkedAirports : [], optimizer: optimized.engine,
+    sourceStatus: input.checkPublicSources ? 'Official checks requested for ' + checkedAirports.join(', ') + '. Each source and trip-time coverage gap is labeled below.' : 'Public-source checks were not requested.' };
 }
