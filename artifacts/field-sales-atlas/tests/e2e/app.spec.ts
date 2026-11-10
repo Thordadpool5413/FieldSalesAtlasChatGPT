@@ -613,6 +613,80 @@ test('flight intelligence displays source age and stops using expired station ev
   await expect(source.locator('.journey-state')).toHaveText('stale');
 });
 
+test('Flight DNA makes route history, sample size and reporting cutoff visible after analysis', async ({ page }) => {
+  const checkedAt = new Date().toISOString();
+  await page.goto('/?page=plan&tool=radar');
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({
+    json: { available: false, checkedAt, airports: [], message: 'No current FAA entries.' },
+  }));
+  await page.route('**/api/travel/aviation/*', route => route.fulfill({
+    json: { available: false, checkedAt, message: 'No validated station report.', observation: null, forecast: null, evidence: [] },
+  }));
+  await page.route('**/api/travel/weather-alerts?*', route => route.fulfill({
+    json: { available: false, checkedAt, alerts: [], message: 'No active alerts.' },
+  }));
+  await page.route('**/api/travel/point-forecast?*', route => route.fulfill({
+    json: { available: false, checkedAt, periods: [], message: 'Forecast unavailable.' },
+  }));
+  await page.route('**/api/travel/flight-history?*', route => route.fulfill({
+    json: {
+      available: true, checkedAt, source: 'Fixture', sourceUrl: '', attribution: 'Fixture',
+      license: 'CC BY 4.0', period: null,
+      sources: [{ name: 'routes', available: true, records: 314, periodEnd: '2026-08-31' }],
+      legs: [{
+        origin: 'MCO', destination: 'ATL',
+        match: {
+          basis: 'route', label: 'MCO → ATL', origin: 'MCO', destination: 'ATL',
+          carrier: '', flightNumber: '', flights: 27428, onTimePct: 84.2,
+          cancelPct: 0.9, severePct: 4.1, avgArrivalDelay: 6.2,
+          medianArrivalDelay: -5, departureOnTimePct: 85.1,
+          periodStart: '2023-07-01', periodEnd: '2026-08-31',
+        },
+        route: null, airportBaseline: null, note: 'Fixture route history.',
+      }],
+      alternatePaths: [], alternateArrival: null, selectedMonth: '2026-11', monthly: [], notes: [],
+    },
+  }));
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  const dnaCard=page.locator('.fsc-card-dna');
+  await expect(dnaCard).toBeVisible();
+  await expect(dnaCard).toContainText('84.2% arrived ≤15 min late');
+  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('Directional route · 27,428 past flights');
+  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('0.9% cancelled');
+  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('4.1% 60+ min late');
+  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('Historical data through Aug 31, 2026');
+  await dnaCard.click();
+  await expect(page.getByRole('region', { name: 'Flight DNA historical intelligence' })).toBeVisible();
+  await expect(page.locator('.fd-results')).toContainText('27,428 historical flights');
+});
+
+test('Flight DNA reports historical feed failures in the visible flight brief', async ({ page }) => {
+  const checkedAt = new Date().toISOString();
+  await page.goto('/?page=plan&tool=radar');
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({
+    json: { available: false, checkedAt, airports: [] },
+  }));
+  await page.route('**/api/travel/aviation/*', route => route.fulfill({
+    json: { available: false, checkedAt, observation: null, forecast: null, evidence: [] },
+  }));
+  await page.route('**/api/travel/weather-alerts?*', route => route.fulfill({
+    json: { available: false, checkedAt, alerts: [], message: 'No active alerts.' },
+  }));
+  await page.route('**/api/travel/point-forecast?*', route => route.fulfill({
+    json: { available: false, checkedAt, periods: [], message: 'Forecast unavailable.' },
+  }));
+  await page.route('**/api/travel/flight-history?*', route => route.abort('failed'));
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  const dnaCard=page.locator('.fsc-card-dna');
+  await expect(dnaCard).toBeVisible();
+  await expect(dnaCard).toContainText('History temporarily unavailable');
+  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('historical source could not be reached');
+});
+
 test('live ADS-B observations stay separate from airline flight status', async ({ page }) => {
   await page.goto('/?page=plan&tool=radar');
   let liveRequests = 0;

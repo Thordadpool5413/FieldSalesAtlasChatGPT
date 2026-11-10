@@ -32,6 +32,7 @@ export type DnaResponse = {
   monthly: Array<{month: string; flights: number; onTimePct: number|null; cancelPct: number|null}>;
   notes: string[];
 };
+export type DnaStatus = 'idle'|'loading'|'ready'|'unavailable'|'error';
 type Props = {
   origin: string; destination: string; connection: string;
   alternate: string; connectionMinutes: string;
@@ -39,13 +40,20 @@ type Props = {
   onDateChange:(date:string)=>void;
   analysisToken?:number;
   initialCarrier?:string;initialFlightNumber?:string;
-  onAnalyzed?: (data:DnaResponse|null)=>void;
+  onAnalyzed?: (data:DnaResponse|null,status:DnaStatus,message?:string)=>void;
 };
 function readable(value: number|null, suffix: string, decimals = 1) {
   return value === null || !Number.isFinite(value) ? 'Not available' :
     value.toFixed(decimals) + suffix;
 }
 function number(value: number) { return value.toLocaleString('en-US'); }
+function coverageDate(value:string){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return 'cutoff not supplied';
+  const date=new Date(value+'T00:00:00Z');
+  return Number.isFinite(date.getTime())
+    ?date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})
+    :'cutoff not supplied';
+}
 function bufferInitial(): number {
   try {
     const value = Number(localStorage.getItem('atlas-transfer-buffer-min-v1'));
@@ -96,7 +104,7 @@ export default function FlightDnaPanel({
     request.current += 1;
     setBusy(false);
     setReport(null);
-    onAnalyzed?.(null);
+    onAnalyzed?.(null,'idle');
     setError('');
     setCopied(false);
   }, [sourceKey,onAnalyzed]);
@@ -119,6 +127,7 @@ export default function FlightDnaPanel({
     setBusy(true);
     setReport(null);
     setError('');
+    onAnalyzed?.(null,'loading');
     const params = new URLSearchParams({origin,destination});
     if(connection) params.set('connection',connection);
     if(alternate) params.set('alternate',alternate);
@@ -128,13 +137,16 @@ export default function FlightDnaPanel({
     try {
       const response = await api.get('/api/travel/flight-history?' + params.toString());
       if (token === request.current) {
-        setReport(response.data as DnaResponse);
-        onAnalyzed?.(response.data as DnaResponse);
+        const data=response.data as DnaResponse;
+        setReport(data);
+        onAnalyzed?.(data,data.available?'ready':'unavailable',
+          data.available?'':'No historical flight dataset is currently available.');
       }
     } catch(err) {
       if (token === request.current) {
-        onAnalyzed?.(null);
-        setError(err instanceof Error ? err.message : 'Historical data could not be loaded.');
+        const message=err instanceof Error ? err.message : 'Historical data could not be loaded.';
+        onAnalyzed?.(null,'error',message);
+        setError(message);
       }
     } finally {
       if (token === request.current) setBusy(false);
@@ -205,17 +217,20 @@ export default function FlightDnaPanel({
       If you leave it blank, Atlas uses available route or airport history instead.
     </p>
     {error && <div className="fd-error" role="alert">{error}</div>}
-    {report && !report.available && <div className="fd-error">
-      No historical source returned. Atlas has not generated any fallback statistics.
-      Try again after checking connectivity.
+    {report && !report.available && <div className="fd-error" role="status">
+      <strong>No historical source returned.</strong> Atlas has not generated fallback statistics.
+      {report.sources.length>0&&<ul>{report.sources.map(source=><li key={source.name}>
+        {source.name.replaceAll('-',' ')}: {source.available?'available':'unavailable'}
+      </li>)}</ul>}
+      Try again later. Current FAA and weather checks are separate.
     </div>}
     {report?.available && <div className="fd-results" aria-live="polite">
       <div className="fd-results-head">
         <div>
           <span className="fd-overline">HISTORICAL MATCH RESULTS</span>
           <h3>{[origin,connection,destination].filter(Boolean).join(' → ')}</h3>
-          <p>Source data checked {new Date(report.checkedAt).toLocaleString()}.
-            This is descriptive historical research, not a forecast of your exact flight.</p>
+          <p>Atlas completed this lookup {new Date(report.checkedAt).toLocaleString()}.
+            Reporting cutoffs are shown on each result and source below. This is not a forecast of your exact flight.</p>
         </div>
         <button type="button" className="fd-copy" onClick={copiedBrief}>
           {copied?<Check size={16}/>:<FileText size={16}/>}
@@ -292,7 +307,8 @@ export default function FlightDnaPanel({
         <div className="fd-source-status">
           {report.sources.map(item=><span key={item.name} className={item.available?'available':'unavailable'}>
             {item.available?<Check size={13}/>:<Info size={13}/>}
-            {item.name.replaceAll('-',' ')} · {item.available?number(item.records)+' rows':'unavailable'}
+            {item.name.replaceAll('-',' ')} · {item.available?
+              number(item.records)+' rows · through '+coverageDate(item.periodEnd):'unavailable'}
           </span>)}
         </div>
         <p>{report.attribution}. <a href="https://flyerintel.com/data/" target="_blank" rel="noreferrer">

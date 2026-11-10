@@ -7,12 +7,12 @@ Radar,RefreshCw,Route,ShieldAlert,Sparkles,
 TicketCheck,
 Wind
 } from 'lucide-react';
-import { useEffect,useMemo,useRef,useState } from 'react';
+import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import TravelEvidence from './TravelEvidence';
 import type { Evidence } from '../shared/travel/types';
 import { describeEvidence } from '../shared/travel/evidence';
 import FlightDecisionBrief from './FlightDecisionBrief';
-import type { DnaResponse } from './FlightDnaPanel';
+import type { DnaResponse,DnaStatus } from './FlightDnaPanel';
 import FlightDnaPanel from './FlightDnaPanel';
 import './FlightRadar.css';
 import './FlightRadarForecast.css';
@@ -229,11 +229,18 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const [error, setError] = useState('');
   const [copyMessage, setCopyMessage] = useState('');
   const [historical, setHistorical] = useState<DnaResponse|null>(null);
+  const [historyStatus,setHistoryStatus]=useState<DnaStatus>('idle');
+  const [historyError,setHistoryError]=useState('');
   const [faaDeltas, setFaaDeltas] = useState<Record<string, string[]>>({});
   const [researchRun,setResearchRun] = useState(0);
   const [offlineNotice,setOfflineNotice] = useState('');
   const requestId = useRef(0);
   const guardianStarted=useRef(false);
+  const onHistoricalAnalysis=useCallback((data:DnaResponse|null,status:DnaStatus,message='')=>{
+    setHistorical(data);
+    setHistoryStatus(status);
+    setHistoryError(message);
+  },[]);
   const airportIndex = useMemo(() => new Map(ctx.airports.map(a => [a.iata, a])), [ctx.airports]);
   const codes = useMemo(() => [...new Set([
     route.origin, route.connection, route.destination, route.alternate
@@ -286,6 +293,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     setLoading(false);
     setAnalysis(null);
     setHistorical(null);
+    setHistoryStatus('idle');
+    setHistoryError('');
     setFaaDeltas({});
     setError('');
     setCopyMessage('');
@@ -325,6 +334,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     setError('');
     setAnalysis(null);
     setHistorical(null);
+    setHistoryStatus('loading');
+    setHistoryError('');
     setCopyMessage('');
     // One tap runs live airport checks and distinct historical sample research.
     setResearchRun(run => run + 1);
@@ -517,7 +528,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       setCopyMessage('Clipboard unavailable. Use the on-screen brief.');
     }
   }
-  const visibleEvidence=Boolean(analysis||historical);
+  const visibleEvidence=Boolean(analysis||historical||historyStatus!=='idle');
   const aircraftAirports=useMemo(()=>codes.flatMap(code=>{
     const airport=airportIndex.get(code);
     return /^[A-Z]{3}$/.test(code)?[{code,name:airport?.name||code}]:[];
@@ -680,7 +691,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         ));
       }}>Details <ArrowRight size={15}/></button>
     </section>}
-    {visibleEvidence&&<FlightShowcase route={route} current={currentAnalysis} history={historical} travelDate={travelDate}/>}
+    {visibleEvidence&&<FlightShowcase route={route} current={currentAnalysis} history={historical}
+      historyStatus={historyStatus} historyError={historyError} travelDate={travelDate}/>}
     {visibleEvidence&&aircraftAirports.length>0&&<ObservedAircraftPanel airports={aircraftAirports}/>}
     <button type="button" className="fr-mobile-detail-toggle"
       onClick={()=>setMobileDeepOpen(open=>!open)}
@@ -836,7 +848,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     <div id="atlas-flight-dna" className={mobileDeepOpen?'':'fr-historical-collapsed'}>
       <FlightDnaPanel origin={route.origin} destination={route.destination}
         connection={route.connection} alternate={route.alternate}
-        connectionMinutes={route.connectionMinutes} onAnalyzed={setHistorical}
+        connectionMinutes={route.connectionMinutes} onAnalyzed={onHistoricalAnalysis}
         analysisToken={researchRun} travelDate={travelDate}
         initialCarrier={guardian?.carrier||''}
         initialFlightNumber={guardian?.flightNumber||''}

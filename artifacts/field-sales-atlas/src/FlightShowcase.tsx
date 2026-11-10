@@ -3,7 +3,7 @@ Activity,ArrowRight,ChevronRight,Clock3,CloudLightning,
 Compass,Info,Layers3,Plane,Radar,Route,ShieldCheck,Sparkles
 } from 'lucide-react';
 import { useEffect,useMemo,useRef,useState } from 'react';
-import type { DnaResponse } from './FlightDnaPanel';
+import type { DnaResponse,DnaStatus } from './FlightDnaPanel';
 import FlightNetworkMap from './FlightNetworkMap';
 import './FlightShowcase.css';
 
@@ -49,6 +49,12 @@ type Tile = {
   link:string;
 };
 const percent=(n:number|null|undefined)=>typeof n==='number'&&Number.isFinite(n)?n.toFixed(1).replace(/\.0$/,'')+'%':null;
+function dateLabel(value:string){
+  const date=new Date(value+'T00:00:00Z');
+  return Number.isFinite(date.getTime())
+    ?date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})
+    :'date not supplied';
+}
 function freshObservation(at:string|null|undefined,now:number){
   if(!at)return false;
   const t=Date.parse(at);
@@ -59,11 +65,13 @@ function valueKind(kind:Tile['state']){
 }
 
 export default function FlightShowcase({
-  route, current, history, travelDate
+  route, current, history, historyStatus, historyError, travelDate
 }:{
   route:RouteInput;
   current:OfficialCheck|null;
   history:DnaResponse|null;
+  historyStatus:DnaStatus;
+  historyError:string;
   travelDate:string;
 }){
   const [now,setNow]=useState(()=>Date.now());
@@ -126,6 +134,40 @@ export default function FlightShowcase({
   // A connecting journey is not represented by the rate of its first leg.
   const multiLeg=histories.length>1;
   const ontime=multiLeg?null:percent(metric?.onTimePct);
+  const dnaValue=historyStatus==='loading'?'Loading historical results…':
+    historyStatus==='error'?'History temporarily unavailable':
+    historyStatus==='unavailable'?'No history feed available':
+    history?.available&&multiLeg?'Review each leg':
+    history?.available&&metric?
+      (percent(metric.onTimePct)||'Rate unavailable')+' arrived ≤15 min late':
+    history?.available?'No covered route sample':'Not analyzed';
+  const dnaDetails=historyStatus==='loading'?'Checking published history separately from current conditions.':
+    historyStatus==='error'?'The historical source could not be reached. Current airport checks remain separate.':
+    historyStatus==='unavailable'?'No source returned usable historical rows; missing data is not proof of no service.':
+    history?.available&&multiLeg?histories.map(leg=>{
+      const row=leg.match;
+      return `${leg.origin}–${leg.destination}: ${row
+        ?`${percent(row.onTimePct)||'rate unavailable'} arrived ≤15 min late · ${row.flights.toLocaleString('en-US')} flights`
+        :'no covered sample'}`;
+    }).join(' · '):
+    history?.available&&metric?
+      `${metric.basis==='flight number'?'Flight-number':metric.basis==='route'?'Directional route':'Airport baseline'} · ${metric.flights.toLocaleString('en-US')} past flights`:
+    history?.available?'No covered route or airport sample. This does not mean no airline service.':
+    'Run Analyze flight to retrieve public historical samples.';
+  const dnaRateDetail=historyStatus==='ready'&&history?.available&&!multiLeg&&metric
+    ?[
+      metric.cancelPct===null?null:`${percent(metric.cancelPct)} cancelled`,
+      metric.severePct===null?null:`${percent(metric.severePct)} 60+ min late`
+    ].filter(Boolean).join(' · ')
+    :'';
+  const dnaDateDetail=historyStatus==='ready'&&history?.available
+    ?multiLeg?'Each leg has its own reporting window.':
+      metric?.periodEnd?`Historical data through ${dateLabel(metric.periodEnd)}; not a travel-date forecast.`:
+        'The source did not provide a reporting cutoff.'
+    :'';
+  const dnaTileDetail=[dnaDetails,dnaRateDetail,dnaDateDetail].filter(Boolean).join(' · ');
+  const sourceCount=history?.sources.filter(source=>source.available).length||0;
+  const sourceTotal=history?.sources.length||0;
   const evidencePoints=airports.filter(a=>
     (a.faaAvailable&&a.faa?.level!=='unknown')||
     (a.aviation?.available&&a.aviation.observation&&freshObservation(a.aviation.observation.reportTime,now))||
@@ -163,10 +205,9 @@ export default function FlightShowcase({
       slug:'dna',eyebrow:'HISTORICAL RELIABILITY',
       icon:Activity,title:'Flight DNA',
       subtitle:'Published flight, route and airport patterns',
-      detail:metric?(metric.basis==='airport'?'Airport baseline · ':'Matched '+metric.basis+' · ')+
-        metric.flights.toLocaleString('en-US')+' flights':'Open the historical research below',
-      value:multiLeg?'View leg histories':ontime?ontime+' on-time':'Analyze history',
-      state:multiLeg&&history?.available?'known':ontime?'known':'pending',link:'#atlas-flight-dna'
+      detail:dnaTileDetail,
+      value:dnaValue,
+      state:historyStatus==='ready'&&history?.available?'known':'pending',link:'#atlas-flight-dna'
     },
     {
       slug:'pressure',eyebrow:'FAA / CAPACITY',
@@ -303,10 +344,20 @@ export default function FlightShowcase({
       </div>
       <div className="fsc-brief-column">
         <span className="fsc-mini-label">HISTORICAL EVIDENCE</span>
-        <strong className="fsc-cyan">{multiLeg?'Per-leg only':ontime||'Not yet analyzed'}</strong>
-        <span className="fsc-brief-sub">{metric?
-          (multiLeg?'No combined connection rate · ':'')+metric.basis+' history; not a forecast':
-          'Flight DNA has not returned a rate'}</span>
+        <strong className={historyStatus==='error'||historyStatus==='unavailable'?'fsc-gold':'fsc-cyan'}
+          data-testid="flight-history-value">{dnaValue}</strong>
+        <span className="fsc-brief-sub" data-testid="flight-history-detail" aria-live="polite">
+          {dnaDetails}
+        </span>
+        {dnaRateDetail&&<span className="fsc-brief-sub">{dnaRateDetail}</span>}
+        {dnaDateDetail&&<span className="fsc-brief-sub">{dnaDateDetail}</span>}
+        {historyStatus==='ready'&&history?.available&&sourceTotal>0&&
+          <span className="fsc-brief-sub">{sourceCount} of {sourceTotal} historical datasets available · lookup completed {new Date(history.checkedAt).toLocaleString()}</span>}
+        {historyStatus==='error'&&historyError&&
+          <span className="fsc-brief-sub">Details: {historyError}</span>}
+        <a className="fsc-history-action" href="#atlas-flight-dna">
+          Open full Flight DNA evidence <ArrowRight size={13}/>
+        </a>
       </div>
     </section>
     <div className="fsc-mobile-toolhead">
@@ -336,6 +387,8 @@ export default function FlightShowcase({
             <div className="fsc-card-icon"><Icon size={21}/></div>
             <strong>{tile.title}</strong>
             <p>{tile.subtitle}</p>
+            {tile.slug==='dna'&&tile.detail&&
+              <small className="fsc-card-detail" data-testid="flight-history-card-detail">{tile.detail}</small>}
             <span className={'fsc-card-value '+valueKind(tile.state)}>
               {tile.value}<ChevronRight size={16}/>
             </span>
