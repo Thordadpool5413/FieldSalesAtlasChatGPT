@@ -8,6 +8,7 @@ TicketCheck,Waypoints
 import { readBookedFlights } from './BookedFlightLogic';
 import FieldMissionBrief from './FieldMissionBrief';
 import MobileJourneyPeek from './MobileJourneyPeek';
+import IntelligenceGallery from './IntelligenceGallery';
 import { useOp } from './Operations';
 import type { Manager } from './opsModels';
 import { dateLabel,today } from './opsModels';
@@ -141,10 +142,8 @@ export default function TravelStart({ onSectionChange,onDestination,onCircuit }:
         </div>
       </header>
       <div className="vice-travel-context"><span>{activeName} · {dateLabel(currentDate,{weekday:'short',month:'short',day:'numeric'})}</span>
-        <button type="button" onClick={()=>onSectionChange('radar')}><Radar size={16}/> Flight DNA <ArrowRight size={16}/></button></div>
-
-
-
+        <button type="button" onClick={()=>onSectionChange('radar')}><Radar size={16}/> Intelligence toolkit <ArrowRight size={16}/></button></div>
+      <IntelligenceGallery/>
       <div className="fao-mobile-journey" aria-label="Your next booked flight or field trip">
         <MobileJourneyPeek
           onBooked={()=>onSectionChange('booked')}

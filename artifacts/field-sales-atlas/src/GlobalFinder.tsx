@@ -8,16 +8,18 @@ import type { Visit } from './opsModels';
 import { STATES,dateLabel } from './opsModels';
 import { WORKSPACE_TOOLS } from './workspaceTools';
 import { api } from './workspaceApi';
+import { INTELLIGENCE_TOOLS, openIntelligenceTool, type FlightTool } from './intelligenceTools';
 
 type Result = {
   id:string; kind:'person'|'region'|'airport'|'county'|'place'|'zip'|'zcta'|'visit'|'trip'|'tool'; label:string; detail:string;
   managerId?:string; regionCode?:string; country?:'US'|'CA'; airportCode?:string; areaCode?:string;
   visit?:Visit;
   page?:Page;
+  flightTool?:FlightTool;
 };
 
 
-const LAUNCH_TOOLS=['atlas','mission','radar','coordinate','reports','calendar'];
+const LAUNCH_TOOLS=['atlas','mission','intelligence','coordinate','reports','calendar'];
 
 type Props = { enableKeyboardShortcut?: boolean };
 export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
@@ -163,12 +165,17 @@ export default function GlobalFinder({enableKeyboardShortcut=true}:Props){
       }));
     const toolMatches=WORKSPACE_TOOLS
       .filter(x=>(x.label+' '+x.description+' '+x.terms).toLowerCase().includes(value))
-      .slice(0,7).map(x=>({id:'tool:'+x.page,kind:'tool' as const,
-        label:x.label,detail:x.description,page:x.page}));
-    return [...censusZctas,...people,...region,...airports,...toolMatches,...zipAreas,...counties,...places,...savedVisits,...savedTrips].slice(0,30);
+      .slice(0,7).map(x=>({id:'tool:'+x.id,kind:'tool' as const,
+        label:x.label,detail:x.description,page:x.page,flightTool:x.id==='radar'?'dna' as const:undefined}));
+    const toolkitMatches=INTELLIGENCE_TOOLS.filter(tool=>tool.id!=='dna'&&
+      (tool.title+' '+tool.description+' '+tool.terms).toLowerCase().includes(value))
+      .map(tool=>({id:'intelligence:'+tool.id,kind:'tool' as const,label:tool.title,detail:tool.description,flightTool:tool.id}));
+    return [...censusZctas,...people,...region,...airports,...toolMatches,...toolkitMatches,...zipAreas,...counties,...places,...savedVisits,...savedTrips].slice(0,30);
   },[query,nationalZctas,ctx.board.managers,ctx.board.visits,ctx.board.trips,ctx.airports,ctx.geo.state,ctx.geo.counties,ctx.geo.places,ctx.board.assignments,ctx.state]);
   function choose(result:Result){
-    if(result.kind==='tool'&&result.page){
+    if(result.flightTool){
+      openIntelligenceTool(result.flightTool);
+    }else if(result.kind==='tool'&&result.page){
       ctx.go(result.page);
     }else if(result.kind==='person'&&result.managerId){
       ctx.setSelectedManager(result.managerId);ctx.go('managers');

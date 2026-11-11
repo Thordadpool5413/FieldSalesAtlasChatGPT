@@ -191,7 +191,7 @@ test('mobile tools are grouped consistently and preserve every destination', asy
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?page=plan&tool=radar');
   const bottomTabs = page.getByRole('navigation', { name: 'Primary iPhone tabs' });
-  for (const name of ['Atlas', 'Travel', 'People', 'Calendar']) {
+  for (const name of ['Atlas', 'Travel', 'Intelligence', 'People', 'Calendar']) {
     await expect(bottomTabs.getByRole('button', { name, exact: true })).toBeVisible();
   }
 
@@ -214,7 +214,8 @@ test('mobile tools are grouped consistently and preserve every destination', asy
 
   await page.goto('/');
   const mapFrame = page.locator('.mv-map-frame');
-  await expect(mapFrame).toBeVisible();
+  // Wait for the lazily loaded map before measuring its frame.
+  await expect(mapFrame).toBeVisible({ timeout: 15000 });
   const mapBefore = (await mapFrame.boundingBox())!;
   await page.getByRole('button', { name: 'Open tools and navigation' }).click();
   await expect(drawer).toBeVisible();
@@ -246,8 +247,8 @@ test('desktop navigation and workspace search explain specialized tools without 
   await expect(page).toHaveURL(/page=mission/);
   await expect(mission).toHaveAttribute('aria-current', 'page');
   await page.goto('/?page=plan&tool=radar');
-  const flightTab = page.locator('.fsa-hub-tabs').getByRole('tab', { name: /Flight DNA/ });
-  await expect(flightTab).toContainText('Check past flights, airport alerts, and weather');
+  const flightTab = page.locator('.fsa-hub-tabs').getByRole('tab', { name: /Intelligence/ });
+  await expect(flightTab).toContainText('Open the flight, airport, weather and connection toolkit.');
   await page.keyboard.press('Control+k');
   const search = page.getByRole('dialog', { name: 'Search all workspace data' });
   await search.getByRole('combobox').fill('Flight DNA');
@@ -259,7 +260,7 @@ test('desktop navigation and workspace search explain specialized tools without 
 
 test('tool purpose copy stays the same in desktop, phone, search and Travel tabs', async ({ page }) => {
   const travelTools = [
-    { label: 'Flight DNA', description: 'Check past flights, airport alerts, and weather.' },
+    { label: 'Intelligence', description: 'Open the flight, airport, weather and connection toolkit.' },
     { label: 'Booked flights', description: 'Review imported itineraries and flight details.' },
     { label: 'Airport & route planner', description: 'Compare airports and routes for a trip.' },
     { label: 'Itineraries', description: 'Review saved trip plans.' },

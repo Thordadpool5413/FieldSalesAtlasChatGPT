@@ -21,6 +21,7 @@ import FlightDnaPanel from './FlightDnaPanel';
 import './FlightRadar.css';
 import './FlightRadarForecast.css';
 import FlightToolkit, { initialFlightTool, type FlightTool } from './FlightToolkit';
+import { INTELLIGENCE_NAVIGATION_EVENT } from './intelligenceTools';
 import FlightNetworkMap from './FlightNetworkMap';
 import './FlightIntelligence.css';
 import ObservedAircraftPanel from './ObservedAircraftPanel';
@@ -249,7 +250,11 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       if (tool === 'aircraft') setAircraftOpened(true);
     };
     window.addEventListener('popstate', restoreTool);
-    return () => window.removeEventListener('popstate', restoreTool);
+    window.addEventListener(INTELLIGENCE_NAVIGATION_EVENT, restoreTool);
+    return () => {
+      window.removeEventListener('popstate', restoreTool);
+      window.removeEventListener(INTELLIGENCE_NAVIGATION_EVENT, restoreTool);
+    };
   }, []);
   function selectTool(tool: FlightTool) {
     setActiveTool(tool);

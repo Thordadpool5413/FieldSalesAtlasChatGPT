@@ -27,7 +27,7 @@ Successfully accessed sources:
 - Main palette, derived from the supplied logo: background `#081226`, rail `#0a1529`, surface `#101f35`, white `#f4f5ff`, secondary text `#b2c5df`, electric cyan `#5ceaf5`, magenta `#ff5bc8`, warm yellow `#fff199`.
 - Day palette: white surfaces, pale blue surroundings, midnight-blue text, deeper cyan `#087887`, magenta `#b42b7b` and gold `#805c08` for readable contrast.
 - Display: Barlow Condensed 600/700. Interface: DM Sans 400/500/600/700, served from the app through Vite, with system fallbacks.
-- Geometry: 220px desktop rail, 66px header, 28px content gutters, 12px main panel radius, 7px controls, hairline borders. Phone header 74px plus safe area; fixed four-tab navigation; touch controls generally 44px or larger.
+- Geometry: 220px desktop rail, 66px header, 28px content gutters, 12px main panel radius, 7px controls, hairline borders. Phone header 74px plus safe area; fixed five-tab navigation including Intelligence; touch controls generally 44px or larger.
 - Icons: Lucide outline, restrained stroke weights, map / plane / people / calendar navigation. No decorative substitute icons for actual controls.
 - Motion: brief control feedback, honoring reduced-motion settings. No ambient animation behind business data.
 - Artwork: a separate 1800px WebP panorama (183 KB) and 900px phone version (56 KB). App text is not baked into images.
@@ -53,7 +53,7 @@ Browser/IAB tools were unavailable, so verification used Playwright and local Ch
 | Photography | Ocean Drive neon architecture at right, sunset and palms across the scene | Matching separately generated scene bundled locally, with a dark edge supporting live text. No external image dependency. |
 | Palette | Deep petrol, white display text, turquoise action, coral accent | The current tokens use the supplied logo’s cyan, magenta, midnight blue and warm yellow; a readable day counterpart applies to the same workflows. |
 | Typography | Condensed uppercase display; plain sans controls | Local Barlow Condensed and DM Sans replace remote font requests. The supplied image now replaces the previous text-only navigation wordmark. |
-| Shell | 220px left rail, four primary sections, quiet top header | Same architecture. Existing record creation, intelligence shortcuts, trainer switch, appearance and settings are retained as functional product requirements. |
+| Shell | 220px left rail, five primary destinations, quiet top header | Intelligence is visible alongside Atlas, Travel, People and Calendar. Existing record creation, trainer switch, appearance and settings are retained as functional product requirements. |
 | Copy | “Your field. In perspective.” / “Plan a trip” / “Territory atlas” | Preserved. Phone subtitle follows the shorter mobile concept. No invented KPI, live weather or booking claims were added. |
 | Map | Decorative selected Florida panel and example territory colors | Replaced by the actual geographic engine and actual saved data. No selection is fabricated; the initial inspector invites territory selection. State/province selection, layers and focus controls are retained. |
 | Phone selection | Compact selected-territory region | Retains the app's richer territory inspector as a fixed, scrollable sheet above the tab bar. This preserves manager, airport and coverage workflows. Its stacking and close action were checked in the browser. |

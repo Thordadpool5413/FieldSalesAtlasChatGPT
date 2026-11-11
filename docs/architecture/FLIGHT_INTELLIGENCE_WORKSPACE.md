@@ -7,6 +7,14 @@ restores the selected tool without discarding loaded history. Route/date/filter
 changes invalidate previous results; request tokens prevent late responses from
 populating a different query.
 
+Intelligence is also a primary desktop and phone navigation destination. The
+Travel landing page displays all six illustrated shortcuts before the route
+studio, with map and aircraft links alongside them. Workspace search opens each
+tool directly. `intelligenceTools.ts` supplies one catalog for gallery labels,
+photographs, search terms and destinations. Navigation preserves the workspace
+fragment and opens Intelligence at the top, rather than restoring a scrolled
+Travel page underneath it. Native Back/Forward retains its existing behavior.
+
 | Tool | Visible result | Connection and boundary |
 | --- | --- | --- |
 | Flight DNA | Official per-leg outcomes, independent historical matches, sample sizes, rates, reporting cutoffs and airport monthly trends | `/api/travel/history` reads installed BTS records. `/api/travel/flight-history` queries independent aggregates. Separate cohorts; no combined connecting-trip reliability rate. |
@@ -31,9 +39,12 @@ produces a source-specific error with no assigned rate, rather than crashing the
 travel page. Retrying historical analysis checks both sources again. Either
 source can remain useful while the other is unavailable.
 
-The old photo carousel, duplicate summary/map block and global deep-research
-disclosure were removed. The optional combined decision brief remains below the
-selected tool. Source records and limitations stay with the results they support.
+The old carousel is now a static photo grid. Its six original photographs are
+bundled under `public/resources/intelligence`, with source/credit information in
+`CREDITS.md`, so blocked third-party image hosts cannot remove the images. The
+duplicate summary/map block and global deep-research disclosure were removed.
+The optional combined decision brief remains below the selected tool. Source
+records and limitations stay with the results they support.
 
 ## Verification boundaries
 

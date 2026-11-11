@@ -23,7 +23,7 @@ type Props = {
 
 export default function PlanHub({section,onSectionChange,onDestination,onCircuit}:Props){
   const sections=[
-    workspaceTool('radar'),workspaceTool('booked'),workspaceTool('air'),
+    {...workspaceTool('intelligence'),travelTool:'radar' as const},workspaceTool('booked'),workspaceTool('air'),
     workspaceTool('itineraries'),workspaceTool('week'),workspaceTool('coordinate'),
   ];
   return <section className={'fsa-hub fsa-plan-hub'+(section==='radar'?' fs-flight-focused':'')+(section==='start'?' fsa-plan-home':'')} aria-label='Field planning'>

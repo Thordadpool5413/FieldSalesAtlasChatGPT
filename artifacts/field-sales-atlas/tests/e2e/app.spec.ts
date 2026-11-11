@@ -1046,3 +1046,70 @@ test('Flight DNA labels airport fallback rates without implying matched route hi
   await expect(report).toContainText('AIRPORT-LEVEL FALLBACK');
   await expect(report).toContainText('Airport baseline only; this route is not covered.');
 });
+
+test('restored intelligence photographs and shortcuts are visible from Travel and primary navigation', async ({ page }, info) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await flightWorkspaceFixture(page);
+  await page.goto('/?page=plan');
+  await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
+  const fragment = new URL(page.url()).hash;
+  const gallery = page.getByRole('region', { name: 'Intelligence toolkit', exact: true });
+  const shortcuts = gallery.getByRole('navigation', { name: 'Intelligence toolkit shortcuts' });
+  await expect(shortcuts.getByRole('button')).toHaveCount(6);
+  await expect(shortcuts.locator('img')).toHaveCount(6);
+  await expect.poll(() => shortcuts.locator('img').evaluateAll(images => images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+  expect((await gallery.boundingBox())!.y).toBeLessThan((await page.locator('.fao-feature-grid').boundingBox())!.y);
+  const tools = [
+    ['Flight DNA', 'dna', 'Flight DNA'], ['Airport pressure', 'pressure', 'Airport pressure'],
+    ['Weather risk', 'weather', 'Weather risk'], ['Connection survival', 'connection', 'Connection survival'],
+    ['Security & airport', 'security', 'Airport Security Memory'], ['Alternatives', 'alternatives', 'Alternative routes'],
+  ];
+  for (const [label, id, heading] of tools) {
+    await shortcuts.getByRole('button', { name: label, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp('intel=' + id));
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    expect(new URL(page.url()).hash).toBe(fragment);
+    await page.goBack();
+    await expect(shortcuts).toBeVisible();
+  }
+  const primary = info.project.name === 'mobile'
+    ? page.getByRole('navigation', { name: 'Primary iPhone tabs' })
+    : page.getByRole('navigation', { name: 'plan sections' });
+  await page.evaluate(() => scrollTo(0, 1200));
+  await page.getByRole('button', { name: 'People', exact: true }).filter({ visible: true }).first().click();
+  await primary.getByRole('button', { name: 'Intelligence', exact: true }).click();
+  const toolkit = page.getByRole('navigation', { name: 'Flight intelligence tools' });
+  await expect(toolkit).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Flight intelligence.', exact: true })).toBeInViewport();
+  await expect.poll(() => toolkit.locator('img').evaluateAll(images => images.every(image => (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+  if (info.project.name === 'mobile') {
+    await expect(primary.getByRole('button')).toHaveCount(5);
+    await expect(primary.locator('[aria-current="page"]')).toHaveCount(1);
+    await expect(primary.getByRole('button', { name: 'Intelligence', exact: true })).toHaveAttribute('aria-current', 'page');
+  }
+  await primary.getByRole('button', { name: 'Travel', exact: true }).click();
+  await expect(gallery).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('workspace search opens each intelligence tool directly while preserving the workspace link', async ({ page }) => {
+  await page.goto('/?page=people');
+  await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
+  const fragment = new URL(page.url()).hash;
+  for (const [query, target, heading] of [['Weather risk', 'weather', 'Weather risk'], ['Airport pressure', 'pressure', 'Airport pressure'], ['Connection survival', 'connection', 'Connection survival'], ['Security & airport', 'security', 'Airport Security Memory'], ['Alternatives', 'alternatives', 'Alternative routes']]) {
+    await page.keyboard.press('Control+k');
+    const search = page.getByRole('dialog', { name: 'Search all workspace data' });
+    await search.getByRole('combobox').fill(query);
+    await search.getByRole('option').filter({ hasText: query }).click();
+    await expect(search).toBeHidden();
+    await expect(page).toHaveURL(new RegExp('intel=' + target));
+    await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    expect(new URL(page.url()).hash).toBe(fragment);
+  }
+  await page.keyboard.press('Control+k');
+  const search = page.getByRole('dialog', { name: 'Search all workspace data' });
+  await search.getByRole('combobox').fill('Travel');
+  await search.getByRole('option').filter({ has: page.getByText('Travel', { exact: true }) }).click();
+  await expect(page.getByRole('region', { name: 'Intelligence toolkit', exact: true })).toBeVisible();
+});

@@ -15,7 +15,7 @@ The main experience should answer four questions:
 3. What evidence supports this plan, and what still needs verification?
 4. What should we review when an input changes?
 
-Product principles: one clear next action; complexity behind progressive disclosure; consistent language and controls; fast interaction; visible save/recovery states; evidence available without overwhelming the main screen. Preserve the existing four primary destinations and visual identity.
+Product principles: one clear next action; consistent language and controls; fast interaction; visible save/recovery states; evidence available without overwhelming the main screen. Keep Atlas, Travel, People and Calendar stable, with Intelligence as a fifth visible primary destination. Its six illustrated tools are available directly on the Travel landing page and through workspace search.
 
 ## Starting point and important gaps
 

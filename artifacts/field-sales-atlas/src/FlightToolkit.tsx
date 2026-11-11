@@ -1,15 +1,13 @@
-import { Activity, ArrowRight, Clock3, CloudLightning, Map, Plane, Radar, Route, ShieldCheck } from 'lucide-react';
+import { Map, Plane } from 'lucide-react';
 import type { DnaResponse, DnaStatus } from './FlightDnaPanel';
 import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 import type { AirportProduct } from '../shared/travel/airportBrief';
 import { describeEvidence } from '../shared/travel/evidence';
+import IntelligenceCard from './IntelligenceCard';
+import { INTELLIGENCE_TOOLS, type CoreFlightTool, type FlightTool } from './intelligenceTools';
 
-export const flightTools = ['dna', 'pressure', 'weather', 'connection', 'security', 'alternatives', 'map', 'aircraft'] as const;
-export type FlightTool = typeof flightTools[number];
-export function initialFlightTool(): FlightTool {
-  const value = new URLSearchParams(window.location.search).get('intel');
-  return flightTools.find(tool => tool === value) || 'dna';
-}
+export { flightTools, initialFlightTool } from './intelligenceTools';
+export type { FlightTool } from './intelligenceTools';
 type AirportCheck = {
   code: string; faaAvailable: boolean;
   faa?: { level: string; headline: string };
@@ -17,7 +15,7 @@ type AirportCheck = {
   nws?: { available: boolean; alerts: Array<{ event: string; severity: string }> };
   regional?: AirportProduct[];
 };
-type Tool = { id: FlightTool; title: string; icon: typeof Plane; value: string; detail: string; state: 'observed' | 'review' | 'unknown' | 'input' };
+type Tool = { id: CoreFlightTool; value: string; detail: string; state: 'observed' | 'review' | 'unknown' | 'input' };
 const pct = (value: number | null | undefined) => typeof value === 'number' && Number.isFinite(value)
   ? value.toFixed(1).replace(/\.0$/, '') + '%' : 'Rate unavailable';
 
@@ -58,16 +56,16 @@ export default function FlightToolkit({ active, onSelect, route, current, histor
   const layover = Number(route.connectionMinutes);
   const hasLayover = !!route.connection && layover > 0;
   const tools: Tool[] = [
-    { id: 'dna', title: 'Flight DNA', icon: Activity, value: historyValue, detail: historyDetail, state: official.length || leg ? 'observed' : 'unknown' },
-    { id: 'pressure', title: 'Airport pressure', icon: Radar,
+    { id: 'dna', value: historyValue, detail: historyDetail, state: official.length || leg ? 'observed' : 'unknown' },
+    { id: 'pressure',
       value: restrictions.length ? restrictions.map(airport => airport.code + ' restriction').join(' · ') : current ? airports.length ? faa.length + ' of ' + airports.length + ' FAA statuses known' : 'Check expired · refresh' : 'Airport events & capacity',
       detail: 'FAA airport-wide notices', state: restrictions.length ? 'review' : faa.length && faa.length === airports.length ? 'observed' : 'unknown' },
-    { id: 'weather', title: 'Weather risk', icon: CloudLightning,
+    { id: 'weather',
       value: weatherWarnings[0] || (observations.length ? observations.map(airport => airport.code + ' ' + (airport.aviation?.observation?.category || 'observed')).join(' · ') : current ? 'Station coverage unverified' : 'Observations & forecasts'),
       detail: 'NOAA · NWS · ECCC', state: weatherReview ? 'review' : observations.length ? 'observed' : 'unknown' },
-    { id: 'connection', title: 'Connection survival', icon: Clock3, value: hasLayover ? layover + ' min at ' + route.connection : 'Test your layover margin', detail: 'Your timing + transfer assumptions', state: hasLayover ? 'input' : 'unknown' },
-    { id: 'security', title: 'Security & airport', icon: ShieldCheck, value: 'Checkpoint history & memory', detail: 'Published history + your experience', state: 'input' },
-    { id: 'alternatives', title: 'Alternatives', icon: Route,
+    { id: 'connection', value: hasLayover ? layover + ' min at ' + route.connection : 'Test your layover margin', detail: 'Your timing + transfer assumptions', state: hasLayover ? 'input' : 'unknown' },
+    { id: 'security', value: 'Checkpoint history & memory', detail: 'Published history + your experience', state: 'input' },
+    { id: 'alternatives',
       value: history?.available ? history.alternatePaths.length + ' historical connection corridors' : 'Research backup routes',
       detail: 'Schedules & seats require verification', state: history?.available && history.alternatePaths.length ? 'observed' : 'unknown' },
   ];
@@ -76,16 +74,9 @@ export default function FlightToolkit({ active, onSelect, route, current, histor
       <h2>Choose what you need to know.</h2></div>
       <span className="fi-toolkit-help">Every tool opens its own evidence.</span>
     </div>
-    <div className="fi-tool-grid">{tools.map(tool => {
-      const Icon = tool.icon;
-      return <button type="button" key={tool.id} className={'fi-tool fi-tool-' + tool.id}
-        aria-label={tool.title} aria-pressed={active === tool.id} aria-controls="flight-intelligence-results"
-        onClick={() => onSelect(tool.id)}>
-        <span className="fi-tool-title"><Icon size={19}/><strong>{tool.title}</strong><ArrowRight size={15}/></span>
-        <span className={'fi-tool-value fi-state-' + tool.state}>{tool.value}</span>
-        <small>{tool.detail}</small>
-      </button>;
-    })}</div>
+    <div className="fi-tool-grid">{tools.map(tool => <IntelligenceCard key={tool.id}
+      tool={INTELLIGENCE_TOOLS.find(item => item.id === tool.id)!} onOpen={() => onSelect(tool.id)}
+      selected={active === tool.id} value={tool.value} detail={tool.detail} state={tool.state} controls="flight-intelligence-results"/>)}</div>
     <div className="fi-context-tools"><span>Explore the area</span>
       <button type="button" aria-pressed={active === 'map'} aria-controls="flight-intelligence-results" onClick={() => onSelect('map')}><Map size={16}/> Route & airport map</button>
       <button type="button" aria-pressed={active === 'aircraft'} aria-controls="flight-intelligence-results" onClick={() => onSelect('aircraft')}><Plane size={16}/> Aircraft nearby</button>

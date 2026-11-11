@@ -22,6 +22,7 @@ import type { Dispatch,SetStateAction } from 'react';
 import { Component,createContext,lazy,Suspense,useContext,useEffect,useMemo,useRef,useState } from 'react';
 import AirportAlertRail from './AirportAlertRail';
 import './AtlasFoundation.css';
+import './IntelligenceNavigation.css';
 import { CANADA_STARTER_AIRPORTS } from './CanadaRegions';
 import { uniqueManagerIds } from './fieldExperience';
 import GlobalFinder from './GlobalFinder';
@@ -47,6 +48,7 @@ import TrainerProfilesEditor from './TrainerProfilesEditor';
 import WorkspaceSetup from './WorkspaceSetup';
 import { workspaceTool } from './workspaceTools';
 import type { WorkspaceTool } from './workspaceTools';
+import { INTELLIGENCE_NAVIGATION_EVENT, openIntelligenceTool } from './intelligenceTools';
 import localUsAtlas from './us-states-10m.json';
 import { api,createNewWorkspace,getShareUrl,initializeWorkspace } from './workspaceApi';
 const AirTravelPage = lazy(() => import('./AirTravel'));
@@ -96,21 +98,22 @@ export function useOp():Context {
   return context;
 }
 // The Atlas is the application's home. Travel remains a separate working tool.
-const MIAMI_NAV=[workspaceTool('atlas'),workspaceTool('travel'),workspaceTool('people'),workspaceTool('calendar')];
+const MIAMI_NAV=[workspaceTool('atlas'),workspaceTool('travel'),workspaceTool('intelligence'),workspaceTool('people'),workspaceTool('calendar')];
 const QUICK_NAV=MIAMI_NAV;
-// Surface existing working tools without changing the four-tab phone navigation.
+// Intelligence is a primary destination on desktop and phone.
 type NavItem=WorkspaceTool;
 const DESKTOP_NAV_GROUPS:Array<{label:string;items:NavItem[]}>=[
-  {label:'PLAN',items:[workspaceTool('atlas'),workspaceTool('travel'),workspaceTool('calendar')]},
+  {label:'PLAN',items:[workspaceTool('atlas'),workspaceTool('travel'),workspaceTool('intelligence'),workspaceTool('calendar')]},
   {label:'TEAM',items:[workspaceTool('people'),workspaceTool('coordinate'),workspaceTool('coaching')]},
   {label:'INSIGHTS',items:[workspaceTool('mission'),workspaceTool('radar'),workspaceTool('booked'),workspaceTool('reports')]},
 ];
-const PRIMARY_NAV_IDS=new Set<Page>(MIAMI_NAV.map(item=>item.page));
+const PRIMARY_NAV_IDS=new Set(MIAMI_NAV.map(item=>item.id));
 const MOBILE_TOOL_GROUPS=DESKTOP_NAV_GROUPS
-  .map(group=>({label:group.label,items:group.items.filter(item=>!PRIMARY_NAV_IDS.has(item.page))}))
+  .map(group=>({label:group.label,items:group.items.filter(item=>!PRIMARY_NAV_IDS.has(item.id))}))
   .filter(group=>group.items.length>0);
 const ADDITIONAL_TOOLS=[workspaceTool('air'),workspaceTool('map'),workspaceTool('data'),workspaceTool('sharing')];
 function isNavItemActive(id:Page,view:Page,planSection:string,peopleSection:string){
+  if(id==='plan')return view==='plan'&&planSection!=='radar';
   if(id==='mission')return view==='mission';
   if(id==='coaching')return view==='people'&&peopleSection==='coaching';
   if(['coordinate','radar','booked','week','trips','air'].includes(id))
@@ -536,7 +539,7 @@ function Product(){
       setPeopleSection(page);
       target='people';
     }else if(page==='plan'){
-      const reselect=view==='plan'&&window.matchMedia('(max-width:900px)').matches;
+      const reselect=planSection==='radar'||(view==='plan'&&window.matchMedia('(max-width:900px)').matches);
       tool=reselect?'start':planSection;
       if(reselect)setPlanSection('start');
     }else if(page==='people'){
@@ -548,7 +551,7 @@ function Product(){
     else if(PRIMARY_PAGES.includes(target))lastPrimaryTab.current=target;
     if(typeof window!=='undefined'){
       if(PRIMARY_PAGES.includes(view))scrollPositions.current.set(view,window.scrollY);
-      restoreScrollFor.current=PRIMARY_PAGES.includes(target)&&
+      restoreScrollFor.current=page!=='radar'&&PRIMARY_PAGES.includes(target)&&
         PRIMARY_PAGES.includes(view)&&target!==view?target:null;
     }
     setView(target);
@@ -582,9 +585,9 @@ function Product(){
     return ()=>window.cancelAnimationFrame(id);
   },[view]);
   useEffect(()=>{
-    const fromHistory=()=>{
+    const fromHistory=(event:Event)=>{
       const destination=initialRoute();
-      restoreScrollFor.current=PRIMARY_PAGES.includes(destination)?destination:null;
+      restoreScrollFor.current=event.type!==INTELLIGENCE_NAVIGATION_EVENT&&PRIMARY_PAGES.includes(destination)?destination:null;
       setView(destination);
       setPlanSection(initialPlanTool());
       setPeopleSection(initialPeopleTool());
@@ -594,7 +597,11 @@ function Product(){
       window.scrollTo(0,0);
     };
     window.addEventListener('popstate',fromHistory);
-    return ()=>window.removeEventListener('popstate',fromHistory);
+    window.addEventListener(INTELLIGENCE_NAVIGATION_EVENT,fromHistory);
+    return ()=>{
+      window.removeEventListener('popstate',fromHistory);
+      window.removeEventListener(INTELLIGENCE_NAVIGATION_EVENT,fromHistory);
+    };
   },[]);
   useEffect(()=>{
     if(!quickAddOpen)return;
@@ -661,7 +668,7 @@ function Product(){
     travelRequest,clearTravelRequest:()=>setTravelRequest(null),atlasJump,jumpToAtlas,startTravel,clearAtlasJump:()=>setAtlasJump(null),selectedManager,setSelectedManager,
     selectedCounty,setSelectedCounty,modal,open,close,atlas,airports,airportSource,
     geo,geoBusy,geoError,busy,error,notice,setError,setNotice,reload,submit,
-  }),[board,user,identity,state,zctaFocus,mapMode,view,activeTrainerId,syncRevision,syncStatus,lastSyncAt,airportCheckedAt,travelRequest,atlasJump,selectedManager,selectedCounty,modal,atlas,airports,airportSource,geo,geoBusy,geoError,busy,error,notice]);
+  }),[board,user,identity,state,zctaFocus,mapMode,view,planSection,peopleSection,activeTrainerId,syncRevision,syncStatus,lastSyncAt,airportCheckedAt,travelRequest,atlasJump,selectedManager,selectedCounty,modal,atlas,airports,airportSource,geo,geoBusy,geoError,busy,error,notice]);
 
 
   return <Store.Provider value={context}>
@@ -698,7 +705,7 @@ function Product(){
                 aria-current={active?'page':undefined}
                 aria-label={item.label}
                 aria-describedby={item.description?'fsa-tool-description-desktop-'+item.id:undefined}
-                title={item.label} onClick={()=>go(item.page)}>
+                title={item.label} onClick={()=>item.id==='radar'?openIntelligenceTool('dna'):go(item.page)}>
                 <Icon size={19}/><span className="fsa-tool-copy">
                   <strong id={'fsa-tool-label-desktop-'+item.id}>{item.label}</strong>
                   <small id={'fsa-tool-description-desktop-'+item.id}>{item.description}</small>
@@ -847,7 +854,7 @@ function Product(){
         <div className="mv-mobile-drawer-head"><span>TOOLS & SETTINGS</span>
           <button onClick={()=>setMenuOpen(false)} aria-label="Close menu"><X size={20}/></button>
         </div>
-        <p className="fsa-drawer-hint">Atlas, Travel, People and Calendar stay in the bottom bar. Related tools are grouped below.</p>
+        <p className="fsa-drawer-hint">Atlas, Travel, Intelligence, People and Calendar stay in the bottom bar. Related tools are grouped below.</p>
         <label className="fsa-mobile-trainer-picker">ACTIVE TRAINER
           <select aria-label="Change active trainer from navigation" value={activeTrainerId}
             onChange={event=>setActiveTrainerId(event.target.value==='trainer_b'?'trainer_b':'trainer_a')}>
@@ -862,7 +869,7 @@ function Product(){
             return <button key={item.id} className={active?'active':''} aria-current={active?'page':undefined}
               aria-label={item.label}
               aria-describedby={'fsa-tool-description-mobile-'+item.id}
-              onClick={()=>go(item.page)}>
+              onClick={()=>item.id==='radar'?openIntelligenceTool('dna'):go(item.page)}>
               <Icon size={18}/><span className="fsa-mobile-tool-copy">
                 <strong id={'fsa-tool-label-mobile-'+item.id}>{item.label}</strong>
               <small id={'fsa-tool-description-mobile-'+item.id}>{item.description}</small>
@@ -938,10 +945,11 @@ function Product(){
       <nav className="mv-bottom-nav ios-tab-bar" aria-label="Primary iPhone tabs">
         {QUICK_NAV.map(item=>{
           const Icon=item.icon;
-          return <button key={item.id} type="button" className={view===item.page?'active':''}
-            aria-label={item.label} aria-current={view===item.page?'page':undefined}
+          const active=isNavItemActive(item.page,view,planSection,peopleSection);
+          return <button key={item.id} type="button" className={active?'active':''}
+            aria-label={item.label} aria-current={active?'page':undefined}
             onClick={()=>go(item.page)}>
-            <span className="ios-tab-icon"><Icon size={22} strokeWidth={view===item.page?2.2:1.85}/></span>
+            <span className="ios-tab-icon"><Icon size={22} strokeWidth={active?2.2:1.85}/></span>
             <span className="ios-tab-label">{item.label}</span>
           </button>;
         })}
