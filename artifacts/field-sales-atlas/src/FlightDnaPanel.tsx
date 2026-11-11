@@ -11,31 +11,13 @@ import { api } from './workspaceApi';
 import OfficialFlightHistory from './OfficialFlightHistory';
 import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 
-type Metric = {
-  basis: 'flight number'|'route'|'airport';
-  label: string;
-  origin: string; destination: string; carrier: string; flightNumber: string;
-  flights: number; onTimePct: number|null; cancelPct: number|null; severePct: number|null;
-  avgArrivalDelay: number|null; medianArrivalDelay: number|null;
-  departureOnTimePct: number|null; periodStart: string; periodEnd: string;
-};
-type Leg = {
-  origin: string; destination: string;
-  match: Metric|null; route: Metric|null; airportBaseline: Metric|null; note: string;
-};
-type Path = {connection: string; legs: Metric[]; index: number; description: string};
-export type DnaResponse = {
-  available: boolean; checkedAt: string; source: string; sourceUrl: string;
-  attribution: string; license: string;
-  period: {start: string; end: string}|null;
-  sources: Array<{name: string; available: boolean; records: number; periodEnd: string}>;
-  legs: Leg[]; alternatePaths: Path[]; alternateArrival: Leg|null;
-  selectedMonth: string;
-  monthly: Array<{month: string; flights: number; onTimePct: number|null; cancelPct: number|null}>;
-  notes: string[];
-};
-export type DnaStatus = 'idle'|'loading'|'ready'|'unavailable'|'error';
+import { flightHistorySchema, type DnaResponse, type DnaStatus } from './FlightHistoryData';
+export type { DnaResponse, DnaStatus } from './FlightHistoryData';
+type Metric = DnaResponse['legs'][number]['match'];
 type Props = {
+  view?: 'dna' | 'connection' | 'alternatives';
+  onEditConnection?: () => void;
+  onEditAlternative?: () => void;
   onOfficialAnalyzed?: (legs: OfficialHistoryLeg[] | null) => void;
   origin: string; destination: string; connection: string;
   alternate: string; connectionMinutes: string;
@@ -92,7 +74,8 @@ function MetricCard({metric,subtitle}:{metric:Metric|null;subtitle:string}) {
 
 export default function FlightDnaPanel({
   origin,destination,connection,alternate,connectionMinutes,onAnalyzed,travelDate,onDateChange,
-  analysisToken=0,initialCarrier='',initialFlightNumber='',onOfficialAnalyzed
+  analysisToken=0,initialCarrier='',initialFlightNumber='',onOfficialAnalyzed,
+  view='dna',onEditConnection,onEditAlternative
 }: Props) {
   const [carrier,setCarrier] = useState(initialCarrier);
   const [flightNumber,setFlightNumber] = useState(initialFlightNumber);
@@ -142,7 +125,9 @@ export default function FlightDnaPanel({
     try {
       const response = await api.get('/api/travel/flight-history?' + params.toString());
       if (token === request.current) {
-        const data=response.data as DnaResponse;
+        const parsed=flightHistorySchema.safeParse(response.data);
+        if(!parsed.success)throw Error('Incomplete independent-history response.');
+        const data=parsed.data;
         setReport(data);
         onAnalyzed?.(data,data.available?'ready':'unavailable',
           data.available?'':'No historical flight dataset is currently available.');
@@ -188,17 +173,19 @@ export default function FlightDnaPanel({
     navigator.clipboard.writeText(content).then(
       () => setCopied(true), () => setCopied(false));
   }
-  return <section className="fd-root" aria-label="Flight DNA historical intelligence">
+  return <section className="fd-root" aria-label={view === 'dna' ? 'Flight DNA historical intelligence' : view === 'connection' ? 'Connection survival scenarios' : 'Alternative route research'}>
     <header className="fd-head">
       <div>
-        <span className="fd-overline"><Database size={16}/> PUBLIC HISTORY · OUR DECISION LOGIC</span>
-        <h2>Flight DNA <span>See the past behind the route.</span></h2>
-        <p>Analyze published, selectively covered historical flight outcomes, compare possible connection corridors, and test your layover margin. This is not a comprehensive nationwide flight database.</p>
+        <span className="fd-overline"><Database size={16}/>{view === 'connection' ? 'YOUR TIMING / EXPLICIT ASSUMPTIONS' : 'PUBLIC HISTORY / SOURCE RECORDS'}</span>
+        <h2>{view === 'dna' ? 'Flight DNA' : view === 'connection' ? 'Connection survival' : 'Alternative routes'}</h2>
+        <p>{view === 'dna' ? 'See the records behind your route: arrival reliability, cancellations, severe delays and reporting coverage. Official records and independent samples stay separate.'
+          : view === 'connection' ? 'See what remains of your layover after a late arrival and your own gate-transfer allowance.'
+          : 'Compare historically documented connecting corridors and a different arrival airport. Schedules and seats still need airline verification.'}</p>
       </div>
       <div className="fd-head-icon"><Activity size={27}/></div>
     </header>
 
-    <div className="fd-controls">
+    {view !== 'connection' && <><div className="fd-controls">
       <label><CalendarDays size={15}/> Travel date
         <input type="date" value={travelDate} onChange={e=>onDateChange(e.target.value)}/>
       </label>
@@ -220,10 +207,11 @@ export default function FlightDnaPanel({
     <p className="fd-intro-warning"><Info size={15}/>
       Use the airline operating the flight, which can differ from the brand on your ticket.
       If you leave it blank, Atlas uses available route or airport history instead.
-    </p>
-    {error && <div className="fd-error" role="alert">{error}</div>}
-    <OfficialFlightHistory origin={origin} destination={destination} connection={connection} carrier={carrier} flightNumber={flightNumber} analysisToken={officialRun.key === sourceKey ? officialRun.run : 0} onAnalyzed={onOfficialAnalyzed}/>
-    {report && !report.available && <div className="fd-error" role="status">
+    </p></>}
+    {view === 'alternatives' && <button type="button" className="fi-inline-action" onClick={onEditAlternative}><Compass size={17}/>{alternate ? 'Change alternative arrival ' + alternate : 'Add an alternative arrival airport'}<ArrowRight size={16}/></button>}
+    {view !== 'connection' && error && <div className="fd-error" role="alert">{error}</div>}
+    <div hidden={view !== 'dna'}><OfficialFlightHistory origin={origin} destination={destination} connection={connection} carrier={carrier} flightNumber={flightNumber} analysisToken={officialRun.key === sourceKey ? officialRun.run : 0} onAnalyzed={onOfficialAnalyzed}/></div>
+    {view !== 'connection' && report && !report.available && <div className="fd-error" role="status">
       <strong>Independent historical aggregates are unavailable.</strong> Check the separate official BTS results above.
       {report.sources.length>0&&<ul>{report.sources.map(source=><li key={source.name}>
         {source.name.replaceAll('-',' ')}: {source.available?'available':'unavailable'}
@@ -231,7 +219,7 @@ export default function FlightDnaPanel({
       Try again later. Current airport and weather checks are separate.
 
     </div>}
-    {report?.available && <div className="fd-results" aria-live="polite">
+    {view !== 'connection' && report?.available && <div className="fd-results" aria-live="polite">
       <div className="fd-results-head">
         <div>
           <span className="fd-overline">HISTORICAL MATCH RESULTS</span>
@@ -244,7 +232,8 @@ export default function FlightDnaPanel({
           {copied?'Copied':'Copy evidence'}
         </button>
       </div>
-      <div className="fd-legs">
+      {view === 'dna' && !report.legs.length && <p className="fd-empty">No matched historical leg was returned for this route. Review the source coverage below; no reliability rate was assigned.</p>}
+      {view === 'dna' && <div className="fd-legs">
         {report.legs.map((leg,i)=><div className="fd-leg" key={leg.origin+'-'+leg.destination+'-'+i}>
           <div className="fd-leg-title">
             <div><span>LEG {i+1}</span><strong>{leg.origin} <ArrowRight size={17}/> {leg.destination}</strong></div>
@@ -265,8 +254,8 @@ export default function FlightDnaPanel({
               <span>Airport-wide completed departures, not a matched itinerary.</span>
             </div>}
         </div>)}
-      </div>
-      {report.alternateArrival?.match &&
+      </div>}
+      {view === 'alternatives' && report.alternateArrival?.match &&
         <div className="fd-alternate-summary">
           <Compass size={21}/>
           <div><span>ALTERNATE ARRIVAL RESEARCH</span>
@@ -275,7 +264,9 @@ export default function FlightDnaPanel({
             <small>{report.alternateArrival.note}</small></div>
           <strong>{readable(report.alternateArrival.match.onTimePct,'%')}</strong>
         </div>}
-      {report.alternatePaths.length > 0 && <section className="fd-paths">
+      {view === 'alternatives' && !report.alternatePaths.length && <p className="fd-empty">No connecting corridor was found in this source's historical coverage. That does not establish that no airline option exists. Verify alternatives with the airline.</p>}
+      {view === 'alternatives' && alternate && !report.alternateArrival?.match && <p className="fd-empty">No matched historical sample for {origin} → {alternate}. No reliability rate was assigned.</p>}
+      {view === 'alternatives' && report.alternatePaths.length > 0 && <section className="fd-paths">
         <div className="fd-section-label">
           <div><span className="fd-overline">OPEN DATA NETWORK SCAN</span>
             <h3>Other connecting hubs worth researching</h3>
@@ -295,7 +286,7 @@ export default function FlightDnaPanel({
         </div>
         <p className="fd-note">* Lowest proxy listed first. The proxy is the largest leg's historical 60+ minute delay percentage plus the largest leg's cancellation percentage. It is an internal comparison heuristic, not a probability or a guarantee of better routing. Actual airline schedules remain unverified.</p>
       </section>}
-      {report.monthly.length > 0 && <section className="fd-months">
+      {view === 'dna' && report.monthly.length > 0 && <section className="fd-months">
         <div className="fd-section-label"><div><span className="fd-overline">AIRPORT TREND · HISTORICAL</span>
           <h3>{origin} monthly departure reliability</h3>
           <p>Recent months across the airport's entire reporting-airline network, not your selected flight or route.</p></div>
@@ -326,20 +317,21 @@ export default function FlightDnaPanel({
       </div>
     </div>}
 
-    {connection && <section className="fd-connection" aria-label="Connection survival scenarios">
+    {view === 'connection' && <section className="fd-connection">
       <div className="fd-section-label">
         <div><span className="fd-overline">LAYOVER ENGINE · YOUR ASSUMPTIONS</span>
-          <h3>How much of your connection survives a delay?</h3>
-          <p>Simple what-if arithmetic using the layover you entered above and your personal gate-transfer allowance.</p></div>
+          <h3>{connection ? 'Your layover at ' + connection : 'Start with your connecting airport'}</h3>
+          <p>{connection ? 'Simple what-if arithmetic using your entered layover of ' + (connectionMinutes || 'an unknown number of') + ' minutes and your gate-transfer allowance.' : 'Add a connecting airport and scheduled layover to calculate your margin. Atlas will not guess either value.'}</p></div>
         <Clock3 size={21}/>
       </div>
-      <div className="fd-buffer-row">
+      <button type="button" className="fi-inline-action" onClick={onEditConnection}><Clock3 size={17}/>{connection ? 'Edit connecting airport & layover' : 'Add connecting airport & layover'}<ArrowRight size={16}/></button>
+      {connection && <div className="fd-buffer-row">
         <span>Allow for terminal / gate transfer</span>
-        <select value={buffer} onChange={e=>setBuffer(Number(e.target.value))}>
+        <select aria-label="Gate-transfer allowance" value={buffer} onChange={e=>setBuffer(Number(e.target.value))}>
           {[25,35,45,60,75].map(value=><option value={value} key={value}>{value} minutes</option>)}
         </select>
         <small>Remembered on this device</small>
-      </div>
+      </div>}
       {transferScenarios.length > 0 ? <div className="fd-scenarios">
         {transferScenarios.map(row=><div key={row.delay} className={row.remaining<0?'failed':row.remaining<15?'tight':'roomy'}>
           <span>Inbound arrives {row.delay} min late</span>
@@ -349,9 +341,9 @@ export default function FlightDnaPanel({
       </div> : <p className="fd-empty">Enter the connecting layover above to see your margin under different delay scenarios.</p>}
       <p className="fd-note">This is not a missed-connection probability. It excludes airline minimum connection rules, boarding-door cutoffs, aircraft and gate movements, separate tickets, immigration and accessibility needs.</p>
     </section>}
-    {!report && !busy && <p className="fd-empty">
-      <Database size={21}/> Enter your actual flight or leave the optional airline fields empty.
-      Atlas will retrieve documented historical records and identify the strongest matching level.
+    {view !== 'connection' && busy && <p className="fd-empty" role="status"><RefreshCw size={18} className="fd-spin"/> Reading independent historical samples. Official records load separately.</p>}
+    {view !== 'connection' && !report && !busy && !error && <p className="fd-empty">
+      <Database size={21}/> {valid ? 'Choose Analyze flight above, or Analyze historical flights to query this route. Optional operating-airline and flight-number filters narrow the match.' : 'Enter your departure and arrival airports above, then choose Analyze flight. Optional airline and flight-number filters can narrow the historical match.'}
     </p>}
   </section>;
 }

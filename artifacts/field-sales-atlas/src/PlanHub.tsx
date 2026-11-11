@@ -27,11 +27,11 @@ export default function PlanHub({section,onSectionChange,onDestination,onCircuit
     workspaceTool('itineraries'),workspaceTool('week'),workspaceTool('coordinate'),
   ];
   return <section className={'fsa-hub fsa-plan-hub'+(section==='radar'?' fs-flight-focused':'')+(section==='start'?' fsa-plan-home':'')} aria-label='Field planning'>
-    {section!=='start'&&<header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>
+    {section!=='start'&&section!=='radar'&&<header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>
       <div className='atlas-hub-lead'><span className='atlas-hub-icon'><Route size={18}/></span>
-        <div><p className='fsa-kicker'>{section==='radar'?'FIELD SALES ATLAS / TRAVEL INTELLIGENCE':'FIELD SALES ATLAS / TRAVEL'}</p>
-        <p className='fsa-hub-guide'>{section==='radar'?'Free FAA, NOAA and historical flight research. No manager or booking required.':'Review your trip plans, itineraries and shared trainer schedules'}</p></div>
-      </div><span className='atlas-hub-online'>{section==='radar'?'PUBLIC SOURCES · NO BOOKING':'SHARED TRAVEL PLANNING'}</span>
+        <div><p className='fsa-kicker'>FIELD SALES ATLAS / TRAVEL</p>
+        <p className='fsa-hub-guide'>Review your trip plans, itineraries and shared trainer schedules</p></div>
+      </div><span className='atlas-hub-online'>SHARED TRAVEL PLANNING</span>
     </header>}
     {section!=='start'&&<div className='atlas-mobile-tool-switch'>
       <button type='button' className='atlas-tool-back' onClick={()=>onSectionChange('start')}>

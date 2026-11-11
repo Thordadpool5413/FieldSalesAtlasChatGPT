@@ -167,7 +167,7 @@ export default function ObservedAircraftPanel({
           {state === 'loading' ? 'Checking…' : 'Check observations'}
         </button>
       </div>
-      <p className="oap-control-note">Analyze flight requests one live snapshot for the selected airport. Use Check observations to refresh; no background polling.</p>
+      <p className="oap-control-note">Opening this tool after an analysis requests one snapshot for the selected airport. Use Check observations to refresh; no background polling.</p>
     </div>
 
     {state === 'idle' && <div className="oap-idle" data-testid="state-aircraft-idle">

@@ -87,12 +87,6 @@
 @media(max-width:640px){.mv-app.atlas-product-v4 .fsa-plan-hub .fsa-hub-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}.mv-app.atlas-product-v4 .fsa-plan-hub .fsa-hub-tabs>button{padding:8px 1px;min-height:61px;min-width:0;gap:4px}.mv-app.atlas-product-v4 .fsa-plan-hub .fsa-hub-tabs strong{font-size:10px;letter-spacing:-.1px}.mv-app .fr-hero{padding:17px;border-radius:13px}.mv-app .fr-hero h1{font-size:29px}.mv-app .fr-card{padding:16px}.mv-app .fr-route-fields{gap:9px}.mv-app .fr-route-fields label{font-size:11px}.mv-app .fr-route-fields input{font-size:17px;padding:9px}.mv-app .fr-builder-bottom{flex-direction:column;align-items:stretch}.mv-app .fr-builder-bottom label{max-width:100%}.mv-app .fr-builder-bottom input{max-width:100%}.mv-app .fr-check-button{width:100%}.mv-app .fr-airport{padding:15px}.mv-app .fr-airport-top{align-items:start}.mv-app .fr-level-pill{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.mv-app .fr-spinning{animation:none!important}}
 
-/* The history query stays mounted so a single Analyze action completes even
-   when its full evidence tables are intentionally collapsed on any viewport. */
-.mv-app.atlas-product-v4 .fr-historical-collapsed {
-  display: none !important;
-}
-
 /* Flight DNA route workspace
    The route composer used to inherit only mobile/density-specific grid rules.
    Give its five direct children an explicit desktop layout and keep the card

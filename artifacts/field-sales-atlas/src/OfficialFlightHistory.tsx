@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { routeHistory } from '../../api-server/src/field-atlas/backend/providers/bts';
+import { officialHistorySchema, type OfficialHistory } from './FlightHistoryData';
 import TravelEvidence from './TravelEvidence';
 import { api } from './workspaceApi';
 
-type History = ReturnType<typeof routeHistory>;
-export type OfficialHistoryLeg = { origin: string; destination: string; result?: History; error?: string };
+export type OfficialHistoryLeg = { origin: string; destination: string; result?: OfficialHistory; error?: string };
 const percent = (value: number | null) => value === null ? 'Insufficient evidence' :
   new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 1 }).format(value);
 
@@ -26,7 +25,11 @@ export default function OfficialFlightHistory({ origin, destination, connection,
       // The supplied operating carrier/number applies only to the first leg.
       if (index === 0 && carrier) params.set('carrier', carrier);
       if (index === 0 && flightNumber) params.set('flightNumber', flightNumber);
-      try { return { origin: from, destination: to, result: (await api.get('/api/travel/history?' + params)).data as History }; }
+      try {
+        const parsed = officialHistorySchema.safeParse((await api.get('/api/travel/history?' + params)).data);
+        return parsed.success ? { origin: from, destination: to, result: parsed.data }
+          : { origin: from, destination: to, error: 'The official-history response is incomplete or incompatible. Restart the API from the current build and retry. No official rate was assigned.' };
+      }
       catch { return { origin: from, destination: to, error: 'Official records could not be read. No rate was assigned.' }; }
     })).then(legs => { if (active) { setState({ key, busy: false, legs }); onAnalyzed?.(legs); } });
     return () => { active = false; };

@@ -60,11 +60,11 @@ function hourLabel(hour:number){
   const time=new Date(2001,0,1,hour);
   return time.toLocaleTimeString('en-US',{hour:'numeric'});
 }
-export default function SecurityHistory({airport}:{airport:string}){
+export default function SecurityHistory({airport,travelDate}:{airport:string;travelDate?:string}){
   const ctx=useOp();
   const personalKey=legacyPersonalKey+'-'+ctx.activeTrainerId;
-  const [selected,setSelected]=useState(validCodes.has(airport)?airport:'MCO');
-  const [date,setDate]=useState(today());
+  const [selected,setSelected]=useState(/^[A-Z]{3}$/.test(airport)?airport:'MCO');
+  const [date,setDate]=useState(travelDate || today());
   const [hour,setHour]=useState(8);
   const [report,setReport]=useState<Report|null>(null);
   const [loading,setLoading]=useState(false);
@@ -77,7 +77,8 @@ export default function SecurityHistory({airport}:{airport:string}){
   const [queue,setQueue]=useState<Queue>('standard');
   const [feedback,setFeedback]=useState('');
   const code=selected;
-  useEffect(()=>{if(validCodes.has(airport))setSelected(airport);},[airport]);
+  useEffect(()=>{if(/^[A-Z]{3}$/.test(airport))setSelected(airport);},[airport]);
+  useEffect(()=>{if(travelDate)setDate(travelDate);},[travelDate]);
   const currentPersonal=useMemo(()=>personal.filter(row=>row.airport===code),[personal,code]);
   const queuePersonal=useMemo(()=>currentPersonal.filter(row=>row.queue===queue),[currentPersonal,queue]);
   useEffect(()=>{setReport(null);setError('');setFeedback('');},[code,date,hour]);
@@ -128,6 +129,7 @@ export default function SecurityHistory({airport}:{airport:string}){
     <div className="sh-query">
       <label>Airport
         <select value={code} onChange={event=>setSelected(event.target.value)}>
+          {!validCodes.has(code)&&<option value={code}>{code} · archive coverage unverified</option>}
           {covered.map(value=><option key={value} value={value}>{value}</option>)}
         </select>
       </label>
@@ -146,9 +148,8 @@ export default function SecurityHistory({airport}:{airport:string}){
     </div>
     {airport&&/^[A-Z]{3}$/.test(airport)&&!validCodes.has(airport)&&
       <p className="sh-note"><Info size={14}/>
-        Your route's departure airport {airport} is not in the lookup selector.
-        The separate {code} query is not a substitute for your actual departure airport.
-        Availability is verified only when the archive returns records.
+        Archive coverage for your route's departure airport {airport} is unverified.
+        A different airport's history cannot establish waits at {airport}. Availability is verified only when the archive returns records.
       </p>}
     {error&&<p className="sh-error" role="alert">{error}</p>}
     {report&&!report.available&&<div className="sh-error sh-empty-source" role="status">

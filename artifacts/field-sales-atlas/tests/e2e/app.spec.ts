@@ -541,7 +541,7 @@ test('data connections display failed checks as unavailable and keep routing est
     await route.fulfill({ json: { ...status, results: [{ airport: 'MCO', checks: [{ evidence, data: null }] }], routingProbe: { roadBased: false, minutes: null, evidence: { ...evidence, id: 'browser-road-fixture', provider: 'Geographic fallback', kind: 'estimate', state: 'partial', limitation: 'A road-network route could not be validated.' } } } });
   });
   await connections.getByRole('button', { name: 'Validate official sources and routing' }).click();
-  await expect(connections.getByText('unavailable', { exact: true })).toBeVisible();
+  await expect(connections.locator('[data-travel-evidence-id="browser-unavailable-fixture"]').getByText('unavailable', { exact: true })).toBeVisible();
   await expect(connections.getByText('A drivable road-network route was not validated. Geographic estimates are provisional.')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-data-connections.png`), fullPage: true, scale: 'css' });
@@ -629,16 +629,18 @@ test('flight intelligence displays source age and stops using expired station ev
   await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
-  await page.getByRole('region', { name: 'Public flight evidence at a glance' }).getByRole('button', { name: 'Details', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Weather risk', exact: true }).click();
   const operations = page.locator('#atlas-airport-operations');
-  await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true }).first()).toBeVisible();
+  await expect(operations.getByText('IFR · 5 kt sustained', { exact: true }).first()).toBeVisible();
+  await page.getByText('How this evidence affects your trip', { exact: true }).click();
   await expect(page.getByRole('region', { name: 'Combined flight decision intelligence' }).getByText('FAA restriction at MCO', { exact: true })).toBeVisible();
-  const source = operations.locator('details').filter({ has: page.locator('summary', { hasText: 'Source evidence, age and limitations' }) }).first();
-  await source.locator('summary').click();
+  const source = operations.locator('.travel-evidence-grid').first();
   await expect(source).toContainText('Under a minute old');
   await page.clock.fastForward(61000);
-  await expect(operations.getByText('NOAA reports instrument flight-rule conditions (IFR)', { exact: true })).toHaveCount(0);
-  await expect(source.locator('.journey-state')).toHaveText(['stale', 'stale']);
+  await expect(operations.getByText('IFR · 5 kt sustained', { exact: true })).toHaveCount(0);
+  await expect(source.locator('.journey-state')).toHaveText(['stale']);
+  await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Airport pressure', exact: true }).click();
+  await expect(operations.getByText('Fixture ground stop', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Combined flight decision intelligence' }).getByText('FAA restriction at MCO', { exact: true })).toHaveCount(0);
 });
 
@@ -675,8 +677,8 @@ test('Canadian weather and official BTS remain usable when independent history f
   await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('YYZ');
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('MCO');
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Flight evidence at a glance', exact: true })).toContainText('Review airport conditions');
-  await page.getByRole('region', { name: 'Public flight evidence at a glance' }).getByRole('button', { name: 'Details', exact: true }).click();
+  await expect(page.locator('.fi-tool-weather')).toContainText('Snow warning — Toronto');
+  await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Weather risk', exact: true }).click();
   const regional = page.getByRole('region', { name: 'Canadian regional weather' });
   await expect(page.getByRole('heading', { name: 'YYZ fixture', exact: true })).toBeVisible();
   await expect(regional).toContainText('ECCC Weather Alerts');
@@ -685,15 +687,16 @@ test('Canadian weather and official BTS remain usable when independent history f
   await expect(regional).toContainText('Snow showers in the Toronto regional forecast.');
   await expect(regional).toContainText('no exact validity timestamps');
   await regional.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-canadian-weather-detail.png`), scale: 'css' });
+  await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Flight DNA', exact: true }).click();
   const official = page.getByRole('region', { name: 'Official BTS route history' });
   await expect(official).toContainText('Insufficient evidence');
   await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-canadian-weather.png`), fullPage: true, scale: 'css' });
   await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
-  await expect(page.locator('.fsc-card-dna')).toContainText('80% observed on-time · BTS');
-  await expect(page.locator('.fsc-card-dna')).toContainText('40 official records');
-  await expect(page.getByRole('region', { name: 'Travel intelligence summary' }).getByRole('link', { name: /Historical performance/ })).toContainText('40 official records');
+  await expect(page.locator('.fi-tool-dna')).toContainText('80% observed on-time · BTS');
+  await expect(page.locator('.fi-tool-dna')).toContainText('40 official records');
+  await expect(official).toContainText('40 eligible arrival outcomes');
   await expect(official).toContainText('2.5%');
   await expect(official).toContainText('2026-08');
   await official.getByText('Official history source, age and limitations', { exact: true }).click();
@@ -776,19 +779,20 @@ test('Flight DNA makes route history, sample size and reporting cutoff visible a
   await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
-  const dnaCard=page.locator('.fsc-card-dna');
+  const dnaCard=page.locator('.fi-tool-dna');
   await expect(dnaCard).toBeVisible();
   await expect(dnaCard).toContainText('84.2% arrived under 15 min late');
-  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('Directional route · 27,428 past flights');
-  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('0.9% cancelled');
-  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('4.1% 60+ min late');
-  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('Historical data through Aug 31, 2026');
-  await dnaCard.click();
+  // The detailed report is visible automatically; no disclosure or card click.
+  const report = page.getByRole('region', { name: 'Flight DNA historical intelligence' });
+  await expect(report).toContainText('27,428 historical flights');
+  await expect(report).toContainText('0.90%');
+  await expect(report).toContainText('4.1%');
+  await expect(report).toContainText('2023-07-01 to 2026-08-31');
   await expect(page.getByRole('region', { name: 'Flight DNA historical intelligence' })).toBeVisible();
   await expect(page.locator('.fd-results')).toContainText('27,428 historical flights');
 });
 
-test('Flight DNA reports historical feed failures in the visible flight brief', async ({ page }) => {
+test('Flight DNA reports independent feed failures beside the visible source results', async ({ page }) => {
   const checkedAt = new Date().toISOString();
   await page.goto('/?page=plan&tool=radar');
   await page.route('**/api/travel/disruptions?*', route => route.fulfill({
@@ -807,10 +811,10 @@ test('Flight DNA reports historical feed failures in the visible flight brief', 
   await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
-  const dnaCard=page.locator('.fsc-card-dna');
+  const dnaCard=page.locator('.fi-tool-dna');
   await expect(dnaCard).toBeVisible();
-  await expect(dnaCard).toContainText('History temporarily unavailable');
-  await expect(dnaCard.getByTestId('flight-history-card-detail')).toContainText('historical source could not be reached');
+  await expect(dnaCard).toContainText('Independent feed unavailable');
+  await expect(page.getByRole('region', { name: 'Flight DNA historical intelligence' })).toContainText('Independent historical data could not be loaded');
 });
 
 test('live ADS-B observations stay separate from airline flight status', async ({ page }) => {
@@ -852,6 +856,8 @@ test('live ADS-B observations stay separate from airline flight status', async (
   await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  expect(liveRequests).toBe(0);
+  await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Aircraft nearby', exact: true }).click();
   const panel = page.getByTestId('observed-aircraft-panel');
   await expect(panel).toBeVisible();
   await expect(panel.getByTestId('text-aircraft-disclaimer')).toContainText('cannot confirm a particular flight’s status');
@@ -886,4 +892,157 @@ test('a failed page module keeps Atlas recovery navigation and saved workspace r
   expect(after.managers).toEqual(before.managers);
   expect(after.visits).toEqual(before.visits);
   expect(after.trips).toEqual(before.trips);
+});
+
+async function flightWorkspaceFixture(page: Page, basis: 'route' | 'airport' = 'route') {
+  const checkedAt = new Date().toISOString();
+  await page.route('**/api/travel/disruptions?*', route => route.fulfill({ json: { available: false, checkedAt, airports: [], message: 'FAA coverage unknown for these airports.' } }));
+  await page.route('**/api/travel/history?*', route => route.fulfill({ json: {
+    state: 'unavailable', coverage: { periods: [] }, summary: null,
+    evidence: { id: 'official-empty', provider: 'U.S. DOT / BTS', subject: 'Fixture route', sourceUrl: 'https://www.transtats.bts.gov/', kind: 'historical', state: 'unavailable', retrievedAt: '', version: 'fixture', scope: 'No installed records.', limitation: 'No official reliability rate assigned.' },
+  } }));
+  await page.route('**/api/travel/flight-history?*', route => {
+    const params = new URL(route.request().url()).searchParams;
+    const origin = params.get('origin')!, destination = params.get('destination')!;
+    const metric = { basis, label: basis === 'airport' ? origin + ' airport network' : origin + ' → ' + destination, origin, destination, carrier: '', flightNumber: '', flights: 120,
+      onTimePct: 81.5, cancelPct: 1.2, severePct: 5.3, avgArrivalDelay: 7, medianArrivalDelay: -2, departureOnTimePct: 80,
+      periodStart: '2026-01-01', periodEnd: '2026-08-31' };
+    return route.fulfill({ json: { available: true, checkedAt, source: 'Fixture aggregate', sourceUrl: 'https://flyerintel.com/data/', attribution: 'Fixture', license: 'CC BY 4.0',
+      period: { start: '2026-01-01', end: '2026-08-31' }, sources: [{ name: 'routes', available: true, records: 120, periodEnd: '2026-08-31' }],
+      legs: [{ origin, destination, match: metric, route: null, airportBaseline: null, note: basis === 'airport' ? 'Airport baseline only; this route is not covered.' : 'Directional route fixture.' }],
+      alternatePaths: [{ connection: 'CLT', legs: [{ ...metric, destination: 'CLT' }, { ...metric, origin: 'CLT' }], index: 6.5, description: 'Historical corridor only' }],
+      alternateArrival: null, selectedMonth: '2026-11', monthly: [], notes: [] } });
+  });
+}
+
+test('intelligence toolkit is upfront and every tool opens a distinct usable view', async ({ page }, info) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await flightWorkspaceFixture(page);
+  await page.goto('/?page=plan&tool=radar');
+  const tools = page.getByRole('navigation', { name: 'Flight intelligence tools' });
+  const composer = page.getByRole('region', { name: 'Flight research route and date' });
+  await expect(page.getByRole('region', { name: 'Flight DNA historical intelligence' })).toBeVisible();
+  await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
+  const workspaceHash = new URL(page.url()).hash;
+  expect((await tools.boundingBox())!.y).toBeLessThan((await composer.boundingBox())!.y);
+  for (const name of ['Flight DNA', 'Airport pressure', 'Weather risk', 'Connection survival', 'Security & airport', 'Alternatives']) {
+    const tool = tools.getByRole('button', { name, exact: true });
+    await expect(tool).toBeVisible();
+    const bounds = (await tool.boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(0);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  }
+  expect(await page.locator('.fi-tool-grid').evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  const dna = page.getByRole('region', { name: 'Flight DNA historical intelligence' });
+  await expect(dna).toContainText('120 historical flights');
+  await expect(dna).toContainText('81.5%');
+  await expect(page.getByText('FAA coverage unknown for these airports.', { exact: true })).toHaveCount(0);
+  await expect(page.getByTestId('observed-aircraft-panel')).toHaveCount(0);
+  await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-intelligence-workspace.png`), fullPage: true });
+  await tools.getByRole('button', { name: 'Airport pressure', exact: true }).click();
+  await expect(page).toHaveURL(/intel=pressure/);
+  await expect(page.getByRole('heading', { name: 'Airport pressure', exact: true })).toBeVisible();
+  await expect(page.getByText('FAA coverage unknown for these airports.', { exact: true })).toBeVisible();
+  await expect(page.locator('#atlas-airport-operations')).not.toContainText('NOAA station weather');
+  await expect(page.getByRole('region', { name: 'Flight intelligence results' })).toBeFocused();
+  await tools.getByRole('button', { name: 'Weather risk', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/intel=weather/);
+  await expect(page.getByRole('heading', { name: 'Weather risk', exact: true })).toBeVisible();
+  await expect(page.locator('#atlas-airport-operations')).not.toContainText('FAA airport events');
+  await tools.getByRole('button', { name: 'Alternatives', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Alternative route research' })).toContainText('MCO → CLT → ATL');
+  await expect(page.getByRole('region', { name: 'Official BTS route history' })).toBeHidden();
+  await page.goBack();
+  await expect(page.getByRole('heading', { name: 'Weather risk', exact: true })).toBeVisible();
+  await page.goForward();
+  await expect(page.getByRole('region', { name: 'Alternative route research' })).toBeVisible();
+  await tools.getByRole('button', { name: 'Security & airport', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Airport checkpoint intelligence' })).toBeVisible();
+  await tools.getByRole('button', { name: 'Route & airport map', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Route & airport map', exact: true })).toBeVisible();
+  await tools.getByRole('button', { name: 'Flight DNA', exact: true }).click();
+  await expect(dna).toContainText('120 historical flights');
+  expect(new URL(page.url()).hash).toBe(workspaceHash);
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('BOS');
+  await expect(dna.locator('.fd-results')).toHaveCount(0);
+  await expect(page.locator('.fi-tool-dna')).not.toContainText('81.5%');
+  await expect(page.locator('vite-error-overlay')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('connection tool edits the shared route and computes explicit transfer scenarios', async ({ page }) => {
+  await flightWorkspaceFixture(page);
+  await page.goto('/?page=plan&tool=radar&intel=connection');
+  const tools = page.getByRole('navigation', { name: 'Flight intelligence tools' });
+  const connection = page.getByRole('region', { name: 'Connection survival scenarios' });
+  await expect(connection).toContainText('Atlas will not guess either value');
+  await connection.getByRole('button', { name: 'Add connecting airport & layover', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Connecting IATA airport code' })).toBeFocused();
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('combobox', { name: 'Connecting IATA airport code' }).fill('CLT');
+  await page.getByRole('spinbutton', { name: 'Connection time in minutes' }).fill('90');
+  await expect(connection).toContainText('45 min spare');
+  await expect(connection).toContainText('15 min short');
+  await connection.getByRole('combobox', { name: 'Gate-transfer allowance' }).selectOption('60');
+  await expect(connection).toContainText('30 min short');
+  await expect(connection).toContainText('not a missed-connection probability');
+  await tools.getByRole('button', { name: 'Alternatives', exact: true }).click();
+  await page.getByRole('button', { name: 'Add an alternative arrival airport', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Alternative IATA airport code' })).toBeFocused();
+});
+
+test('Flight DNA isolates incomplete API responses and can retry without losing the workspace', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await flightWorkspaceFixture(page);
+  await page.route('**/api/travel/history?*', route => route.fulfill({ json: { coverage: { periods: [] }, summary: null, state: 'unavailable' } }));
+  await page.route('**/api/travel/flight-history?*', route => route.fulfill({ json: { available: true, legs: null } }));
+  await page.goto('/?page=plan&tool=radar');
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  const dna = page.getByRole('region', { name: 'Flight DNA historical intelligence' });
+  await expect(dna).toContainText('official-history response is incomplete or incompatible');
+  await expect(dna).toContainText('Independent historical data could not be loaded');
+  await expect(page.getByRole('heading', { name: 'This page couldn’t be displayed.' })).toHaveCount(0);
+  await flightWorkspaceFixture(page);
+  await dna.getByRole('button', { name: 'Analyze historical flights', exact: true }).click();
+  await expect(dna).toContainText('120 historical flights');
+  await expect(dna).not.toContainText('incomplete or incompatible');
+  await expect(dna).not.toContainText('Independent historical data could not be loaded');
+  expect(errors).toEqual([]);
+});
+
+test('security research preserves the actual departure airport and travel date', async ({ page }) => {
+  await page.goto('/?page=plan&tool=radar');
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('YYZ');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('MCO');
+  await page.getByLabel('Travel date for planning and historical context').fill('2026-12-03');
+  await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Security & airport', exact: true }).click();
+  const security = page.getByRole('region', { name: 'Airport checkpoint intelligence' });
+  await expect(security.getByRole('combobox', { name: 'Airport', exact: true })).toHaveValue('YYZ');
+  await expect(security.getByLabel('Airport local date (selects historical weekday)', { exact: true })).toHaveValue('2026-12-03');
+  await expect(security).toContainText("Archive coverage for your route's departure airport YYZ is unverified");
+  await security.getByRole('button', { name: 'Analyze checkpoint history', exact: true }).click();
+  await expect(security).toContainText('No usable checkpoint history returned for YYZ');
+  await expect(security).toContainText('not an estimate of zero minutes');
+});
+
+test('Flight DNA labels airport fallback rates without implying matched route history', async ({ page }) => {
+  await flightWorkspaceFixture(page, 'airport');
+  await page.goto('/?page=plan&tool=radar');
+  await page.getByRole('combobox', { name: 'Departure IATA airport code' }).fill('MCO');
+  await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
+  await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
+  const card = page.locator('.fi-tool-dna');
+  await expect(card).toContainText('81.5% airport-wide baseline');
+  await expect(card.locator('small')).toBeVisible();
+  await expect(card).toContainText('airport baseline, not this route');
+  const report = page.getByRole('region', { name: 'Flight DNA historical intelligence' });
+  await expect(report).toContainText('AIRPORT-LEVEL FALLBACK');
+  await expect(report).toContainText('Airport baseline only; this route is not covered.');
 });

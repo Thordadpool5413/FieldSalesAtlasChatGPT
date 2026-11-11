@@ -1,9 +1,9 @@
 import {
-Activity,AlertTriangle,ArrowRight,CalendarDays,
+Activity,ArrowRight,CalendarDays,
 ChevronDown,Clock3,CloudLightning,
 Compass,ExternalLink,FileText,Info,
 PlaneLanding,PlaneTakeoff,
-Radar,RefreshCw,Route,ShieldAlert,Sparkles,
+Radar,RefreshCw,Route,ShieldAlert,
 TicketCheck,
 Wind
 } from 'lucide-react';
@@ -20,7 +20,9 @@ import type { DnaResponse,DnaStatus } from './FlightDnaPanel';
 import FlightDnaPanel from './FlightDnaPanel';
 import './FlightRadar.css';
 import './FlightRadarForecast.css';
-import FlightShowcase from './FlightShowcase';
+import FlightToolkit, { initialFlightTool, type FlightTool } from './FlightToolkit';
+import FlightNetworkMap from './FlightNetworkMap';
+import './FlightIntelligence.css';
 import ObservedAircraftPanel from './ObservedAircraftPanel';
 import { useOp } from './Operations';
 import type { Airport } from './opsModels';
@@ -237,7 +239,35 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     {...defaultRoute,origin:guardian.origin,destination:guardian.destination}:initiallySaved());
   const [travelDate,setTravelDate]=useState(()=>guardian?.travelDate||today());
   const [showAdvanced,setShowAdvanced]=useState(()=>{const saved=initiallySaved();return !!(saved.connection||saved.alternate||saved.connectionMinutes);});
-  const [mobileDeepOpen,setMobileDeepOpen]=useState(false);
+  const [activeTool, setActiveTool] = useState<FlightTool>(initialFlightTool);
+  const [aircraftOpened, setAircraftOpened] = useState(() => initialFlightTool() === 'aircraft');
+  const resultRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const restoreTool = () => {
+      const tool = initialFlightTool();
+      setActiveTool(tool);
+      if (tool === 'aircraft') setAircraftOpened(true);
+    };
+    window.addEventListener('popstate', restoreTool);
+    return () => window.removeEventListener('popstate', restoreTool);
+  }, []);
+  function selectTool(tool: FlightTool) {
+    setActiveTool(tool);
+    if (tool === 'aircraft') setAircraftOpened(true);
+    if (tool !== activeTool) {
+      const address = new URL(window.location.href);
+      address.searchParams.set('intel', tool);
+      window.history.pushState(window.history.state, '', address.pathname + address.search + address.hash);
+    }
+    requestAnimationFrame(() => {
+      resultRef.current?.focus({ preventScroll: true });
+      resultRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
+  }
+  function editConnection() {
+    setShowAdvanced(true);
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[aria-label="Connecting IATA airport code"]')?.focus());
+  }
   const [savedPlans, setSavedPlans] = useState<TravelPlan[]>([]);
   const [chosenPlan, setChosenPlan] = useState('');
   const [savedError, setSavedError] = useState('');
@@ -252,7 +282,6 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const [officialHistory, setOfficialHistory] = useState<OfficialHistoryLeg[] | null>(null);
   const onOfficialAnalysis = useCallback((legs: OfficialHistoryLeg[] | null) => setOfficialHistory(legs), []);
   const [historyStatus,setHistoryStatus]=useState<DnaStatus>('idle');
-  const [historyError,setHistoryError]=useState('');
   const [faaDeltas, setFaaDeltas] = useState<Record<string, string[]>>({});
   const [researchRun,setResearchRun] = useState(0);
   const [offlineNotice,setOfflineNotice] = useState('');
@@ -260,10 +289,9 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const guardianStarted=useRef(false);
   const originInputRef=useRef<HTMLInputElement>(null);
   const destinationInputRef=useRef<HTMLInputElement>(null);
-  const onHistoricalAnalysis=useCallback((data:DnaResponse|null,status:DnaStatus,message='')=>{
+  const onHistoricalAnalysis=useCallback((data:DnaResponse|null,status:DnaStatus)=>{
     setHistorical(data);
     setHistoryStatus(status);
-    setHistoryError(message);
   },[]);
   const airportIndex = useMemo(() => new Map(ctx.airports.map(a => [a.iata, a])), [ctx.airports]);
   const codes = useMemo(() => [...new Set([
@@ -320,7 +348,6 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     setHistorical(null);
     setOfficialHistory(null);
     setHistoryStatus('idle');
-    setHistoryError('');
     setFaaDeltas({});
     setError('');
     setCopyMessage('');
@@ -369,11 +396,15 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     setError('');
     setAnalysis(null);
     setHistorical(null);
+    setOfficialHistory(null);
     setHistoryStatus('loading');
-    setHistoryError('');
     setCopyMessage('');
     // One tap runs live airport checks and distinct historical sample research.
     setResearchRun(run => run + 1);
+    requestAnimationFrame(() => {
+      resultRef.current?.focus({ preventScroll: true });
+      resultRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    });
     const airports = codes.map(code => ({ code, airport: airportIndex.get(code) }));
     const faaPromise = api.get('/api/travel/disruptions?airports=' + encodeURIComponent(codes.join(',')))
       .then(res => res.data as FaaResult).catch(() => null);
@@ -556,45 +587,18 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     const airport=airportIndex.get(code);
     return /^[A-Z]{3}$/.test(code)?[{code,name:airport?.name||code}]:[];
   }),[codes,airportIndex]);
-  return <main className={'fr-page'+(mobileDeepOpen?' fr-deep-open':' fr-deep-collapsed')}
-    onClickCapture={event=>{
-      if(mobileDeepOpen)return;
-      const target=event.target instanceof Element
-        ?event.target.closest<HTMLAnchorElement>('a[href^="#atlas-"]'):null;
-      const id=target?.getAttribute('href')?.slice(1);
-      if(!id)return;
-      event.preventDefault();
-      setMobileDeepOpen(true);
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        document.getElementById(id)?.scrollIntoView({
-          block:'start',
-          behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
-        });
-      }));
-    }}>
-    <h1 className="fr-mobile-title">Analyze a flight</h1>
-    <header className="fr-hero fs-ref-hero">
-      <div className="fs-photo-plane" aria-hidden="true"/>
-      <div className="fr-hero-copy">
-        <span className="fr-eyebrow"><PlaneTakeoff size={19}/> FIELD SALES ATLAS / AVIATION INTELLIGENCE</span>
-        <h1>Flight <span>Intelligence.</span></h1>
-        <p>Make your next flight decision with more context. Explore
-          historical reliability, FAA operations and aviation weather, with free public sources.</p>
-        <button type="button" className="fs-guardian-launch" onClick={()=>onToolChange?.('booked')}>
-          <TicketCheck size={17}/> Already booked? Import your itinerary <ArrowRight size={16}/>
-        </button>
+  return <section className="fr-page fi-page" aria-label="Flight intelligence workspace">
+    <header className="fi-header">
+      <div><span className="fi-eyebrow"><PlaneTakeoff size={16}/> YOUR TRAVEL INTELLIGENCE</span>
+        <h1>Flight <span>intelligence.</span></h1>
+        <p>Your route. The evidence. A more informed next move.</p>
       </div>
-      <details className="fs-travel-menu">
-        <summary aria-label="Open travel tools"><span>Travel tools</span><ChevronDown size={16}/></summary>
-        <div className="fs-travel-menu-list">
-          <button type="button" onClick={()=>onToolChange?.('booked')}>Import booked flight</button>
-          <button type="button" onClick={()=>onToolChange?.('travel')}>Plan travel</button>
-          <button type="button" onClick={()=>onToolChange?.('trips')}>Saved itineraries</button>
-          <button type="button" onClick={()=>onToolChange?.('week')}>Our week</button>
-          <button type="button" onClick={()=>onToolChange?.('coordinate')}>Two-trainer coordination</button>
-        </div>
-      </details>
+      <button type="button" className="fi-booked-link" onClick={() => onToolChange?.('booked')}>
+        <TicketCheck size={18}/> Already booked? <span>Open your itinerary</span><ArrowRight size={16}/>
+      </button>
     </header>
+    <FlightToolkit active={activeTool} onSelect={selectTool} route={route} current={currentAnalysis}
+      history={historical} historyStatus={historyStatus} officialHistory={officialHistory}/>
     {guardian&&<div className="fr-guardian-handoff" role="status">
       <TicketCheck size={18}/>
       <span>Imported booked flight · {guardian.origin} → {guardian.destination}
@@ -602,7 +606,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         It cannot verify the reservation or live airline flight status.</span>
       <button type="button" onClick={()=>onToolChange?.('booked')}>Back to itinerary</button>
     </div>}
-    <section id="flight-route-composer" className="fr-card fr-builder fs-ref-route" aria-label="Flight research route and date">
+    <section id="flight-route-composer" className="fr-card fr-builder fi-composer" aria-label="Flight research route and date">
       <div className="fs-route-primary">
         <label><span><PlaneTakeoff size={17}/> From <small>(required)</small></span>
           <input type="text" maxLength={3} list="fr-known-airports" placeholder="MCO"
@@ -699,75 +703,64 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         {routeHint}
       </p>}
     </section>
-    {error&&<div className="fr-alert fr-alert-top" role="alert"><AlertTriangle size={18}/>{error}</div>}
-    {analysis&&<section className="fr-quick-result" aria-label="Public flight evidence at a glance" aria-live="polite">
-      <div className="fr-quick-result-icon"><Activity size={18}/></div>
-      <div className="fr-quick-result-copy">
-        <strong>{highlights[0]||'Airport-level source observations are ready to review.'}</strong>
-        <small>{[route.origin,route.connection,route.destination].filter(Boolean).join(' → ')}
-          {' · Checked '+timeLabel(analysis.at)+' · Not airline flight status'}</small>
+    <p className="fi-run-status" role="status">
+      {loading ? 'Checking airport and weather sources. Historical results load separately.' : analysis
+        ? 'Airport checks completed ' + timeLabel(analysis.at) + '. Each source keeps its own coverage and age.'
+        : 'Enter your airports and choose Analyze flight. No booking or manager record is required.'}
+      {' '}Current conditions are checked now; historical records do not forecast your travel date.
+    </p>
+    <section className="fi-results" id="flight-intelligence-results" aria-label="Flight intelligence results" tabIndex={-1} ref={resultRef}>
+      <div className="fi-result-toolbar"><span>{[route.origin, route.connection, route.destination].filter(Boolean).join(' → ') || 'Your flight research'}
+        {valid && ' · ' + travelDate}</span>
+        <button type="button" onClick={() => {
+          const selected = document.querySelector<HTMLButtonElement>('.fi-toolkit button[aria-pressed="true"]');
+          selected?.focus({ preventScroll: true });
+          document.getElementById('flight-intelligence-tools')?.scrollIntoView({ block: 'start' });
+        }}>All intelligence tools ↑</button>
       </div>
-      <button type="button" onClick={()=>{
-        setMobileDeepOpen(true);
-        requestAnimationFrame(()=>requestAnimationFrame(()=>
-          document.getElementById('atlas-deep-research')?.scrollIntoView({
-            block:'start',
-            behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
-          })
-        ));
-      }}>Details <ArrowRight size={15}/></button>
-    </section>}
-    {visibleEvidence&&<FlightShowcase route={route} current={currentAnalysis} history={historical} officialHistory={officialHistory}
-      historyStatus={historyStatus} historyError={historyError} travelDate={travelDate}/>}
-    {visibleEvidence&&aircraftAirports.length>0&&
-      <ObservedAircraftPanel airports={aircraftAirports} autoCheckToken={researchRun}/>}
-    <button type="button" className="fr-mobile-detail-toggle"
-      onClick={()=>setMobileDeepOpen(open=>!open)}
-      aria-expanded={mobileDeepOpen}>
-      <Compass size={16}/>
-      {mobileDeepOpen?'Hide additional research':'Explore historical, security and source details'}
-      <ChevronDown size={16}/>
-    </button>
-    {mobileDeepOpen&&<>
-    <div className="fs-research-title" id="atlas-deep-research">
-      <span>FULL SOURCE RECORDS / DEEP RESEARCH</span>
-      <h2>Explore the evidence.</h2>
-      <p>Full airport observations, historical source samples and transfer assumptions.</p>
-      <div className="fs-evidence-basis"><Info size={16}/>
-        <span>FAA and weather describe conditions at the time of checking, not on your
-          selected travel date. Historical results are limited samples, not flight-specific
-          predictions. Missing or stale sources are never evidence of a clear journey.</span>
+      <div hidden={!['dna', 'connection', 'alternatives'].includes(activeTool)} id="atlas-flight-dna">
+        <FlightDnaPanel origin={route.origin} destination={route.destination}
+          connection={route.connection} alternate={route.alternate} connectionMinutes={route.connectionMinutes}
+          view={activeTool === 'connection' || activeTool === 'alternatives' ? activeTool : 'dna'} onEditConnection={editConnection}
+          onEditAlternative={() => {
+            setShowAdvanced(true);
+            requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[aria-label="Alternative IATA airport code"]')?.focus());
+          }}
+          onAnalyzed={onHistoricalAnalysis} onOfficialAnalyzed={onOfficialAnalysis}
+          analysisToken={researchRun} travelDate={travelDate}
+          initialCarrier={guardian?.carrier || ''} initialFlightNumber={guardian?.flightNumber || ''}
+          onDateChange={value => { invalidateResearch(); setTravelDate(value); }}/>
       </div>
-    </div>
+      {(activeTool === 'pressure' || activeTool === 'weather') && <>
+        <header className="fi-panel-heading"><span className="fi-eyebrow">{activeTool === 'pressure' ? 'FAA / AIRPORT OPERATIONS' : 'NOAA / NWS / ECCC'}</span>
+          <h2>{activeTool === 'pressure' ? 'Airport pressure' : 'Weather risk'}</h2>
+          <p>{activeTool === 'pressure' ? 'Airport-wide operating notices and published runway configuration. Missing FAA entries leave status unknown.'
+            : 'Station observations, published forecasts and regional warnings. Every airport is checked separately.'}</p>
+        </header>
+        {activeTool === 'pressure' && error && <p className="fi-source-gap" role="status"><Info size={18}/>{error}</p>}
     {analysis && <section id="atlas-airport-operations" className="fr-findings" aria-live="polite">
       <div className="fr-results-heading">
         <div><span className="fr-overline">CURRENT AIRPORT-LEVEL EVIDENCE</span>
-          <h2>{[route.origin, route.connection, route.destination].filter(Boolean).join(' → ')}</h2>
+          <h3>{[route.origin, route.connection, route.destination].filter(Boolean).join(' → ')}</h3>
           <p>Checked {timeLabel(analysis.at)}. This is not a live flight-status or booking service.</p></div>
         <button type="button" className="fr-secondary" onClick={() => void copyBrief()}>
           <FileText size={17}/> Copy evidence brief
         </button>
       </div>
       {copyMessage && <p className="fr-note" role="status">{copyMessage}</p>}
-      <div className="fr-insights">
-        <div className="fr-insights-head"><Sparkles size={20}/><div><strong>What deserves your attention</strong>
-          <span>Rules based on returned observations, not invented delay probabilities.</span></div></div>
-        {highlights.map((message, i) => <div key={i} className="fr-insight">
-          <span>{i + 1}</span><p>{message}</p>
-        </div>)}
-      </div>
       <div className="fr-airports">
-        {rows.map(row => <article className={'fr-airport fr-level-' + row.assessment.level} key={row.code}>
+        {rows.map(row => <article className={'fr-airport fr-level-' + (activeTool === 'pressure' && row.faaAvailable ? row.faa?.level : 'unknown')} key={row.code}>
           <div className="fr-airport-top">
             <div><span className="fr-code">{row.code}</span>
               <span className="fr-role">{roleName(route, row.code)}</span></div>
-            <span className={'fr-level-pill fr-pill-' + row.assessment.level}>
-              {row.assessment.level === 'critical' ? 'Immediate review' :
-                row.assessment.level === 'caution' ? 'Conditions to review' :
-                  row.assessment.level === 'none' ? 'No flagged signals' : 'Coverage unknown'}
+            <span className={'fr-level-pill fr-pill-' + (activeTool === 'pressure' && row.faaAvailable ? row.faa?.level : 'unknown')}>
+              {activeTool === 'weather' ? row.aviation?.observation ? 'Station report available' : 'Station report unavailable'
+                : !row.faaAvailable ? 'FAA status unknown' : row.faa?.level === 'critical' ? 'Immediate review'
+                : row.faa?.level === 'caution' ? 'Conditions to review' : 'FAA entry available'}
             </span>
           </div>
           <h3>{row.airportName || row.airport?.name || 'Airport name not mapped'}</h3>
+          {activeTool === 'pressure' && <>
           <div className="fr-evidence">
             <div className="fr-evidence-label"><Activity size={16}/> FAA airport events</div>
             <strong>{row.faaAvailable ? row.faa?.headline ||
@@ -790,6 +783,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
               <p key={index} className="fr-configuration-change">{change}</p>)}
             <small>Change detection compares only this device's previously saved FAA snapshot, not a historical airport capacity model.</small>
           </div>}
+          </>}
+          {activeTool === 'weather' && <>
           <div className="fr-evidence">
             <div className="fr-evidence-label"><Wind size={16}/> NOAA station weather</div>
             {row.aviation?.observation ? <>
@@ -837,19 +832,12 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
               : <strong>{row.outlookIssue}</strong>}
           </div></>}
           {!!row.regional?.length && <RegionalAirportWeather products={row.regional}/>}
-          <details className="fr-unknown"><summary>Source evidence, age and limitations</summary><TravelEvidence evidence={[
-            ...(row.faa?.evidence ? [row.faa.evidence] : []), ...(row.aviation?.evidence || []),
-            ...(row.nws?.evidence ? [row.nws.evidence] : []), ...(row.outlook?.evidence ? [row.outlook.evidence] : []),
-            ...(row.regional || []).map(product => product.evidence)
-          ]}/><small>Missing or expired evidence does not establish current conditions.</small></details>
-          {row.assessment.findings.length > 0 && <div className="fr-findings-list">
-            {row.assessment.findings.map((finding, index) =>
-              <p key={index}><AlertTriangle size={14}/>{finding}</p>)}
-          </div>}
-          {row.assessment.unknowns.length > 0 && <details className="fr-unknown">
-            <summary><Info size={14}/>{row.assessment.unknowns.length} information gap{row.assessment.unknowns.length === 1 ? '' : 's'}</summary>
-            <ul>{row.assessment.unknowns.map((gap, index) => <li key={index}>{gap}</li>)}</ul>
-          </details>}
+          </>}
+          <TravelEvidence evidence={activeTool === 'pressure' ? (row.faa?.evidence ? [row.faa.evidence] : []) : [
+            ...(row.aviation?.evidence || []), ...(row.nws?.evidence ? [row.nws.evidence] : []),
+            ...(row.outlook?.evidence ? [row.outlook.evidence] : []), ...(row.regional || []).map(product => product.evidence)
+          ]}/>
+          <small className="fi-evidence-note">Missing or expired evidence does not establish current conditions.</small>
         </article>)}
       </div>
       <div className="fr-source-list">
@@ -867,35 +855,21 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       <Radar size={28}/><strong>Your first real travel intelligence brief is one check away.</strong>
       <p>Pick the airports involved in your trip. Atlas will request current FAA operating events,
         official aviation conditions and local weather alerts, then explain what warrants attention.</p>
-      <button type="button" onClick={() => ctx.go('air')}>Back to travel planning <ArrowRight size={16}/></button>
+      <button type="button" onClick={() => { originInputRef.current?.focus(); }}>Enter route airports <ArrowRight size={16}/></button>
     </section>}
-    <FlightDecisionBrief route={route} now={currentAnalysis} history={historical} officialHistory={officialHistory}/>
-    </>}
-
-    {/* Keep the historical request lifecycle alive while the detailed UI is
-        collapsed, so one Analyze click queries both sources as advertised. */}
-    <div id="atlas-flight-dna" className={mobileDeepOpen?'':'fr-historical-collapsed'}>
-      <FlightDnaPanel origin={route.origin} destination={route.destination}
-        connection={route.connection} alternate={route.alternate}
-        connectionMinutes={route.connectionMinutes} onAnalyzed={onHistoricalAnalysis} onOfficialAnalyzed={onOfficialAnalysis}
-        analysisToken={researchRun} travelDate={travelDate}
-        initialCarrier={guardian?.carrier||''}
-        initialFlightNumber={guardian?.flightNumber||''}
-        onDateChange={value=>{invalidateResearch();setTravelDate(value);}}/>
-    </div>
-    {mobileDeepOpen&&<>
-    <div id="atlas-security-history">
-      <SecurityHistory key={ctx.activeTrainerId} airport={route.origin}/>
-    </div>
-    <p className="fr-disclaimer">
-      Airport-level analysis only. It does not predict flight cancellations or guarantee connections,
-      gate timing, security lines, fares or alternative seat availability. No booking or purchase actions are provided.
-    </p>
-    <p className="fr-visual-credit">
-      Decorative aviation photography: <a href="https://unsplash.com/photos/kYR73ySq3MQ"
-        target="_blank" rel="noreferrer">Andrés Dallimonti / Unsplash</a>.
-      Photographs represent atmosphere only, never live airport conditions.
-    </p>
-    </>}
-  </main>;
+      </>}
+      <div id="atlas-security-history" hidden={activeTool !== 'security'}>
+        <SecurityHistory key={ctx.activeTrainerId} airport={route.origin} travelDate={travelDate}/>
+      </div>
+      {activeTool === 'map' && <FlightNetworkMap origin={route.origin} connection={route.connection} destination={route.destination} alternate={route.alternate}/>}
+      <div hidden={activeTool !== 'aircraft'}>
+        {aircraftOpened && aircraftAirports.length > 0 ? <ObservedAircraftPanel airports={aircraftAirports} autoCheckToken={activeTool === 'aircraft' ? researchRun : 0}/>
+          : activeTool === 'aircraft' && <div className="fi-empty"><Radar size={26}/><h2>Aircraft nearby</h2><p>Enter a route airport to request a community observation snapshot.</p></div>}
+      </div>
+    </section>
+    {visibleEvidence && <details className="fi-trip-brief"><summary><Compass size={18}/> How this evidence affects your trip <ChevronDown size={16}/></summary>
+      <FlightDecisionBrief route={route} now={currentAnalysis} history={historical} officialHistory={officialHistory}/>
+      <div className="fi-evidence-basis"><Info size={17}/><p>FAA and station observations describe conditions at check time. Historical samples, transfer assumptions and future forecasts have different scopes. Missing data remains unknown.</p></div>
+    </details>}
+  </section>;
 }

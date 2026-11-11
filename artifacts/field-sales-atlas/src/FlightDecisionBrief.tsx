@@ -124,7 +124,7 @@ export default function FlightDecisionBrief({route,now,history,officialHistory}:
       body:'No confirmed FAA airport-level status is available for '+route.connection+'. An omitted airport is not proof that operations are normal.'});
   if(tightConnection)reasons.push({
     kind:'review',title:layover+'-minute scheduled connection',
-    body:'Your layover could leave little room after gate transfer and boarding-door cutoff. Use the connection scenarios below with your own transfer allowance.'
+    body:'Your layover could leave little room after gate transfer and boarding-door cutoff. Open Connection survival and set your own gate-transfer allowance.'
   });
   if(highRate?.match)reasons.push({
     kind:'review',title:'Historically variable leg: '+highRate.origin+' → '+highRate.destination,

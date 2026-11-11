@@ -4,6 +4,10 @@ Audited 2026-11-10 against the active API server and application. The research
 catalog in [AVIATION_DATA_CONNECTIONS.md](AVIATION_DATA_CONNECTIONS.md) describes
 additional work; its entries do not activate providers.
 
+The current tool navigation and source-to-result connections are documented in
+[Flight intelligence workspace](FLIGHT_INTELLIGENCE_WORKSPACE.md). The six core
+tools now open distinct, visible results rather than one hidden research section.
+
 ## Implemented paths
 
 | Data | Active backend / API | Where it is used | Practical limit |
