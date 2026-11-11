@@ -718,6 +718,29 @@ test('Canadian weather and official BTS remain usable when independent history f
   await expect(official).toHaveCount(0);
 });
 
+test('Flight DNA explains required airports instead of disabling Analyze', async ({ page }) => {
+  await page.goto('/?page=plan&tool=radar');
+  const origin=page.getByRole('combobox',{name:'Departure IATA airport code'});
+  const destination=page.getByRole('combobox',{name:'Arrival IATA airport code'});
+  const analyze=page.getByRole('button',{name:'Analyze flight',exact:true});
+
+  await expect(origin).toHaveValue('');
+  await expect(destination).toHaveValue('');
+  await expect(analyze).toBeEnabled();
+  await analyze.click();
+  await expect(page.getByRole('status').filter({
+    hasText:'Enter a three-letter departure and arrival airport code',
+  })).toBeVisible();
+  await expect(origin).toBeFocused();
+
+  await origin.fill('MCO');
+  await destination.fill('ATL');
+  await expect(analyze).toBeEnabled();
+  await expect(page.getByRole('status').filter({
+    hasText:'Enter a three-letter departure and arrival airport code',
+  })).toHaveCount(0);
+});
+
 test('Flight DNA makes route history, sample size and reporting cutoff visible after analysis', async ({ page }) => {
   const checkedAt = new Date().toISOString();
   await page.goto('/?page=plan&tool=radar');
