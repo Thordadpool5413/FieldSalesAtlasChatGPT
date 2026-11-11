@@ -728,17 +728,15 @@ test('Flight DNA explains required airports instead of disabling Analyze', async
   await expect(destination).toHaveValue('');
   await expect(analyze).toBeEnabled();
   await analyze.click();
-  await expect(page.getByRole('status').filter({
-    hasText:'Enter a three-letter departure and arrival airport code',
-  })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText(
+    'Enter a three-letter departure and arrival airport code',
+  );
   await expect(origin).toBeFocused();
 
   await origin.fill('MCO');
   await destination.fill('ATL');
   await expect(analyze).toBeEnabled();
-  await expect(page.getByRole('status').filter({
-    hasText:'Enter a three-letter departure and arrival airport code',
-  })).toHaveCount(0);
+  await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
 test('Flight DNA makes route history, sample size and reporting cutoff visible after analysis', async ({ page }) => {

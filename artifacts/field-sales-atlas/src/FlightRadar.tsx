@@ -627,7 +627,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
             onChange={e=>{invalidateResearch();setTravelDate(e.target.value);}}/>
         </label>
         <button className="fr-check-button" type="button" disabled={loading}
-          aria-describedby="fr-route-guidance"
+          aria-describedby={!valid?'fr-route-guidance':undefined}
           onClick={()=>void analyze()}>
           {loading?<RefreshCw size={17} className="fr-spinning"/>:<Radar size={18}/>}
           {loading?'Checking…':analysis?'Refresh flight brief':'Analyze flight'}
