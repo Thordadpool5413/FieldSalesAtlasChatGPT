@@ -217,3 +217,7 @@ verification also covered all six tool photos and shared connection assumptions.
 Screenshots and live-check receipts are held outside the repository. A historical
 MCO sample succeeded; no claim is made about every airport, live TSA queues,
 airline inventory or the separately published Replit deployment.
+
+## Connected My Trip extension
+
+The saved-plan overview, assistant, optional flight provider, reviewed Google/Outlook delivery, encrypted transfer, measured travel records and background-alert paths are mapped in [CONNECTED_MY_TRIP.md](CONNECTED_MY_TRIP.md). These reuse existing normalized records; no sample data or inferred booking access is introduced. Optional integrations require their configured accounts and live validation as documented in [Connected Trip setup](../operations/CONNECTED_TRIP_SETUP.md).

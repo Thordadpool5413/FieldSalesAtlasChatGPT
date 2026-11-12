@@ -39,7 +39,7 @@ export default function JourneyReadinessController({ plan, revision, names, onSa
     {loading&&<p role="status">Checking the supplied itinerary and saved appointments…</p>}
     {error&&<p className="journey-alert" role="alert">{error}</p>}
     {snapshot&&<><JourneyReadiness report={snapshot.readiness} title="Current journey readiness"/><details className="journey-details"><summary>Evidence used for these margins</summary><TravelEvidence evidence={snapshot.evidence}/></details>
-      <details className="journey-details"><summary>Review transport, equipment and pickup deadlines</summary>
+      <details className="journey-details readiness-arrangements"><summary>Review transport, equipment and pickup deadlines</summary>
         <p>These are your reported arrangements for this plan. A shared car or equipment must be reassessed after a trainer handoff.</p>
         {requirements.trainers.map(item=><fieldset key={item.trainerId}><legend>{names[item.trainerId]||item.trainerId}</legend><div className="journey-fields">
           <label>Ground transport access<select value={item.transport} onChange={event=>update(item.trainerId,{transport:event.target.value as TrainerRequirements['transport']})}><option value="unknown">Not reviewed</option><option value="independent">Independent access arranged</option><option value="shared-arranged">Shared access arranged for this plan</option><option value="shared-needs-review">Shared access unresolved</option></select></label>

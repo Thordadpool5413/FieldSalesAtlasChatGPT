@@ -21,6 +21,10 @@ import { testFixturesEnabled } from './runtime/testFixtures';
 import { zoneAt } from './travel/zones';
 import { zonedInstant } from '../shared/travel/time';
 import { makeTravelRoutes } from './travel/routes';
+import { makeFlightStatusRoutes } from './travel/flightStatusRoutes';
+import { makeCalendarRoutes } from './travel/calendarRoutes';
+import { makeCompanionRoutes } from './travel/companionRoutes';
+import { makeNotificationRoutes } from './travel/notifications';
 import { curatedAirportDirectory, lookupAirports } from './providers/airports';
 import { officialJson } from './providers/evidence';
 import { liveAircraftNearAirport, liveAircraftProductionGate } from './providers/liveAircraft';
@@ -592,6 +596,10 @@ async function travelBoard(workspaceId:string):Promise<ScenarioBoard>{
 }
 export const handler = router({
   ...makeTravelRoutes({workspaceAccess,member,load:travelBoard,tables,extraTables,activityLog}),
+  ...makeCompanionRoutes({workspaceAccess,member,load:travelBoard}),
+  ...makeCalendarRoutes({workspaceAccess,member,load:travelBoard}),
+  ...makeFlightStatusRoutes({workspaceAccess,member,load:travelBoard}),
+  ...makeNotificationRoutes({workspaceAccess,member}),
   ...makeRestoreRoutes({workspaceAccess,member,tables,extraTables}),
 
   'GET /api/_healthcheck': [async () => {

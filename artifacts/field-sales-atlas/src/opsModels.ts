@@ -41,6 +41,7 @@ export type TripStop = {
   lat?: number; lon?: number;
 };
 export type Trip = {
+  scenarioReportId?: string;
   trainerId?: 'trainer_a' | 'trainer_b';
   id: string; title: string; trainer: string; startDate: string; endDate: string;
   arrivalAirport: string; status: 'Planned' | 'Completed' | 'Canceled';

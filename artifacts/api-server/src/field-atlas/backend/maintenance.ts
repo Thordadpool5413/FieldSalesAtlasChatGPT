@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { refreshPublicSourceStatus } from "./index";
 import { refreshAirportReference } from "./providers/airports";
 import { runTravelReviews } from "./travel/watch";
+import { deliverTripNotifications } from './travel/notifications';
 import {
   dailyMaintenanceKey,
   runDurableJob,
@@ -83,7 +84,7 @@ export function runMaintenance() {
         },
       ]);
     const outcomes = await Promise.allSettled([
-      runTravelReviews(),
+      runTravelReviews().then(async()=>{await deliverTripNotifications();}),
       ...jobs.map(([id, work]) => runDurableJob(id, key, work)),
     ]);
     return {

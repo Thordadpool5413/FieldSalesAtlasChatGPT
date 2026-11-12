@@ -306,6 +306,7 @@ function readBookingRecords(key:string):BookedFlight[]{
   }catch{return [];}
 }
 export function readBookedFlights():BookedFlight[]{return readBookingRecords(workspaceDeviceKey(KEY));}
+export const sanitizedBooking = safeFlight;
 export function readEarlierDeviceBookings():BookedFlight[]{return workspaceDeviceKey(KEY)===KEY?[]:readBookingRecords(KEY);}
 export function storeBookedFlights(items:BookedFlight[]):void{
   // Explicit user action only. Raw confirmation emails, PNRs, passenger details,

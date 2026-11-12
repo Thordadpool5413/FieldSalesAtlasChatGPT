@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import type { Page } from './Operations';
 
-export type TravelTool = 'week'|'coordinate'|'travel'|'radar'|'booked'|'trips';
+export type TravelTool = 'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'|'journey';
 
 export type WorkspaceTool = {
   id:string;
@@ -19,6 +19,7 @@ export type WorkspaceTool = {
 export const WORKSPACE_TOOLS:WorkspaceTool[] = [
   {id:'atlas',page:'home',label:'Atlas',description:'Explore territories, managers, and airport locations.',terms:'map geography states',icon:MapIcon},
   {id:'travel',page:'plan',label:'Travel',description:'Review trip plans, flights, and trainer travel options.',terms:'travel booking flight planning',icon:Plane},
+  {id:'journey',page:'journey',travelTool:'journey',label:'My Trip',description:'See both trainers’ itinerary, next actions and readiness.',terms:'trip timeline companion checklist next action',icon:Route},
   {id:'intelligence',page:'radar',label:'Intelligence',description:'Open the flight, airport, weather and connection toolkit.',terms:'aviation intelligence toolkit',icon:Sparkles},
   {id:'people',page:'people',label:'People',description:'Browse manager profiles and territory assignments.',terms:'contacts roster managers',icon:Users},
   {id:'calendar',page:'calendar',label:'Calendar',description:'Review visits and trainer availability.',terms:'appointments agenda schedule',icon:CalendarDays},

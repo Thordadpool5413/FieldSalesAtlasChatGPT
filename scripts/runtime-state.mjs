@@ -12,6 +12,12 @@ export function runtimeConfiguration(env = process.env) {
         : !!env.ATLAS_ROUTING_URL,
     privateBucketConfigured: !!env.ATLAS_BACKUP_BUCKET_ID,
     backupScope: env.ATLAS_BACKUP_SCOPE || null,
+    flightStatusConfigured: !!env.ATLAS_AEROAPI_KEY,
+    flightWorkspacesConfigured: !!env.ATLAS_AEROAPI_WORKSPACE_IDS,
+    flightPollingEnabled: env.ATLAS_FLIGHT_STATUS_POLLING === "enabled",
+    calendarEncryptionConfigured: /^[a-f0-9]{64}$/i.test(env.ATLAS_CONNECTION_ENCRYPTION_KEY || ""),
+    googleCalendarConfigured: !!env.ATLAS_GOOGLE_CLIENT_ID && !!env.ATLAS_GOOGLE_CLIENT_SECRET,
+    microsoftCalendarConfigured: !!env.ATLAS_MICROSOFT_CLIENT_ID && !!env.ATLAS_MICROSOFT_CLIENT_SECRET,
   };
 }
 async function listening(port) {

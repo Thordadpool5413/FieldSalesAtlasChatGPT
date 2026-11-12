@@ -105,3 +105,7 @@ catch-up jobs, optional external scheduling, WAL-safe backups and restore drills
 the web build. `/api/openapi.json` inventories the active routes and access rules.
 Road routing, durable hosting and airline-provider authorization still require
 real deployment configuration; diagnostics keep those limitations explicit.
+
+### Connected My Trip
+
+My Trip brings both trainers’ reviewed flights, saved visits, timing margins, resource checks and next actions into one workspace. The six intelligence tools remain visible. Optional encrypted device transfer, personal measured travel history, reviewed calendar export, provider flight checks, Google/Outlook authorization and opt-in background notifications are described in [Connected Trip setup](docs/operations/CONNECTED_TRIP_SETUP.md). Provider credentials and each person’s calendar authorization are required for live connections; a Git push does not activate or publish them.

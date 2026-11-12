@@ -14,7 +14,7 @@ import type { Manager } from './opsModels';
 import { dateLabel,today } from './opsModels';
 import './TravelCommandHome.css';
 
-type Tool = 'start' | 'week' | 'coordinate' | 'travel' | 'radar' | 'booked' | 'trips';
+type Tool = 'journey' | 'start' | 'week' | 'coordinate' | 'travel' | 'radar' | 'booked' | 'trips';
 type Region = {code:string;name:string;country:'US'|'CA'};
 type Props = {onSectionChange:(tool:Tool)=>void;
   onDestination:(region:Region,manager?:Manager)=>void;
@@ -134,7 +134,7 @@ export default function TravelStart({ onSectionChange,onDestination,onCircuit }:
           <h1>Make the next move count<span className="atlas-page-period" aria-hidden="true">.</span></h1>
           <p className="op-subtitle">Plan the field. Protect the trip. Stay in sync.</p>
         </div>
-        <div className="op-head-actions">
+        <div className="op-head-actions"><button type="button" className="op-btn" onClick={()=>onSectionChange('journey')}>My Trip <ArrowRight size={16}/></button>
           <button type="button" className="op-btn primary" data-testid="button-new-trip"
             onClick={()=>onSectionChange('travel')}>
             New trip <ArrowRight size={16}/>
@@ -147,7 +147,7 @@ export default function TravelStart({ onSectionChange,onDestination,onCircuit }:
       <div className="fao-mobile-journey" aria-label="Your next booked flight or field trip">
         <MobileJourneyPeek
           onBooked={()=>onSectionChange('booked')}
-          onTrip={()=>onSectionChange('trips')}
+          onTrip={()=>onSectionChange('journey')}
         />
       </div>
 

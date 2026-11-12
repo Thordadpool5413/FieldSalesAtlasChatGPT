@@ -10,6 +10,7 @@ import { addMinutes, inZone, zonedInstant } from '../../shared/travel/time';
 import { lookupAirports } from '../providers/airports';
 import { zoneAt } from './zones';
 import type { AssistantAnswer } from '../../shared/travel/intelligence';
+import { answerTripIntent } from './assistantIntents';
 
 export const assistantInput = z.object({ reportId: z.string().min(1).max(100), question: z.string().trim().min(3).max(600),
   deadlineDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), deadlineTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
@@ -21,6 +22,8 @@ export async function answerTravelQuestion(workspaceId: string, request: z.infer
   const workEvidence = workspaceEvidence(board, revision), policy = policyEvidence(context.input);
   const answer: AssistantAnswer = { id: randomUUID(), question: request.question, createdAt: new Date().toISOString(), workspaceRevision: revision,
     verdict: 'unknown', title: 'More evidence is needed to answer this trip question.', claims: [], missing: [], assumptions: [], evidence: [workEvidence, policy], trainers: [], followups: [] };
+  const additional=await answerTripIntent(request.question,context,board,answer);
+  if(additional)return additional;
   const deadline = interpretDeadline(request.question, context.input.startDate, context.input.endDate, request.deadlineDate, request.deadlineTime);
   if (deadline.clarification || !deadline.date || !deadline.time) return { ...answer, verdict: 'clarification', title: deadline.clarification || 'Choose an exact deadline.', followups: ['Set the deadline date and, optionally, a local time below.'] };
   if (deadline.date < context.input.startDate) return { ...answer, verdict: 'clarification', title: 'The return-home deadline precedes the selected field period.', followups: ['Choose a deadline in or after this plan’s field period.'] };

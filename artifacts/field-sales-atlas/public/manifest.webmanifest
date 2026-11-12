@@ -46,10 +46,10 @@
       ]
     },
     {
-      "name": "Travel planning",
-      "short_name": "Travel",
-      "description": "Plan field visits and compare airport routes",
-      "url": "/?page=plan&tool=travel",
+      "name": "My Trip",
+      "short_name": "My Trip",
+      "description": "Both trainers\u2019 itinerary, readiness, next actions and travel updates",
+      "url": "/?page=plan&tool=journey",
       "icons": [
         {
           "src": "/resources/app-icon-192.png",

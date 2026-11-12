@@ -1331,3 +1331,92 @@ test('checkpoint selectors support keyboard selection and malformed data can be 
   expect(errors).toEqual([]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+test('My Trip exposes six tools, both trainers, real next actions, provider setup and a reviewed calendar export',async({page},info)=>{
+  const errors:string[]=[];page.on('pageerror',failure=>errors.push(failure.message));
+  const {key,report}=await savedAirJourney(page);
+  await page.goto('/?page=plan&tool=journey&journeyId='+report.id+'#workspace='+key);
+  const trip=page.getByRole('region',{name:'My Trip workspace'});
+  await expect(page.getByRole('heading',{name:'My Trip.',exact:true})).toBeVisible();
+  await expect(page.locator('.ig-gallery-grid .ig-card')).toHaveCount(6);
+  await expect(page.getByRole('region',{name:'Both trainers’ timing margins'})).toContainText('Taylor');
+  await expect(page.getByRole('region',{name:'Both trainers’ timing margins'})).toContainText('Morgan');
+  await expect(page.getByRole('region',{name:'Shared trip timeline'})).toContainText('AA100');
+  await expect(page.getByRole('region',{name:'Flight-specific provider status'})).toContainText('not connected');
+  await expect(page.getByRole('region',{name:'Calendar connections'})).toContainText('App registration needs setup');
+  await page.locator('.my-trip-checklist li').filter({hasText:'Review Taylor’s transport and equipment'}).first().getByRole('button',{name:'Review',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Save reviewed journey requirements'})).toBeVisible();
+  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export reviewed calendar file'}).click();
+  expect((await download).suggestedFilename()).toBe('field-atlas-trip.ics');
+  await page.getByRole('button',{name:'Ask about this trip'}).click();await expect(page).toHaveURL(/tripView=assistant/);
+  await page.getByRole('button',{name:'What needs confirming?'}).click();
+  await expect(page.getByLabel('Your travel question')).toHaveValue('What still needs confirming?');
+  await page.goBack();await expect(page.getByRole('heading',{name:'My Trip.',exact:true})).toBeVisible();
+  await page.getByText('Your measured travel experience',{exact:true}).click();
+  const experience=page.getByRole('region',{name:'Personal travel experience'});
+  await experience.getByLabel('Measured minutes').fill('23');await experience.getByRole('button',{name:'Save measured time'}).click();
+  await expect(experience).toContainText('At least five measurements');await expect(experience).toContainText('1');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);expect(errors).toEqual([]);
+  await page.screenshot({path:join(tmpdir(),'field-atlas-'+info.project.name+'-my-trip.png'),fullPage:true});
+});
+test('empty My Trip creates no invented itinerary or measurements and preserves an obvious route into the toolkit',async({page})=>{
+  await page.goto('/?page=plan&tool=journey');
+  await expect(page.getByRole('heading',{name:'Connect your first trip'})).toBeVisible();
+  await expect(page.locator('.ig-gallery-grid .ig-card')).toHaveCount(6);
+  await expect(page.getByRole('region',{name:'Shared trip timeline'})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Plan a trip',exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
+
+test('encrypted travel transfer unlocks on a second device only after review and leaves shared appointments intact',async({page,browser,baseURL})=>{
+  const {key,report,flights}=await savedAirJourney(page),url='/?page=plan&tool=journey&journeyId='+report.id+'#workspace='+key;
+  const before=await (await page.request.get('/api/operations?workspaceKey='+key)).json();
+  await page.goto(url);
+  await expect(page.getByRole('heading',{name:'My Trip.',exact:true})).toBeVisible();
+  await page.evaluate(({key,flights})=>localStorage.setItem('atlas-booked-flight-guardian-v1:workspace:'+key,JSON.stringify({version:1,records:[{id:'qa-transfer-booking',trainerId:'trainer_a',verified:true,source:'manual',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),legs:flights.filter((leg:{trainerId:string})=>leg.trainerId==='trainer_a').map((leg:object,index:number)=>({...leg,id:'qa-leg-'+index}))}]})),{key,flights});
+  await page.getByText('Secure transfer between your devices',{exact:true}).click();
+  const sender=page.getByRole('region',{name:'Encrypted travel synchronization'});
+  await sender.getByLabel('Sync passphrase').fill('qa secured travel passphrase');
+  await sender.getByRole('button',{name:'Save encrypted copy',exact:true}).click();
+  await expect(sender).toContainText('Encrypted copy saved.');
+  const device=await browser.newContext({baseURL,viewport:page.viewportSize()||undefined});
+  try {
+    await device.route('**/*',route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
+    const receiver=await device.newPage();await receiver.goto(url);
+    await receiver.getByText('Secure transfer between your devices',{exact:true}).click();
+    const sync=receiver.getByRole('region',{name:'Encrypted travel synchronization'});
+    await sync.getByLabel('Sync passphrase').fill('qa secured travel passphrase');
+    await sync.getByRole('button',{name:'Unlock saved copy',exact:true}).click();
+    await expect(sync.getByRole('heading',{name:'Review what to restore'})).toBeVisible();
+    expect(await receiver.evaluate(key=>localStorage.getItem('atlas-booked-flight-guardian-v1:workspace:'+key),key)).toBeNull();
+    await sync.getByRole('checkbox').first().check();await sync.getByRole('button',{name:'Restore reviewed selections'}).click();
+    await expect(sync).toContainText('Selected records restored on this device.');
+    const stored=await receiver.evaluate(key=>JSON.parse(localStorage.getItem('atlas-booked-flight-guardian-v1:workspace:'+key)||'{}'),key);
+    expect(stored.records).toHaveLength(1);expect(stored.records[0].id).toBe('qa-transfer-booking');
+    const after=await (await page.request.get('/api/operations?workspaceKey='+key)).json();expect(after.visits).toEqual(before.visits);
+  }finally{await device.close();}
+});
+
+test('My Trip reuses the saved flight fields for review and clears its snapshot when the workspace changes',async({page})=>{
+  const {key,report,end}=await savedAirJourney(page);
+  await page.goto('/?page=plan&tool=journey&journeyId='+report.id+'#workspace='+key);
+  await page.getByRole('button',{name:'Review next action'}).click();
+  await expect(page.getByLabel('Operating airline code').first()).toHaveValue('AA');
+  await expect(page.getByLabel('Flight number',{exact:true}).first()).toHaveValue('100');
+  const records=await page.evaluate(key=>JSON.parse(localStorage.getItem('atlas-booked-flight-guardian-v1:workspace:'+key)||'{}').records,key);
+  expect(records).toHaveLength(1);expect(records[0].verified).toBe(false);expect(records[0].legs[0].origin).toBe('MIA');
+  await page.goBack();await expect(page.getByRole('heading',{name:'My Trip.',exact:true})).toBeVisible();
+  await page.getByLabel('Flight used by the intelligence tools').selectOption('trainer_a|MCO|MIA|'+end+'|AA|101');
+  await page.getByRole('region',{name:'Intelligence toolkit',exact:true}).getByRole('button',{name:'Security & airport',exact:true}).click();
+  await expect(page.getByLabel('Departure IATA airport code')).toHaveValue('MCO');
+  await expect(page.getByLabel('Arrival IATA airport code')).toHaveValue('MIA');
+  await expect(page.getByText(/Saved trip flight fields · MCO/)).toBeVisible();
+  await page.getByRole('button',{name:'Back to My Trip',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'My Trip.',exact:true})).toBeVisible();
+  await expect(page.getByLabel('Flight used by the intelligence tools')).toHaveValue('trainer_a|MCO|MIA|'+end+'|AA|101');
+  const other=(await (await page.request.post('/api/guest/create',{data:{}})).json()).workspaceKey;
+  await page.evaluate(other=>{location.hash='workspace='+other;},other);
+  await expect(page.getByRole('heading',{name:'Connect your first trip'})).toBeVisible();
+  await expect(page.getByRole('region',{name:'Shared trip timeline'})).toHaveCount(0);
+  await expect(page.locator('.my-trip')).not.toContainText('AA100');
+});

@@ -1,3 +1,4 @@
+import { flightStatusConfig } from './flightStatus';
 import { existsSync, readFileSync } from 'node:fs';
 import { airportReferenceStatus, lookupAirports } from './airports';
 import { publicAirportEvidence } from './publicTravel';
@@ -33,7 +34,7 @@ export async function connectionStatus() {
       { name: 'ECCC GeoMet', purpose: 'Canadian surface observations', host: 'api.weather.gc.ca', limitation: 'The specific observation collection must pass live schema validation. Canadian warnings and forecasts are separate products.' },
       { name: 'ECCC City Page Weather', purpose: 'Nearest Canadian regional forecast', host: 'api.weather.gc.ca', limitation: 'Named forecast periods do not have exact validity timestamps; not an airport aviation forecast.' },
       { name: 'ECCC Weather Alerts', purpose: 'Active Canadian regional warning polygons', host: 'api.weather.gc.ca', limitation: 'Regional query coverage only; not flight-specific status or nationwide all-clear.' },
-    ], plannedIntegrations: { state: 'design-only', catalog: 'docs/architecture/aviation-connections.json', limitation: 'Research catalog entries are not active providers. Only the adapters and runtime checks listed here are connected.' }, flightStatus: { configured: false, limitation: 'No flight-specific status provider is connected. Reported flight changes are traveler-supplied; airport/weather feeds do not confirm them.' } };
+    ], plannedIntegrations: { state: 'design-only', catalog: 'docs/architecture/aviation-connections.json', limitation: 'Research catalog entries are not active providers. Only the adapters and runtime checks listed here are connected.' }, flightStatus: flightStatusConfig() };
 }
 export async function validateConnections(codes: string[], checkRouting: boolean) {
   const airports = await lookupAirports(codes);

@@ -52,8 +52,8 @@ try {
     },
     {
       component: "Flight-specific status",
-      state: "manual-verification-required",
-      action: report.flightStatus.limitation,
+      state: report.flightStatus.configured ? "configured-needs-flight-check" : "manual-verification-required",
+      action: report.flightStatus.configured ? "Open My Trip and validate an exact operating flight with the configured provider. Key presence is not a successful live check." : report.flightStatus.limitation,
     },
   ];
   const failedWeather = checks.some((check) =>

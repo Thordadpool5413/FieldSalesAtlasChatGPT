@@ -24,3 +24,11 @@ export function interpretDeadline(question: string, startDate: string, endDate: 
   return { date, time: explicitTime || parsedTime || '23:59', assumedEndOfDay: !explicitTime && !parsedTime,
     assumptions: [!explicitDate && weekdays.length ? `“${weekdays[0]}” means ${date} in the selected field period.` : 'The supplied deadline date is used.', 'Deadlines apply in each trainer’s home-airport time zone.'] };
 }
+
+export function tripQuestionIntent(question:string):'readiness'|'delay'|'airports'|'deadline' {
+  const text=question.toLowerCase();
+  if(/\b(delay|delayed|late|lateness)\b/.test(text))return 'delay';
+  if(/\bairports?\b/.test(text)&&/\b(compare|closest|best|less driving|least driving|driving)\b/.test(text))return 'airports';
+  if(/\b(ready|readiness|confirm|confirming|missing|checklist)\b|what.*(?:still need|need to do)/.test(text))return 'readiness';
+  return 'deadline';
+}

@@ -215,7 +215,7 @@ function roleName(route: RouteEntry, code: string) {
   return parts.join(' · ');
 }
 
-type GuardianHandoff={origin:string;destination:string;travelDate:string;carrier:string;flightNumber:string;workspace?:string};
+type GuardianHandoff={origin:string;destination:string;travelDate:string;carrier:string;flightNumber:string;workspace?:string;source?:'saved-plan'};
 function readGuardianHandoff():GuardianHandoff|null{
   try{
     const raw=sessionStorage.getItem('atlas-guardian-research-v1');
@@ -225,10 +225,10 @@ function readGuardianHandoff():GuardianHandoff|null{
     if(!/^[A-Z]{3}$/.test(data.origin||'')||!/^[A-Z]{3}$/.test(data.destination||'')||
       !/^20\d{2}-\d{2}-\d{2}$/.test(data.travelDate||''))return null;
     return {origin:data.origin!,destination:data.destination!,travelDate:data.travelDate!,
-      carrier:String(data.carrier||'').slice(0,2),flightNumber:String(data.flightNumber||'').slice(0,4)};
+      carrier:String(data.carrier||'').slice(0,2),flightNumber:String(data.flightNumber||'').slice(0,4),source:data.source==='saved-plan'?'saved-plan':undefined};
   }catch{return null;}
 }
-export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'travel'|'trips'|'week'|'coordinate'|'booked')=>void}) {
+export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'travel'|'trips'|'week'|'coordinate'|'booked'|'journey')=>void}) {
   const ctx = useOp();
   const [guardian]=useState<GuardianHandoff|null>(readGuardianHandoff);
   const [route, setRoute] = useState<RouteEntry>(()=>guardian?
@@ -627,10 +627,10 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       history={historical} historyStatus={historyStatus} officialHistory={officialHistory}/>
     {guardian&&<div className="fr-guardian-handoff" role="status">
       <TicketCheck size={18}/>
-      <span>Imported booked flight · {guardian.origin} → {guardian.destination}
+      <span>{guardian.source==='saved-plan'?'Saved trip flight fields':'Imported booked flight'} · {guardian.origin} → {guardian.destination}
         {' · '+guardian.travelDate}. Atlas is checking public aviation evidence.
         It cannot verify the reservation or live airline flight status.</span>
-      <button type="button" onClick={()=>onToolChange?.('booked')}>Back to itinerary</button>
+      <button type="button" onClick={()=>onToolChange?.(guardian.source==='saved-plan'?'journey':'booked')}>{guardian.source==='saved-plan'?'Back to My Trip':'Back to itinerary'}</button>
     </div>}
     <section id="flight-route-composer" className="fr-card fr-builder fi-composer" aria-label="Flight research route and date" ref={routeFormRef} tabIndex={-1} data-route-valid={valid}>
       <div className="fs-route-primary">

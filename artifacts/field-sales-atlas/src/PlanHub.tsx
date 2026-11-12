@@ -4,6 +4,7 @@ import { TripsPage } from './OperationsTrip';
 import { CoachingPage,ManagersPage } from './OperationsViews';
 import type { Manager } from './opsModels';
 import TravelStart from './TravelStart';
+import './PlanHub.css';
 import { workspaceTool } from './workspaceTools';
 import type { TravelTool } from './workspaceTools';
 const TripPlanningExperience = lazy(() => import('./TripPlanningExperience'));
@@ -11,6 +12,7 @@ const TwoTrainerWeek = lazy(() => import('./TwoTrainerWeek'));
 const TrainerCoordination = lazy(() => import('./TrainerCoordination'));
 const FlightRadar = lazy(() => import('./FlightRadar'));
 const FlightGuardian = lazy(() => import('./FlightGuardian'));
+const MyTrip = lazy(() => import('./MyTrip'));
 
 type Region = { code:string; name:string; country:'US'|'CA' };
 type Tab = 'start'|TravelTool;
@@ -23,11 +25,11 @@ type Props = {
 
 export default function PlanHub({section,onSectionChange,onDestination,onCircuit}:Props){
   const sections=[
-    {...workspaceTool('intelligence'),travelTool:'radar' as const},workspaceTool('booked'),workspaceTool('air'),
+    workspaceTool('journey'),{...workspaceTool('intelligence'),travelTool:'radar' as const},workspaceTool('booked'),workspaceTool('air'),
     workspaceTool('itineraries'),workspaceTool('week'),workspaceTool('coordinate'),
   ];
   return <section className={'fsa-hub fsa-plan-hub'+(section==='radar'?' fs-flight-focused':'')+(section==='start'?' fsa-plan-home':'')} aria-label='Field planning'>
-    {section!=='start'&&section!=='radar'&&<header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>
+    {section!=='start'&&section!=='radar'&&section!=='journey'&&<header className='fsa-hub-head fsa-hub-head-compact atlas-hub-banner'>
       <div className='atlas-hub-lead'><span className='atlas-hub-icon'><Route size={18}/></span>
         <div><p className='fsa-kicker'>FIELD SALES ATLAS / TRAVEL</p>
         <p className='fsa-hub-guide'>Review your trip plans, itineraries and shared trainer schedules</p></div>
@@ -69,6 +71,7 @@ export default function PlanHub({section,onSectionChange,onDestination,onCircuit
       </>}
       {section==='coordinate'&&<TrainerCoordination onDestination={onDestination} onCircuit={onCircuit}/>}
       {section==='travel'&&<TripPlanningExperience/>}
+      {section==='journey'&&<MyTrip onTool={onSectionChange}/>}
       {section==='radar'&&<FlightRadar onToolChange={onSectionChange}/>}
       {section==='booked'&&<Suspense fallback={<div className='op-alert'>Opening your flight importer…</div>}>
         <FlightGuardian onResearch={()=>onSectionChange('radar')}

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Connect your travel services · Field Sales Atlas</title
+  ><style>
+    body {
+      margin: 0;
+      background: #091525;
+      color: #e5eff9;
+      font:
+        16px/1.7 system-ui,
+        sans-serif;
+    }
+    main {
+      max-width: 850px;
+      margin: auto;
+      padding: 48px 24px;
+    }
+    h1 {
+      font-size: clamp(32px, 6vw, 46px);
+      line-height: 1.15;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+    a {
+      color: #50dfe6;
+    }
+    code {
+      background: #152a40;
+      padding: 3px 6px;
+      border-radius: 5px;
+      overflow-wrap: anywhere;
+    }
+    li {
+      margin: 12px 0;
+    }
+    p {
+      color: #b4c6da;
+    }
+    strong {
+      color: #e5eff9;
+    }
+    aside {
+      border-left: 3px solid #f84f9a;
+      padding: 10px 20px;
+      background: #11253a;
+    }
+    footer {
+      border-top: 1px solid #314359;
+      margin-top: 40px;
+      padding-top: 24px;
+    }
+  </style>
+  <main>
+    <a href="/?page=plan&amp;tool=journey">← Return to the app</a>
+    <h1>Connect the services you choose.</h1>
+    <p>
+      The shared trip view and public evidence work without these accounts.
+      Flight status and direct calendar updates need an authorized provider
+      connection.
+    </p>
+    <aside>
+      Put credentials in <strong>Replit Secrets</strong>, never in chat or
+      source files. Development and published runtimes need their own intended
+      settings. Restart one app instance after changing Secrets.
+    </aside>
+    <h2>Flight-specific status</h2>
+    <ol>
+      <li>
+        Create an authorized
+        <a
+          href="https://www.flightaware.com/aeroapi/"
+          target="_blank"
+          rel="noreferrer"
+          >FlightAware AeroAPI account</a
+        >. Review coverage, limits and pricing.
+      </li>
+      <li>
+        Set <code>ATLAS_AEROAPI_KEY</code> in Secrets. Set
+        <code>ATLAS_AEROAPI_WORKSPACE_IDS</code> to the approved workspace ID
+        shown in My Trip’s provider setup details. This restricts paid usage to
+        the intended workspace.
+      </li>
+      <li>
+        To permit optional background checks, set
+        <code>ATLAS_FLIGHT_STATUS_POLLING=enabled</code>. Then opt the trip into
+        flight monitoring inside My Trip. Configure and verify the maintenance
+        schedule.
+      </li>
+      <li>
+        Attach reviewed operating-flight fields and run an exact-instance check.
+        Confirmation numbers alone cannot retrieve reservations. Review any
+        supplied change before recovery analysis.
+      </li>
+    </ol>
+    <h2>Google and Outlook calendars</h2>
+    <ol>
+      <li>Set <code>ATLAS_PUBLIC_URL</code> to your HTTPS app origin.</li>
+      <li>
+        Set <code>ATLAS_CONNECTION_ENCRYPTION_KEY</code> to 64 securely
+        generated random hexadecimal characters. Retain it in a password
+        manager; changing it requires reconnecting calendars.
+      </li>
+      <li>
+        Register a Google OAuth web client with the Calendar API enabled. Set
+        <code>ATLAS_GOOGLE_CLIENT_ID</code> and
+        <code>ATLAS_GOOGLE_CLIENT_SECRET</code>. Add redirect URI
+        <code
+          >https://field-sales-atlas.replit.app/api/travel/calendar/oauth/google/callback</code
+        >.
+      </li>
+      <li>
+        Register a Microsoft Entra web app with delegated
+        <code>Calendars.ReadWrite</code> permission and suitable account types.
+        Set <code>ATLAS_MICROSOFT_CLIENT_ID</code> and
+        <code>ATLAS_MICROSOFT_CLIENT_SECRET</code>. Add redirect URI
+        <code
+          >https://field-sales-atlas.replit.app/api/travel/calendar/oauth/microsoft/callback</code
+        >.
+      </li>
+      <li>
+        In My Trip, choose your own trainer seat, connect your primary calendar,
+        and sign in with the provider. Each trainer authorizes separately.
+        Review every proposed event before applying changes.
+      </li>
+    </ol>
+    <p>
+      Atlas stores calendar tokens encrypted. It does not send invitations,
+      delete external appointments, or automatically rebook flights. Existing
+      exported events remain after disconnecting; revoke the grant in your
+      provider account as well.
+    </p>
+    <h2>Background notifications</h2>
+    <p>
+      Use the current installed web app and enable notifications on your
+      personal device. Opt the trip into monitoring, choose quiet hours if
+      needed, and verify a delivered maintenance run. Updates remain in the app
+      if push is unavailable. Notification payloads contain a generic prompt,
+      with no itinerary or workspace access key.
+    </p>
+    <footer>
+      <a
+        href="https://github.com/Thordadpool5413/FieldSalesAtlasChatGPT/blob/main/docs/operations/CONNECTED_TRIP_SETUP.md"
+        target="_blank"
+        rel="noreferrer"
+        >Full setup and validation instructions →</a
+      >
+      <p>
+        A connection marked “configured” still needs a successful real account
+        request. Git synchronization and publishing are separate steps.
+      </p>
+    </footer>
+  </main>
+</html>

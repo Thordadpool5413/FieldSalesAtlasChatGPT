@@ -38,10 +38,10 @@ function FlightFields({ value, onChange, prefix, trainers }: { value: FlightInpu
   </div><p>Dates and times are local to each airport. Time zones are resolved from the airport reference; ambiguous clock-change times require correction.</p></fieldset>;
 }
 
-export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; onBack: () => void }) {
+export default function TravelIntelligenceDesk({ mode, onBack, initialPlanId }: { mode: Mode; onBack: () => void; initialPlanId?:string }) {
   const ctx = useOp();
   const [bookingSelection,setBookingSelection]=useState<Record<string,string>>({});
-  const [plans, setPlans] = useState<PlanSummary[]>([]), [planId, setPlanId] = useState(''), [loading, setLoading] = useState(true);
+  const [plans, setPlans] = useState<PlanSummary[]>([]), [planId, setPlanId] = useState(initialPlanId||''), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
   const [question, setQuestion] = useState('');
   const [deadlineDate, setDeadlineDate] = useState(''), [deadlineTime, setDeadlineTime] = useState('');
@@ -122,7 +122,8 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
       {plan&&mode!=='connections'&&<JourneyReadinessController plan={plan} revision={ctx.board.revision} names={Object.fromEntries(ctx.trainerProfiles.map(profile=>[profile.id,profile.name]))} onSaved={async()=>{await loadPlans(plan.id);await ctx.reload();}}/>}
       {mode === 'assistant' && <>
         <form onSubmit={event => { event.preventDefault(); if (!plan) return; void action(async () => { const result = await api.post('/api/travel/assistant', { reportId: plan.id, question, allowHandoffs: handoffs, ...(deadlineDate ? { deadlineDate } : {}), ...(deadlineTime ? { deadlineTime } : {}) }); setAnswer(result.data); }); }}>
-          <label className="travel-question-label">Your travel question<textarea required maxLength={600} rows={3} placeholder="Ask when you can finish the saved visits and return home." value={question} onChange={event => setQuestion(event.target.value)}/></label><p className="travel-question-help">Ask about finishing visits and returning home by a weekday or date. An answer proposes no calendar or booking changes.</p>
+          <label className="travel-question-label">Your travel question<textarea required maxLength={600} rows={3} placeholder="Ask when you can finish the saved visits and return home." value={question} onChange={event => setQuestion(event.target.value)}/></label><p className="travel-question-help">Ask what needs confirming, compare airports by driving, test one delay duration, or check a return-home deadline. Answers use saved records and calculations; they do not book or reschedule anything.</p>
+          <div className="my-trip-actions"><button className="op-btn" type="button" onClick={()=>setQuestion('What still needs confirming?')}>What needs confirming?</button><button className="op-btn" type="button" onClick={()=>setQuestion('Which airport means less driving?')}>Compare airport driving</button><button className="op-btn" type="button" onClick={()=>setQuestion('What if we are delayed 30 minutes?')}>Compare a 30-minute delay</button></div>
           {plan&&<button className="op-btn" type="button" onClick={()=>setQuestion('Can we finish these visits and get home by '+plan.endDate+'?')}>Check the return date in this plan · {plan.endDate}</button>}
           <details className="journey-details"><summary>Set an exact deadline</summary><div className="journey-fields"><label>Return-home deadline date<input type="date" value={deadlineDate} onChange={event => setDeadlineDate(event.target.value)}/></label><label>Deadline time at each home airport<input type="time" value={deadlineTime} onChange={event => setDeadlineTime(event.target.value)}/></label></div><p>Without a requested clock time, the calculation uses 23:59 in each home-airport time zone.</p></details>
           <label className="journey-check"><input type="checkbox" checked={handoffs} onChange={event => setHandoffs(event.target.checked)}/> Consider sharing visits between trainers</label>

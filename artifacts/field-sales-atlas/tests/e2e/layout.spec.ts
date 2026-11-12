@@ -327,6 +327,7 @@ test('tool purpose copy stays the same in desktop, phone, search and Travel tabs
     { label: 'Itineraries', description: 'Review saved trip plans.' },
     { label: 'Our Week', description: 'See the team’s weekly schedule.' },
     { label: 'Coordinate trainers', description: 'Balance trainer coverage and find better visit options.' },
+    { label: 'My Trip', description: 'See both trainers’ itinerary, next actions and readiness.' },
   ];
 
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -345,8 +346,8 @@ test('tool purpose copy stays the same in desktop, phone, search and Travel tabs
   await expect(planner.locator('small')).toHaveText(travelTools[2].description);
 
   const tabs = page.getByRole('tablist', { name: 'Planning tools' });
-  for (const [index, item] of travelTools.entries()) {
-    const tab = tabs.getByRole('tab').nth(index);
+  for (const item of travelTools) {
+    const tab = tabs.getByRole('tab').filter({has:page.getByText(item.label,{exact:true})});
     await expect(tab.locator('strong')).toHaveText(item.label);
     await expect(tab.locator('small')).toHaveText(item.description);
   }

@@ -105,6 +105,10 @@ test("runtime inspection separates service, configuration, source-edit and build
       !JSON.stringify(mismatch).includes("synthetic-secret-not-for-logs"),
     );
     servedProxyApi = undefined;
+    const secretChange=await inspectRuntime(root,{...env,ATLAS_AEROAPI_KEY:"new-secret-not-for-output"});
+    assert.equal(secretChange.state,"configuration-mismatch");
+    assert.ok(secretChange.configurationDifferences.includes("api.flightStatusConfigured"));
+    assert.equal(JSON.stringify(secretChange).includes("new-secret-not-for-output"),false);
     healthReady = false;
     assert.equal((await inspectRuntime(root, env)).state, "not-ready");
     healthReady = true;

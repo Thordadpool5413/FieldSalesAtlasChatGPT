@@ -27,3 +27,19 @@ export function selectedBookingFlights(bookings: BookedFlight[], selection: Reco
       ...(booking.updatedAt && Number.isFinite(Date.parse(booking.updatedAt)) ? {providedAt:booking.updatedAt} : {})};
   }));
 }
+
+// Reuse saved planning fields without treating them as a reviewed reservation.
+export function bookingForSavedFlights(trainerId:'trainer_a'|'trainer_b',flights:FlightInput[],bookings:BookedFlight[]):BookedFlight {
+  const own=flights.filter(flight=>flight.trainerId===trainerId);
+  if(!own.length)throw Error('No flight fields are saved for this trainer. Import an itinerary first.');
+  const shape=(leg:FlightInput|BookedFlight['legs'][number])=>[leg.carrier,leg.flightNumber,leg.origin,leg.destination,leg.departDate,leg.departTime,leg.arriveDate,leg.arriveTime,leg.departureZone||'',leg.arrivalZone||'',leg.connection||null];
+  const fingerprint=JSON.stringify(own.map(shape));
+  const found=bookings.find(booking=>booking.trainerId===trainerId&&JSON.stringify(booking.legs.map(shape))===fingerprint);
+  if(found)return found;
+  if(bookings.length>=30)throw Error('This device already holds 30 itineraries. Review and remove an old local copy before creating another; existing records were preserved.');
+  const legs=own.map(flight=>({id:crypto.randomUUID(),carrier:flight.carrier,flightNumber:flight.flightNumber,origin:flight.origin,destination:flight.destination,
+    departDate:flight.departDate,departTime:flight.departTime,arriveDate:flight.arriveDate,arriveTime:flight.arriveTime,departureZone:flight.departureZone,arrivalZone:flight.arrivalZone,connection:flight.connection?{...flight.connection}:undefined}));
+  if(!itineraryValid(legs))throw Error('Review the saved leg order, dates and time zones before opening this itinerary.');
+  const now=new Date().toISOString();
+  return {id:crypto.randomUUID(),trainerId,legs,verified:false,review:undefined,source:'manual',createdAt:now,updatedAt:now,revision:1,changes:[]};
+}

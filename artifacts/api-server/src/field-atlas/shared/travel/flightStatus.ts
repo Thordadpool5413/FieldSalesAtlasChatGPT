@@ -1,0 +1,21 @@
+import type { Evidence, FlightInput } from "./types";
+export type FlightSnapshot = {
+  id: string;
+  leg: FlightInput;
+  state: "matched" | "unknown" | "unavailable";
+  status: string;
+  canceled?: boolean;
+  scheduledDeparture?: string;
+  scheduledArrival?: string;
+  estimatedDeparture?: string;
+  estimatedArrival?: string;
+  actualDeparture?: string;
+  actualArrival?: string;
+  gate?: string;
+  arrivalGate?: string;
+  terminal?: string;
+  arrivalTerminal?: string;
+  providerFlightId?: string;
+  evidence: Evidence;
+  replacement?: FlightInput;
+};

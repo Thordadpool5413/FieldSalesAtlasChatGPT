@@ -1,8 +1,8 @@
-/* Field Sales Atlas PWA v16. Generic application shell may be cached offline.
+/* Field Sales Atlas PWA v17. Generic application shell may be cached offline.
  * Never cache API responses, workspace keys, auth records or personal data.
  * Updates remain user-approved to protect unsaved forms.
  */
-const CACHE_NAME='field-sales-atlas-static-v16';
+const CACHE_NAME='field-sales-atlas-static-v17';
 const PREFIX='field-sales-atlas-static-';
 const OFFLINE='/offline.html';
 const APP_SHELL='/';
@@ -82,4 +82,24 @@ self.addEventListener('fetch',(event)=>{
    return response;
   }catch{return saved||Response.error();}
  })());
+});
+
+
+self.addEventListener('message', event => {
+ if(event.data?.type==='ATLAS_PUSH_CAPABILITY' && event.ports?.[0])event.ports[0].postMessage({tripPush:1});
+});
+self.addEventListener('push', event => {
+ let data;try{data=event.data?.json();}catch{return;}
+ if(!data || typeof data.workspaceId!=='string' || typeof data.reportId!=='string' || typeof data.noticeId!=='string')return;
+ event.waitUntil(self.registration.showNotification('Field Sales Atlas', {
+  body:'Your trip has an update. Open the app to review the latest evidence.',
+  icon:'/resources/app-icon-192.png', tag:'atlas-trip-'+data.noticeId,
+  data:{workspaceId:data.workspaceId,reportId:data.reportId}
+ }));
+});
+self.addEventListener('notificationclick', event => {
+ event.notification.close();const data=event.notification.data||{};
+ if(typeof data.workspaceId!=='string'||typeof data.reportId!=='string')return;
+ const query=new URLSearchParams({page:'plan',tool:'journey',journeyId:data.reportId,notificationWorkspace:data.workspaceId});
+ event.waitUntil(self.clients.openWindow('/?'+query.toString()));
 });

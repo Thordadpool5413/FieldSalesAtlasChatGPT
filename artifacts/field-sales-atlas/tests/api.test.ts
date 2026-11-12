@@ -1219,3 +1219,139 @@ test('aircraft API preserves unknown numbers and rejects unknown or old position
     if (previousMode === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previousMode;
   }
 });
+
+test('My Trip connects both trainers, routes resource gaps to review, scopes results and keeps monitoring idempotent',async()=>{
+  const {key,report,board,flights}=await approvedAirPlan(),path='/api/travel/journeys/'+report.id;
+  const opened=await request('GET',path+'/workspace',key);assert.equal(opened.status,200,JSON.stringify(opened.data));
+  assert.equal(opened.data.readiness.trainers.length,2);assert.equal(opened.data.timeline.filter((row:{kind:string})=>row.kind==='flight').length,4);
+  assert.equal(opened.data.timeline.find((row:{kind:string})=>row.kind==='flight').localDate,flights[0].departDate);
+  assert.ok(opened.data.actions.filter((row:{id:string})=>row.id.startsWith('requirements-')).every((row:{destination:string})=>row.destination==='requirements'));
+  const other=await request('GET',path+'/workspace',await workspace());assert.notEqual(other.status,200);assert.equal(JSON.stringify(other.data).includes('Taylor'),false);
+  const body={enabled:true,expectedWorkspaceRevision:opened.data.workspaceRevision,expectedItineraryVersion:opened.data.itineraryVersion};
+  const results=await Promise.all([request('PUT',path+'/monitoring',key,body),request('PUT',path+'/monitoring',key,body)]);assert.ok(results.every(row=>row.status===200));
+  const {watchesFor}=await import('../../api-server/src/field-atlas/backend/travel/watch');assert.equal((await watchesFor(board.team.id)).filter(row=>row.tripIds.some(id=>opened.data.plan.tripIds.includes(id))).length,1);
+  assert.equal((await request('PUT',path+'/monitoring',key,{...body,expectedWorkspaceRevision:0})).status,409);
+  assert.deepEqual((await request('GET','/api/operations',key)).data.visits,board.visits);
+});
+test('encrypted transfer is workspace/seat scoped, bounded, versioned and cannot resurrect a removed copy with an old version',async()=>{
+  const key=await workspace(),other=await workspace(),board=(await request('GET','/api/operations',key)).data;
+  const path='/api/travel/private-sync?trainerId=trainer_a',envelope={format:1,algorithm:'AES-256-GCM',kdf:'PBKDF2-SHA256',iterations:600000,salt:Buffer.alloc(16).toString('base64'),iv:Buffer.alloc(12).toString('base64'),ciphertext:Buffer.alloc(32).toString('base64')};
+  assert.equal((await request('PUT',path,key,{rawText:'must not be stored'})).status,400);
+  const body={expectedVersion:0,workspaceId:board.team.id,trainerId:'trainer_a',envelope};
+  assert.equal((await request('PUT',path,key,body)).status,200);assert.equal((await request('PUT',path,key,body)).status,409);
+  assert.equal((await request('GET',path,other)).data.envelope,null);assert.equal((await request('GET','/api/travel/private-sync?trainerId=trainer_b',key)).data.envelope,null);
+  assert.equal((await request('PUT',path,other,body)).status,409);
+  assert.equal((await request('DELETE',path,key,{expectedVersion:1,workspaceId:board.team.id,trainerId:'trainer_a'})).status,200);
+  const removed=(await request('GET',path,key)).data;assert.equal(removed.envelope,null);assert.equal(removed.version,2);
+  assert.equal((await request('PUT',path,key,{...body,expectedVersion:1})).status,409);
+});
+test('expanded assistant answers readiness and explicit delay comparisons without editing plans or claiming a flight prediction',async()=>{
+  const {key,report,board}=await approvedAirPlan();
+  const ready=await request('POST','/api/travel/assistant',key,{reportId:report.id,question:'What still needs confirming?'});assert.equal(ready.status,200,JSON.stringify(ready.data));assert.equal(ready.data.readiness.trainers.length,2);assert.ok(ready.data.missing.length);
+  const delay=await request('POST','/api/travel/assistant',key,{reportId:report.id,question:'What if our flight is delayed 30 minutes?'});assert.equal(delay.status,200);assert.equal(delay.data.claims.length,2);assert.ok(delay.data.claims.every((row:{limitation:string})=>row.limitation.includes('not a flight-delay prediction')));
+  const unclear=await request('POST','/api/travel/assistant',key,{reportId:report.id,question:'What if our flight is delayed?'});assert.equal(unclear.data.verdict,'clarification');
+  const roads=await request('POST','/api/travel/assistant',key,{reportId:report.id,question:'Compare airports for less driving'});assert.equal(roads.status,200,JSON.stringify(roads.data));assert.ok(roads.data.evidence.some((row:{provider:string})=>row.provider.includes('OSRM')));
+  const after=(await request('GET','/api/operations',key)).data;assert.deepEqual(after.visits,board.visits);assert.equal(after.revision,board.revision);
+});
+test('push subscriptions block arbitrary endpoints and isolate per-trainer reads; delivery is deduplicated and invalid endpoints are retired',async()=>{
+  const key=await workspace(),board=(await request('GET','/api/operations',key)).data;
+  const body={trainerId:'trainer_a',workspaceId:board.team.id,endpoint:'https://fcm.googleapis.com/fcm/send/atlas-contract-test',keys:{p256dh:Buffer.concat([Buffer.from([4]),Buffer.alloc(64,1)]).toString('base64url'),auth:Buffer.alloc(16,2).toString('base64url')}};
+  assert.equal((await request('POST','/api/travel/push/subscription?trainerId=trainer_a',key,{...body,endpoint:'https://127.0.0.1/private'})).status,400);
+  assert.equal((await request('POST','/api/travel/push/subscription?trainerId=trainer_b',key,body)).status,400);
+  const added=await request('POST','/api/travel/push/subscription?trainerId=trainer_a',key,body);assert.equal(added.status,200,JSON.stringify(added.data));
+  const publicKey=(await request('GET','/api/travel/push/public-key',key)).data;assert.ok(publicKey.publicKey);assert.equal('privateKey' in publicKey,false);
+  const {queueTripNotice,deliverTripNotifications,quietUntil}=await import('../../api-server/src/field-atlas/backend/travel/notifications');
+  await queueTripNotice(board.team.id,'test-plan','change-1','Provider change','Review this evidence');await queueTripNotice(board.team.id,'test-plan','change-1','Provider change','Review this evidence');
+  const notices=(await request('GET','/api/travel/notifications?trainerId=trainer_a',key)).data.notices;assert.equal(notices.length,1);
+  await request('POST','/api/travel/notifications/'+notices[0].id+'/read?trainerId=trainer_b',key,{});
+  assert.equal((await request('GET','/api/travel/notifications?trainerId=trainer_a',key)).data.notices[0].readAt,undefined);
+  let delivered=0;const fakeSend=(async(_sub:unknown,payload:unknown)=>{delivered++;assert.equal(String(payload).includes(key),false);assert.equal(String(payload).includes('Taylor'),false);return {statusCode:201,body:'',headers:{}};}) as any;
+  await deliverTripNotifications(Date.now()+1000,fakeSend);await deliverTripNotifications(Date.now()+2000,fakeSend);assert.equal(delivered,1);
+  await queueTripNotice(board.team.id,'test-plan','change-2','Provider change','Review');
+  await deliverTripNotifications(Date.now()+3000,(async()=>{throw {statusCode:410};}) as any);
+  assert.equal((await request('POST','/api/travel/push/status?trainerId=trainer_a',key,{endpoint:body.endpoint})).data.subscribed,false);
+  assert.equal(quietUntil({start:'22:00',end:'07:00',timeZone:'America/New_York'},Date.parse('2026-11-01T05:30:00Z')),'2026-11-01T12:00:00Z');
+});
+test('flight provider requires an exact instance, retains missing issue time and gates recovery behind review',async()=>{
+  const {key,report,flights}=await approvedAirPlan(),path='/api/travel/journeys/'+report.id;
+  const current=(await request('GET',path+'/workspace',key)).data,oldKey=process.env.ATLAS_AEROAPI_KEY,oldAllow=process.env.ATLAS_AEROAPI_WORKSPACE_IDS,original=globalThis.fetch;
+  process.env.ATLAS_AEROAPI_KEY='contract-test-only';process.env.ATLAS_AEROAPI_WORKSPACE_IDS='another-contract-workspace';
+  globalThis.fetch=async(input,init)=>{const url=new URL(String(input));if(url.hostname!=='aeroapi.flightaware.com')return original(input,init);
+    const requested=decodeURIComponent(url.pathname.split('/').at(-1)!);const leg=flights.find((row:any)=>row.carrier+row.flightNumber===requested)!;
+    return new Response(JSON.stringify({flights:[{fa_flight_id:'test-'+requested,ident_iata:requested,origin:{code_iata:leg.origin},destination:{code_iata:leg.destination},scheduled_out:leg.departDate+'T'+String(Number(leg.departTime.slice(0,2))+5).padStart(2,'0')+leg.departTime.slice(2)+':00Z',scheduled_in:leg.arriveDate+'T12:00:00Z',estimated_out:leg.departDate+'T12:00:00Z',estimated_in:leg.arriveDate+'T13:00:00Z',status:'Delayed',cancelled:false}]}));
+  };
+  try {
+    const unapproved=await request('POST',path+'/flight-status/check',key,{expectedWorkspaceRevision:current.workspaceRevision,expectedItineraryVersion:current.itineraryVersion});assert.equal(unapproved.status,409);
+    process.env.ATLAS_AEROAPI_WORKSPACE_IDS=(await request('GET','/api/operations',key)).data.team.id;
+    const check=await request('POST',path+'/flight-status/check',key,{expectedWorkspaceRevision:current.workspaceRevision,expectedItineraryVersion:current.itineraryVersion});assert.equal(check.status,200,JSON.stringify(check.data));assert.equal(check.data.flights.length,4);assert.ok(check.data.flights.every((row:any)=>row.state==='matched'));
+    assert.equal(check.data.flights[0].evidence.observedAt,undefined);assert.equal(check.data.flights[0].evidence.state,'partial');
+    assert.equal((await request('POST','/api/travel/flight-status/checks/'+check.data.id+'/report-change',key,{legIndex:0,reviewed:false})).status,400);
+    const change=await request('POST','/api/travel/flight-status/checks/'+check.data.id+'/report-change',key,{legIndex:0,reviewed:true});assert.equal(change.status,201,JSON.stringify(change.data));assert.equal(change.data.evidence.provider,'FlightAware AeroAPI');
+    const other=await request('POST','/api/travel/flight-status/checks/'+check.data.id+'/report-change',await workspace(),{legIndex:0,reviewed:true});assert.equal(other.status,404);
+    const {checkFlight}=await import('../../api-server/src/field-atlas/backend/providers/flightStatus');
+    globalThis.fetch=async()=>new Response(JSON.stringify({flights:[1,2].map(()=>({fa_flight_id:'ambiguous',ident_iata:'AA100',origin:{code_iata:'MIA'},destination:{code_iata:'MCO'},scheduled_out:'2026-12-07T11:00:00Z'}))}));
+    const ambiguousWorkspace='ambiguous-'+randomUUID();process.env.ATLAS_AEROAPI_WORKSPACE_IDS+=','+ambiguousWorkspace;
+    const ambiguous=await checkFlight(ambiguousWorkspace,flights[0]);assert.equal(ambiguous.state,'unknown');assert.equal(ambiguous.replacement,undefined);
+  }finally{globalThis.fetch=original;if(oldKey===undefined)delete process.env.ATLAS_AEROAPI_KEY;else process.env.ATLAS_AEROAPI_KEY=oldKey;if(oldAllow===undefined)delete process.env.ATLAS_AEROAPI_WORKSPACE_IDS;else process.env.ATLAS_AEROAPI_WORKSPACE_IDS=oldAllow;}
+});
+test('Google and Outlook use single-use PKCE authorization and require reviewed, current calendar previews; external events are not removed',async()=>{
+  const {key,report,board}=await approvedAirPlan(),other=await workspace(),original=globalThis.fetch;
+  const variables=['ATLAS_GOOGLE_CLIENT_ID','ATLAS_GOOGLE_CLIENT_SECRET','ATLAS_MICROSOFT_CLIENT_ID','ATLAS_MICROSOFT_CLIENT_SECRET','ATLAS_CONNECTION_ENCRYPTION_KEY'];const prior=Object.fromEntries(variables.map(name=>[name,process.env[name]]));
+  for(const name of variables)process.env[name]=name==='ATLAS_CONNECTION_ENCRYPTION_KEY'?'a'.repeat(64):'contract-test-only';
+  const {connectionTable}=await import('../../api-server/src/field-atlas/backend/travel/calendarConnection');
+  const path='/api/travel/journeys/'+report.id;let writes=0;
+  globalThis.fetch=async(input,init)=>{const url=new URL(String(input));
+    if(url.hostname==='oauth2.googleapis.com'||url.hostname==='login.microsoftonline.com')return new Response(JSON.stringify({access_token:'test-access',refresh_token:'test-refresh',expires_in:3600}));
+    if(url.hostname==='www.googleapis.com'||url.hostname==='graph.microsoft.com'){
+      if(!init?.method||init.method==='GET')return new Response('{}',{status:404});
+      assert.equal(init.method,'POST');writes++;const body=JSON.parse(String(init.body));assert.equal(body.attendees,undefined);return new Response(JSON.stringify({id:body.id||'ms-event-'+writes,etag:'"test-v1"'}));
+    }return original(input,init);
+  };
+  try {
+    for(const provider of ['google','microsoft']){
+      const start=await request('POST','/api/travel/calendar/'+provider+'/connect?trainerId=trainer_a',key,{workspaceId:board.team.id,trainerId:'trainer_a'});assert.equal(start.status,200,JSON.stringify(start.data));const url=new URL(start.data.authorizationUrl);assert.equal(url.searchParams.get('code_challenge_method'),'S256');assert.ok(url.searchParams.get('code_challenge'));
+      const callback='https://field-sales-atlas.replit.app/api/travel/calendar/oauth/'+provider+'/callback?state='+url.searchParams.get('state')+'&code=test-code';
+      assert.equal((await handler(new Request(callback))).status,200);assert.equal((await handler(new Request(callback))).status,400);
+      const [stored]=await db.get<any>(connectionTable,[board.team.id+'|trainer_a|'+provider]);assert.equal(stored.box.includes('test-refresh'),false);
+      const status=(await request('GET','/api/travel/calendar/connections?trainerId=trainer_a',key)).data;assert.equal(status.connections.find((row:any)=>row.provider===provider).connected,true);assert.equal(JSON.stringify(status).includes('test-access'),false);
+      const current=(await request('GET',path+'/workspace',key)).data;
+      const preview=await request('POST',path+'/calendar/preview?trainerId=trainer_a',key,{provider,expectedWorkspaceRevision:current.workspaceRevision,expectedItineraryVersion:current.itineraryVersion});assert.equal(preview.status,200,JSON.stringify(preview.data));assert.ok(preview.data.items.length>=2);assert.equal(writes,provider==='google'?0:preview.data.items.length);
+      assert.equal((await request('POST','/api/travel/calendar/previews/'+preview.data.id+'/apply?trainerId=trainer_a',key,{reviewed:false})).status,400);
+      assert.equal((await request('POST','/api/travel/calendar/previews/'+preview.data.id+'/apply?trainerId=trainer_a',other,{reviewed:true})).status,404);
+      const applied=await request('POST','/api/travel/calendar/previews/'+preview.data.id+'/apply?trainerId=trainer_a',key,{reviewed:true});assert.equal(applied.status,200);assert.equal(applied.data.state,'saved',JSON.stringify(applied.data));
+      assert.equal((await request('POST','/api/travel/calendar/previews/'+preview.data.id+'/apply?trainerId=trainer_a',key,{reviewed:true})).status,409);
+    }
+    const goodFetch=globalThis.fetch;
+    globalThis.fetch=async(input,init)=>{const url=new URL(String(input));
+      if(url.hostname==='www.googleapis.com'&&url.pathname.includes('/events/')){
+        const id=url.pathname.split('/').at(-1)!;
+        if(!init?.method||init.method==='GET')return new Response(JSON.stringify({id,etag:'"external-version"',extendedProperties:{private:{atlasEventKey:id}}}));
+        assert.equal(init.method,'PATCH');assert.equal((init.headers as Record<string,string>)['If-Match'],'"external-version"');return new Response('{}',{status:412});
+      }return goodFetch(input,init);
+    };
+    const current=(await request('GET',path+'/workspace',key)).data;
+    const body={provider:'google',expectedWorkspaceRevision:current.workspaceRevision,expectedItineraryVersion:current.itineraryVersion};
+    assert.equal((await request('POST',path+'/calendar/preview?trainerId=trainer_a',key,{...body,expectedWorkspaceRevision:0})).status,409);
+    const editPreview=await request('POST',path+'/calendar/preview?trainerId=trainer_a',key,body);assert.equal(editPreview.status,200,JSON.stringify(editPreview.data));
+    const conflict=await request('POST','/api/travel/calendar/previews/'+editPreview.data.id+'/apply?trainerId=trainer_a',key,{reviewed:true});
+    assert.equal(conflict.data.state,'partial');assert.ok(conflict.data.results.every((row:any)=>row.state==='needs-review'&&row.reason.includes('changed outside Atlas')));
+    assert.deepEqual((await request('GET','/api/operations',key)).data.visits,board.visits);
+  }finally{globalThis.fetch=original;for(const name of variables){if(prior[name]===undefined)delete process.env[name];else process.env[name]=prior[name];}}
+});
+
+test('recovery monitoring links update notices to the saved plan rather than a transient recovery report',async()=>{
+  const {key,report,board,flights}=await approvedAirPlan(),original=globalThis.fetch;
+  const {queueWatch,watchesFor,runTravelReviews}=await import('../../api-server/src/field-atlas/backend/travel/watch');
+  await queueWatch(board.team.id,{...report,id:'transient-recovery-report'},board.trips.map((row:any)=>row.id),flights);
+  const watch=(await watchesFor(board.team.id))[0];
+  await db.tx.update('atlas_journey_watches_v1',[{id:watch.id,record:{fingerprint:'previous',monitorFlights:true,nextRun:'2020-01-01T00:00:00Z'}}],{patch:true});
+  const oldKey=process.env.ATLAS_AEROAPI_KEY,oldAllow=process.env.ATLAS_AEROAPI_WORKSPACE_IDS,oldPolling=process.env.ATLAS_FLIGHT_STATUS_POLLING;process.env.ATLAS_AEROAPI_KEY='watch-contract-only';process.env.ATLAS_AEROAPI_WORKSPACE_IDS=board.team.id;process.env.ATLAS_FLIGHT_STATUS_POLLING='enabled';
+  globalThis.fetch=async(input)=>{const url=new URL(String(input));if(url.hostname!=='aeroapi.flightaware.com')throw Error('Unavailable public provider fixture');
+    const identifier=decodeURIComponent(url.pathname.split('/').at(-1)!);const leg=flights.find((row:any)=>row.carrier+row.flightNumber===identifier)!;
+    return new Response(JSON.stringify({flights:[{ident_iata:identifier,fa_flight_id:'watch-'+identifier,origin:{code_iata:leg.origin},destination:{code_iata:leg.destination},scheduled_out:leg.departDate+'T11:00:00Z',cancelled:identifier==='AA100',status:identifier==='AA100'?'Cancelled':'Timing fields returned'}]}));
+  };
+  try{await runTravelReviews(Date.parse('2026-12-07T12:00:00Z'));}finally{globalThis.fetch=original;if(oldKey===undefined)delete process.env.ATLAS_AEROAPI_KEY;else process.env.ATLAS_AEROAPI_KEY=oldKey;if(oldPolling===undefined)delete process.env.ATLAS_FLIGHT_STATUS_POLLING;else process.env.ATLAS_FLIGHT_STATUS_POLLING=oldPolling;if(oldAllow===undefined)delete process.env.ATLAS_AEROAPI_WORKSPACE_IDS;else process.env.ATLAS_AEROAPI_WORKSPACE_IDS=oldAllow;}
+  const updates=(await request('GET','/api/travel/notifications?reportId='+report.id+'&trainerId=trainer_a',key)).data.notices;
+  assert.ok(updates.length>=1);assert.ok(updates.some((row:any)=>row.detail.includes('AA100')&&row.detail.includes('Cancelled')));assert.ok(updates.every((row:any)=>row.reportId===report.id));
+  assert.equal((await request('GET','/api/travel/notifications?reportId=transient-recovery-report&trainerId=trainer_a',key)).data.notices.length,0);
+});

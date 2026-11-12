@@ -9,7 +9,7 @@ import { roadMatrix } from '../providers/routing';
 import { evidenceState } from '../providers/evidence';
 import { zoneAt } from './zones';
 import { addMinutes, elapsedMinutes, zonedInstant } from '../../shared/travel/time';
-import type { FlightInput } from '../../shared/travel/types';
+import type { Evidence, FlightInput } from '../../shared/travel/types';
 import type { FlightChange, RecoveryPreview, RecoveryOption, VisitImpact } from '../../shared/travel/intelligence';
 import { queueWatch, watchReplacementOperations } from './watch';
 
@@ -20,8 +20,8 @@ export const flightKey = (flight: FlightInput) => [flight.trainerId, flight.orig
 type StoredChange = FlightChange & { requestHash: string; appliedRecoveryId?: string };
 type StoredRecovery = RecoveryPreview & { inputs: Record<string, ScenarioInput>; unresolvedTrainerIds?: string[]; receipt?: { optionId: string; tripIds: string[]; updatedVisits: number } };
 
-export async function reportFlightChange(workspaceId: string, body: ChangeInput, board: ScenarioBoard) {
-  const requestHash = createHash('sha256').update(JSON.stringify(body)).digest('hex');
+export async function reportFlightChange(workspaceId: string, body: ChangeInput, board: ScenarioBoard, providerEvidence?: Evidence) {
+  const requestHash = createHash('sha256').update(providerEvidence?JSON.stringify({body,providerEvidence}):JSON.stringify(body)).digest('hex');
   const [previous] = await db.get<StoredChange>(changeTable(workspaceId), [body.id]);
   if (previous) { if (previous.requestHash !== requestHash) throw new Error('This report ID already belongs to a different flight change.'); return previous; }
   const revision = board.revision ?? await db.workspaceRevision(workspaceId), context = await planContext(workspaceId, body.reportId, board);
@@ -38,7 +38,7 @@ export async function reportFlightChange(workspaceId: string, body: ChangeInput,
   const airports = await lookupAirports([body.originalLeg.origin, body.originalLeg.destination]);
   normalizeFlights([body.originalLeg, ...(body.replacementLeg ? [body.replacementLeg] : [])], airports);
   const now = new Date().toISOString();
-  const change: StoredChange = { ...body, createdAt: now, state: 'pending', requestHash, evidence: {
+  const change: StoredChange = { ...body, createdAt: now, state: 'pending', requestHash, evidence: providerEvidence || {
     id: 'flight-change-' + body.id, provider: 'Traveler-reported flight change', subject: `${body.originalLeg.origin}–${body.originalLeg.destination} · ${body.status}`,
     sourceUrl: '', kind: 'traveler', state: 'reference', observedAt: body.checkedAt, retrievedAt: now, version: body.id,
     scope: 'The traveler supplied these flight fields and the check time.', limitation: 'Not independently confirmed by an airline or flight-status provider. Alternative seats, fares and rebooking eligibility remain unverified.' } };
@@ -149,7 +149,7 @@ export async function buildRecovery(workspaceId: string, changeId: string, board
   const now = new Date().toISOString();
   const preview: StoredRecovery = { id: randomUUID(), changeId, reportId: change.reportId, workspaceRevision: revision, createdAt: now,
     expiresAt: new Date(Date.now() + 15 * 60000).toISOString(), change, impacts, options, inputs, unresolvedTrainerIds: changed.unresolvedTrainerIds,
-    limitations: ['Flight status is traveler-reported. Seats, fares, airline connection requirements and rebooking eligibility require verification.', 'Recovery changes only this plan’s remaining visits. Other shared commitments and completed history stay reserved.', 'Alternate airport pairs require a new itinerary with routed transfers. No meetings or bookings have changed yet.'] };
+    limitations: [change.evidence.provider+' supplies the reported change. Seats, fares, airline connection requirements and rebooking eligibility require verification.', 'Recovery changes only this plan’s remaining visits. Other shared commitments and completed history stay reserved.', 'Alternate airport pairs require a new itinerary with routed transfers. No meetings or bookings have changed yet.'] };
   if (await db.workspaceRevision(workspaceId) !== revision) throw new Error('The calendar changed during analysis. Refresh and build recovery options again.');
   await db.tx.add(recoveryTable(workspaceId), [preview]);
   return publicRecovery(preview);
@@ -163,7 +163,7 @@ export async function approveRecovery(workspaceId: string, previewId: string, op
   const option = preview.options.find(item => item.id === optionId);
   if (!option?.scenario.feasible || !acknowledge) throw new Error('Review the consequences and select a complete recovery option before approving.');
   if (option.readiness?.constraints.some(step => step.marginMinutes !== null && step.marginMinutes < 0)) throw new Error('A supplied journey requirement is missed. Resolve the timing or pickup requirement and rebuild recovery.');
-  if (Date.parse(preview.expiresAt) <= Date.now() || option.evidence.some(item => item.state === 'current' && evidenceState(item) !== 'current')) throw new Error('Recovery evidence or preview expired. Build fresh options.');
+  if (Date.parse(preview.expiresAt) <= Date.now() || option.evidence.some(item => ['current','partial'].includes(item.state) && evidenceState(item) === 'stale')) throw new Error('Recovery evidence or preview expired. Build fresh options.');
   const context = await planContext(workspaceId, preview.reportId, board);
   if (context.pendingChange?.id !== preview.changeId) throw new Error('The reported flight change was resolved or replaced. Refresh before approving.');
   const now = new Date().toISOString(), sourceTrips = board.trips!.filter(trip => context.tripIds.includes(trip.id));

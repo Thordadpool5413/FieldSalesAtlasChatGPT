@@ -58,7 +58,7 @@ const TodayHub = lazy(() => import('./TodayHub'));
 const TwoTrainerWeek = lazy(() => import('./TwoTrainerWeek'));
 
 
-export type Page = 'today' | 'mission' | 'plan' | 'people' | 'week' | 'radar' | 'booked' | 'coordinate' | 'home' | 'air' | 'overview' | 'map' | 'managers' | 'trips' | 'coaching' | 'calendar' | 'data' | 'team';
+export type Page = 'today' | 'mission' | 'plan' | 'people' | 'week' | 'radar' | 'booked' | 'coordinate' | 'home' | 'air' | 'overview' | 'map' | 'managers' | 'trips' | 'coaching' | 'calendar' | 'data' | 'team' | 'journey';
 export type Dialog = 'manager' | 'assignment' | 'visit' | 'coaching' | 'trip' | 'invite' | null;
 export type ModalState = { kind: Dialog; record?: unknown; detail?: string } | null;
 export type User = { userId: string; name?: string; email?: string };
@@ -132,18 +132,19 @@ function initialRoute():Page{
   }
   if(candidate==='today')return 'home';
   // Existing travel deep links must retain their routes and selected tools.
-  if(['radar','booked','air','week','trips','coordinate'].includes(candidate))return 'plan';
+  if(['radar','booked','air','week','trips','coordinate','journey'].includes(candidate))return 'plan';
   if(candidate==='managers'||candidate==='coaching')return 'people';
   return (['plan','home','people','calendar','mission','overview','map','data','team'] as string[]).includes(candidate)
     ?candidate as Page:'home';
 }
-function initialPlanTool(): 'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'{
+function initialPlanTool(): 'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'|'journey'{
   if(typeof window==='undefined')return 'start';
   const search=new URLSearchParams(window.location.search);
   const tool=search.get('tool');
+  if(tool==='journey')return tool;
   if(tool==='start'||tool==='week'||tool==='travel'||tool==='trips'||tool==='coordinate'||tool==='radar'||tool==='booked')return tool;
   const oldPage=search.get('page');
-  return oldPage==='radar'?'radar':
+  return oldPage==='journey'?'journey':oldPage==='radar'?'radar':
     oldPage==='booked'?'booked':
     oldPage==='air'?'travel':
     oldPage==='week'?'week':
@@ -194,7 +195,7 @@ function Product(){
   const [mapMode,setMapMode]=useState<'national'|'state'>('national');
   // Atlas is the default landing screen; Travel is a separate planning destination.
   const [view,setView]=useState<Page>(initialRoute);
-  const [planSection,setPlanSection]=useState<'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'>(initialPlanTool);
+  const [planSection,setPlanSection]=useState<'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'|'journey'>(initialPlanTool);
   const [peopleSection,setPeopleSection]=useState<'managers'|'coaching'>(initialPeopleTool);
   const [trainerProfilesOpen,setTrainerProfilesOpen]=useState(false);
   const [activeTrainerId,setActiveTrainerIdState]=useState<'trainer_a'|'trainer_b'>(()=>{
@@ -498,7 +499,7 @@ function Product(){
     setAtlasJump({...region,airport,nonce:Date.now()});
     go('home');
   }
-  function changePlanSection(next:'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'){
+  function changePlanSection(next:'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'|'journey'){
     if(planSection===next)return;
     setPlanSection(next);
     if(typeof window!=='undefined'){
@@ -531,10 +532,10 @@ function Product(){
     // browser's back gesture without exposing the workspace access key.
     let target:Page=page;
     let tool='';
-    if(page==='today'||page==='week'||page==='air'||page==='trips'||page==='radar'||page==='booked'||page==='coordinate'){
-      tool=page==='today'?'start':page==='radar'?'radar':
+    if(page==='today'||page==='week'||page==='air'||page==='trips'||page==='radar'||page==='booked'||page==='coordinate'||page==='journey'){
+      tool=page==='journey'?'journey':page==='today'?'start':page==='radar'?'radar':
         page==='booked'?'booked':page==='coordinate'?'coordinate':page==='week'?'week':page==='air'?'travel':'trips';
-      setPlanSection(tool as 'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips');
+      setPlanSection(tool as 'start'|'week'|'coordinate'|'travel'|'radar'|'booked'|'trips'|'journey');
       target='plan';
     }else if(page==='managers'||page==='coaching'){
       tool=page;
