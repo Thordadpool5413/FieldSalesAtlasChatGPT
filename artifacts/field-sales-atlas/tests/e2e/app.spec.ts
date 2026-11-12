@@ -272,7 +272,7 @@ test('map symbols and controls stay clear in both map modes and themes', async (
   }
 });
 
-test('first visit welcomes; returning visit keeps the map compact and usable', async ({ page }) => {
+test('first and returning Atlas visits show the toolkit and keep the map usable', async ({ page }) => {
   const viewport = page.viewportSize()!;
   const mobile = viewport.width <= 900;
   const map = page.getByRole('group', { name: /Interactive United States map/ });
@@ -280,11 +280,13 @@ test('first visit welcomes; returning visit keeps the map compact and usable', a
 
   async function expectMapProminentAndUsable(compact: boolean) {
     await expect(map).toBeVisible();
+    // On phones the six tools come first; the full map follows below them.
+    if (mobile) await mapFrame.scrollIntoViewIfNeeded();
     const bounds = await map.boundingBox();
     const frame = await mapFrame.boundingBox();
     expect(bounds).not.toBeNull();
     expect(frame).not.toBeNull();
-    if (compact) expect(bounds!.y).toBeLessThan(viewport.height * .76);
+    if (compact && !mobile) expect(bounds!.y).toBeLessThan(viewport.height * .76);
     expect(frame!.height).toBeGreaterThanOrEqual(mobile ? 320 : 480);
 
     const zoomControls = page.getByRole('group', { name: 'Map zoom controls' });
@@ -295,15 +297,17 @@ test('first visit welcomes; returning visit keeps the map compact and usable', a
   }
 
   await page.goto('/');
-  const welcome = page.locator('.mv-map-page > .vice-masthead');
-  await expect(welcome).toBeVisible();
-  await expect(welcome.getByRole('heading', { name: 'Your field. In perspective.' })).toBeVisible();
-  await expect.poll(() => welcome.locator('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  const toolkit = page.getByRole('region', { name: 'Intelligence toolkit', exact: true });
+  await expect(toolkit.getByRole('heading', { name: 'Your intelligence toolkit' })).toBeVisible();
+  await expect(toolkit.locator('img')).toHaveCount(6);
+  for (const button of await toolkit.getByRole('navigation').getByRole('button').all())
+    await expect(button).toBeInViewport({ ratio: 1 });
   await expect(page.locator('.fsa-map-heading-text h2')).toHaveText('Territory atlas');
   await expectMapProminentAndUsable(false);
 
   await page.reload();
-  await expect(welcome).toHaveCount(0);
+  await expect(toolkit).toBeVisible();
+  await expect(toolkit.getByRole('navigation').getByRole('button')).toHaveCount(6);
   await expect(page.getByRole('combobox', { name: 'Search this map for a state, manager or airport' })).toBeVisible();
   await expect(page.locator('.fsa-map-heading')).toBeVisible();
   await expect(page.locator('.fsa-map-heading-text')).toHaveCount(0);
@@ -1047,10 +1051,11 @@ test('Flight DNA labels airport fallback rates without implying matched route hi
   await expect(report).toContainText('Airport baseline only; this route is not covered.');
 });
 
-test('restored intelligence photographs and shortcuts are visible from Travel and primary navigation', async ({ page }, info) => {
+for (const entry of [{ name: 'Atlas', url: '/' }, { name: 'Travel', url: '/?page=plan' }]) {
+test(`restored intelligence photographs and shortcuts are visible from ${entry.name} and primary navigation`, async ({ page }, info) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await flightWorkspaceFixture(page);
-  await page.goto('/?page=plan');
+  await page.goto(entry.url);
   await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
   const fragment = new URL(page.url()).hash;
   const gallery = page.getByRole('region', { name: 'Intelligence toolkit', exact: true });
@@ -1058,7 +1063,13 @@ test('restored intelligence photographs and shortcuts are visible from Travel an
   await expect(shortcuts.getByRole('button')).toHaveCount(6);
   await expect(shortcuts.locator('img')).toHaveCount(6);
   await expect.poll(() => shortcuts.locator('img').evaluateAll(images => images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
-  expect((await gallery.boundingBox())!.y).toBeLessThan((await page.locator('.fao-feature-grid').boundingBox())!.y);
+  const nextSection = page.locator(entry.name === 'Atlas' ? '.atlas-mission-layout' : '.fao-feature-grid');
+  await expect(nextSection).toBeVisible();
+  expect((await gallery.boundingBox())!.y).toBeLessThan((await nextSection.boundingBox())!.y);
+  if (entry.name === 'Atlas') {
+    for (const button of await shortcuts.getByRole('button').all())
+      await expect(button).toBeInViewport({ ratio: 1 });
+  }
   const tools = [
     ['Flight DNA', 'dna', 'Flight DNA'], ['Airport pressure', 'pressure', 'Airport pressure'],
     ['Weather risk', 'weather', 'Weather risk'], ['Connection survival', 'connection', 'Connection survival'],
@@ -1092,6 +1103,7 @@ test('restored intelligence photographs and shortcuts are visible from Travel an
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
   expect(errors).toEqual([]);
 });
+}
 
 test('workspace search opens each intelligence tool directly while preserving the workspace link', async ({ page }) => {
   await page.goto('/?page=people');

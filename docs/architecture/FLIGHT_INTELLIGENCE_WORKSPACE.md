@@ -7,8 +7,16 @@ restores the selected tool without discarding loaded history. Route/date/filter
 changes invalidate previous results; request tokens prevent late responses from
 populating a different query.
 
-Intelligence is also a primary desktop and phone navigation destination. The
-Travel landing page displays all six illustrated shortcuts before the route
+Intelligence is also a primary desktop and phone navigation destination. Atlas,
+the default opening screen, now replaces its first-visit decorative banner with
+all six illustrated tools and the map/aircraft shortcuts. The gallery remains
+present on return visits, independently of the map welcome flag, workspace setup
+completion or saved records. All six photo cards fit in the first viewport on
+laptops and phones; phone users reach the territory map below them. Map focus
+continues to devote its screen to the map. Compact cards retain their tool
+descriptions as accessible descriptions and hover text.
+
+The Travel landing page displays the same six illustrated shortcuts before the route
 studio, with map and aircraft links alongside them. Workspace search opens each
 tool directly. `intelligenceTools.ts` supplies one catalog for gallery labels,
 photographs, search terms and destinations. Navigation preserves the workspace

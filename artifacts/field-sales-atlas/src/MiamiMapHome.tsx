@@ -8,7 +8,7 @@ import { CANADA_REGIONS,CANADA_REGION_BY_CODE } from './CanadaRegions';
 import { territoryPeople } from './fieldExperience';
 import type { LiveMapHandle } from './LiveTerritoryMap';
 import './MapIntelligence.css';
-import OceanMasthead from './OceanMasthead';
+import IntelligenceGallery from './IntelligenceGallery';
 import { trackEvent } from './analytics';
 import { useOp } from './Operations';
 import type { Airport,Assignment,Manager } from './opsModels';
@@ -619,9 +619,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
     !listTerm||(airport.iata+' '+airport.name+' '+airport.state).toLowerCase().includes(listTerm)
   ).slice(0,40);
   return <div data-lens={mapLens} className={'mv-map-page vice-atlas'+(focusMap?' atlas-focused':'')+(region?' has-active-region':'')+(setupComplete?' atlas-setup-complete':'')+(!showMapWelcome?' atlas-map-workspace':'')+(viewMode==='list'?' atlas-list-mode':'')}>
-    {!focusMap&&showMapWelcome&&<OceanMasthead title="Your field. In perspective."
-      description="Explore territories. Connect with your people. Plan the next visit."
-      mobileDescription="Explore territories. Plan your next visit."/>}
+    {!focusMap&&<IntelligenceGallery compact/>}
     {!focusMap&&showMapWelcome&&<section className="atlas-first-use-guide" data-testid="first-use-guide"
       aria-label="First-time guide">
       <div className="atlas-first-use-copy">

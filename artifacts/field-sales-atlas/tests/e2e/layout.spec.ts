@@ -43,13 +43,19 @@ for (const viewport of [
   { width: 780, height: 360 },
   { width: 667, height: 375 },
 ]) {
-  test(`short landscape phones keep the map and zoom controls within reach at ${viewport.width} × ${viewport.height}`, async ({ page }) => {
+  test(`short landscape phones show every intelligence tool and keep map controls within reach at ${viewport.width} × ${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
+
+    const shortcuts = page.getByRole('navigation', { name: 'Intelligence toolkit shortcuts' });
+    await expect(shortcuts.getByRole('button')).toHaveCount(6);
+    for (const button of await shortcuts.getByRole('button').all())
+      await expect(button).toBeInViewport({ ratio: 1 });
 
     const map = page.getByRole('group', { name: /Interactive United States map/ });
     const frame = page.locator('.mv-map-frame');
     await expect(map).toBeVisible();
+    await frame.scrollIntoViewIfNeeded();
     const frameBounds = (await frame.boundingBox())!;
     expect(frameBounds.height).toBeGreaterThanOrEqual(180);
     expect(frameBounds.x).toBeGreaterThanOrEqual(0);
