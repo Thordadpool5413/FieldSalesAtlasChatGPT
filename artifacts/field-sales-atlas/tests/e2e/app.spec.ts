@@ -1074,9 +1074,10 @@ test(`restored intelligence photographs and shortcuts are visible from ${entry.n
     ['Flight DNA', 'dna', 'Flight DNA'], ['Airport pressure', 'pressure', 'Airport pressure'],
     ['Weather risk', 'weather', 'Weather risk'], ['Connection survival', 'connection', 'Connection survival'],
     ['Security & airport', 'security', 'Airport Security Memory'], ['Alternatives', 'alternatives', 'Alternative routes'],
+    ['Route & airport map', 'map', 'Route & airport map'], ['Aircraft nearby', 'aircraft', 'Aircraft nearby'],
   ];
   for (const [label, id, heading] of tools) {
-    await shortcuts.getByRole('button', { name: label, exact: true }).click();
+    await gallery.getByRole('button', { name: label, exact: true }).click();
     await expect(page).toHaveURL(new RegExp('intel=' + id));
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
     expect(new URL(page.url()).hash).toBe(fragment);
