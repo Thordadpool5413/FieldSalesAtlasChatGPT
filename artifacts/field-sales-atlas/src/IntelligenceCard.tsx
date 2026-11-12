@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import type { IntelligenceToolDefinition } from './intelligenceTools';
+import { intelligenceToolImage, type IntelligenceToolDefinition } from './intelligenceTools';
 import './IntelligenceGallery.css';
 
 export default function IntelligenceCard({ tool, onOpen, selected, value, detail, state = 'unknown', controls }: {
@@ -10,8 +10,8 @@ export default function IntelligenceCard({ tool, onOpen, selected, value, detail
   return <button type="button" className={'ig-card fi-tool fi-tool-' + tool.id} onClick={onOpen}
     aria-label={tool.title} aria-description={value || tool.description} title={tool.description}
     aria-pressed={selected} aria-controls={controls}>
-    <img className="ig-card-photo" src={'/resources/intelligence/' + tool.photo + '.jpg'} style={{objectPosition:tool.photoPosition}}
-      alt="" aria-hidden="true" width="960" height="640" decoding="async"/>
+    <img className="ig-card-photo" src={intelligenceToolImage(tool)} style={{objectPosition:tool.photoPosition}}
+      alt="" aria-hidden="true" width="1200" height="800" decoding="async"/>
     <span className="ig-card-shade" aria-hidden="true"/>
     <span className="fi-tool-title"><Icon size={20}/><strong>{tool.title}</strong><ArrowRight size={16}/></span>
     <span className={'fi-tool-value fi-state-' + state}>{value || tool.description}</span>

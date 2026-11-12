@@ -21,7 +21,8 @@ import FlightDnaPanel from './FlightDnaPanel';
 import './FlightRadar.css';
 import './FlightRadarForecast.css';
 import FlightToolkit, { initialFlightTool, type FlightTool } from './FlightToolkit';
-import { INTELLIGENCE_NAVIGATION_EVENT } from './intelligenceTools';
+import { INTELLIGENCE_NAVIGATION_EVENT, INTELLIGENCE_TOOLS } from './intelligenceTools';
+import IntelligenceToolVisual from './IntelligenceToolVisual';
 import FlightNetworkMap from './FlightNetworkMap';
 import './FlightIntelligence.css';
 import ObservedAircraftPanel from './ObservedAircraftPanel';
@@ -243,15 +244,30 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const [activeTool, setActiveTool] = useState<FlightTool>(initialFlightTool);
   const [aircraftOpened, setAircraftOpened] = useState(() => initialFlightTool() === 'aircraft');
   const resultRef = useRef<HTMLElement>(null);
+  const selectedTool = INTELLIGENCE_TOOLS.find(tool => tool.id === activeTool);
   useEffect(() => {
+    let frame = 0, finalFrame = 0;
+    const focusSelectedTool = () => {
+      cancelAnimationFrame(frame); cancelAnimationFrame(finalFrame);
+      // Let the workspace router finish restoring its own layout first.
+      frame = requestAnimationFrame(() => {
+        finalFrame = requestAnimationFrame(() => {
+          resultRef.current?.focus({ preventScroll: true });
+          resultRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+        });
+      });
+    };
     const restoreTool = () => {
       const tool = initialFlightTool();
       setActiveTool(tool);
       if (tool === 'aircraft') setAircraftOpened(true);
+      if (window.history.state?.atlasFocusTool) focusSelectedTool();
     };
+    if (window.history.state?.atlasFocusTool) focusSelectedTool();
     window.addEventListener('popstate', restoreTool);
     window.addEventListener(INTELLIGENCE_NAVIGATION_EVENT, restoreTool);
     return () => {
+      cancelAnimationFrame(frame); cancelAnimationFrame(finalFrame);
       window.removeEventListener('popstate', restoreTool);
       window.removeEventListener(INTELLIGENCE_NAVIGATION_EVENT, restoreTool);
     };
@@ -723,6 +739,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           document.getElementById('flight-intelligence-tools')?.scrollIntoView({ block: 'start' });
         }}>All intelligence tools ↑</button>
       </div>
+      {selectedTool && <IntelligenceToolVisual tool={selectedTool}/>}
       <div hidden={!['dna', 'connection', 'alternatives'].includes(activeTool)} id="atlas-flight-dna">
         <FlightDnaPanel origin={route.origin} destination={route.destination}
           connection={route.connection} alternate={route.alternate} connectionMinutes={route.connectionMinutes}

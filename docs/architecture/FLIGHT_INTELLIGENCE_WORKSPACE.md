@@ -19,7 +19,7 @@ descriptions as accessible descriptions and hover text.
 The Travel landing page displays the same six illustrated shortcuts before the route
 studio, with map and aircraft links alongside them. Workspace search opens each
 tool directly. `intelligenceTools.ts` supplies one catalog for gallery labels,
-photographs, search terms and destinations. Navigation preserves the workspace
+images, search terms and destinations. Navigation preserves the workspace
 fragment and opens Intelligence at the top, rather than restoring a scrolled
 Travel page underneath it. Native Back/Forward retains its existing behavior.
 
@@ -47,16 +47,26 @@ produces a source-specific error with no assigned rate, rather than crashing the
 travel page. Retrying historical analysis checks both sources again. Either
 source can remain useful while the other is unavailable.
 
-The old carousel is now a static photo grid. Six tool-specific airport photographs
-show a departures board, apron traffic, an airliner in rain, a terminal moving
-walkway, a security scanner and directional airport signs. The files are bundled
-under `public/resources/intelligence`; each tool uses the same image and crop
-throughout Atlas, Travel and Intelligence. Descriptive filenames replace the
-earlier images so browser caches request the new assets. A small credits link
-opens the source, photographer and license details in `CREDITS.html`, with the
-same information in `CREDITS.md`. These are illustrative photographs, never
-current weather or flight information. Blocked third-party hosts cannot remove
-the images at runtime. The
+The old carousel is a static image grid. Each of the six tools now has an original
+photorealistic illustration depicting its actual purpose: flight-performance
+research, aircraft congestion under air traffic control, aviation storm risk,
+a timed gate connection, passenger security screening, and comparing alternate
+flight itineraries. These AI-generated scenes replace the generic stock photos.
+They are illustrative, never current conditions, flight data or screenshots of
+real provider results. The image guide explains that distinction.
+
+The six optimized WebP files are bundled under `public/resources/intelligence`,
+with distinct versioned filenames so caches request the replacement images.
+`intelligenceTools.ts` owns the image, crop and meaningful image description for
+each tool. Cards use that catalog throughout Atlas, Travel and Intelligence.
+`IntelligenceToolVisual.tsx` also displays the matching full image and purpose
+caption inside each selected tool's results. Map and aircraft views retain their
+own geographic and observation visuals. Explicit card/search navigation opens
+the selected results, while primary Intelligence navigation keeps the toolkit
+overview at the top. Back/Forward preserves the tool and workspace link.
+
+`IMAGE_GUIDE.html` and `IMAGE_GUIDE.md` document all six scenes. Blocked third-party
+hosts cannot remove the images at runtime. The
 duplicate summary/map block and global deep-research disclosure were removed.
 The optional combined decision brief remains below the selected tool. Source
 records and limitations stay with the results they support.

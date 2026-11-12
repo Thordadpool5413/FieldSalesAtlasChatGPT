@@ -1068,6 +1068,7 @@ test(`restored intelligence photographs and shortcuts are visible from ${entry.n
   const shortcuts = gallery.getByRole('navigation', { name: 'Intelligence toolkit shortcuts' });
   await expect(shortcuts.getByRole('button')).toHaveCount(6);
   await expect(shortcuts.locator('img')).toHaveCount(6);
+  expect(new Set(await shortcuts.locator('img').evaluateAll(images => images.map(image => image.getAttribute('src')))).size).toBe(6);
   await expect.poll(() => shortcuts.locator('img').evaluateAll(images => images.every(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
   const nextSection = page.locator(entry.name === 'Atlas' ? '.atlas-mission-layout' : '.fao-feature-grid');
   await expect(nextSection).toBeVisible();
@@ -1083,9 +1084,20 @@ test(`restored intelligence photographs and shortcuts are visible from ${entry.n
     ['Route & airport map', 'map', 'Route & airport map'], ['Aircraft nearby', 'aircraft', 'Aircraft nearby'],
   ];
   for (const [label, id, heading] of tools) {
+    const image = gallery.getByRole('button', { name: label, exact: true }).locator('img');
+    const cardImage = await image.count() ? await image.getAttribute('src') : null;
     await gallery.getByRole('button', { name: label, exact: true }).click();
     await expect(page).toHaveURL(new RegExp('intel=' + id));
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    if (cardImage) {
+      const visual = page.getByRole('figure', { name: label + ' visual guide', exact: true });
+      await expect(visual).toBeInViewport({ ratio: 1 });
+      await expect(visual.getByRole('img')).toHaveAttribute('src', cardImage);
+      await expect(visual).toContainText('Illustrative image');
+      await expect.poll(() => visual.getByRole('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      await expect(visual).toHaveAttribute('data-tool', id);
+      await expect(page.locator('.fi-tool-visual:visible')).toHaveCount(1);
+    }
     expect(new URL(page.url()).hash).toBe(fragment);
     await page.goBack();
     await expect(shortcuts).toBeVisible();
