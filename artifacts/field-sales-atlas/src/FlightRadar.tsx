@@ -23,6 +23,7 @@ import './FlightRadarForecast.css';
 import FlightToolkit, { initialFlightTool, type FlightTool } from './FlightToolkit';
 import { INTELLIGENCE_NAVIGATION_EVENT, INTELLIGENCE_TOOLS } from './intelligenceTools';
 import IntelligenceToolVisual from './IntelligenceToolVisual';
+import { deviceWorkspaceScope,workspaceDeviceKey } from './deviceWorkspace';
 import FlightNetworkMap from './FlightNetworkMap';
 import './FlightIntelligence.css';
 import ObservedAircraftPanel from './ObservedAircraftPanel';
@@ -106,7 +107,7 @@ const airportCode = (code: string) => /^[A-Z]{3}$/.test(code);
 const isoAirport = (value: string) => value.trim().toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
 function initiallySaved(): RouteEntry {
   try {
-    const raw = window.localStorage.getItem('atlas-free-flight-radar-v1');
+    const raw = window.localStorage.getItem(workspaceDeviceKey('atlas-free-flight-radar-v1'));
     if (!raw) return { ...defaultRoute };
     const parsed = JSON.parse(raw) as Partial<RouteEntry>;
     const origin=isoAirport(String(parsed.origin||''));
@@ -222,12 +223,13 @@ function roleName(route: RouteEntry, code: string) {
   return parts.join(' · ');
 }
 
-type GuardianHandoff={origin:string;destination:string;travelDate:string;carrier:string;flightNumber:string};
+type GuardianHandoff={origin:string;destination:string;travelDate:string;carrier:string;flightNumber:string;workspace?:string};
 function readGuardianHandoff():GuardianHandoff|null{
   try{
     const raw=sessionStorage.getItem('atlas-guardian-research-v1');
     if(!raw)return null;
     const data=JSON.parse(raw) as Partial<GuardianHandoff>;
+    if(data.workspace!==deviceWorkspaceScope())return null;
     if(!/^[A-Z]{3}$/.test(data.origin||'')||!/^[A-Z]{3}$/.test(data.destination||'')||
       !/^20\d{2}-\d{2}-\d{2}$/.test(data.travelDate||''))return null;
     return {origin:data.origin!,destination:data.destination!,travelDate:data.travelDate!,
@@ -244,6 +246,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   const [activeTool, setActiveTool] = useState<FlightTool>(initialFlightTool);
   const [aircraftOpened, setAircraftOpened] = useState(() => initialFlightTool() === 'aircraft');
   const resultRef = useRef<HTMLElement>(null);
+  const routeFormRef = useRef<HTMLElement>(null);
   const selectedTool = INTELLIGENCE_TOOLS.find(tool => tool.id === activeTool);
   useEffect(() => {
     let frame = 0, finalFrame = 0;
@@ -252,8 +255,12 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       // Let the workspace router finish restoring its own layout first.
       frame = requestAnimationFrame(() => {
         finalFrame = requestAnimationFrame(() => {
-          resultRef.current?.focus({ preventScroll: true });
-          resultRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+          const form=routeFormRef.current;
+          const needsRoute=form?.dataset.routeValid!=='true';
+          const target=needsRoute?form:resultRef.current;
+          const input=needsRoute?Array.from(form?.querySelectorAll<HTMLInputElement>('input') || []).find(item=>item.type==='text'&&item.value.trim().length!==3):null;
+          (input || target)?.focus({ preventScroll: true });
+          target?.scrollIntoView({ block: 'start', behavior: 'auto' });
         });
       });
     };
@@ -343,7 +350,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     }
   }, [ctx.activeTrainer.homeAirports.join(',')]);
   useEffect(() => {
-    try { window.localStorage.setItem('atlas-free-flight-radar-v1', JSON.stringify(route)); }
+    try { window.localStorage.setItem(workspaceDeviceKey('atlas-free-flight-radar-v1'), JSON.stringify(route)); }
     catch { /* Local storage is optional. */ }
   }, [route]);
   useEffect(()=>{
@@ -558,7 +565,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     if (!valid) return;
     try {
       // Deliberate local opt-in: never copy team records or expiring live alerts.
-      localStorage.setItem('atlas-travel-offline-brief-v1',JSON.stringify({
+      localStorage.setItem(workspaceDeviceKey('atlas-travel-offline-brief-v1'),JSON.stringify({
         route:[route.origin,route.connection,route.destination].filter(Boolean).join(' → '),
         alternate:route.alternate,travelDate,
         connectionMinutes:route.connectionMinutes,savedAt:new Date().toISOString(),
@@ -627,10 +634,10 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         It cannot verify the reservation or live airline flight status.</span>
       <button type="button" onClick={()=>onToolChange?.('booked')}>Back to itinerary</button>
     </div>}
-    <section id="flight-route-composer" className="fr-card fr-builder fi-composer" aria-label="Flight research route and date">
+    <section id="flight-route-composer" className="fr-card fr-builder fi-composer" aria-label="Flight research route and date" ref={routeFormRef} tabIndex={-1} data-route-valid={valid}>
       <div className="fs-route-primary">
         <label><span><PlaneTakeoff size={17}/> From <small>(required)</small></span>
-          <input type="text" maxLength={3} list="fr-known-airports" placeholder="MCO"
+          <input type="text" maxLength={3} list="fr-known-airports" placeholder="Code"
             aria-label="Departure IATA airport code" autoCapitalize="characters"
             aria-required="true" ref={originInputRef} aria-invalid={routeAttempted && !airportCode(route.origin)}
             autoCorrect="off" spellCheck={false} value={route.origin}
@@ -640,7 +647,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           onClick={swapRoute} aria-label="Swap departure and arrival airports"
           title="Swap airports"><Route size={20}/></button>
         <label><span><PlaneLanding size={17}/> To <small>(required)</small></span>
-          <input type="text" maxLength={3} list="fr-known-airports" placeholder="ATL"
+          <input type="text" maxLength={3} list="fr-known-airports" placeholder="Code"
             aria-label="Arrival IATA airport code" autoCapitalize="characters"
             aria-required="true" ref={destinationInputRef} aria-invalid={routeAttempted && (!airportCode(route.destination) || route.origin === route.destination)}
             autoCorrect="off" spellCheck={false} value={route.destination}
@@ -685,7 +692,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           <ShieldAlert size={15}/> Save offline travel card
         </button>
         <button type="button" className="fs-clear-offline" onClick={()=>{
-          try{localStorage.removeItem('atlas-travel-offline-brief-v1');
+          try{localStorage.removeItem(workspaceDeviceKey('atlas-travel-offline-brief-v1'));
             setOfflineNotice('This device’s offline travel card was cleared.');}
           catch{setOfflineNotice('Could not clear device storage.');}
         }}>Clear offline copy</button>
@@ -695,17 +702,17 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       {showAdvanced&&<div className="fs-advanced-fields">
         <label>Connecting airport
           <input aria-label="Connecting IATA airport code" type="text" maxLength={3}
-            list="fr-known-airports" placeholder="ATL" value={route.connection}
+            list="fr-known-airports" placeholder="Code" value={route.connection}
             onChange={e=>setField('connection',e.target.value)}/>
         </label>
         <label>Alternative arrival
           <input aria-label="Alternative IATA airport code" type="text" maxLength={3}
-            list="fr-known-airports" placeholder="MDW" value={route.alternate}
+            list="fr-known-airports" placeholder="Code" value={route.alternate}
             onChange={e=>setField('alternate',e.target.value)}/>
         </label>
         <label>Connection minutes
           <input aria-label="Connection time in minutes" type="number" min={1} max={600}
-            inputMode="numeric" placeholder="65" disabled={!route.connection}
+            inputMode="numeric" placeholder="Minutes" disabled={!route.connection}
             value={route.connection?route.connectionMinutes:''}
             onChange={e=>setField('connectionMinutes',e.target.value)}/>
         </label>

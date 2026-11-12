@@ -1,4 +1,5 @@
 .mv-app.atlas-design-v3.atlas-product-v4 .fi-results { scroll-margin-top: 84px; }
+.mv-app.atlas-design-v3.atlas-product-v4 #flight-route-composer { scroll-margin-top: 84px; }
 .mv-app.atlas-design-v3.atlas-product-v4 .fi-tool-visual {
   display: grid; grid-template-columns: minmax(220px,320px) minmax(0,1fr); align-items: center;
   margin: 12px 0 20px; min-width: 0; overflow: hidden;

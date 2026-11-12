@@ -1,3 +1,4 @@
+import airportReference from './airport-reference.json';
 
 import type { Airport } from './opsModels';
 
@@ -69,4 +70,7 @@ export const CANADA_STARTER_AIRPORTS:Airport[] = [
   {iata:'YZF',name:'Yellowknife Airport',state:'NT',tier:'Secondary',scheduled:true,lat:62.4628,lon:-114.4403,icao:'CYZF'},
   {iata:'YXY',name:'Erik Nielsen Whitehorse International',state:'YT',tier:'Secondary',scheduled:true,lat:60.7096,lon:-135.0674,icao:'CYXY'},
   {iata:'YFB',name:'Iqaluit Airport',state:'NU',tier:'Secondary',scheduled:true,lat:63.7564,lon:-68.5558,icao:'CYFB'},
-];
+].map((airport):Airport=>{
+  const reference=airportReference[airport.iata as keyof typeof airportReference];
+  return {...airport,...reference,tier:reference.type==='large_airport'?'Major':reference.type==='medium_airport'?'Secondary':'Regional'};
+});

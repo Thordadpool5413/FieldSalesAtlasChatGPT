@@ -2,7 +2,8 @@
 
 The Flight DNA page now opens a visible results workspace. Its six primary tools
 appear before the route form, on desktop and phone. Selecting a tool changes the
-results pane, updates `intel` in the URL, and focuses the results. Back/Forward
+results pane and updates `intel` in the URL. If a route is incomplete, focus goes
+to the required route inputs with Analyze visible; otherwise it goes to the results. Back/Forward
 restores the selected tool without discarding loaded history. Route/date/filter
 changes invalidate previous results; request tokens prevent late responses from
 populating a different query.
@@ -29,7 +30,7 @@ Travel page underneath it. Native Back/Forward retains its existing behavior.
 | Airport pressure | Each airport's FAA notice, runway configuration and evidence | `/api/travel/disruptions`. An omitted airport remains unknown. Restrictions and missing coverage have different presentation. |
 | Weather risk | Aviation observations, forecasts and local/regional warnings | `/api/travel/airports/:iata/brief`; NOAA, NWS or ECCC according to coverage. Source time, age and scope stay attached. Expired observations cannot remain current recommendations. |
 | Connection survival | Minutes remaining for 0/15/30/60-minute inbound delays | Entered layover minus the user's gate-transfer allowance minus hypothetical delay. Device-local allowance; arithmetic, not an airline minimum connection time or probability. |
-| Security & airport | Historical checkpoint query and trainer-specific device memory | `/api/travel/security-history`. Route departure and travel date populate the query. Unsupported airports remain explicitly unverified rather than silently becoming MCO. |
+| Security & airport | Historical checkpoint query with validated direct-archive fallback and workspace/trainer-specific device memory | `/api/travel/security-history`. Route departure and travel date populate the query. Unsupported airports remain explicitly unverified rather than silently becoming MCO. |
 | Alternatives | Historical connecting corridors and optional alternative-arrival sample | Independent history response. An empty sample does not prove no service; schedules, seats and fares need verification. |
 | Route & airport map | Reference coordinates and schematic corridor | Existing geographic component. Lines do not establish schedules or actual flight paths. |
 | Aircraft nearby | Community position snapshot, source age and observations | `/api/travel/live-aircraft`. Loaded on opening this tool after analysis, with explicit refresh and no background polling. Positions cannot confirm flight status or bookings. |

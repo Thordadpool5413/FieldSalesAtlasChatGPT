@@ -6,7 +6,7 @@ History,Info,
 Plus,RefreshCw,ShieldCheck,
 Trash2
 } from 'lucide-react';
-import { useEffect,useMemo,useState } from 'react';
+import { useEffect,useMemo,useRef,useState } from 'react';
 import { useOp } from './Operations';
 import { today } from './opsModels';
 import './SecurityHistory.css';
@@ -15,10 +15,12 @@ import { api } from './workspaceApi';
 type Queue = 'standard'|'precheck';
 type Stats = {
   terminal:string;queue:Queue;hourRecords:number;
-  historicalMedianPosted:number;typicalHourlyP75:number;typicalHourlyP95:number;
+  historicalMedianPosted:number;typicalHourlyP75:number;typicalHourlyP95:number|null;
   observedStart:string;observedEnd:string;
 };
 type Report = {
+  state?:'historical'|'stale'|'unavailable';lastAttemptAt?:string;
+  archive?:{sourceUrl:string;sha256:string;retrievedAt:string;revision:string};
   available:boolean;checkedAt:string;airport:string;localDate:string;localHour:number;
   etHour:number|null;etWeekday:number|null;timezone:string;
   rows:Stats[];requestedQueues:Queue[];limitations:string[];
@@ -38,8 +40,7 @@ const legacyPersonalKey='atlas-personal-security-experiences-v1';
 function readPersonal(storageKey:string):Personal[]{
   try{
     // Preserve the previous device records under trainer A; other trainer seats start separately.
-    const raw=localStorage.getItem(storageKey)||
-      (storageKey.endsWith('trainer_a')?localStorage.getItem(legacyPersonalKey):null);
+    const raw=localStorage.getItem(storageKey);
     if(!raw)return [];
     const parsed=JSON.parse(raw);
     if(!Array.isArray(parsed))return [];
@@ -56,63 +57,70 @@ function median(nums:number[]):number|null{
   const middle=Math.floor(values.length/2);
   return Math.round(values.length%2?values[middle]:(values[middle-1]+values[middle])/2);
 }
+function observationDate(value:string){const instant=Date.parse(value);return Number.isFinite(instant)?new Date(instant).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'Unknown date';}
 function hourLabel(hour:number){
   const time=new Date(2001,0,1,hour);
   return time.toLocaleTimeString('en-US',{hour:'numeric'});
 }
 export default function SecurityHistory({airport,travelDate}:{airport:string;travelDate?:string}){
   const ctx=useOp();
-  const personalKey=legacyPersonalKey+'-'+ctx.activeTrainerId;
-  const [selected,setSelected]=useState(/^[A-Z]{3}$/.test(airport)?airport:'MCO');
+  const personalKey=legacyPersonalKey+'-'+(ctx.board.team?.id || 'unlinked')+'-'+ctx.activeTrainerId;
+  const [selected,setSelected]=useState(/^[A-Z]{3}$/.test(airport)?airport:'');
   const [date,setDate]=useState(travelDate || today());
-  const [hour,setHour]=useState(8);
+  const [hour,setHour]=useState<number|null>(null);
   const [report,setReport]=useState<Report|null>(null);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState('');
-  const [buffer,setBuffer]=useState(35);
-  const [personal,setPersonal]=useState(()=>readPersonal(personalKey));
+  const [buffer,setBuffer]=useState<number|null>(null);
+  const [personalStore,setPersonalStore]=useState(()=>({key:personalKey,rows:readPersonal(personalKey)}));
+  const personal=personalStore.key===personalKey?personalStore.rows:readPersonal(personalKey);
+  const earlierPersonal=readPersonal(legacyPersonalKey+'-'+ctx.activeTrainerId).concat(ctx.activeTrainerId==='trainer_a'?readPersonal(legacyPersonalKey):[])
+    .filter((record,index,all)=>all.findIndex(item=>item.id===record.id)===index&&!personal.some(item=>item.id===record.id));
+  const request=useRef(0);
   const [showLog,setShowLog]=useState(false);
-  const [minutes,setMinutes]=useState(25);
+  const [minutes,setMinutes]=useState('');
   const [terminal,setTerminal]=useState('');
   const [queue,setQueue]=useState<Queue>('standard');
   const [feedback,setFeedback]=useState('');
   const code=selected;
-  useEffect(()=>{if(/^[A-Z]{3}$/.test(airport))setSelected(airport);},[airport]);
+  useEffect(()=>{setSelected(/^[A-Z]{3}$/.test(airport)?airport:'');},[airport]);
   useEffect(()=>{if(travelDate)setDate(travelDate);},[travelDate]);
   const currentPersonal=useMemo(()=>personal.filter(row=>row.airport===code),[personal,code]);
   const queuePersonal=useMemo(()=>currentPersonal.filter(row=>row.queue===queue),[currentPersonal,queue]);
-  useEffect(()=>{setReport(null);setError('');setFeedback('');},[code,date,hour]);
-  useEffect(()=>{
-    try{localStorage.setItem(personalKey,JSON.stringify(personal.slice(0,80)));}
-    catch{/* Device storage unavailable */ }
-  },[personal,personalKey]);
+  useEffect(()=>{request.current++;setLoading(false);setReport(null);setError('');setFeedback('');},[code,date,hour]);
+  function savePersonal(rows:Personal[]){
+    try{localStorage.setItem(personalKey,JSON.stringify(rows.slice(0,80)));setPersonalStore({key:personalKey,rows:rows.slice(0,80)});return true;}
+    catch{setFeedback('Browser storage is unavailable. This observation was not saved.');return false;}
+  }
   async function check(){
-    if(loading)return;
+    if(loading || !/^[A-Z]{3}$/.test(code) || hour===null || !date)return;
+    const token=++request.current;
     setLoading(true);setError('');setFeedback('');setReport(null);
     const params=new URLSearchParams({airport:code,date,hour:String(hour)});
     try{
       const res=await api.get('/api/travel/security-history?'+params.toString());
-      setReport(res.data as Report);
+      if(token===request.current)setReport(res.data as Report);
     }catch(err){
-      setError(err instanceof Error?err.message:'The historical airport data could not be read.');
-    }finally{setLoading(false);}
+      if(token===request.current)setError(err instanceof Error?err.message:'The historical airport data could not be read.');
+    }finally{if(token===request.current)setLoading(false);}
   }
   function addPersonal(){
-    if(!Number.isFinite(minutes)||minutes<1||minutes>240){
+    const measured=Number(minutes);
+    if(!/^[A-Z]{3}$/.test(code)||!minutes||!Number.isFinite(measured)||measured<1||measured>240){
       setFeedback('Enter a measured security-line time from 1 to 240 minutes.');
       return;
     }
     const record:Personal={
       id:typeof crypto!=='undefined'&&'randomUUID' in crypto?crypto.randomUUID():Date.now().toString(),
       airport:code,terminal:terminal.trim().slice(0,45),queue,
-      minutes:Math.round(minutes),date:today()
+      minutes:Math.round(measured),date:today()
     };
-    setPersonal(old=>[record,...old].slice(0,80));
+    if(!savePersonal([record,...readPersonal(personalKey)]))return;
     setFeedback('Your experience was saved on this device only.');
     setShowLog(false);
   }
   function deletePersonal(id:string){
-    setPersonal(old=>old.filter(record=>record.id!==id));
+    if(!savePersonal(readPersonal(personalKey).filter(record=>record.id!==id)))return;
     setFeedback('Personal record deleted from this device.');
   }
   const memory=median(queuePersonal.map(record=>record.minutes));
@@ -129,7 +137,8 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
     <div className="sh-query">
       <label>Airport
         <select value={code} onChange={event=>setSelected(event.target.value)}>
-          {!validCodes.has(code)&&<option value={code}>{code} · archive coverage unverified</option>}
+          {!code&&<option value="">Choose your airport</option>}
+          {!!code&&!validCodes.has(code)&&<option value={code}>{code} · archive coverage unverified</option>}
           {covered.map(value=><option key={value} value={value}>{value}</option>)}
         </select>
       </label>
@@ -137,11 +146,12 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
         <input type="date" value={date} onChange={event=>setDate(event.target.value)}/>
       </label>
       <label>Checkpoint arrival time
-        <select value={hour} onChange={event=>setHour(Number(event.target.value))}>
+        <select value={hour??''} onChange={event=>setHour(event.target.value===''?null:Number(event.target.value))}>
+          <option value="">Choose your planned arrival time</option>
           {Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}
         </select>
       </label>
-      <button className="sh-run" disabled={loading} onClick={()=>void check()}>
+      <button className="sh-run" disabled={loading||!code||hour===null||!date} onClick={()=>void check()}>
         {loading?<RefreshCw size={17}/>:<History size={17}/>}
         {loading?'Reading history…':'Analyze checkpoint history'} <ArrowRight size={16}/>
       </button>
@@ -162,32 +172,36 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
         target="_blank" rel="noreferrer">View the public source <ArrowRight size={14}/></a>
     </div>}
     {report?.available&&<div className="sh-results">
+      {report.state==='stale'&&<p className="sh-error" role="status">{report.message} Last refresh attempt: {report.lastAttemptAt?new Date(report.lastAttemptAt).toLocaleString():'Unknown'}.</p>}
+      {report.state!=='stale'&&report.message&&<p className="sh-note" role="status"><Info size={15}/>{report.message}</p>}
       <div className="sh-results-head">
         <div><span className="sh-overline">AIRPORT-PUBLISHED ESTIMATE ARCHIVE</span>
-          <h3>{report.airport} · {hourLabel(hour)} local</h3>
+          <h3>{report.airport} · {hourLabel(report.localHour)} local</h3>
           <p>Source checked {new Date(report.checkedAt).toLocaleString()}.
             Historical observations are grouped by terminal and security type.</p></div>
         <span>Source timezone: U.S. Eastern</span>
       </div>
+      {report.archive&&<p className="sh-note"><span>Historical archive snapshot retrieved {new Date(report.archive.retrievedAt).toLocaleString()}. <a href={report.archive.sourceUrl} target="_blank" rel="noreferrer">Published source file</a> · Revision {report.archive.revision.slice(0,12)} · SHA-256 {report.archive.sha256.slice(0,12)}. This is not a live wait estimate.</span></p>}
       <div className="sh-rows">
         {report.rows.map((row,index)=><article className="sh-row" key={index}>
           <div className="sh-row-top">
             <div><span>{row.queue==='precheck'?'TSA PRECHECK':'STANDARD SCREENING'}</span>
               <strong>{row.terminal}</strong></div>
-            <small>{row.hourRecords} sampled hourly records</small>
+            <small>{row.hourRecords} historical hourly records</small>
           </div>
+          <small className="sh-observed-period">Observed {observationDate(row.observedStart)} – {observationDate(row.observedEnd)}</small>
           <div className="sh-stats">
             <div><span>Median of hourly p50s</span>
               <strong>{row.historicalMedianPosted}<small> min</small></strong></div>
             <div><span>Median of hourly p75s</span>
               <strong>{row.typicalHourlyP75}<small> min</small></strong></div>
             <div><span>Median of hourly p95s</span>
-              <strong>{row.typicalHourlyP95}<small> min</small></strong></div>
+              <strong>{row.typicalHourlyP95===null?'Not reported':<>{row.typicalHourlyP95}<small> min</small></>}</strong></div>
           </div>
           <div className="sh-buffer-review">
             <div><Clock3 size={15}/><span>Your security-time allowance</span></div>
-            <strong>{buffer} min</strong>
-            {row.queue===queue ? <span className={buffer<row.typicalHourlyP75?'sh-review-rose':'sh-review-aqua'}>
+            <strong>{buffer===null?'Not supplied':buffer+' min'}</strong>
+            {row.queue===queue && buffer!==null ? <span className={buffer<row.typicalHourlyP75?'sh-review-rose':'sh-review-aqua'}>
               {row.hourRecords<5?'Small historical sample. Do not rely on this comparison alone.':
                 buffer<row.typicalHourlyP75?
                   'Below the recent sampled hourly p75 benchmark. Consider more time.' :
@@ -196,18 +210,22 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
           </div>
         </article>)}
       </div>
-      <p className="sh-note"><Info size={15}/> These values are medians across up to 100 recent matching hourly records per queue, grouped by terminal. Each hourly record has its own published p50/p75/p95. These are not pooled passenger percentiles. The selected date determines weekday and time-zone conversion; it is not a forecast for that calendar date. The readings are airport-posted estimates, not measured passenger waits.</p>
+      <p className="sh-note"><Info size={15}/> These values are medians across up to 100 recent matching hourly records per queue, grouped by terminal. Each hourly record has its own published p50/p75/p95. These are not pooled passenger percentiles. The selected date determines weekday and time-zone conversion; it is not a forecast for that calendar date. The readings are airport-posted estimates, not measured passenger waits. Only open lanes are included; closed checkpoints and missing queues do not mean zero waits.</p>
+      {!!report.limitations?.length&&<details><summary>Source scope and limitations</summary><ul>{report.limitations.map(item=><li key={item}>{item}</li>)}</ul></details>}
     </div>}
     <div className="sh-memory">
       <div className="sh-memory-heading">
         <div><span className="sh-overline">PRIVATE · ON THIS DEVICE</span>
           <h3>Your airport memory</h3>
-          <p>Track how long security took on past trips. Records are stored locally for the selected trainer seat, not synchronized with your shared workspace. Anyone using this device and trainer seat may view them.</p>
+          <p>Track how long security took on past trips. Records stay on this device for this workspace and trainer. They are not synchronized with your partner.</p>
         </div>
         <button type="button" onClick={()=>setShowLog(v=>!v)}>
           {showLog?'Close':'Log a trip'} <Plus size={16}/>
         </button>
       </div>
+      {earlierPersonal.length>0&&<details><summary>Earlier observations on this device</summary><p>Import only observations that belong to the selected trainer in this workspace. Earlier copies remain preserved.</p>
+        <button type="button" className="op-btn" onClick={()=>{if(window.confirm('These observations will be attached locally to the selected trainer in this workspace. Have you reviewed that they belong here?'))savePersonal([...personal,...earlierPersonal]);}}>Import {earlierPersonal.length} earlier observations after review</button>
+      </details>}
       <div className="sh-memory-overview">
         <div><span>Recorded trips at {code}</span><strong>{currentPersonal.length}</strong></div>
         <div><span>Personal median · {queue==='precheck'?'PreCheck':'Standard'}</span><strong>{memory===null?'Not yet recorded':memory+' min'}</strong></div>
@@ -218,7 +236,8 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
           </select>
         </label>
         <label>Use this many minutes for security
-          <select value={buffer} onChange={event=>setBuffer(Number(event.target.value))}>
+          <select value={buffer??''} onChange={event=>setBuffer(event.target.value===''?null:Number(event.target.value))}>
+            <option value="">Choose your allowance</option>
             {[15,20,25,30,35,45,60,75,90].map(value=><option key={value} value={value}>{value} min</option>)}
           </select>
         </label>
@@ -226,7 +245,7 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
       {showLog&&<div className="sh-log-form">
         <label>Observed elapsed minutes
           <input type="number" min={1} max={240} value={minutes}
-            onChange={event=>setMinutes(Number(event.target.value))}/>
+            onChange={event=>setMinutes(event.target.value)}/>
         </label>
         <label>Terminal (optional)
           <input value={terminal} onChange={event=>setTerminal(event.target.value)}

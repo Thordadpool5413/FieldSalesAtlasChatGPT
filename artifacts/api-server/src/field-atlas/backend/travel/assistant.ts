@@ -34,9 +34,10 @@ export async function answerTravelQuestion(workspaceId: string, request: z.infer
   }
   const input = { ...changed.input, endDate: deadline.date < changed.input.endDate ? deadline.date : changed.input.endDate,
     allowHandoffs: request.allowHandoffs, checkPublicSources: true };
-  let scheduleFits = true;
+  let scheduleFits = true, routingUnknown=false;
   if (input.managerIds.length) {
     const report = await buildScenarios(input, changed.board, revision);
+    routingUnknown=report.routingVerified===false;
     const scenario = report.scenarios.find(item => item.feasible) || report.scenarios[0];
     answer.scenario = scenario; scheduleFits = scenario.feasible;
     answer.evidence.push(...report.evidence);
@@ -70,7 +71,7 @@ export async function answerTravelQuestion(workspaceId: string, request: z.infer
   }
   const knownLate = answer.trainers.some(row => row.meetsDeadline === false);
   const unknownHome = answer.trainers.some(row => row.meetsDeadline === null);
-  answer.verdict = !scheduleFits || knownLate ? 'not-with-current-itinerary' : unknownHome ? 'unknown' : 'provisional';
+  answer.verdict = knownLate || (!scheduleFits&&!routingUnknown) ? 'not-with-current-itinerary' : unknownHome || routingUnknown ? 'unknown' : 'provisional';
   answer.title = answer.verdict === 'not-with-current-itinerary' ? 'The supplied itinerary does not meet this goal.' : answer.verdict === 'unknown' ? 'The return-home goal still needs evidence.' : 'Your supplied timings fit the deadline.';
   const readiness = await journeyReadiness(input, changed.board, answer.scenario?.visits || context.pending, { date: deadline.date, time: deadline.time });
   answer.readiness = readiness.readiness;

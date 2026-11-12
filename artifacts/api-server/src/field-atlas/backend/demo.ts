@@ -18,7 +18,7 @@ export async function createDemoWorkspace() {
   ].map(person => ({ ...person, id: randomUUID(), email: '', phone: '', cadence: 'Monthly', focus: 'Sample coaching goals', coachingStatus: 'On track', updatedAt: now }));
   try {
     await db.transact([
-      db.tx.add('atlas_teams', [{ id: workspaceId, ownerId: actorId, name: 'Field Sales Atlas demo' }]),
+      db.tx.add('atlas_teams', [{ id: workspaceId, ownerId: actorId, name: 'Field Sales Atlas demo', testFixture:true }]),
       db.tx.add('atlas_members', [{ id: actorId, workspaceId, role: 'owner' }]),
       db.tx.add('atlas_guest_links', [{ id: createHash('sha256').update(workspaceKey).digest('hex'), workspaceId, actorId, createdAt: now }]),
       db.tx.add('atlas_managers_' + workspaceId, managers),

@@ -53,8 +53,14 @@
     <small>Your original workspace address stays in the browser. This screen does not change your saved plans.</small>
   </main>
   <script>
+    function loadSavedBrief(){
+    document.getElementById('savedBrief').style.display='none';
+    document.getElementById('savedLegs').replaceChildren();
+    document.getElementById('savedHistory').hidden=true;
     try{
-      var item=JSON.parse(localStorage.getItem('atlas-travel-offline-brief-v1')||'null');
+      var selected=window.location.hash.match(/^#workspace=([0-9a-f]{64})$/i);
+      var scope=selected?selected[1].toLowerCase():localStorage.getItem('field-sales-atlas-link-v1')||'';
+      var item=/^[0-9a-f]{64}$/i.test(scope)?JSON.parse(localStorage.getItem('atlas-travel-offline-brief-v1:workspace:'+scope.toLowerCase())||'null'):null;
       if(item&&typeof item.route==='string'&&/^[A-Z]{3}( → [A-Z]{3}){1,2}$/.test(item.route)){
         document.getElementById('savedRoute').textContent=item.route;
         document.getElementById('savedDate').textContent='Travel date: '+String(item.travelDate||'Not set');
@@ -80,6 +86,10 @@
         document.getElementById('savedBrief').style.display='block';
       }
     }catch(error){/* Offline reference is optional. */}
+    }
+    loadSavedBrief();
+    window.addEventListener('hashchange',loadSavedBrief);
+    window.addEventListener('pageshow',loadSavedBrief);
     document.getElementById('retry').addEventListener('click',function(){window.location.reload();});
     window.addEventListener('online',function(){window.location.reload();},{once:true});
   </script>

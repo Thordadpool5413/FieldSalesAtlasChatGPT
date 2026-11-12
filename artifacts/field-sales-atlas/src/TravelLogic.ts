@@ -1,8 +1,11 @@
 
 import type { Airport,Manager } from './opsModels';
 import { distanceMiles,today } from './opsModels';
+import type { RoadPlanningResult } from '../shared/travel/roadPlanning';
+import { describeEvidence } from '../shared/travel/evidence';
 
 export type TravelPrefs = {
+  roadNetwork?: NonNullable<RoadPlanningResult['network']>;
   homeAirports: string[];
   homeDriveMinutes: Record<string,number>;
   checkinMinutes: number;
@@ -16,8 +19,6 @@ export type TravelPrefs = {
   tollsPerTrip: number;
   groundMiscPerTrip: number;
   valueOfTimePerHour: number;
-  roadMultiplier: number;
-  assumedRoadMph: number;
   preferNonstop: boolean;
   maxConnections: number;
   preferredAirlines: string;
@@ -27,7 +28,7 @@ export const defaultTravelPrefs: TravelPrefs = {
   checkinMinutes:105, rentalPickupMinutes:45, rentalReturnMinutes:30,
   hotelPerNight:160, mealsPerDay:65, rentalPerDay:68, parkingPerDay:13,
   fuelPerMile:0.17, tollsPerTrip:15, groundMiscPerTrip:0,
-  valueOfTimePerHour:65, roadMultiplier:1.3, assumedRoadMph:47,
+  valueOfTimePerHour:65,
   preferNonstop:true, maxConnections:1, preferredAirlines:'',
 };
 export type TravelPlace = { name:string; state:string; lat:number;lon:number; code?:string };
@@ -59,9 +60,10 @@ export type TravelPlan = {
 };
 export type Gateway = {
   airport: Airport; airMiles: number; planningRoadMiles: number;
-  planningDriveMinutes: number; path:Manager[]; firstLegMiles:number;
+  planningDriveMinutes: number; path:Manager[]; firstLegMiles:number; firstLegMinutes?:number;
 };
 export type QuoteResult = {
+  groundKnown:boolean;complete:boolean;
   quote:FlightQuote; cash:number; totalMinutes:number; economicCost:number;
   fare:number; groundMinutes:number; groundMiles:number; homeTravelMinutes:number;
   nightCount:number; expenseBreakdown:Array<{name:string;amount:number}>;
@@ -79,29 +81,45 @@ export const safeTravelPrefs=(raw:Partial<TravelPrefs>):TravelPrefs=>{
     ['parkingPerDay',0,200,13],['fuelPerMile',0,3,0.17],
     ['tollsPerTrip',0,500,15],['groundMiscPerTrip',0,1000,0],
     ['valueOfTimePerHour',0,500,65],
-    ['roadMultiplier',1,2.3,1.3],['assumedRoadMph',15,75,47],
     ['maxConnections',0,4,1],
   ];
   for(const [key,min,max,fallback] of numbers)(p as unknown as Record<string,unknown>)[key]=clamp(p[key],min,max,fallback);
   p.homeAirports=[...new Set((p.homeAirports||[]).map(s=>String(s).toUpperCase()).filter(s=>/^[A-Z]{3}$/.test(s)))].slice(0,6);
   p.homeDriveMinutes=Object.fromEntries(Object.entries(p.homeDriveMinutes||{})
-    .filter(([code])=>/^[A-Z]{3}$/.test(code)).map(([code,n])=>[code,clamp(n,0,300,60)]));
+    .filter(([code,n])=>/^[A-Z]{3}$/.test(code)&&n!==null&&n!==undefined&&String(n).trim()!==''&&Number.isFinite(Number(n))&&Number(n)>=0&&Number(n)<=300)
+    .map(([code,n])=>[code,Math.round(Number(n))]));
+  delete (p as unknown as Record<string,unknown>).roadMultiplier;
+  delete (p as unknown as Record<string,unknown>).assumedRoadMph;
   p.preferredAirlines=String(p.preferredAirlines||'').slice(0,170);
   p.preferNonstop=!!p.preferNonstop;
   return p;
 };
-export const newTravelPlan=(origin:string='MCO'):TravelPlan=>({
+export const newTravelPlan=(origin:string=''):TravelPlan=>({
   id:'',title:'',trainer:'',departDate:today(),returnDate:today(),
-  destination:null,managerIds:[],origins:[origin],selectedArrival:'',notes:'',quotes:[],
+  destination:null,managerIds:[],origins:origin?[origin]:[],selectedArrival:'',notes:'',quotes:[],
   planning:{dayStart:'09:00',dayEnd:'17:00',sessionMinutes:150,breakMinutes:30,includeWeekends:false,arrivalToCoachingBufferMinutes:30},
 });
 export const countNights=(start:string,end:string)=>{
   const a=Date.parse(start+'T12:00:00Z'),b=Date.parse(end+'T12:00:00Z');
   return Number.isFinite(a)&&Number.isFinite(b)?Math.max(0,Math.ceil((b-a)/86400000)):0;
 };
-export function estimateRoadMiles(airMiles:number,p:TravelPrefs){return Math.round(airMiles*p.roadMultiplier);}
-export function estimateRoadMinutes(airMiles:number,p:TravelPrefs){
-  return Math.round(estimateRoadMiles(airMiles,p)/p.assumedRoadMph*60);
+export function roadTransfer(from:{lat?:number;lon?:number},to:{lat?:number;lon?:number},prefs:TravelPrefs){
+  const network=prefs.roadNetwork;
+  if(!network || !network.matrix.roadBased || describeEvidence(network.matrix.evidence).state!=='current')return null;
+  const find=(point:typeof from)=>network.points.findIndex(item=>Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(item.lat-point.lat!)<0.00001&&Math.abs(item.lon-point.lon!)<0.00001);
+  const a=find(from),b=find(to);if(a<0||b<0)return null;
+  const minutes=network.matrix.durations[a]?.[b],miles=network.matrix.distances[a]?.[b];
+  return typeof minutes==='number'&&typeof miles==='number'?{minutes,miles}:null;
+}
+export function roadCircuit(airport:Airport,stops:Manager[],prefs:TravelPrefs,returnAirport=airport){
+  const remaining=[...stops],path:Manager[]=[];let current:{lat?:number;lon?:number}=airport,minutes=0,miles=0;
+  while(remaining.length){
+    const choices=remaining.map((person,index)=>({person,index,leg:roadTransfer(current,person,prefs)})).filter(item=>item.leg!==null).sort((a,b)=>a.leg!.minutes-b.leg!.minutes);
+    const next=choices[0];if(!next)return null;
+    path.push(next.person);minutes+=next.leg!.minutes;miles+=next.leg!.miles;current=next.person;remaining.splice(next.index,1);
+  }
+  const back=roadTransfer(current,returnAirport,prefs);if(!back)return null;
+  return {path,minutes:minutes+back.minutes,miles:miles+back.miles};
 }
 export function orderStopsFromAirport(airport:Airport,selected:Manager[]):Manager[]{
   const valid=selected.filter(m=>Number.isFinite(m.lat)&&Number.isFinite(m.lon));
@@ -118,39 +136,6 @@ export function orderStopsFromAirport(airport:Airport,selected:Manager[]):Manage
   }
   return result;
 }
-export function distanceItinerary(airport:Airport,stops:Manager[],returnAirport?:Airport){
-  const ordered=orderStopsFromAirport(airport,stops);
-  let distance=0,lat=airport.lat!,lon=airport.lon!;
-  for(const manager of ordered){
-    distance+=distanceMiles(lat,lon,manager.lat!,manager.lon!);
-    lat=manager.lat!;lon=manager.lon!;
-  }
-  const last=returnAirport&&Number.isFinite(returnAirport.lat)&&Number.isFinite(returnAirport.lon)
-    ?returnAirport:airport;
-  if(ordered.length)distance+=distanceMiles(lat,lon,last.lat!,last.lon!);
-  return {airMiles:distance,path:ordered,firstLegMiles:ordered.length?distanceMiles(airport.lat!,airport.lon!,ordered[0].lat!,ordered[0].lon!):0};
-}
-export function airportGateways(
-  airports:Airport[],place:TravelPlace|null,managers:Manager[],prefs:TravelPrefs,max:number=9
-):Gateway[]{
-  const locations=managers.filter(m=>Number.isFinite(m.lat)&&Number.isFinite(m.lon));
-  if(!locations.length && !(place && Number.isFinite(place.lat)&&Number.isFinite(place.lon)))return [];
-  const candidates=airports.filter(a=>Number.isFinite(a.lat)&&Number.isFinite(a.lon)&&a.scheduled===true && /^[A-Z]{3}$/.test(a.iata));
-  const picked=candidates.map(airport=>{
-    if(locations.length){
-      const route=distanceItinerary(airport,locations);
-      return {airport,airMiles:route.airMiles,planningRoadMiles:estimateRoadMiles(route.airMiles,prefs),
-        planningDriveMinutes:estimateRoadMinutes(route.airMiles,prefs),path:route.path,firstLegMiles:route.firstLegMiles};
-    }
-    const airMiles=distanceMiles(airport.lat!,airport.lon!,place!.lat,place!.lon);
-    return {airport,airMiles,planningRoadMiles:estimateRoadMiles(airMiles*2,prefs),
-      planningDriveMinutes:estimateRoadMinutes(airMiles*2,prefs),path:[],firstLegMiles:airMiles};
-  });
-  picked.sort((a,b)=>a.planningDriveMinutes-b.planningDriveMinutes
-     ||Number(b.airport.tier==='Major')-Number(a.airport.tier==='Major')
-     ||a.airport.iata.localeCompare(b.airport.iata));
-  return picked.slice(0,max);
-}
 export function homeAirportOptions(airports:Airport[],prefs:TravelPrefs,selected:string[]){
   const byCode=new Map(airports.map(a=>[a.iata,a]));
   return [...new Set([...selected,...prefs.homeAirports])].map(code=>byCode.get(code)).filter((a):a is Airport=>!!a);
@@ -163,18 +148,15 @@ export function calcQuote(quote:FlightQuote,plan:TravelPlan,prefs:TravelPrefs,ai
   const people=managers.filter(m=>plan.managerIds.includes(m.id)&&Number.isFinite(m.lat)&&Number.isFinite(m.lon));
   let groundMinutes=0;
   let groundMiles=0;
+  let groundKnown=false;
   const warnings:string[]=[];
   if(first&&Number.isFinite(first.lat)&&Number.isFinite(first.lon)){
     if(people.length===plan.managerIds.length&&people.length>0){
-      const loop=distanceItinerary(first,people,last);
-      groundMiles=estimateRoadMiles(loop.airMiles,prefs);
-      groundMinutes=estimateRoadMinutes(loop.airMiles,prefs);
+      const loop=roadCircuit(first,people,prefs,last);
+      if(loop){groundMiles=loop.miles;groundMinutes=loop.minutes;groundKnown=true;}
     }else if(plan.destination&&Number.isFinite(plan.destination.lat)&&Number.isFinite(plan.destination.lon)){
-      const outbound=distanceMiles(first.lat!,first.lon!,plan.destination.lat,plan.destination.lon);
-      const inbound=last&&Number.isFinite(last.lat)&&Number.isFinite(last.lon)
-        ? distanceMiles(plan.destination.lat,plan.destination.lon,last.lat!,last.lon!):outbound;
-      groundMiles=estimateRoadMiles(outbound+inbound,prefs);
-      groundMinutes=estimateRoadMinutes(outbound+inbound,prefs);
+      const outbound=roadTransfer(first,plan.destination,prefs),inbound=roadTransfer(plan.destination,last || first,prefs);
+      if(outbound&&inbound){groundMiles=outbound.miles+inbound.miles;groundMinutes=outbound.minutes+inbound.minutes;groundKnown=true;}
       if(plan.managerIds.length)warnings.push('Some manager locations are missing; ground travel only uses the selected city.');
     }else warnings.push('Ground travel cannot be estimated until a destination is mapped.');
   }else warnings.push('Destination airport coordinates unavailable.');
@@ -182,8 +164,8 @@ export function calcQuote(quote:FlightQuote,plan:TravelPlan,prefs:TravelPrefs,ai
     groundMiles=Number(quote.verifiedGroundMiles);
   if(Number.isFinite(quote.verifiedGroundMinutes)&&Number(quote.verifiedGroundMinutes)>0)
     groundMinutes=Number(quote.verifiedGroundMinutes);
-  if(!quote.verifiedGroundMiles||!quote.verifiedGroundMinutes)
-    warnings.push('Ground distance and/or travel time use geographic estimates, not a road-routing service.');
+  if(Number.isFinite(quote.verifiedGroundMiles)&&Number(quote.verifiedGroundMiles)>0&&Number.isFinite(quote.verifiedGroundMinutes)&&Number(quote.verifiedGroundMinutes)>0)groundKnown=true;
+  if(!groundKnown)warnings.push('Ground travel cannot be established: no current road route or complete user-entered ground estimate is available. Cost and travel totals are incomplete.');
   if(quote.returnOrigin && quote.returnOrigin!==quote.destination)
     warnings.push('Open-jaw flight: verify the separate return airport route and one-way rental terms.');
   const driveHome=prefs.homeDriveMinutes[quote.origin];
@@ -198,7 +180,7 @@ export function calcQuote(quote:FlightQuote,plan:TravelPlan,prefs:TravelPrefs,ai
     {name:'Hotel allowance',amount:nights*prefs.hotelPerNight},
     {name:'Meals allowance',amount:days*prefs.mealsPerDay},
     {name:'Departure airport parking',amount:days*prefs.parkingPerDay},
-    {name:'Fuel / charging planning allowance',amount:groundMiles*prefs.fuelPerMile},
+    ...(groundKnown?[{name:'Fuel / charging planning allowance',amount:groundMiles*prefs.fuelPerMile}]:[]),
     {name:'Toll allowance',amount:prefs.tollsPerTrip},
     {name:'Other ground transport allowance',amount:prefs.groundMiscPerTrip},
   ];
@@ -212,7 +194,8 @@ export function calcQuote(quote:FlightQuote,plan:TravelPlan,prefs:TravelPrefs,ai
   if(!quote.outboundMinutes || !quote.returnMinutes)warnings.push('Flight duration is missing. Comparison is incomplete.');
   const homeArrivalLocal=quote.returnLandingLocal&&driveHome!==undefined
     ?addLocalMinutes(quote.returnLandingLocal,driveHome+30):null;
-  return {quote,cash,totalMinutes,economicCost,fare:quote.fare,groundMinutes,groundMiles,homeTravelMinutes,
+  const complete=groundKnown&&driveHome!==undefined&&quote.outboundMinutes>0&&quote.returnMinutes>0;
+  return {quote,cash,totalMinutes,economicCost,fare:quote.fare,groundMinutes,groundMiles,homeTravelMinutes,groundKnown,complete,
     nightCount:nights,expenseBreakdown,warnings,homeArrivalLocal};
 }
 export function addLocalMinutes(isoLocal:string,minutes:number){

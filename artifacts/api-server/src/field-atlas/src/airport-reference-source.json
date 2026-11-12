@@ -1,0 +1,9 @@
+{
+  "source": "OurAirports public-domain reference",
+  "sourceUrl": "https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv",
+  "retrievedAt": "2026-11-12T08:17:23.873486Z",
+  "sourceSha256": "11e7a1edf9e5bef91aa4492e3ab42bb5b38b5f2df81358a235ed5a393a571e54",
+  "airportCount": 121,
+  "scope": "Bundled US/Canada airport coordinates, identifiers, published airport type and scheduled-service flags. Tier is a display mapping of source airport type, not a passenger-volume ranking.",
+  "limitation": "This fixed snapshot can age. A published scheduled-service flag is not a verified route, schedule, fare or seat inventory."
+}

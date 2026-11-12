@@ -1,3 +1,4 @@
+import bundledAirportSource from './airport-reference-source.json';
 
 import { geoAlbersUsa,geoGraticule,geoMercator,geoPath } from 'd3-geo';
 import { ArrowRight,CalendarCheck,CalendarClock,ChevronDown,Compass,Info,Layers,List,Map as MapIcon,MapPin,Maximize2,Minimize2,Plane,PlaneTakeoff,Plus,Search,Sparkles,Users,X } from 'lucide-react';
@@ -1280,7 +1281,7 @@ export default function MiamiMapHome({atlas,airports,managers,assignments,theme,
            <article data-testid="source-airports">
              <strong>Airport location markers</strong>
              <span>Public OurAirports reference directory · {ctx.airportSource==='live'?'current provider response':ctx.airportSource==='cached'?'cached public snapshot':ctx.airportSource==='starter'?'limited starter fallback':'loading'}.</span>
-             <small>Directory checked: {sourceTimestamp(ctx.airportCheckedAt)}. Airport dots are locations, not live flights.</small>
+             <small>Directory checked: {sourceTimestamp(ctx.airportSource==='starter'?bundledAirportSource.retrievedAt:ctx.airportCheckedAt)}. Airport dots are locations, not live flights.</small>
            </article>
            <article data-testid="source-flight-status">
              <strong>Flight status and availability</strong>

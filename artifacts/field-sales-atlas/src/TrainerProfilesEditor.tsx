@@ -48,7 +48,7 @@ export default function TrainerProfilesEditor({profiles,airports,accessSeat,onCl
   function change(patch:Partial<TrainerProfile>){setForms(f=>({...f,[slot]:{...f[slot],...patch}}));setSaved('');}
   function addAirport(code:string){
     if(!/^[A-Z]{3}$/.test(code)||active.homeAirports.includes(code)||active.homeAirports.length>=6)return;
-    change({homeAirports:[...active.homeAirports,code],homeDriveMinutes:{...active.homeDriveMinutes,[code]:active.homeDriveMinutes[code]??60}});
+    change({homeAirports:[...active.homeAirports,code]});
     setAirportSearch('');
   }
   async function save(){
@@ -83,8 +83,8 @@ export default function TrainerProfilesEditor({profiles,airports,accessSeat,onCl
         <div className="trainer-airport-list">
           {active.homeAirports.map(code=><div className="trainer-airport-item" key={code}>
             <div><strong>{code}</strong><span>{airports.find(a=>a.iata===code)?.name||'Saved departure airport'}</span></div>
-            <label><span>Drive min</span><input type="number" min={0} max={300} value={active.homeDriveMinutes[code]??60}
-              onChange={e=>change({homeDriveMinutes:{...active.homeDriveMinutes,[code]:Math.max(0,Math.min(300,Number(e.target.value)||0))}})}/></label>
+            <label><span>Your drive estimate (min)</span><input type="number" min={0} max={300} placeholder="Not supplied" value={active.homeDriveMinutes[code]??''}
+              onChange={e=>{const next={...active.homeDriveMinutes};if(e.target.value==='')delete next[code];else next[code]=Math.max(0,Math.min(300,Number(e.target.value)));change({homeDriveMinutes:next});}}/></label>
             <button onClick={()=>change({homeAirports:active.homeAirports.filter(c=>c!==code)})} aria-label={'Remove '+code}><X size={16}/></button>
           </div>)}
           {!active.homeAirports.length&&<p className="trainer-no-airports">Add at least one home airport to compare travel routes for this trainer.</p>}

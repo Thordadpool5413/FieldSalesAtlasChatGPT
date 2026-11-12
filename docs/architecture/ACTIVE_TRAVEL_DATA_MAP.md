@@ -1,6 +1,6 @@
 # Active travel data: provider to screen
 
-Audited 2026-11-10 against the active API server and application. The research
+Updated 2026-11-12 against the active API server and application. The research
 catalog in [AVIATION_DATA_CONNECTIONS.md](AVIATION_DATA_CONNECTIONS.md) describes
 additional work; its entries do not activate providers.
 
@@ -12,7 +12,7 @@ tools now open distinct, visible results rather than one hidden research section
 
 | Data | Active backend / API | Where it is used | Practical limit |
 | --- | --- | --- | --- |
-| OurAirports airport identifiers, coordinates and country | `providers/airports.ts`; `/api/airports/curated`; itinerary airport lookup | Atlas airport list/map, gateway comparisons, Flight DNA, booking zone resolution, journey planning | Reference listing is not scheduled service or inventory. A bundled fallback has narrower coverage. |
+| OurAirports airport identifiers, coordinates and country | `providers/airports.ts`; `/api/airports/curated`; itinerary airport lookup | Atlas airport list/map, gateway comparisons, Flight DNA, booking zone resolution, journey planning | Reference listing is not scheduled service or inventory. A dated 121-airport bundled US/Canada snapshot has narrower coverage; its published airport type, service flags, coordinates, source SHA-256 and retrieval time are preserved. Size labels are no longer generated from list position. |
 | FAA NAS airport events/configuration | `publicTravel.ts`, NAS projection; `/api/travel/disruptions`; `/api/travel/airports/:iata/brief` | Flight DNA, advanced comparison, journey evidence, opted-in reviews | U.S. airport-wide notices; an omitted airport is unknown. No flight-specific causation. |
 | NOAA METAR / TAF | Shared `publicTravel.ts` adapters; airport brief; compatible `/api/travel/aviation/:icao` | Flight DNA, advanced destination weather, journey evidence and reviews | Exact station match, source issue/observation age and TAF validity. Not airline status. |
 | NWS point forecast and alerts | Shared adapters; airport brief; compatible point-forecast/weather-alerts routes | Flight DNA, advanced destination weather, journey evidence and reviews | U.S. coordinate query. Periods and alert validity constrain applicability. |
@@ -21,8 +21,8 @@ tools now open distinct, visible results rather than one hidden research section
 | ECCC active regional warnings | Warning adapter; airport brief | Canadian weather cards, combined flight brief, journey evidence and reviews | Regional bounding-box/polygon coverage; a returned warning does not establish that the airport itself is affected. |
 | Installed official BTS monthly flights | `providers/bts.ts`; `/api/travel/history` | Flight DNA summary and per-leg official history; joint journey/assistant/recovery historical context; manual history checker | U.S. covered domestic reporting carriers, publication lag; each rate needs 30 eligible observations. Import time and reporting months are separate. |
 | Independent Flyerintel airport/route/flight/month aggregates | `flightHistory.ts`; `/api/travel/flight-history` | Flight DNA, historical network comparisons and monthly charts | Separate cohorts and licence/attribution. Never pooled with the official import, never live availability. Its failure does not hide installed official records. |
-| Historical airport-posted checkpoint samples | `securityHistory.ts`; `/api/travel/security-history` | Security history within Flight DNA | Bounded historical archive and participating airports; not a current TSA wait API or measured passenger wait. |
-| OpenRouteService / configured OSRM matrices | `providers/routing.ts`; scenario/readiness/assistant/recovery calculations | Joint journey planner, readiness, assistant/recovery transfer estimates and reviewed calendar updates | Road-network estimates exclude live traffic/closures/border queues. Legacy guided/advanced gateway and quote comparisons still use labeled geographic estimates; use Plan together for road-network calculations. Geographic fallback cannot establish a drivable route. Sample success does not certify every route. |
+| Historical airport-posted checkpoint samples | `securityHistory.ts`; `/api/travel/security-history` | Security history within Flight DNA | Validated, timestamped historical rows are cached durably. A bounded, license-checked, revision-pinned Parquet archive backs up the query service, with checksum and retrieval receipt. Missing percentiles stay absent; outages retain a labeled stale snapshot. Ambiguous DST hours are rejected. Not a current TSA wait API or measured passenger wait. |
+| OpenRouteService / configured OSRM matrices | `providers/routing.ts`; `/api/travel/road-planning`; scenario/readiness/assistant/recovery calculations | Guided and advanced airport comparisons, quote calculations, joint planner, readiness, assistant/recovery and reviewed calendar updates | The same directed road matrices serve all active planners. Missing/currently unreachable road data cannot create a feasible schedule or complete quote ranking. User-entered checked ground estimates remain explicitly identified. Live traffic, closures, border queues and airline inventory remain unknown. |
 | adsb.lol aircraft observations | `providers/liveAircraft.ts`; `/api/travel/live-aircraft` | On-demand aircraft panel within Flight DNA | Position observations, not confirmed flight/booking/aircraft assignment. Production provider-review gate remains separate. |
 | Census county/place/ZCTA geography | Geography adapters and geography APIs | Atlas territories, county/ZIP explorer and base reference tools | Reference geography, not an independently verified street address or USPS delivery ZIP. |
 | Saved visits, trainer profiles, availability, flight fields and reviewed requirements | Workspace-scoped record store; journeys/readiness/scenarios/assistant/recovery APIs | Both-trainer constraints, deadlines, connection/resource margins and reviewed calendar changes | User-supplied constraints. Calendar state and itinerary versions are checked again before changes. Imported booking fields require explicit attachment to shared journeys. |
@@ -55,6 +55,49 @@ tools now open distinct, visible results rather than one hidden research section
 - Exposed per-dataset daily checks and the distinction between implemented
   adapters and research-only integrations. Diagnostics no longer list road
   configuration as missing when routing is configured; live traffic remains a gap.
+
+## Real-data and decision boundaries
+
+Normal Run and published runtimes do not offer demo creation or access to old
+fixture workspaces. New workspaces contain no managers, visits, trips or flight
+results until users add records or request attributed public data. Existing
+private records are preserved. Historical datasets are real observations with
+reporting periods and coverage; they are not fabricated examples or live status.
+Illustrative toolkit photography is labeled as imagery, not operational evidence.
+
+Test fixtures require an explicit test runtime flag **and** a separate temporary
+data directory. `/api/testing/workspace` is omitted from normal route registration.
+`/api/demo/create` is retired with HTTP 410. Browser and API fixtures are only
+used to exercise errors, provider contracts and scheduling safely.
+
+- Guided scheduling now builds a backend scenario preview and uses the same
+  reviewed, revision-checked atomic approval as joint planning. Availability,
+  ownership, local working hours, flight limits and road reachability are checked
+  before calendar writes. Advanced comparison routes its scheduling action to
+  that engine instead of maintaining a separate client-side save path.
+- A booking must be explicitly selected from reviewed itineraries for the intended
+  trainer and dates. All legs, local dates, IANA zones, connection requirements and
+  review timestamps travel together. Unreviewed drafts and duplicate bookings are
+  not silently combined. Booking documents and confirmation codes are excluded.
+- Private device bookings, offline flight cards, saved route inputs and personal
+  checkpoint notes are scoped to the workspace. Earlier unscoped bookings and
+  checkpoint notes remain available only for explicit review/import. Changing the
+  workspace fragment reloads its records; requests reject a mismatched link.
+- Assistant answers and recovery previews are bound to the question, deadline,
+  selected plan, requirements, workspace revision and source lifetime. Editing
+  inputs, receiving a saved-record change, or expiry removes the old conclusion.
+  A fresh answer is required; display refresh never freshens source observations.
+- Connection what-if scenarios use the same calculation as itinerary readiness:
+  available layover minus inbound delay, entered transfer allowance and entered
+  boarding cutoff. Missing allowances produce an unknown margin, not a default
+  success. Checkpoint history does not supply an airline minimum connection time.
+- Home-drive times and personal security waits start blank. Budget and processing
+  allowances are labeled planning inputs; they are not confirmed prices or
+  observed waits. Quotes missing required timing/road inputs show known subtotals
+  and are excluded from complete cost/time rankings.
+- Tool navigation preserves each illustrative image and puts required route
+  inputs into view when a user opens a tool without a route. Travel assistant,
+  recovery and source diagnostics remain visible from each planning mode.
 
 ## Still absent or conditional
 
@@ -98,3 +141,15 @@ Live samples around 2026-11-10 21:58 UTC:
 
 Source availability can change after these checks. A successful fixture or sample
 does not certify every airport, travel date, provider product or production host.
+
+
+Live checks on 2026-11-12 around 08:03 UTC used an isolated normal runtime,
+with no source fixtures or private host credentials. MCO/YYZ weather products
+returned current observations/forecasts; FAA omission of MCO remained unknown.
+Independent MCO–ATL history matched 27,428 records through 2026-08-31. The
+checkpoint query service timed out, but the validated direct hourly archive
+recovered 186 matching historical MCO rows (six terminal/queue summaries).
+The source file was pinned to revision
+`716a95800929db49f8c2ebac248fd4dcc6f90fcb` with SHA-256
+`ad9e0961497934827c002f67193f365da807f107828ea6d75ba91f186e34c190`.
+These are source checks and historical records, not live boarding or queue guarantees.

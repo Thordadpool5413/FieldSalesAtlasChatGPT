@@ -60,7 +60,7 @@ test('live updates deliver saved manager changes to another browser tab', async 
   await second.close();
 });
 
-test('setup opens existing trainer tools, resumes after dismissal, and keeps demo records separate', async ({ page }, info) => {
+test('setup opens trainer tools, resumes after dismissal, and starts with no fabricated records', async ({ page }, info) => {
   await page.goto('/');
   await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
   const realUrl = page.url();
@@ -73,13 +73,12 @@ test('setup opens existing trainer tools, resumes after dismissal, and keeps dem
   await expect(page.getByRole('dialog', { name: 'Manage the two field sales trainers' })).toBeVisible();
   await page.getByRole('button', { name: 'Close trainer settings' }).click();
   await setup.getByRole('button', { name: 'Set up workspace', exact: true }).click();
-  await setup.getByRole('button', { name: 'Explore a demo' }).click();
-  await expect(page.getByRole('region', { name: 'Demo workspace' })).toBeVisible();
-  expect(new URL(page.url()).hash).not.toEqual(new URL(realUrl).hash);
+  await expect(setup.getByRole('button', { name: 'Explore a demo' })).toHaveCount(0);
   const original = await page.request.get('/api/operations?workspaceKey=' + realKey);
-  expect((await original.json()).managers).toHaveLength(0);
-  await page.getByRole('button', { name: 'Return to my workspace' }).click();
-  await expect(page).toHaveURL(realUrl);
+  const empty = await original.json();
+  for (const collection of ['managers', 'visits', 'trips']) expect(empty[collection]).toHaveLength(0);
+  expect((await page.request.post('/api/demo/create', { data: {} })).status()).toBe(410);
+  await setup.getByRole('button', { name: 'Collapse', exact: true }).click();
   await page.getByRole('button', { name: 'Dismiss setup reminder' }).click();
   await page.reload();
   await expect(page.getByRole('region', { name: 'Workspace setup' })).toHaveCount(0);
@@ -108,7 +107,7 @@ function nextFieldWeek() {
 test('guided planning saves the proposed trip and visits into the shared calendar', async ({ page }, info) => {
   const errors: string[] = [];
   page.on('pageerror', failure => errors.push(failure.message));
-  const demo = await page.request.post('/api/demo/create', { data: {} });
+  const demo = await page.request.post('/api/testing/workspace', { data: {} });
   const key = (await demo.json()).workspaceKey;
   await page.goto('/?page=plan&tool=travel#workspace=' + key);
   const planner = page.getByRole('region', { name: 'Guided trip planner' });
@@ -123,13 +122,14 @@ test('guided planning saves the proposed trip and visits into the shared calenda
   await planner.getByLabel('Departure airport', { exact: true }).selectOption('MIA');
   await planner.getByRole('radio', { name: /MCO/ }).check();
   await planner.getByRole('button', { name: 'Continue to Review' }).click();
-  await expect(planner.getByText('No conflicts found in saved workspace records.')).toBeVisible();
+  await expect(planner.getByText('The proposed visits fit the checked scheduling constraints.')).toBeVisible({ timeout: 25000 });
+  await planner.getByRole('checkbox', { name: 'I reviewed the proposed appointments and remaining evidence gaps.' }).check();
   await page.screenshot({ path: join(tmpdir(), `field-atlas-${info.project.name}-guided-review.png`), fullPage: false, scale: 'css' });
   await planner.getByRole('button', { name: 'Add trip and visits to Calendar' }).click();
   await expect(page).toHaveURL(/page=calendar/);
   const board = await (await page.request.get('/api/operations?workspaceKey=' + key)).json();
   expect(board.trips).toHaveLength(1);
-  expect(board.trips[0].title).toBe('Guided Florida circuit');
+  expect(board.trips[0].title).toBe('Guided Florida circuit · Taylor');
   expect(board.visits).toHaveLength(2);
   expect(board.visits.every((visit: { tripId: string }) => visit.tripId === board.trips[0].id)).toBe(true);
   expect(errors).toEqual([]);
@@ -179,7 +179,7 @@ test('map symbols and controls stay clear in both map modes and themes', async (
       layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#102238' } }],
     }),
   }));
-  const demo = await page.request.post('/api/demo/create', { data: {} });
+  const demo = await page.request.post('/api/testing/workspace', { data: {} });
   const { workspaceKey } = await demo.json();
   await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
   await page.goto('/#workspace=' + workspaceKey);
@@ -327,7 +327,7 @@ test('first and returning Atlas visits show the toolkit and keep the map usable'
 test('saved territory stays selected in the compact map after reload', async ({ page }) => {
   const viewport = page.viewportSize()!;
   const mobile = viewport.width <= 900;
-  const demo = await page.request.post('/api/demo/create', { data: {} });
+  const demo = await page.request.post('/api/testing/workspace', { data: {} });
   const { workspaceKey } = await demo.json();
   const board = await (await page.request.get('/api/operations?workspaceKey=' + workspaceKey)).json();
   expect(board.assignments.some((assignment: { stateCode: string }) => assignment.stateCode === 'FL')).toBe(true);
@@ -378,7 +378,7 @@ test('saved territory stays selected in the compact map after reload', async ({ 
 });
 
 test('guided review blocks saving when the trainer is unavailable', async ({ page }) => {
-  const key = (await (await page.request.post('/api/demo/create', { data: {} })).json()).workspaceKey;
+  const key = (await (await page.request.post('/api/testing/workspace', { data: {} })).json()).workspaceKey;
   const { start, end } = nextFieldWeek();
   const response = await page.request.post('/api/trainer-availability?workspaceKey=' + key, { data: {
     id: randomUUID(), trainerId: 'trainer_a', startDate: start, endDate: end, reason: 'Personal time', notes: '',
@@ -393,7 +393,7 @@ test('guided review blocks saving when the trainer is unavailable', async ({ pag
   await planner.getByRole('button', { name: 'Continue to Airports' }).click();
   await planner.getByRole('radio', { name: /MCO/ }).check();
   await planner.getByRole('button', { name: 'Continue to Review' }).click();
-  await expect(planner.getByRole('alert')).toContainText('personal time');
+  await expect(planner).toContainText('Personal time', { timeout: 25000 });
   await expect(planner.getByRole('button', { name: 'Add trip and visits to Calendar' })).toBeDisabled();
   const board = await (await page.request.get('/api/operations?workspaceKey=' + key)).json();
   expect(board.trips).toHaveLength(0);
@@ -401,7 +401,7 @@ test('guided review blocks saving when the trainer is unavailable', async ({ pag
 });
 
 test('advanced comparison retains the people and dates chosen in the guide', async ({ page }) => {
-  const key = (await (await page.request.post('/api/demo/create', { data: {} })).json()).workspaceKey;
+  const key = (await (await page.request.post('/api/testing/workspace', { data: {} })).json()).workspaceKey;
   await page.goto('/?page=plan&tool=travel#workspace=' + key);
   const planner = page.getByRole('region', { name: 'Guided trip planner' });
   await planner.getByRole('checkbox', { name: /Demo · Jordan Ellis/ }).check();
@@ -434,11 +434,19 @@ test('advanced comparison retains the people and dates chosen in the guide', asy
   await expect(weather).toContainText('trip-window coverage is unknown');
   await weather.getByText('Weather source evidence, age and limitations', { exact: true }).click();
   await expect(weather).toContainText('ECCC City Page Weather');
+  const travelTools=page.getByRole('navigation',{name:'Travel intelligence tools'});
+  for(const name of ['Plan together','Travel assistant','Flight change','Data connections'])
+    await expect(travelTools.getByRole('button',{name,exact:true})).toBeVisible();
+  await advanced.getByRole('button',{name:'Guided planner',exact:true}).click();
+  await expect(planner.getByRole('checkbox',{name:/Demo · Jordan Ellis/})).toBeChecked();
+  await planner.getByRole('button',{name:'Continue to Dates'}).click();
+  await expect(planner.getByLabel('Departure date',{exact:true})).toHaveValue(start);
+  await expect(planner.getByLabel('Return date',{exact:true})).toHaveValue(end);
 });
 
 test('joint travel intelligence compares options, discloses evidence gaps and saves both trainers atomically', async ({ page }, info) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
-  const key = (await (await page.request.post('/api/demo/create', { data: {} })).json()).workspaceKey;
+  const key = (await (await page.request.post('/api/testing/workspace', { data: {} })).json()).workspaceKey;
   const initial = await (await page.request.get('/api/operations?workspaceKey=' + key)).json();
   const partnerManager = initial.managers.find((person: { name: string }) => person.name.includes('Casey'));
   expect((await page.request.put('/api/managers/' + partnerManager.id + '?workspaceKey=' + key, { data: { ...partnerManager, trainer: 'Morgan', expectedUpdatedAt: partnerManager.updatedAt } })).status()).toBe(200);
@@ -449,11 +457,12 @@ test('joint travel intelligence compares options, discloses evidence gaps and sa
   await planner.getByRole('checkbox', { name: /Demo · Casey Rivera/ }).check();
   const { start, end } = nextFieldWeek();
   await planner.getByLabel('First field date').fill(start); await planner.getByLabel('Last field date').fill(end);
+  await planner.getByLabel('Field airport', { exact: true }).fill('MCO');
   await planner.getByRole('button', { name: 'Build travel options' }).click();
   await expect(planner.getByRole('heading', { name: 'Your week, considered.' })).toBeVisible({ timeout: 20000 });
   const optionCount = await planner.getByRole('radiogroup', { name: 'Travel options' }).getByRole('radio').count();
   expect(optionCount).toBeGreaterThanOrEqual(1); expect(optionCount).toBeLessThanOrEqual(3);
-  await expect(planner.getByText('No road-routing service is configured.', { exact: false }).first()).toBeVisible();
+  await expect(planner.getByText(/no imported arrival flight/i).first()).toBeVisible();
   await expect(planner.getByText('America/New_York', { exact: false }).first()).toBeVisible();
   await expect(planner.getByRole('button', { name: 'Add this option to Calendar' })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
@@ -475,7 +484,7 @@ test('joint travel intelligence compares options, discloses evidence gaps and sa
 });
 
 async function savedAirJourney(page: Page) {
-  const key = (await (await page.request.post('/api/demo/create', { data: {} })).json()).workspaceKey;
+  const key = (await (await page.request.post('/api/testing/workspace', { data: {} })).json()).workspaceKey;
   const board = await (await page.request.get('/api/operations?workspaceKey=' + key)).json();
   const people = board.managers.filter((person: { baseState: string }) => person.baseState === 'FL');
   const partner = people.find((person: { name: string }) => person.name.includes('Casey'));
@@ -503,6 +512,7 @@ test('travel assistant explains a Thursday home deadline, reveals source age and
   await page.getByRole('button', { name: 'Travel assistant', exact: true }).click();
   const assistant = page.getByRole('region', { name: 'Evidence-backed travel assistant' });
   await expect(assistant.getByLabel('Saved travel plan')).toHaveValue(report.id);
+  await assistant.getByLabel('Your travel question').fill('Can we finish these visits and get home Thursday?');
   await assistant.getByRole('button', { name: 'Calculate an evidence-backed answer' }).click();
   await expect(assistant.getByRole('heading', { name: 'Your supplied timings fit the deadline.' })).toBeVisible({ timeout: 20000 });
   await expect(assistant.getByText('Estimated home: ' + end + ' 21:45', { exact: false })).toBeVisible();
@@ -550,6 +560,7 @@ test('data connections display failed checks as unavailable and keep routing est
     const evidence = { id: 'browser-unavailable-fixture', provider: 'FAA NAS', subject: 'MCO', sourceUrl: 'https://nasstatus.faa.gov/api/airport-events', kind: 'observation', state: 'unavailable', retrievedAt: new Date().toISOString(), version: 'fixture', scope: 'Airport-wide notices only.', limitation: 'Provider unavailable; no current operational conclusion is available.' };
     await route.fulfill({ json: { ...status, results: [{ airport: 'MCO', checks: [{ evidence, data: null }] }], routingProbe: { roadBased: false, minutes: null, evidence: { ...evidence, id: 'browser-road-fixture', provider: 'Geographic fallback', kind: 'estimate', state: 'partial', limitation: 'A road-network route could not be validated.' } } } });
   });
+  await connections.getByLabel('Airports to validate').fill('MCO, ATL');
   await connections.getByRole('button', { name: 'Validate official sources and routing' }).click();
   await expect(connections.locator('[data-travel-evidence-id="browser-unavailable-fixture"]').getByText('unavailable', { exact: true })).toBeVisible();
   await expect(connections.getByText('A drivable road-network route was not validated. Geographic estimates are provisional.')).toBeVisible();
@@ -578,7 +589,7 @@ test('booked-flight readiness calculates connection margin, saves explicit check
   await page.getByRole('checkbox',{name:/I checked that tickets were issued/}).check();
   await page.getByRole('button',{name:'Save locally',exact:true}).click();
   await expect(page.getByText('Flight saved on this device.',{exact:false})).toBeVisible();
-  const stored=await page.evaluate(()=>localStorage.getItem('atlas-booked-flight-guardian-v1')||'');
+  const stored=await page.evaluate(()=>localStorage.getItem('atlas-booked-flight-guardian-v1:workspace:'+location.hash.slice('#workspace='.length))||'');
   expect(stored).not.toContain('ABC123');expect(JSON.parse(stored).records[0].review.ticketingConfirmedAt).toBeTruthy();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   await readiness.scrollIntoViewIfNeeded();
@@ -996,10 +1007,13 @@ test('connection tool edits the shared route and computes explicit transfer scen
   await page.getByRole('combobox', { name: 'Arrival IATA airport code' }).fill('ATL');
   await page.getByRole('combobox', { name: 'Connecting IATA airport code' }).fill('CLT');
   await page.getByRole('spinbutton', { name: 'Connection time in minutes' }).fill('90');
-  await expect(connection).toContainText('45 min spare');
-  await expect(connection).toContainText('15 min short');
+  await expect(connection).toContainText('Needs allowances');
+  await connection.getByRole('combobox', { name: 'Gate-transfer allowance' }).selectOption('45');
+  await connection.getByRole('spinbutton', { name: 'Boarding cutoff before departure in minutes' }).fill('20');
+  await expect(connection).toContainText('25 min spare');
+  await expect(connection).toContainText('35 min short');
   await connection.getByRole('combobox', { name: 'Gate-transfer allowance' }).selectOption('60');
-  await expect(connection).toContainText('30 min short');
+  await expect(connection).toContainText('50 min short');
   await expect(connection).toContainText('not a missed-connection probability');
   await tools.getByRole('button', { name: 'Alternatives', exact: true }).click();
   await page.getByRole('button', { name: 'Add an alternative arrival airport', exact: true }).click();
@@ -1037,6 +1051,7 @@ test('security research preserves the actual departure airport and travel date',
   await expect(security.getByRole('combobox', { name: 'Airport', exact: true })).toHaveValue('YYZ');
   await expect(security.getByLabel('Airport local date (selects historical weekday)', { exact: true })).toHaveValue('2026-12-03');
   await expect(security).toContainText("Archive coverage for your route's departure airport YYZ is unverified");
+  await security.getByLabel('Checkpoint arrival time').selectOption('8');
   await security.getByRole('button', { name: 'Analyze checkpoint history', exact: true }).click();
   await expect(security).toContainText('No usable checkpoint history returned for YYZ');
   await expect(security).toContainText('not an estimate of zero minutes');
@@ -1091,7 +1106,9 @@ test(`restored intelligence photographs and shortcuts are visible from ${entry.n
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
     if (cardImage) {
       const visual = page.getByRole('figure', { name: label + ' visual guide', exact: true });
-      await expect(visual).toBeInViewport({ ratio: 1 });
+      await expect(visual).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Departure IATA airport code' })).toBeInViewport();
+      await expect(page.getByRole('button', { name: 'Analyze flight', exact: true })).toBeInViewport();
       await expect(visual.getByRole('img')).toHaveAttribute('src', cardImage);
       await expect(visual).toContainText('Illustrative image');
       await expect.poll(() => visual.getByRole('img').evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
@@ -1143,4 +1160,128 @@ test('workspace search opens each intelligence tool directly while preserving th
   await search.getByRole('combobox').fill('Travel');
   await search.getByRole('option').filter({ has: page.getByText('Travel', { exact: true }) }).click();
   await expect(page.getByRole('region', { name: 'Intelligence toolkit', exact: true })).toBeVisible();
+});
+
+test('changing a shared workspace link loads the selected records before allowing another edit', async ({ page }) => {
+  const create=async(name:string)=>{
+    const key=(await (await page.request.post('/api/guest/create',{data:{}})).json()).workspaceKey;
+    expect((await page.request.post('/api/managers?workspaceKey='+key,{data:{name,baseState:'FL'}})).status()).toBe(201);
+    return key;
+  };
+  const first=await create('First workspace person'),second=await create('Second workspace person');
+  await page.goto('/?page=people#workspace='+first);
+  await expect(page.getByText('First workspace person',{exact:true}).first()).toBeVisible();
+  const loaded=page.waitForResponse(response=>response.url().includes('/api/operations?')&&new URL(response.url()).searchParams.get('workspaceKey')===second);
+  await page.evaluate(key=>{location.hash='workspace='+key.toUpperCase();},second);
+  await loaded;
+  await expect(page.getByText('Second workspace person',{exact:true}).first()).toBeVisible();
+  await expect(page.getByText('First workspace person',{exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:/Add manager/}).filter({visible:true}).first().click();
+  await page.getByRole('dialog').getByLabel('Territory manager name',{exact:false}).fill('Saved in second workspace');
+  await page.getByRole('dialog').getByRole('button',{name:'Save changes'}).click();
+  const firstBoard=await (await page.request.get('/api/operations?workspaceKey='+first)).json();
+  const secondBoard=await (await page.request.get('/api/operations?workspaceKey='+second)).json();
+  expect(firstBoard.managers).toHaveLength(1);expect(secondBoard.managers).toHaveLength(2);
+});
+
+test('assistant removes old conclusions when the question or saved records change', async ({ page }) => {
+  const {key,report}=await savedAirJourney(page);
+  await page.goto('/?page=plan&tool=travel#workspace='+key);
+  await page.getByRole('button',{name:'Travel assistant',exact:true}).click();
+  const assistant=page.getByRole('region',{name:'Evidence-backed travel assistant'});
+  await expect(assistant.getByLabel('Saved travel plan')).toHaveValue(report.id);
+  const question=assistant.getByLabel('Your travel question');
+  await expect(question).toHaveValue('');
+  await expect(assistant.getByRole('button',{name:'Calculate an evidence-backed answer'})).toBeDisabled();
+  await question.fill('Can we finish these visits and get home Thursday?');
+  await assistant.getByRole('button',{name:'Calculate an evidence-backed answer'}).click();
+  await expect(assistant.getByRole('region',{name:'Travel assistant answer'})).toBeVisible({timeout:20000});
+  await question.fill('Can we finish these visits and get home Wednesday by 10:00?');
+  await expect(assistant.getByRole('region',{name:'Travel assistant answer'})).toHaveCount(0);
+  await expect(assistant.getByText('The question, saved trip, planning requirements or source evidence changed. Calculate again to use the current details.')).toBeVisible();
+  await assistant.getByRole('button',{name:'Calculate an evidence-backed answer'}).click();
+  await expect(assistant.getByRole('region',{name:'Travel assistant answer'})).toBeVisible({timeout:20000});
+  expect((await page.request.post('/api/managers?workspaceKey='+key,{data:{name:'New saved constraint context',baseState:'FL'}})).status()).toBe(201);
+  await expect(assistant.getByRole('region',{name:'Travel assistant answer'})).toHaveCount(0);
+});
+
+test('joint planner attaches only the selected reviewed booking with all connection and review fields', async ({page})=>{
+  const key=(await (await page.request.post('/api/testing/workspace',{data:{}})).json()).workspaceKey;
+  const {start,end}=nextFieldWeek(),stamp=new Date().toISOString();
+  const leg={id:'outbound',carrier:'AA',flightNumber:'100',origin:'MIA',destination:'MCO',departDate:start,departTime:'06:00',arriveDate:start,arriveTime:'07:00',departureZone:'America/New_York',arrivalZone:'America/New_York',connection:{transferMinutes:40,boardingCutoffMinutes:20,ticketRelation:'same-ticket-reported'}};
+  const reviewed={id:'chosen',trainerId:'trainer_a',verified:true,legs:[leg],source:'manual',createdAt:stamp,updatedAt:stamp,review:{fieldsReviewedAt:stamp,airlineCheckedAt:stamp,ticketingConfirmedAt:stamp}};
+  await page.addInitScript(({key,records})=>localStorage.setItem('atlas-booked-flight-guardian-v1:workspace:'+key,JSON.stringify({version:1,records})),{key,records:[reviewed,{...reviewed,id:'duplicate'},{...reviewed,id:'unreviewed',verified:false}]});
+  await page.goto('/?page=plan&tool=travel#workspace='+key);
+  await page.getByRole('button',{name:'Plan together',exact:true}).click();
+  const planner=page.getByRole('region',{name:'Intelligent journey planner'});
+  await planner.getByLabel('First field date').fill(start);await planner.getByLabel('Last field date').fill(end);
+  await planner.getByLabel('Field airport',{exact:true}).fill('MCO');
+  await planner.getByRole('checkbox',{name:/Demo · Jordan Ellis/}).check();
+  await planner.getByRole('checkbox',{name:'Include saved flight legs for these trainers'}).check();
+  const picker=planner.getByRole('region',{name:'Reviewed bookings for this plan'});
+  await expect(picker.getByRole('option',{name:/MIA/})).toHaveCount(2);
+  await expect(picker.getByLabel('Taylor booking')).toHaveValue('');
+  await picker.getByLabel('Taylor booking').selectOption('chosen');
+  await planner.getByRole('checkbox',{name:'Check official airport notices and weather'}).uncheck();
+  const sent=page.waitForRequest(request=>request.method()==='POST'&&new URL(request.url()).pathname==='/api/travel/scenarios');
+  await planner.getByRole('button',{name:'Build travel options'}).click();
+  const body=(await sent).postDataJSON();
+  expect(body.flights).toHaveLength(1);expect(body.flights[0].review).toEqual(reviewed.review);
+  expect(body.flights[0].connection).toEqual(leg.connection);expect(body.flights[0].departureZone).toBe('America/New_York');
+  await expect(planner.getByRole('heading',{name:'Your week, considered.'})).toBeVisible({timeout:20000});
+});
+
+test('a saved offline travel card is available only to its original workspace',async({page})=>{
+  await page.goto('/?page=plan&tool=radar');await expect(page).toHaveURL(/#workspace=[0-9a-f]{64}/);
+  const key=new URL(page.url()).hash.slice('#workspace='.length);
+  await page.getByRole('combobox',{name:'Departure IATA airport code'}).fill('MCO');
+  await page.getByRole('combobox',{name:'Arrival IATA airport code'}).fill('ATL');
+  await page.getByText('Offline travel card',{exact:true}).click();
+  await page.getByRole('button',{name:'Save offline travel card',exact:true}).click();
+  await page.goto('/offline.html#workspace='+key);
+  const card=page.getByRole('region',{name:'Previously saved offline travel card'});
+  await expect(card).toBeVisible();await expect(card).toContainText('MCO → ATL');await expect(card).toContainText('NOT CURRENT');
+  const other=(await (await page.request.post('/api/guest/create',{data:{}})).json()).workspaceKey;
+  await page.goto('/offline.html#workspace='+other);await expect(card).toBeHidden();
+});
+
+test('advanced travel settings leave new drive times blank and use live trainer profile updates',async({page})=>{
+  const key=(await (await page.request.post('/api/testing/workspace',{data:{}})).json()).workspaceKey;
+  await page.goto('/?page=plan&tool=travel#workspace='+key);
+  await page.getByRole('button',{name:'Advanced comparison',exact:true}).click();
+  const advanced=page.locator('.travel-page');
+  await advanced.getByTitle('Edit travel preferences',{exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Personal travel settings'});
+  await expect(dialog.locator('.travel-prefs-minutes input')).toHaveValue('45');
+  await dialog.getByLabel('Add home departure airport',{exact:true}).fill('MCO');
+  await dialog.getByRole('combobox',{name:'Choose airport',exact:true}).selectOption('MCO');
+  await dialog.getByRole('button',{name:'Add airport',exact:true}).click();
+  await expect(dialog.locator('.travel-prefs-origin').filter({hasText:'MCO'}).locator('input')).toHaveValue('');
+  await dialog.getByRole('button',{name:'Close personal travel settings'}).click();
+  const board=await (await page.request.get('/api/operations?workspaceKey='+key)).json();
+  const trainer=board.trainerProfiles.find((profile:{id:string})=>profile.id==='trainer_a');
+  const refreshed=page.waitForResponse(async response=>response.url().includes('/api/operations?')&&response.status()===200&&(await response.json()).trainerProfiles?.some((profile:{id:string;homeDriveMinutes:Record<string,number>})=>profile.id==='trainer_a'&&profile.homeDriveMinutes.MIA===undefined));
+  expect((await page.request.put('/api/trainer-profiles/trainer_a?workspaceKey='+key,{data:{...trainer,homeDriveMinutes:{}}})).status()).toBe(200);
+  await refreshed;
+  await advanced.getByTitle('Edit travel preferences',{exact:true}).click();
+  await expect(dialog.locator('.travel-prefs-minutes input')).toHaveValue('');
+});
+
+test('checkpoint history exposes partial coverage, archive age and missing percentiles',async({page})=>{
+  const stamp=new Date().toISOString();
+  await page.route('**/api/travel/security-history?*',route=>route.fulfill({json:{state:'historical',available:true,checkedAt:stamp,airport:'MCO',localDate:'2026-11-12',localHour:8,etHour:8,etWeekday:4,timezone:'America/New_York',
+    rows:[{terminal:'Contract fixture',queue:'standard',hourRecords:1,historicalMedianPosted:0,typicalHourlyP75:10,typicalHourlyP95:null,observedStart:'2026-11-05T13:00:00Z',observedEnd:'2026-11-05T13:00:00Z'}],requestedQueues:['standard','precheck'],
+    limitations:['Closed checkpoints and unobserved queues are not zero waits.'],source:'Isolated checkpoint contract',sourceUrl:'https://huggingface.co/datasets/digitalhen/us-airport-wait-times',attribution:'Test fixture',license:'CC BY 4.0',
+    message:'PreCheck records unavailable. Standard history uses a published archive snapshot.',archive:{sourceUrl:'https://huggingface.co/datasets/digitalhen/us-airport-wait-times',sha256:'a'.repeat(64),retrievedAt:stamp,revision:'b'.repeat(40)}}}));
+  await page.goto('/?page=plan&tool=radar&intel=security');
+  const security=page.getByRole('region',{name:'Airport checkpoint intelligence'});
+  await security.getByRole('combobox',{name:'Airport',exact:true}).selectOption('MCO');
+  await security.getByLabel('Checkpoint arrival time').selectOption('8');
+  await security.getByRole('button',{name:'Analyze checkpoint history',exact:true}).click();
+  await expect(security.getByText('PreCheck records unavailable. Standard history uses a published archive snapshot.',{exact:true})).toBeVisible();
+  await expect(security).toContainText('Not reported');
+  await expect(security.locator('.sh-observed-period')).toContainText('Nov 5, 2026');
+  await expect(security.getByRole('link',{name:'Published source file'})).toBeVisible();
+  await security.getByText('Source scope and limitations',{exact:true}).click();
+  await expect(security.getByText('Closed checkpoints and unobserved queues are not zero waits.',{exact:true})).toBeVisible();
 });

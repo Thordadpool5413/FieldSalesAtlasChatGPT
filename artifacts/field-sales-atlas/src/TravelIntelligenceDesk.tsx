@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, CircleHelp, Link2, Plane, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import { useOp } from './Operations';
 import { api } from './workspaceApi';
+import { currentAnalysisResult, type AnalysisSnapshot } from './analysisSnapshot';
+import BookingPicker from './BookingPicker';
+import { reviewedBookings, selectedBookingFlights } from './BookingHandoff';
 import { readBookedFlights } from './BookedFlightLogic';
 import type { AssistantAnswer, PlanSummary, RecoveryPreview } from '../shared/travel/intelligence';
 import type { FlightInput, Evidence } from '../shared/travel/types';
@@ -40,32 +43,46 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
   const [bookingSelection,setBookingSelection]=useState<Record<string,string>>({});
   const [plans, setPlans] = useState<PlanSummary[]>([]), [planId, setPlanId] = useState(''), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
-  const [question, setQuestion] = useState('Can we finish these visits and get home Thursday?');
+  const [question, setQuestion] = useState('');
   const [deadlineDate, setDeadlineDate] = useState(''), [deadlineTime, setDeadlineTime] = useState('');
-  const [handoffs, setHandoffs] = useState(false), [answer, setAnswer] = useState<AssistantAnswer | null>(null);
+  const [handoffs, setHandoffs] = useState(false), [answerSnapshot, setAnswerSnapshot] = useState<AnalysisSnapshot<AssistantAnswer> | null>(null);
   const [selectedTrips, setSelectedTrips] = useState<string[]>([]);
   const [legIndex, setLegIndex] = useState('0'), [original, setOriginal] = useState<FlightInput>(blankFlight(ctx.activeTrainerId));
   const [replacement, setReplacement] = useState<FlightInput>(blankFlight(ctx.activeTrainerId));
   const [changeStatus, setChangeStatus] = useState('delayed'), [notes, setNotes] = useState('');
   const [checkedAt, setCheckedAt] = useState(new Date().toISOString().slice(0, 16));
-  const [recoveryHandoffs, setRecoveryHandoffs] = useState(true), [preview, setPreview] = useState<RecoveryPreview | null>(null), [optionId, setOptionId] = useState('');
+  const [recoveryHandoffs, setRecoveryHandoffs] = useState(true), [previewSnapshot, setPreviewSnapshot] = useState<AnalysisSnapshot<RecoveryPreview> | null>(null), [optionId, setOptionId] = useState('');
   const [acknowledged, setAcknowledged] = useState(false), [monitor, setMonitor] = useState(false);
-  const [connections, setConnections] = useState<Connections | null>(null), [airportCodes, setAirportCodes] = useState('MCO, YYZ');
-  const requestBusy = useRef(false), resultHeading = useRef<HTMLHeadingElement>(null);
+  const [connections, setConnections] = useState<Connections | null>(null), [airportCodes, setAirportCodes] = useState(ctx.activeTrainer.homeAirports.join(', '));
+  const [planIssues,setPlanIssues]=useState<Array<{id:string;reason:string}>>([]);
+  const [clock,setClock]=useState(Date.now);
+  useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),30000);return ()=>clearInterval(timer);},[]);
+  const requestBusy = useRef(false), resultHeading = useRef<HTMLHeadingElement>(null), plansRequest=useRef(0);
   const plan = plans.find(plan => plan.id === planId);
   const selectedFlightSignature = JSON.stringify(plan?.flightLegs[Number(legIndex)] || null);
+  const planContext=JSON.stringify([ctx.board.team?.id,ctx.board.revision,planId,plan?.itineraryVersion,plan?.requirements,plan?.pendingChange]);
+  const answerContext=JSON.stringify([planContext,question,deadlineDate,deadlineTime,handoffs]);
+  const recoveryContext=JSON.stringify([planContext,recoveryHandoffs]);
+  const answer=currentAnalysisResult(answerSnapshot,answerContext,answerSnapshot?.result.evidence,
+    answerSnapshot&&Number.isFinite(Date.parse(answerSnapshot.result.createdAt))?new Date(Date.parse(answerSnapshot.result.createdAt)+15*60000).toISOString():answerSnapshot?'invalid':undefined,clock);
+  const preview=currentAnalysisResult(previewSnapshot,recoveryContext,previewSnapshot?.result.options.flatMap(item=>item.evidence),previewSnapshot?.result.expiresAt,clock);
+  const setAnswer=(result:AssistantAnswer|null)=>setAnswerSnapshot(result?{context:answerContext,result}:null);
+  const setPreview=(result:RecoveryPreview|null)=>setPreviewSnapshot(result?{context:recoveryContext,result}:null);
   const option = preview?.options.find(option => option.id === optionId);
   const title = mode === 'assistant' ? 'Ask the trip. See the evidence.' : mode === 'recovery' ? 'A change of flight. A considered next step.' : 'Know what your sources know.';
   async function loadPlans(preferred?: string) {
+    const request=++plansRequest.current;
     const response = await api.get('/api/travel/journeys');
+    if(request!==plansRequest.current)return;
     const list = response.data.plans as PlanSummary[]; setPlans(list);
+    setPlanIssues(response.data.issues || []);
     setPlanId(current => preferred || (list.some(plan => plan.id === current) ? current : list[0]?.id || ''));
   }
   useEffect(() => {
     let active = true; setLoading(true);
     const work = mode === 'connections' ? api.get('/api/travel/connections').then(response => { if (active) setConnections(response.data); }) : loadPlans();
     void work.catch(failure => { if (active) setError(failure instanceof Error ? failure.message : 'Could not load travel context.'); }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    return () => { active = false; plansRequest.current++; };
   }, [mode, ctx.board.revision]);
   useEffect(() => {
     const flight = plan?.flightLegs[Number(legIndex)] || blankFlight(ctx.activeTrainerId);
@@ -77,14 +94,14 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
     try { await work(); } catch (failure) { setError(failure instanceof Error ? failure.message : 'The request could not complete.'); }
     finally { requestBusy.current = false; setBusy(false); }
   }
-  const localBookings=readBookedFlights().filter(booking=>booking.verified&&plan&&(plan.trainerIds?plan.trainerIds.includes(booking.trainerId):ctx.trainerProfiles.some(profile=>profile.id===booking.trainerId&&plan.trainerNames.includes(profile.name)))&&booking.legs.some(leg=>leg.departDate>=plan.startDate&&leg.departDate<=plan.endDate));
+  const bookingContext=plan?{trainerIds:plan.trainerIds || ctx.trainerProfiles.filter(profile=>plan.trainerNames.includes(profile.name)).map(profile=>profile.id),startDate:plan.startDate,endDate:plan.endDate}:null;
+  const localBookings=bookingContext?reviewedBookings(readBookedFlights(),bookingContext):[];
   async function shareFlights() {
     if (!plan) return;
-    const bookings=localBookings.filter(booking=>bookingSelection[booking.trainerId]===booking.id);
-    const replaced=new Set(bookings.map(booking=>booking.trainerId));
-    const flights=[...plan.flightLegs.filter(leg=>!replaced.has(leg.trainerId)),...bookings.flatMap(booking=>booking.legs.map(leg=>({...leg,trainerId:booking.trainerId,review:booking.review,providedAt:booking.updatedAt})))];
-    if(!bookings.length)throw new Error('Select a reviewed booking for at least one trainer. Other trainers’ legs will be preserved.');
-    if (!flights.length) throw new Error('No matching saved booking legs are available on this device. Add them in Booked Flights first.');
+    if(!bookingContext)return;
+    const attached=selectedBookingFlights(readBookedFlights(),bookingSelection,bookingContext);
+    const replaced=new Set(attached.map(leg=>leg.trainerId));
+    const flights=[...plan.flightLegs.filter(leg=>!replaced.has(leg.trainerId)),...attached];
     await api.post(`/api/travel/journeys/${plan.id}/itinerary`, { flights, expectedItineraryVersion: plan.itineraryVersion }); setBookingSelection({}); await loadPlans(plan.id); await ctx.reload();
     setMessage('Booking fields shared with this plan. Your calendar and airline booking are unchanged.');
   }
@@ -94,21 +111,24 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
     <header className="journey-header"><div><span className="journey-eyebrow">{mode === 'assistant' ? <Sparkles size={15}/> : mode === 'recovery' ? <Plane size={15}/> : <Link2 size={15}/>} TRAVEL INTELLIGENCE</span><h1>{title}</h1><p>{mode === 'assistant' ? 'Calculate from your saved plan, supplied itinerary and public evidence.' : mode === 'recovery' ? 'Understand the effects on both trainers before changing appointments.' : 'Coverage, source age and limitations stay visible.'}</p></div><button className="op-btn" onClick={onBack} disabled={busy}><ArrowLeft size={15}/> Back to planning</button></header>
     <div className="travel-desk-body">
       {loading && <p role="status">Opening saved travel context…</p>}
+      {!!planIssues.length&&<aside className="journey-gaps"><h2>Some saved plans need attention</h2>{planIssues.map(issue=><p key={issue.id}>{issue.reason}</p>)}<p>Review the saved trips and appointments, then reconnect the plan. No records have been changed.</p></aside>}
       {mode !== 'connections' && <>
         <label className="travel-context-label">Saved travel plan<select value={planId} disabled={busy || !plans.length} onChange={event => { setPlanId(event.target.value); setLegIndex('0'); }}><option value="">Choose a plan</option>{plans.map(plan => <option key={plan.id} value={plan.id}>{plan.title} · {plan.startDate}–{plan.endDate}</option>)}</select></label>
         {plan && <div className="travel-plan-context"><strong>{plan.arrivalAirport} · {plan.trainerNames.join(' & ')}</strong><p>{plan.startDate} — {plan.endDate} · {plan.flightLegs.length} supplied flight legs</p><details className="journey-details"><summary>Connect booking fields from this device</summary><p>Share parsed flight airports, local dates/times, carrier and flight numbers with this workspace. Confirmation codes and booking documents are excluded. Choose one reviewed booking per trainer. This replaces only that trainer’s supplied legs; the other trainer’s legs are preserved.</p>
-          {ctx.trainerProfiles.filter(profile=>plan.trainerIds?.includes(profile.id)||(!plan.trainerIds&&plan.trainerNames.includes(profile.name))).map(profile=><label className="travel-context-label" key={profile.id}>{profile.name} booking to attach<select value={bookingSelection[profile.id]||''} onChange={event=>setBookingSelection(current=>({...current,[profile.id]:event.target.value}))}><option value="">Keep current shared flight fields</option>{localBookings.filter(booking=>booking.trainerId===profile.id).map(booking=><option key={booking.id} value={booking.id}>{booking.legs[0]?.origin} → {booking.legs.at(-1)?.destination} · {booking.legs[0]?.departDate} · revision {booking.revision||1}</option>)}</select></label>)}
+          <BookingPicker bookings={localBookings} trainers={ctx.trainerProfiles.filter(profile=>bookingContext?.trainerIds.includes(profile.id))} selection={bookingSelection} onChange={setBookingSelection} onManage={()=>ctx.go('booked')} disabled={busy}/>
           <button className="op-btn" disabled={busy} onClick={() => void action(shareFlights)}>Share saved flight fields with this plan</button></details></div>}
         <details className="journey-details" open={!plans.length && !loading}><summary>Connect existing saved trips</summary><p>Use one or two trips with a shared field airport and linked pending visits. This creates analysis context; appointments are unchanged.</p><div className="travel-trip-choices">{(ctx.board.trips || []).filter(trip => trip.status === 'Planned').map(trip => <label className="journey-check" key={trip.id}><input type="checkbox" checked={selectedTrips.includes(trip.id)} disabled={busy || (!selectedTrips.includes(trip.id) && selectedTrips.length >= 2)} onChange={() => setSelectedTrips(selectedTrips.includes(trip.id) ? selectedTrips.filter(id => id !== trip.id) : [...selectedTrips, trip.id])}/>{trip.title} · {trip.trainer}</label>)}</div><button className="op-btn" disabled={busy || !selectedTrips.length} onClick={() => void action(async () => { const result = await api.post('/api/travel/journeys/adopt', { tripIds: selectedTrips }); await loadPlans(result.data.reportId); setMessage('Saved trips connected for analysis. No appointments changed.'); })}>Connect selected trips</button>{!(ctx.board.trips || []).length && <p>Save a trip and its proposed visits in the planner first.</p>}</details>
       </>}
       {plan&&mode!=='connections'&&<JourneyReadinessController plan={plan} revision={ctx.board.revision} names={Object.fromEntries(ctx.trainerProfiles.map(profile=>[profile.id,profile.name]))} onSaved={async()=>{await loadPlans(plan.id);await ctx.reload();}}/>}
       {mode === 'assistant' && <>
         <form onSubmit={event => { event.preventDefault(); if (!plan) return; void action(async () => { const result = await api.post('/api/travel/assistant', { reportId: plan.id, question, allowHandoffs: handoffs, ...(deadlineDate ? { deadlineDate } : {}), ...(deadlineTime ? { deadlineTime } : {}) }); setAnswer(result.data); }); }}>
-          <label className="travel-question-label">Your travel question<textarea required maxLength={600} rows={3} value={question} onChange={event => setQuestion(event.target.value)}/></label><p className="travel-question-help">Ask about finishing visits and returning home by a weekday or date. An answer proposes no calendar or booking changes.</p>
+          <label className="travel-question-label">Your travel question<textarea required maxLength={600} rows={3} placeholder="Ask when you can finish the saved visits and return home." value={question} onChange={event => setQuestion(event.target.value)}/></label><p className="travel-question-help">Ask about finishing visits and returning home by a weekday or date. An answer proposes no calendar or booking changes.</p>
+          {plan&&<button className="op-btn" type="button" onClick={()=>setQuestion('Can we finish these visits and get home by '+plan.endDate+'?')}>Check the return date in this plan · {plan.endDate}</button>}
           <details className="journey-details"><summary>Set an exact deadline</summary><div className="journey-fields"><label>Return-home deadline date<input type="date" value={deadlineDate} onChange={event => setDeadlineDate(event.target.value)}/></label><label>Deadline time at each home airport<input type="time" value={deadlineTime} onChange={event => setDeadlineTime(event.target.value)}/></label></div><p>Without a requested clock time, the calculation uses 23:59 in each home-airport time zone.</p></details>
           <label className="journey-check"><input type="checkbox" checked={handoffs} onChange={event => setHandoffs(event.target.checked)}/> Consider sharing visits between trainers</label>
-          <button className="op-btn primary" disabled={busy || !plan}><Sparkles size={16}/>{busy ? 'Calculating from your plan…' : 'Calculate an evidence-backed answer'}</button>
+          <button className="op-btn primary" disabled={busy || !plan || question.trim().length<3}><Sparkles size={16}/>{busy ? 'Calculating from your plan…' : 'Calculate an evidence-backed answer'}</button>
         </form>
+        {answerSnapshot&&!answer&&<p className="journey-alert" role="status">The question, saved trip, planning requirements or source evidence changed. Calculate again to use the current details.</p>}
         {answer && <section className="travel-answer" aria-label="Travel assistant answer"><span className="journey-state">{answer.verdict.replaceAll('-', ' ')}</span><h2 ref={resultHeading} tabIndex={-1}>{answer.title}</h2><small>Calculated {new Date(answer.createdAt).toLocaleString()} from the saved calendar.</small>
           <ul className="travel-claims">{answer.claims.map((claim, index) => <li key={index}><p>{claim.text} <EvidenceLinks ids={claim.evidenceIds} evidence={answer.evidence}/></p>{claim.limitation && <small>{claim.limitation}</small>}</li>)}</ul>
           {!!answer.trainers.length && <div className="travel-trainer-results">{answer.trainers.map(trainer => <article className="journey-source" key={trainer.id}><strong>{trainer.name}</strong><p>{trainer.visitCount} proposed visits · {trainer.homeLocal ? 'Estimated home: ' + trainer.homeLocal : 'Home arrival unresolved'}</p><small>{trainer.timeZone}</small><span className="journey-state">{trainer.meetsDeadline === null ? 'Needs return evidence' : trainer.meetsDeadline ? 'Within supplied timing' : 'After requested deadline'}</span></article>)}</div>}
@@ -118,6 +138,7 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
         </section>}
       </>}
       {mode === 'recovery' && <>
+        {previewSnapshot&&!preview&&<p className="journey-alert" role="status">The saved trip, recovery choices or source evidence changed. Build fresh recovery options before reviewing calendar changes.</p>}
         {plan?.pendingChange ? <div className="journey-gaps"><h2>Reported {plan.pendingChange.status}: {plan.pendingChange.originalLeg.origin} → {plan.pendingChange.originalLeg.destination}</h2><p>Traveler-reported at {new Date(plan.pendingChange.checkedAt).toLocaleString()}. No calendar changes have been applied.</p><label className="journey-check"><input type="checkbox" checked={recoveryHandoffs} onChange={event => setRecoveryHandoffs(event.target.checked)}/> Compare sharing the remaining visits with the partner</label><button className="op-btn primary" disabled={busy} onClick={() => void action(async () => { const response = await api.post('/api/travel/recovery', { changeId: plan.pendingChange!.id, includeHandoffs: recoveryHandoffs }); const next = response.data as RecoveryPreview; setPreview(next); setOptionId(next.options.find(option => option.scenario.feasible)?.id || next.options[0].id); setAcknowledged(false); })}><RefreshCw size={16}/>{busy ? 'Comparing consequences…' : 'Build recovery options'}</button><button className="op-btn" disabled={busy} onClick={() => void action(async () => { await api.delete('/api/travel/changes/' + plan.pendingChange!.id); setPreview(null); await loadPlans(plan.id); await ctx.reload(); setMessage('The reported change was retracted. Calendar appointments are unchanged.'); })}>Retract this report</button></div> : <form onSubmit={event => { event.preventDefault(); if (!plan) return; void action(async () => { await api.post('/api/travel/changes', { id: crypto.randomUUID(), reportId: plan.id, originalLeg: original, ...(changeStatus !== 'canceled' ? { replacementLeg: { ...replacement, trainerId: original.trainerId } } : {}), status: changeStatus, checkedAt: new Date(checkedAt + ':00Z').toISOString(), notes }); await loadPlans(plan.id); await ctx.reload(); setMessage('Flight change reported. Appointments are unchanged; build and review recovery options next.'); }); }}>
           <p className="travel-supplied-note">This records flight details you supply. Public airport notices and weather do not independently confirm an individual flight change.</p>
           {plan && !!plan.flightLegs.length && <label className="travel-context-label">Saved original flight<select value={legIndex} onChange={event => setLegIndex(event.target.value)}>{plan.flightLegs.map((leg, index) => <option value={index} key={index}>{ctx.trainerProfiles.find(profile => profile.id === leg.trainerId)?.name} · {leg.carrier}{leg.flightNumber} · {leg.origin} → {leg.destination} · {leg.departDate}</option>)}</select></label>}
@@ -144,7 +165,7 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
             <article className="journey-source"><strong>Journey analysis</strong><p>Use Plan together to calculate road estimates and saved visit constraints. Supplied itinerary airports are checked separately; flight availability needs airline verification.</p><button className="op-btn" onClick={onBack}>Back to trip planning</button></article></div>
         </section>
         <div className="travel-connection-summary"><article className="journey-source"><strong>Airport reference</strong><p>{connections.airports ? connections.airports.count.toLocaleString() + ' validated reference airports' : 'Limited bundled reference'}</p><small>{connections.airports ? (connections.airports.stale ? 'Stale reference · retrieved ' : 'Retrieved ') + new Date(connections.airports.retrievedAt).toLocaleString() : 'Run a reference refresh to expand coverage.'}</small></article><article className="journey-source"><strong>Road network</strong><p>{connections.routing.configured ? 'Endpoint configured; validate a route below' : 'Routing is not active'}</p><small>{connections.routing.graph?.regions.join(', ')}</small><p>{connections.routing.limitation}</p></article><article className="journey-source"><strong>BTS history</strong><p>{connections.history.periods.length ? connections.history.periods.map(period => period.period).join(', ') : 'No official monthly records loaded'}</p><small>{connections.historySync ? 'Last sync: ' + connections.historySync.state : 'No sync has run'}</small><p>{connections.history.limitation}</p></article></div>
-        <form onSubmit={event => { event.preventDefault(); void action(async () => { const response = await api.post('/api/travel/connections/check', { airports: airportCodes.toUpperCase().split(/[\s,]+/).filter(Boolean), checkRouting: true }); setConnections(response.data); setMessage('Checks completed. Unavailable or limited sources remain explicitly labeled.'); }); }}><label className="travel-context-label">Airports to validate<input value={airportCodes} onChange={event => setAirportCodes(event.target.value.toUpperCase())} placeholder="MCO, YYZ"/></label><p>One to four airport codes. The road check uses Orlando airport and city references in the initial southeastern routing profile.</p><button className="op-btn primary" disabled={busy}><ShieldCheck size={16}/>{busy ? 'Checking sources and route…' : 'Validate official sources and routing'}</button></form>
+        <form onSubmit={event => { event.preventDefault(); void action(async () => { const response = await api.post('/api/travel/connections/check', { airports: airportCodes.toUpperCase().split(/[\s,]+/).filter(Boolean), checkRouting: true }); setConnections(response.data); setMessage('Checks completed for the airports you selected. A driving check requires two airports; unavailable or limited sources remain explicitly labeled.'); }); }}><label className="travel-context-label">Airports to validate<input required value={airportCodes} onChange={event => setAirportCodes(event.target.value.toUpperCase())} placeholder="Enter your airport codes"/></label><p>Choose one to four airport codes. With two or more, the road check uses the first two selected airports. Airport-to-visit timing is calculated from your actual manager locations in the planner.</p><button className="op-btn primary" disabled={busy}><ShieldCheck size={16}/>{busy ? 'Checking sources and route…' : 'Validate official sources and routing'}</button></form>
         {!!connections.results?.length && <><h2 className="travel-evidence-heading">Actual check results</h2>{connections.routingProbe && <p>{connections.routingProbe.roadBased && connections.routingProbe.minutes !== null ? 'A road-network route was validated: ' + connections.routingProbe.minutes + ' estimated driving minutes.' : 'A drivable road-network route was not validated. Geographic estimates are provisional.'}</p>}<TravelEvidence evidence={allEvidence}/>{connections.results.flatMap(result => result.checks.flatMap(check => (check.data || []).map((signal, index) => <p key={result.airport + check.evidence.id + index}>{result.airport} · {signal.title}: {signal.detail}</p>)))}</>}
         {connections.maintenance && <details className="journey-details"><summary>Refresh reliability and saved data</summary>
           <p>{connections.maintenance.scheduling.limitation}</p><p>{connections.maintenance.storage.limitation}</p>
@@ -156,7 +177,7 @@ export default function TravelIntelligenceDesk({ mode, onBack }: { mode: Mode; o
           {connections.sourceHealth ? <><p>Saved scan: {new Date(connections.sourceHealth.checkedAt).toLocaleString()}. This does not replace a current airport check. {connections.sourceHealth.scope}</p>
             {connections.sourceHealth.sources.map(source => <article className="journey-source" key={source.id}><strong>{source.label}</strong>
               <span className="journey-state">{source.available ? 'Passed at recorded check' : 'Needs attention'}</span><small>Checked: {new Date(source.checkedAt).toLocaleString()}{source.lastSuccessAt ? ' · Last success: ' + new Date(source.lastSuccessAt).toLocaleString() : ''}</small>
-              <p>{source.details}</p><p>{source.scope}</p></article>)}</> : <p>No daily source scan has been saved. Airport validation above checks only the selected airports and sample road route.</p>}
+              <p>{source.details}</p><p>{source.scope}</p></article>)}</> : <p>No daily source scan has been saved. Airport validation above checks only the selected airports and the requested road route.</p>}
         </details>
         <details className="journey-details"><summary>Implemented providers and flight-status limits</summary>{connections.providers.map(provider => <article key={provider.name}><h3>{provider.name}</h3><p>{provider.purpose}. {provider.limitation}</p></article>)}<p>{connections.flightStatus.limitation}</p></details>
         {connections.plannedIntegrations && <aside className="journey-gaps"><h3>Research integrations are not connected</h3><p>{connections.plannedIntegrations.limitation}</p><p>Aircraft registry/type profiles, broader aviation hazards, Canadian traffic statistics and additional BTS datasets require their own importers and validation before they can inform recommendations.</p></aside>}

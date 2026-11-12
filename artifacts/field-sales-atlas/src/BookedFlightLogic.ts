@@ -1,6 +1,7 @@
 import { connectionConstraints, flightInstants, type FlightReview, type ConnectionRequirements } from '../shared/travel/readiness';
 import type { Airport,Board,TrainerProfile } from './opsModels';
 
+import { workspaceDeviceKey } from './deviceWorkspace';
 export type BookedLeg = {
   id: string;
   carrier: string;
@@ -296,19 +297,21 @@ function safeFlight(input:unknown):BookedFlight|null{
     ...(s('sharedTripId',70)?{sharedTripId:s('sharedTripId',70)}:{})
   };
 }
-export function readBookedFlights():BookedFlight[]{
+function readBookingRecords(key:string):BookedFlight[]{
   try{
-    const source=JSON.parse(localStorage.getItem(KEY)||'null');
+    const source=JSON.parse(localStorage.getItem(key)||'null');
     if(!source||source.version!==1||!Array.isArray(source.records))return [];
     return source.records.slice(0,30).map(safeFlight)
       .filter((r: BookedFlight | null):r is BookedFlight=>!!r);
   }catch{return [];}
 }
+export function readBookedFlights():BookedFlight[]{return readBookingRecords(workspaceDeviceKey(KEY));}
+export function readEarlierDeviceBookings():BookedFlight[]{return workspaceDeviceKey(KEY)===KEY?[]:readBookingRecords(KEY);}
 export function storeBookedFlights(items:BookedFlight[]):void{
   // Explicit user action only. Raw confirmation emails, PNRs, passenger details,
   // full ticket numbers, addresses, and payment info never enter the stored schema.
   const records=items.slice(0,30).map(safeFlight).filter((r: BookedFlight | null):r is BookedFlight=>!!r);
-  localStorage.setItem(KEY,JSON.stringify({version:1,records}));
+  localStorage.setItem(workspaceDeviceKey(KEY),JSON.stringify({version:1,records}));
 }
 export function connectionReviews(legs:BookedLeg[]):FlightImpact[]{
   return connectionConstraints(legs).map(step=>({

@@ -51,7 +51,7 @@ import { workspaceTool } from './workspaceTools';
 import type { WorkspaceTool } from './workspaceTools';
 import { INTELLIGENCE_NAVIGATION_EVENT, openIntelligenceTool } from './intelligenceTools';
 import localUsAtlas from './us-states-10m.json';
-import { api,createNewWorkspace,getShareUrl,initializeWorkspace } from './workspaceApi';
+import { api,createNewWorkspace,getShareUrl,initializeWorkspace,watchWorkspaceLink } from './workspaceApi';
 const AirTravelPage = lazy(() => import('./AirTravel'));
 const MiamiMapHome = lazy(() => import('./MiamiMapHome'));
 const TodayHub = lazy(() => import('./TodayHub'));
@@ -275,6 +275,7 @@ function Product(){
     setIdentity('member');
   }
   reloadRef.current=reload;
+  useEffect(watchWorkspaceLink,[]);
   // Push updates handle normal collaboration; reconnection and app foregrounding
   // always reconcile missed changes. This is intentionally not an offline write queue.
   useEffect(()=>{

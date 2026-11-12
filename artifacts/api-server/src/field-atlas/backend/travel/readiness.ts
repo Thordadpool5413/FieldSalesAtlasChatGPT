@@ -56,6 +56,7 @@ export async function journeyReadiness(
     try { return zonedInstant(visit.date, time, zone); } catch { return undefined; }
   }
   function drive(id: string, returning = false) {
+    if(!matrix?.roadBased || matrix.evidence.state!=='current')return null;
     const i = points.findIndex(point => point.id === id);
     return i > 0 && matrix ? (returning ? matrix.durations[i][0] : matrix.durations[0][i]) : null;
   }

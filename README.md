@@ -38,6 +38,13 @@ The optimizer installs into `.venv`, including on hosts where pip defaults to `-
 
 The web app uses port 24397; the API uses port 8080. `PORT` and `ATLAS_API_PORT` override these ports for the combined local runner. The web development server forwards `/api` requests, including live updates, to the API service. Stopping the runner stops both services; a service failure also stops its companion.
 
+New workspaces start empty. The app displays records you enter or import and
+attributed public-source results; demo creation is retired. Test fixtures are
+available only in an explicitly enabled test runtime with temporary storage.
+Missing provider data or required timing inputs remain unknown. The
+[active data map](docs/architecture/ACTIVE_TRAVEL_DATA_MAP.md) describes the
+connections, reviewed booking handoffs and decision limits.
+
 ## Code and data
 
 - `artifacts/field-sales-atlas/src/` — React UI, including the official logo and Miami Vice theme.

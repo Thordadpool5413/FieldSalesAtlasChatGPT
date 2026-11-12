@@ -81,24 +81,27 @@
       "id": "security-history",
       "implemented": true,
       "repoFiles": [
-        "artifacts/api-server/src/field-atlas/backend/securityHistory.ts"
+        "artifacts/api-server/src/field-atlas/backend/securityHistory.ts",
+        "artifacts/api-server/src/field-atlas/backend/providers/checkpointArchive.ts"
       ],
       "existingRoutes": [
         "GET /api/travel/security-history"
       ],
-      "readinessNote": "Posted-estimate archive; not a universal live measured queue."
+      "readinessNote": "Historical posted estimates with durable validated snapshots and a bounded, license-checked, revision-pinned hourly archive fallback; not live or measured passenger queues."
     },
     {
       "id": "road-routing",
       "implemented": true,
       "repoFiles": [
         "artifacts/api-server/src/field-atlas/backend/providers/routing.ts",
-        "artifacts/api-server/src/field-atlas/backend/providers/routingConfig.ts"
+        "artifacts/api-server/src/field-atlas/backend/providers/routingConfig.ts",
+        "artifacts/api-server/src/field-atlas/backend/travel/roadPlanning.ts"
       ],
       "existingRoutes": [
-        "POST /api/travel/connections/check"
+        "POST /api/travel/connections/check",
+        "POST /api/travel/road-planning"
       ],
-      "readinessNote": "Implemented optional OSRM matrix; configured and road-validated states differ."
+      "readinessNote": "ORS/OSRM directed matrices serve guided, advanced and joint planning, readiness, assistant and recovery. Configuration and road-validated states differ; missing roads cannot prove a schedule feasible."
     },
     {
       "id": "journey-calculation",

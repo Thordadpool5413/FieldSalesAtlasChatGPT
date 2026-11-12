@@ -2,7 +2,7 @@
 import type { Airport,Coaching,Manager,Visit } from './opsModels';
 import { coachingPriority,distanceMiles } from './opsModels';
 import type { FlightQuote,Gateway,TravelPlan,TravelPrefs,TripPlanning } from './TravelLogic';
-import { estimateRoadMinutes,minutesLabel,money } from './TravelLogic';
+import { roadCircuit,roadTransfer,minutesLabel,money } from './TravelLogic';
 
 const isoDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '';
 const timeNumber = (value: string) => {
@@ -61,32 +61,6 @@ export function getPlanning(plan: TravelPlan): Required<TripPlanning> {
     arrivalToCoachingBufferMinutes: Math.min(240, Math.max(0, Number.isFinite(Number(raw.arrivalToCoachingBufferMinutes)) ? Number(raw.arrivalToCoachingBufferMinutes) : 30)),
   };
 }
-function orderedStops(firstAirport: Airport | undefined, managers: Manager[]): Manager[] {
-  const withGeo = managers.filter(m => Number.isFinite(m.lat) && Number.isFinite(m.lon));
-  const withoutGeo = managers.filter(m => !Number.isFinite(m.lat) || !Number.isFinite(m.lon));
-  if (!withGeo.length || !firstAirport || !Number.isFinite(firstAirport.lat) || !Number.isFinite(firstAirport.lon)) {
-    return [...withGeo, ...withoutGeo];
-  }
-  const outstanding = [...withGeo];
-  const result: Manager[] = [];
-  let latitude = firstAirport.lat!, longitude = firstAirport.lon!;
-  while (outstanding.length) {
-    let best = 0;
-    let smallest = Infinity;
-    outstanding.forEach((person, i) => {
-      const d = distanceMiles(latitude, longitude, person.lat!, person.lon!);
-      if (d < smallest) {
-        best = i;
-        smallest = d;
-      }
-    });
-    const person = outstanding.splice(best, 1)[0];
-    result.push(person);
-    latitude = person.lat!;
-    longitude = person.lon!;
-  }
-  return [...result, ...withoutGeo];
-}
 export function buildCoachingSchedule(
   plan: TravelPlan, airport: Airport | undefined,
   managers: Manager[], prefs: TravelPrefs
@@ -109,7 +83,9 @@ export function buildCoachingSchedule(
     warnings.push('The coaching workday is shorter than one visit. Change the working hours or visit length.');
     return empty('no-days');
   }
-  const ordered = orderedStops(airport, selected);
+  const circuit=airport?roadCircuit(airport,selected,prefs):null;
+  if(!circuit){warnings.push('Road-network travel times are unavailable for this circuit. No visit timings were assigned. Configure or refresh routing before scheduling.');return empty('overbooked');}
+  const ordered = circuit.path;
   const appointments: ScheduledVisit[] = [];
   const unplaced: Manager[] = [];
   let currentDay = 0;
@@ -124,12 +100,14 @@ export function buildCoachingSchedule(
     while (currentDay < days.length) {
       const known = Number.isFinite(manager.lat) && Number.isFinite(manager.lon);
       const roadMinutes = known && lastLocation
-        ? estimateRoadMinutes(distanceMiles(lastLocation.lat, lastLocation.lon, manager.lat!, manager.lon!), prefs)
+        ? roadTransfer(lastLocation,manager,prefs)?.minutes ?? null
         : null;
-      const transfer = roadMinutes === null ? 0 : roadMinutes;
+      if(roadMinutes===null){unknownLegs++;break;}
+      const transfer = roadMinutes;
       const extra = appointments.length && cursor !== start ? p.breakMinutes : 0;
       const beginning = cursor + transfer + extra;
-      if (beginning + p.sessionMinutes <= end) {
+      const returnMinutes=roadTransfer(manager,airport!,prefs)?.minutes;
+      if (returnMinutes!==undefined && beginning + p.sessionMinutes + returnMinutes <= end) {
         appointments.push({
           manager, date: days[currentDay], start: timeString(beginning),
           end: timeString(beginning + p.sessionMinutes), travelBeforeMinutes: roadMinutes,
@@ -143,12 +121,14 @@ export function buildCoachingSchedule(
         placed = true;
         break;
       }
+      if(lastLocation&&cursor!==start)drive+=roadTransfer(lastLocation,airport!,prefs)?.minutes || 0;
       currentDay++;
       cursor = start;
-      // Hotel location is not known. We use the last manager as the next day's geographic starting point.
+      lastLocation={lat:airport!.lat!,lon:airport!.lon!,label:airport!.iata+' airport area'};
     }
     if (!placed) unplaced.push(manager);
   }
+  if(lastLocation&&cursor!==start)drive+=roadTransfer(lastLocation,airport!,prefs)?.minutes || 0;
   if (unknownLegs) warnings.push(unknownLegs + ' location transfer(s) could not be estimated because coordinates are missing.');
   if (appointments.some(v => v.date === plan.departDate)) warnings.push('Some coaching is planned on the flight departure day. Verify your actual arrival time.');
   if (appointments.some(v => v.date === plan.returnDate)) warnings.push('Some coaching is planned on your return travel day. Verify the flight departure cutoff.');
@@ -210,8 +190,8 @@ export function checkFlightWindows(
     if (lastAirport && Number.isFinite(lastAirport.lat) && Number.isFinite(lastAirport.lon) &&
         Number.isFinite(last.manager.lat) && Number.isFinite(last.manager.lon) &&
         endMin !== null && departMin !== null) {
-      const returnDrive = estimateRoadMinutes(distanceMiles(
-        last.manager.lat!, last.manager.lon!, lastAirport.lat!, lastAirport.lon!), prefs);
+      const returnDrive = roadTransfer(last.manager,lastAirport,prefs)?.minutes;
+      if(returnDrive===undefined)return {status:'not-checkable',lines:[...messages,'The road-network return route is unavailable. Return-flight readiness could not be calculated.']};
       const readyBy = endMin + returnDrive + prefs.rentalReturnMinutes + prefs.checkinMinutes;
       if (readyBy > departMin) {
         risky = true;

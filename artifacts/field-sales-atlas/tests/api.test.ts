@@ -7,6 +7,12 @@ import { randomUUID } from 'node:crypto';
 
 const directory = mkdtempSync(join(tmpdir(), 'atlas-api-'));
 process.env.ATLAS_DATA_DIR = directory;
+process.env.NODE_ENV = 'test';
+process.env.ATLAS_TEST_FIXTURES = '1';
+const {routingFixture}=await import('./support/routing-fixture.mjs');
+const testRouting=await routingFixture();
+process.env.ATLAS_ROUTING_PROVIDER='osrm';
+process.env.ATLAS_ROUTING_URL=testRouting.origin;
 let cleanPostgres: (() => Promise<void>) | undefined;
 if (process.env.ATLAS_DATABASE_ENGINE === 'postgres') {
   if (!process.env.ATLAS_TEST_POSTGRES_URL) throw Error('PostgreSQL API tests require ATLAS_TEST_POSTGRES_URL for an isolated test schema.');
@@ -21,7 +27,9 @@ if (process.env.ATLAS_DATABASE_ENGINE === 'postgres') {
 }
 const { handler } = await import('../../api-server/src/field-atlas/backend/index');
 const { db } = await import('../../api-server/src/field-atlas/backend/runtime/sdk');
-after(async () => { await db.close(); await cleanPostgres?.(); rmSync(directory, { recursive: true, force: true }); });
+const {seedTestReference}=await import('./support/seed-reference');
+await seedTestReference();
+after(async () => { await db.close(); await cleanPostgres?.(); await testRouting.close(); rmSync(directory, { recursive: true, force: true }); });
 
 async function request(method: string, path: string, key?: string, body?: unknown) {
   const url = new URL(path, 'http://localhost');
@@ -96,7 +104,7 @@ test('health works without credentials; private API rejects missing and invalid 
 test('demo creation is isolated from real workspace records and has two configured trainers', async () => {
   const original = await workspace();
   await addManager(original, 'Real Manager');
-  const demo = await request('POST', '/api/demo/create', original, {});
+  const demo = await request('POST', '/api/testing/workspace', original, {});
   assert.equal(demo.status, 201);
   const sample = (await request('GET', '/api/operations', demo.data.workspaceKey)).data;
   assert.equal(sample.team.name, 'Field Sales Atlas demo');
@@ -107,6 +115,79 @@ test('demo creation is isolated from real workspace records and has two configur
   assert.notEqual(sample.team.id, real.team.id);
   assert.deepEqual(real.managers.map((manager: { name: string }) => manager.name), ['Real Manager']);
   assert.equal(real.assignments.length, 0);
+});
+
+test('normal runtimes expose no demo creation or fixture records and new workspaces remain empty',async()=>{
+  const fixture=await request('POST','/api/testing/workspace',undefined,{});
+  const previous=process.env.ATLAS_TEST_FIXTURES;
+  process.env.ATLAS_TEST_FIXTURES='0';
+  try{
+    assert.equal((await request('POST','/api/demo/create',undefined,{})).status,410);
+    assert.equal((await request('POST','/api/testing/workspace',undefined,{})).status,404);
+    assert.equal((await request('GET','/api/operations',fixture.data.workspaceKey)).status,410);
+    const board=(await request('GET','/api/operations',await workspace())).data;
+    for(const field of ['managers','visits','assignments','coaching','trips'])assert.equal(board[field].length,0);
+    assert.ok(board.trainerProfiles.every((profile:{homeAirports:string[];homeDriveMinutes:Record<string,number>})=>profile.homeAirports.length===0&&Object.keys(profile.homeDriveMinutes).length===0));
+  }finally{process.env.ATLAS_TEST_FIXTURES=previous;}
+});
+
+test('travel preference updates preserve an unknown home-drive time rather than manufacturing zero',async()=>{
+  const key=await workspace();
+  const response=await request('PUT','/api/travel/preferences?slot=trainer_a',key,{homeAirports:['MCO','MIA'],homeDriveMinutes:{MIA:35},roadMultiplier:1.3,assumedRoadMph:47});
+  assert.equal(response.status,200);assert.deepEqual(response.data.preferences.homeDriveMinutes,{MIA:35});
+  assert.equal('roadMultiplier' in response.data.preferences,false);assert.equal('assumedRoadMph' in response.data.preferences,false);
+});
+
+test('road comparisons use saved workspace locations and unknown road routes produce no timing recommendations',async()=>{
+  const key=(await request('POST','/api/testing/workspace',undefined,{})).data.workspaceKey;
+  const board=(await request('GET','/api/operations',key)).data;
+  const managerIds=board.managers.filter((person:{baseState:string})=>person.baseState==='FL').map((person:{id:string})=>person.id);
+  const body={managerIds,airportCodes:['MCO']};
+  assert.equal((await request('POST','/api/travel/road-planning',undefined,body)).status,403);
+  assert.equal((await request('POST','/api/travel/road-planning',await workspace(),body)).status,422);
+  const working=await request('POST','/api/travel/road-planning',key,body);
+  assert.equal(working.status,200);assert.equal(working.data.available,true);assert.equal(working.data.network.matrix.roadBased,true);
+  assert.ok(working.data.gateways.every((gateway:{planningDriveMinutes:number;firstLegMinutes:number})=>gateway.planningDriveMinutes>0&&gateway.firstLegMinutes>0));
+  const previous=process.env.ATLAS_ROUTING_URL;process.env.ATLAS_ROUTING_URL=testRouting.origin+'/unavailable-fixture';
+  try{
+    const failed=await request('POST','/api/travel/road-planning',key,body);
+    assert.equal(failed.status,200);assert.equal(failed.data.available,false);assert.deepEqual(failed.data.gateways,[]);
+    const scenario=await request('POST','/api/travel/scenarios',key,{...body,trainerIds:['trainer_a'],startDate:'2026-12-07',endDate:'2026-12-08',arrivalAirport:'MCO'});
+    assert.equal(scenario.status,201);assert.equal(scenario.data.routingVerified,false);assert.ok(scenario.data.scenarios.every((option:{feasible:boolean;visits:unknown[]})=>!option.feasible&&option.visits.length===0));
+  }finally{process.env.ATLAS_ROUTING_URL=previous;}
+});
+
+test('checkpoint history preserves validated historical rows through outages and never manufactures a missing percentile',async()=>{
+  const {securityHistory}=await import('../../api-server/src/field-atlas/backend/securityHistory');
+  const original=globalThis.fetch;let calls=0;
+  globalThis.fetch=async input=>{
+    calls++;
+    const queue=String(input).includes('precheck')?'precheck':'standard';
+    const row={airport:'MCO',queue_type:queue,terminal:'A',p50_wait:0,p75_wait:10,p95_wait:null,hour_et:'2026-11-01T08:00:00-05:00'};
+    return new Response(JSON.stringify({rows:[{row},{row:{...row,terminal:'bad',p50_wait:''}},{row:{...row,hour_et:'invalid'}}]}));
+  };
+  try{
+    const first=await securityHistory('MCO','2026-11-15',8);
+    assert.equal(first.available,true);assert.equal(first.state,'historical');assert.equal(first.rows.length,2);
+    assert.ok(first.rows.every(row=>row.historicalMedianPosted===0&&row.typicalHourlyP95===null&&row.hourRecords===1));
+    const cached=await securityHistory('MCO','2026-11-22',8);assert.equal(calls,2);assert.equal(cached.localDate,'2026-11-22');
+    const stored=await db.list<{id:string;result:{etWeekday:number;etHour:number}}>('atlas_checkpoint_history_v3');
+    const receipt=stored.items.find(row=>row.result?.etWeekday===0&&row.result.etHour===8)!;assert.ok(receipt);
+    await db.tx.update('atlas_checkpoint_history_v3',[{id:receipt.id,record:{retryAfter:'2000-01-01T00:00:00Z'}}],{patch:true});
+    globalThis.fetch=async()=>{throw Error('Checkpoint archive unavailable');};
+    const stale=await securityHistory('MCO','2026-11-29',8);
+    assert.equal(stale.available,true);assert.equal(stale.state,'stale');assert.equal(stale.checkedAt,first.checkedAt);
+    assert.deepEqual(stale.rows,first.rows);assert.match(stale.message,/previously validated historical/);
+  }finally{globalThis.fetch=original;}
+});
+
+test('checkpoint history refuses an ambiguous daylight-saving hour without fetching guessed records',async()=>{
+  const {securityHistory}=await import('../../api-server/src/field-atlas/backend/securityHistory');
+  const original=globalThis.fetch;globalThis.fetch=async()=>{throw Error('No request should be made for an ambiguous hour');};
+  try{
+    const result=await securityHistory('MCO','2026-11-01',1);
+    assert.equal(result.available,false);assert.equal(result.rows.length,0);assert.match(result.message,/ambiguous.*daylight-saving/);
+  }finally{globalThis.fetch=original;}
 });
 
 test('workspace data is isolated and stale edits cannot overwrite a newer manager', async () => {
@@ -216,7 +297,7 @@ test('manual visit creation also rejects a simultaneous duplicate', async () => 
 });
 
 async function demoScenario() {
-  const key = (await request('POST', '/api/demo/create', undefined, {})).data.workspaceKey;
+  const key = (await request('POST', '/api/testing/workspace', undefined, {})).data.workspaceKey;
   const board = (await request('GET', '/api/operations', key)).data;
   const managers = board.managers.filter((person: { baseState: string }) => person.baseState === 'FL');
   // Assign the second Florida manager to the partner to require two trainer routes.
@@ -270,7 +351,8 @@ test('joint preview shows evidence gaps; approval is isolated, atomic, timezone 
   const option = report.scenarios[0];
   assert.equal(option.feasible, true); assert.equal(option.trainerIds.length, 2); assert.equal(option.provisional, true);
   assert.equal(option.budget.complete, false); assert.equal(option.budget.items[0].amount, null);
-  assert.ok(option.gaps.some((gap: string) => gap.includes('road-routing')));
+  assert.equal(report.routingVerified,true);
+  assert.ok(option.gaps.some((gap: string) => gap.includes('no imported arrival flight')));
   assert.equal((await request('GET', '/api/operations', key)).data.trips.length, 0);
   const stranger = await workspace();
   const path = '/api/travel/scenarios/' + report.id + '/approve';
@@ -569,7 +651,7 @@ test('expired previews are rejected and durable review failures stay incomplete 
 });
 
 async function approvedAirPlan() {
-  const key = (await request('POST', '/api/demo/create', undefined, {})).data.workspaceKey;
+  const key = (await request('POST', '/api/testing/workspace', undefined, {})).data.workspaceKey;
   let board = (await request('GET', '/api/operations', key)).data;
   const people = board.managers.filter((person: { baseState: string }) => person.baseState === 'FL');
   const partner = people.find((person: { name: string }) => person.name.includes('Casey'));
@@ -659,7 +741,7 @@ test('assistant reports missing return evidence and clarifies unsupported/ambigu
 });
 
 test('existing guided trips can connect to journey analysis without changing the legacy draft-plan API', async () => {
-  const key = (await request('POST', '/api/demo/create', undefined, {})).data.workspaceKey;
+  const key = (await request('POST', '/api/testing/workspace', undefined, {})).data.workspaceKey;
   const board = (await request('GET', '/api/operations', key)).data;
   const person = board.managers.find((person: { name: string }) => person.name.includes('Jordan'));
   const committed = await request('POST', '/api/travel/commit', key, { requestId: randomUUID(), title: 'Existing guided trip', trainer: 'Taylor', trainerId: 'trainer_a',
@@ -857,6 +939,7 @@ test('airport snapshot migration joins map and planner and preserves staleness o
   const rows = codes.map(iata => ({ iata, name: iata + ' fixture', lat: 28, lon: -81, state: 'FL', country: 'US', icao: 'K' + iata, scheduled: true, tier: 'Major' }));
   const checkedAt = '2000-01-01T00:00:00.000Z';
   const legacy = 'atlas_public_airports_snapshot', canonical = 'atlas_airport_reference_global';
+  await db.delete(canonical,['_head','_refresh']);
   await db.tx.update(legacy, [
     { id: 'head', record: { revision: 'fixture', checkedAt, count: rows.length, chunks: 2 } },
     { id: 'part_0', record: { revision: 'fixture', airports: rows.slice(0, 80) } },
@@ -874,6 +957,7 @@ test('airport snapshot migration joins map and planner and preserves staleness o
     globalThis.fetch = original;
     await db.delete(legacy, ['head', 'part_0', 'part_1']);
     await db.delete(canonical, [...codes, '_head', '_refresh']);
+    await seedTestReference();
   }
 });
 
@@ -939,7 +1023,10 @@ test('full source scan includes each historical dataset and flags an incomplete 
     if (url.hostname === 'flyerintel.com') return new Response(JSON.stringify({ meta: { dataset: url.pathname.split('/').at(-1)!.replace('.json', ''), license: 'CC BY 4.0', period: { start: '2026-08-01', end: '2026-08-31' } }, rows: [] }));
     if (url.hostname === 'datasets-server.huggingface.co') {
       if (url.searchParams.get('where')?.includes('precheck')) throw Error('Fixture unavailable queue');
-      return new Response(JSON.stringify({ rows: [{ row: { airport: 'MCO', queue_type: 'standard', terminal: 'A', p50_wait: 10, p75_wait: 15, p95_wait: 20, hour_et: '2026-08-02T10:00:00' } }], partial: false, num_rows_total: 1 }));
+      const weekday=Number(url.searchParams.get('where')?.match(/"day_of_week"=(\d)/)?.[1]);
+      const hour=Number(url.searchParams.get('where')?.match(/"hour_of_day"=(\d+)/)?.[1]);
+      const historical=new Date();historical.setUTCDate(historical.getUTCDate()-7);while(historical.getUTCDay()!==weekday)historical.setUTCDate(historical.getUTCDate()-1);
+      return new Response(JSON.stringify({ rows: [{ row: { airport: 'MCO', queue_type: 'standard', terminal: 'A', p50_wait: 10, p75_wait: 15, p95_wait: 20, hour_et:historical.toISOString().slice(0,10)+'T'+String(hour).padStart(2,'0')+':00:00' } }], partial: false, num_rows_total: 1 }));
     }
     return new Response('{}');
   };

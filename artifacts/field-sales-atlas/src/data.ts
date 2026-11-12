@@ -203,11 +203,9 @@ const starterRows = [
   ['WY', 'JAC', 'Jackson Hole'],
   ['WY', 'CPR', 'Casper Natrona'],
 ];
-export const STARTER_AIRPORTS: Airport[] = starterRows.map((r, i) => ({
-  state: r[0],
-  iata: r[1],
-  name: r[2],
-  tier: i % 2 === 0 ? 'Major' : 'Secondary',
-  scheduled: true,
-  ...airportReference[r[1] as keyof typeof airportReference],
-}));
+// Dated OurAirports snapshot; classification follows the published airport type.
+export const STARTER_AIRPORTS: Airport[] = starterRows.map((r):Airport => {
+  const reference=airportReference[r[1] as keyof typeof airportReference];
+  return {state:r[0],iata:r[1],name:r[2],...reference,
+    tier:reference.type==='large_airport'?'Major':reference.type==='medium_airport'?'Secondary':'Regional'};
+});

@@ -32,7 +32,7 @@ export type ScenarioReport = {
   id: string; createdAt: string; expiresAt: string; workspaceRevision: number;
   startDate: string; endDate: string; arrivalAirport: string;
   scenarios: Scenario[]; evidence: Evidence[]; notes: string[];
-  optimizer: string; sourceStatus: string;
+  optimizer: string; sourceStatus: string; routingVerified?:boolean;
   checkedAirports?: string[];
   signals?: Array<{ sourceId: string; kind?: Evidence['kind']; title: string; detail: string; validFrom?: string; validTo?: string }>;
 };

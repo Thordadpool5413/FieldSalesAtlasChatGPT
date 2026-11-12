@@ -1,12 +1,10 @@
-import { ArrowRight, Check, ChevronDown, CircleAlert, Compass, Minus, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Compass, Minus, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { trackEvent } from './analytics';
 import { useOp } from './Operations';
-import { canReturnFromDemo, openDemoWorkspace, returnFromDemo } from './workspaceApi';
 
 export default function WorkspaceSetup({ expanded, onExpandedChange }: { expanded: boolean; onExpandedChange: (value: boolean) => void }) {
   const ctx = useOp();
-  const demo = ctx.board.team?.name === 'Field Sales Atlas demo';
   const stepCompletion = {
     manager: !!ctx.board.managers?.length,
     territory: !!ctx.board.assignments?.length,
@@ -20,14 +18,12 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
       ['visit', stepCompletion.visit],
     ] as const;
     for (const [step, done] of steps) {
-      if (!demo && !previousCompletion.current[step] && done) {
+      if (!previousCompletion.current[step] && done) {
         trackEvent('onboarding_setup_step_completed', { step });
       }
     }
     previousCompletion.current = stepCompletion;
-  }, [demo, stepCompletion.manager, stepCompletion.territory, stepCompletion.visit]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  }, [stepCompletion.manager, stepCompletion.territory, stepCompletion.visit]);
   const workspaceId = ctx.board.team?.id || '';
   const dismissalKey = 'atlas-setup-dismissed-v1:' + workspaceId;
   const minimizeKey = 'atlas-setup-minimized-v1:' + workspaceId;
@@ -42,10 +38,6 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
     try { return localStorage.getItem(dismissalKey) ? workspaceId : ''; } catch { return ''; }
   });
   if (ctx.identity !== 'member') return null;
-  if (demo) return <section className="atlas-demo-notice" aria-label="Demo workspace">
-    <div><strong>Demo workspace</strong><span>Sample people and territories. Your original workspace is separate.</span></div>
-    {canReturnFromDemo() && <button className="op-btn" onClick={() => { returnFromDemo(); window.location.reload(); }}>Return to my workspace <ArrowRight size={16}/></button>}
-  </section>;
   const steps = [
     { title: 'Add your first manager', detail: 'Create a manager record or import your roster.', done: !!ctx.board.managers?.length, action: () => ctx.open('manager'), label: 'Add first manager' },
     { title: 'Choose a region and territory', detail: 'Assign a state, county, city or ZIP area to a manager.', done: !!ctx.board.assignments?.length, action: () => ctx.open('assignment'), label: 'Choose a region' },
@@ -84,11 +76,6 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
   function planTravel() {
     onExpandedChange(false);
     ctx.go('air');
-  }
-  async function demoWorkspace() {
-    setBusy(true); setError('');
-    try { await openDemoWorkspace(); window.location.reload(); }
-    catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not open the demo.'); setBusy(false); }
   }
   return <section className={'atlas-setup' + (expanded ? ' is-expanded' : '') + (minimized && !expanded ? ' is-minimized' : '')} aria-label="Workspace setup">
     {!expanded && minimized ? <div className="atlas-setup-minimized">
@@ -130,8 +117,7 @@ export default function WorkspaceSetup({ expanded, onExpandedChange }: { expande
           <span>Optional</span>
           <button type="button" className="atlas-quiet-action" onClick={() => { ctx.openTrainers(); onExpandedChange(false); }}>Set trainer profiles</button>
         </div>
-        <div className="atlas-setup-demo"><div><strong>Want to explore first?</strong><p>Open a separate workspace with clearly labeled sample data.</p></div><button className="op-btn" disabled={busy} onClick={demoWorkspace}>{busy ? 'Opening demo…' : 'Explore a demo'}</button></div>
-        {error && <p role="alert" className="op-error"><CircleAlert size={16}/>{error}</p>}
+        <p className="atlas-setup-reference-note">This workspace starts empty. Only records you add or import and attributed public reference data appear here.</p>
         <button className="atlas-quiet-action" onClick={dismiss}>Continue on my own</button>
         <p className="atlas-setup-return-note">Reopen setup later from Workspace setup in the sidebar or tools menu.</p>
       </div>}

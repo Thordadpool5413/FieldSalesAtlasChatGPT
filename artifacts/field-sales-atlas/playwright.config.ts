@@ -24,10 +24,10 @@ export default defineConfig({
     { name: 'laptop', testMatch: 'layout.spec.ts', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
   ],
   webServer: {
-    command: 'pnpm --dir ../.. run start:preview',
+    command: 'node tests/support/start-e2e.mjs',
     url: 'http://127.0.0.1:5174/api/_healthcheck',
     reuseExistingServer: false,
     gracefulShutdown: { signal: 'SIGTERM', timeout: 10000 },
-    env: { PORT: '5174', ATLAS_API_PORT: '5175', ATLAS_DATA_DIR: dataDirectory },
+    env: { PORT: '5174', ATLAS_API_PORT: '5175', ATLAS_DATA_DIR: dataDirectory, ATLAS_DATABASE_ENGINE:'sqlite' },
   },
 });

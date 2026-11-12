@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CalendarCheck, Check, Clock3, Compass, Plane, RefreshCw, ShieldCheck, Users } from 'lucide-react';
 import { useOp } from './Operations';
 import { api } from './workspaceApi';
+import BookingPicker from './BookingPicker';
+import { reviewedBookings, selectedBookingFlights } from './BookingHandoff';
 import { readBookedFlights } from './BookedFlightLogic';
+import type { TravelPlan,TravelPrefs } from './TravelLogic';
+import { currentAnalysisResult, type AnalysisSnapshot } from './analysisSnapshot';
 import { today } from './opsModels';
 import type { Evidence, ScenarioReport } from '../shared/travel/types';
 import './JourneyIntelligence.css';
@@ -19,21 +23,28 @@ function nextWeek() {
 }
 function stamp(value?: string) { return value ? new Date(value).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Not supplied'; }
 type Watch = { id: string; airport: string; airports?: string[]; state: string; nextRun: string; reviewedAt?: string; review?: { message: string; evidence: Evidence[] } };
-export default function JourneyIntelligence({ onBack }: { onBack: () => void }) {
+export default function JourneyIntelligence({ onBack,seedPlan,seedPrefs,joint=false,backLabel='Guided planner' }: { onBack: () => void;seedPlan?:TravelPlan;seedPrefs?:TravelPrefs;joint?:boolean;backLabel?:string }) {
   const ctx = useOp();
   const defaults = useRef(nextWeek()).current;
-  const [managerIds, setManagerIds] = useState<string[]>(ctx.travelRequest?.managerIds || (ctx.travelRequest?.managerId ? [ctx.travelRequest.managerId] : []));
-  const [trainerIds, setTrainerIds] = useState<string[]>(['trainer_a', 'trainer_b']);
-  const [startDate, setStartDate] = useState(ctx.travelRequest?.departDate || defaults.start);
-  const [endDate, setEndDate] = useState(ctx.travelRequest?.returnDate || defaults.end);
-  const [arrivalAirport, setArrivalAirport] = useState(ctx.travelRequest?.arrivalAirport || 'MCO');
-  const [sessionMinutes, setSession] = useState(150), [breakMinutes, setBreak] = useState(30);
-  const [dayStart, setDayStart] = useState('09:00'), [dayEnd, setDayEnd] = useState('17:00');
-  const [checkinMinutes, setCheckin] = useState(105), [arrivalMinutes, setArrival] = useState(60), [returnMinutes, setReturn] = useState(45);
-  const [hotelPerNight, setHotel] = useState(160), [mealsPerDay, setMeals] = useState(65), [rentalPerDay, setRental] = useState(68);
-  const [allowHandoffs, setHandoffs] = useState(false), [includeWeekends, setWeekends] = useState(false);
-  const [useBookings, setUseBookings] = useState(false), [checkPublicSources, setPublicSources] = useState(false);
-  const [report, setReport] = useState<ScenarioReport | null>(null), [selectedId, setSelectedId] = useState('');
+  const [managerIds, setManagerIds] = useState<string[]>(seedPlan?.managerIds || ctx.travelRequest?.managerIds || (ctx.travelRequest?.managerId ? [ctx.travelRequest.managerId] : []));
+  const [trainerIds, setTrainerIds] = useState<string[]>(joint?['trainer_a', 'trainer_b']:[ctx.activeTrainerId]);
+  const [startDate, setStartDate] = useState(seedPlan?.departDate || ctx.travelRequest?.departDate || defaults.start);
+  const [endDate, setEndDate] = useState(seedPlan?.returnDate || ctx.travelRequest?.returnDate || defaults.end);
+  const [arrivalAirport, setArrivalAirport] = useState(seedPlan?.selectedArrival || ctx.travelRequest?.arrivalAirport || '');
+  const [sessionMinutes, setSession] = useState(seedPlan?.planning?.sessionMinutes??150), [breakMinutes, setBreak] = useState(seedPlan?.planning?.breakMinutes??30);
+  const [dayStart, setDayStart] = useState(seedPlan?.planning?.dayStart || '09:00'), [dayEnd, setDayEnd] = useState(seedPlan?.planning?.dayEnd || '17:00');
+  const [checkinMinutes, setCheckin] = useState(seedPrefs?.checkinMinutes??105), [arrivalMinutes, setArrival] = useState(seedPrefs?.rentalPickupMinutes??60), [returnMinutes, setReturn] = useState(seedPrefs?.rentalReturnMinutes??45);
+  const [hotelPerNight, setHotel] = useState(seedPrefs?.hotelPerNight??160), [mealsPerDay, setMeals] = useState(seedPrefs?.mealsPerDay??65), [rentalPerDay, setRental] = useState(seedPrefs?.rentalPerDay??68);
+  const [allowHandoffs, setHandoffs] = useState(false), [includeWeekends, setWeekends] = useState(seedPlan?.planning?.includeWeekends??false);
+  const [useBookings, setUseBookings] = useState(false), [checkPublicSources, setPublicSources] = useState(true);
+  const [bookingSelection,setBookingSelection]=useState<Record<string,string>>({});
+  const [reportSnapshot, setReportSnapshot] = useState<AnalysisSnapshot<ScenarioReport> | null>(null), [selectedId, setSelectedId] = useState('');
+  const [clock,setClock]=useState(Date.now);
+  useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),30000);return ()=>clearInterval(timer);},[]);
+  const reportContext=JSON.stringify([ctx.board.team?.id,ctx.board.revision,managerIds,trainerIds,startDate,endDate,arrivalAirport,sessionMinutes,breakMinutes,dayStart,dayEnd,checkinMinutes,arrivalMinutes,returnMinutes,hotelPerNight,mealsPerDay,rentalPerDay,allowHandoffs,includeWeekends,useBookings,bookingSelection,checkPublicSources,
+    useBookings?readBookedFlights().filter(booking=>bookingSelection[booking.trainerId]===booking.id).map(booking=>[booking.id,booking.revision,booking.updatedAt]):null]);
+  const report=currentAnalysisResult(reportSnapshot,reportContext,reportSnapshot?.result.evidence,reportSnapshot?.result.expiresAt,clock);
+  const setReport=(result:ScenarioReport|null)=>setReportSnapshot(result?{context:reportContext,result}:null);
   const [busy, setBusy] = useState(false), [failure, setFailure] = useState('');
   const [acknowledged, setAcknowledged] = useState(false), [monitor, setMonitor] = useState(false);
   const [watches, setWatches] = useState<Watch[]>([]), [reviewError, setReviewError] = useState('');
@@ -54,10 +65,8 @@ export default function JourneyIntelligence({ onBack }: { onBack: () => void }) 
     event.preventDefault(); if (saving.current) return;
     saving.current = true; setBusy(true); setFailure('');
     try {
-      const flights = useBookings ? readBookedFlights().filter(booking => trainerIds.includes(booking.trainerId))
-        .flatMap(booking => booking.legs.filter(leg => leg.departDate >= startDate && leg.departDate <= endDate).map(leg => ({ trainerId: booking.trainerId,
-          carrier: leg.carrier, flightNumber: leg.flightNumber, origin: leg.origin, destination: leg.destination, departDate: leg.departDate, departTime: leg.departTime, arriveDate: leg.arriveDate, arriveTime: leg.arriveTime, providedAt: booking.updatedAt }))) : [];
-      const response = await api.post('/api/travel/scenarios', { managerIds, trainerIds, startDate, endDate, arrivalAirport, sessionMinutes, breakMinutes,
+      const flights = useBookings ? selectedBookingFlights(readBookedFlights(),bookingSelection,{trainerIds,startDate,endDate}) : [];
+      const response = await api.post('/api/travel/scenarios', { title:seedPlan?.title,managerIds, trainerIds, startDate, endDate, arrivalAirport, sessionMinutes, breakMinutes,
         dayStart, dayEnd, checkinMinutes, arrivalMinutes, returnMinutes, hotelPerNight, mealsPerDay, rentalPerDay, allowHandoffs, includeWeekends, checkPublicSources, flights });
       const next = response.data as ScenarioReport;
       setReport(next); setSelectedId(next.scenarios.find(option => option.feasible)?.id || next.scenarios[0].id); setAcknowledged(false);
@@ -74,7 +83,8 @@ export default function JourneyIntelligence({ onBack }: { onBack: () => void }) 
     finally { saving.current = false; setBusy(false); }
   }
   return <section className="journey" aria-label="Intelligent journey planner">
-    <header className="journey-header"><div><span className="journey-eyebrow"><Compass size={15}/> FIELD INTELLIGENCE</span><h1>A better week, together.</h1><p>Give every visit a place. Give every decision a reason.</p></div><button className="op-btn" onClick={onBack} disabled={busy}><ArrowLeft size={15}/> Guided planner</button></header>
+    <header className="journey-header"><div><span className="journey-eyebrow"><Compass size={15}/> FIELD INTELLIGENCE</span><h1>A better week, together.</h1><p>Give every visit a place. Give every decision a reason.</p></div><button className="op-btn" onClick={onBack} disabled={busy}><ArrowLeft size={15}/> {backLabel}</button></header>
+    {reportSnapshot&&!report&&<p className="journey-alert" role="status">The saved records, itinerary or source evidence changed. Build current options before reviewing a calendar update.</p>}
     {!report ? <form onSubmit={build}>
       <fieldset disabled={busy} className="journey-inputs"><legend className="sr-only">Journey preferences</legend>
         <div className="journey-columns"><section><h2><Users size={19}/> Your field team</h2><p>Plan with one trainer or coordinate both.</p><div className="journey-choice-list">
@@ -85,7 +95,7 @@ export default function JourneyIntelligence({ onBack }: { onBack: () => void }) 
         <section><h2><CalendarCheck size={19}/> Time and place</h2><div className="journey-fields">
           <label>First field date<input required type="date" value={startDate} onChange={event => setStartDate(event.target.value)}/></label>
           <label>Last field date<input required type="date" value={endDate} min={startDate} onChange={event => setEndDate(event.target.value)}/></label>
-          <label className="journey-wide">Field airport<input required pattern="[A-Z]{3}" maxLength={3} value={arrivalAirport} onChange={event => setArrivalAirport(event.target.value.toUpperCase())}/><small>Three-letter code. Daily routes begin and end in this airport area.</small></label>
+          <label className="journey-wide">Field airport<input aria-label="Field airport" aria-describedby="journey-airport-help" required pattern="[A-Z]{3}" maxLength={3} value={arrivalAirport} onChange={event => setArrivalAirport(event.target.value.toUpperCase())}/><small id="journey-airport-help">Three-letter code. Daily routes begin and end in this airport area.</small></label>
           <label>Visit length (minutes)<input type="number" min={30} max={480} required value={sessionMinutes} onChange={event => setSession(Number(event.target.value))}/></label>
           <label>Break between visits<input type="number" min={0} max={120} required value={breakMinutes} onChange={event => setBreak(Number(event.target.value))}/></label>
         </div>
@@ -100,10 +110,11 @@ export default function JourneyIntelligence({ onBack }: { onBack: () => void }) 
           <label>Meals / day (USD)<input type="number" min={0} max={500} value={mealsPerDay} onChange={event => setMeals(Number(event.target.value))}/></label>
           <label>Rental / day (USD)<input type="number" min={0} max={1000} value={rentalPerDay} onChange={event => setRental(Number(event.target.value))}/></label>
         </div><p>Workday hours apply in each location’s local time zone. Budgets are allowances, not quotes.</p></details>
-        <details className="journey-details"><summary><Plane size={15}/> Add flight and public-source context</summary>
+        <section className="journey-details" aria-label="Flight and public-source context"><h2><Plane size={15}/> Flights and public evidence</h2>
           <label className="journey-check"><input type="checkbox" checked={useBookings} onChange={event => setUseBookings(event.target.checked)}/> Include saved flight legs for these trainers and dates</label><p>Shares airport codes, dates, times, carrier and flight numbers from this device with your workspace. Booking documents and confirmation codes are excluded. Choose dates that include every outbound and return leg.</p>
+          {useBookings&&<BookingPicker bookings={reviewedBookings(readBookedFlights(),{trainerIds,startDate,endDate})} trainers={profiles.filter(profile=>trainerIds.includes(profile.id))} selection={bookingSelection} onChange={setBookingSelection} onManage={()=>ctx.go('booked')} disabled={busy}/>}
           <label className="journey-check"><input type="checkbox" checked={checkPublicSources} onChange={event => setPublicSources(event.target.checked)}/> Check official airport notices and weather</label><p>Each source shows its own freshness and scope. Forecasts cover only their published period; individual flight status is unverified.</p>
-        </details></section></div>
+        </section></section></div>
       </fieldset>
       {failure && <p className="journey-alert" role="alert">{failure}</p>}
       <footer className="journey-footer"><span>{busy ? 'Comparing visit order, trainer assignments and working windows…' : 'Your saved calendar and trainer availability are included.'}</span><button className="op-btn primary" type="submit" disabled={busy || !managerIds.length || !trainerIds.length}>{busy ? <RefreshCw size={17} className="journey-spin"/> : <Compass size={17}/>} {busy ? 'Building your options…' : 'Build travel options'}</button></footer>

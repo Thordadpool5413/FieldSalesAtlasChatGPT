@@ -17,10 +17,12 @@ import { requestedManagerIds } from './fieldExperience';
 import { useOp } from './Operations';
 import type { Airport } from './opsModels';
 import { dateLabel,downloadFile,exportCSV,STATE_BY_CODE,STATES,today } from './opsModels';
-import SmartTripPanel from './SmartTripPanel';
+import JourneyIntelligence from './JourneyIntelligence';
+import useRoadPlanning from './useRoadPlanning';
+import TravelEvidence from './TravelEvidence';
 import type { FlightQuote,Gateway,QuoteResult,TravelPlace,TravelPlan,TravelPrefs } from './TravelLogic';
 import {
-airportGateways,calcQuote,
+calcQuote,
 countNights,
 defaultTravelPrefs,
 googleFlightSearch,googleMapRoute,
@@ -33,11 +35,11 @@ import { api } from './workspaceApi';
 // Flight Radar uses free public data; commercial flight offers are not part of this workflow.
 import './AirTravel.css';
 import { CANADA_CITIES,CANADA_REGION_BY_CODE,CANADA_REGIONS } from './CanadaRegions';
-import { buildCoachingSchedule,getPlanning } from './TripIntelligence';
+import { getPlanning } from './TripIntelligence';
 
 const currency=(value:number)=>money(value);
 const qdefault=(plan:TravelPlan,airport:string):FlightQuote=>({
-  id:'',origin:plan.origins[0]||'MCO',destination:airport,
+  id:'',origin:plan.origins[0]||'',destination:airport,
   returnOrigin:airport,carrier:'',source:'',observedOn:today(),
   fare:0,baggage:0,extra:0,outboundMinutes:0,returnMinutes:0,connections:0,
   outboundArrivalLocal:'',returnDepartureLocal:'',returnLandingLocal:'',notes:'',verifiedGroundMiles:0,verifiedGroundMinutes:0,
@@ -53,16 +55,6 @@ function NumberField({label,value,onChange,unit,step=1,min=0,max=50000}:{label:s
     {unit&&<span>{unit}</span>}
   </div></label>;
 }
-const samplePlaces:TravelPlace[]=[
-  {name:'Orlando',state:'FL',lat:28.5383,lon:-81.3792},
-  {name:'Melbourne',state:'FL',lat:28.0836,lon:-80.6081},
-  {name:'Chicago',state:'IL',lat:41.8781,lon:-87.6298},
-  {name:'Minneapolis',state:'MN',lat:44.9778,lon:-93.265},
-  {name:'Dallas',state:'TX',lat:32.7767,lon:-96.7970},
-  {name:'Atlanta',state:'GA',lat:33.749,lon:-84.388},
-  {name:'Boston',state:'MA',lat:42.3601,lon:-71.0589},
-  {name:'Columbus',state:'OH',lat:39.9612,lon:-82.9988},
-];
 function TravelQuoteEditor({initial,origins,gateways,onSave,onCancel}:{initial:FlightQuote;origins:string[];gateways:Gateway[];onSave:(quote:FlightQuote)=>void;onCancel:()=>void}){
   const [q,setQ]=useState(initial);
   const [issue,setIssue]=useState('');
@@ -93,8 +85,8 @@ function TravelQuoteEditor({initial,origins,gateways,onSave,onCancel}:{initial:F
       </select></label>
     </div>
     <div className="travel-fields two">
-      <label>Airline or itinerary<input value={q.carrier} onChange={e=>change('carrier',e.target.value)} placeholder="Delta, American, Southwest…"/></label>
-      <label>Source / site *<input value={q.source} onChange={e=>change('source',e.target.value)} placeholder="Airline website, Google Flights, Concur…"/></label>
+      <label>Airline or itinerary<input value={q.carrier} onChange={e=>change('carrier',e.target.value)} placeholder="Airline name"/></label>
+      <label>Source / site *<input value={q.source} onChange={e=>change('source',e.target.value)} placeholder="Where you found this quote"/></label>
     </div>
     <div className="travel-fields four">
       <NumberField label="Airfare, total" value={q.fare} onChange={v=>change('fare',v)} unit="$"/>
@@ -111,7 +103,7 @@ function TravelQuoteEditor({initial,origins,gateways,onSave,onCancel}:{initial:F
       <NumberField label="Verified total road miles (optional)" value={q.verifiedGroundMiles||0} onChange={v=>change('verifiedGroundMiles',v)} unit="mi" max={20000}/>
       <NumberField label="Verified total driving time (optional)" value={q.verifiedGroundMinutes||0} onChange={v=>change('verifiedGroundMinutes',v)} unit="min" max={20000}/>
     </div>
-    <p className="travel-microcopy" style={{marginTop:-8,marginBottom:14}}>Use a verified route result from a navigation app if available. Leave as zero to use clearly labeled geographic estimates.</p>
+    <p className="travel-microcopy" style={{marginTop:-8,marginBottom:14}}>Enter a route result you checked, or leave zero to use the connected road-network estimate. Unavailable road data leaves the comparison incomplete.</p>
     <div className="travel-fields two">
       <label>Outbound local arrival (optional)<input type="datetime-local" value={q.outboundArrivalLocal} onChange={e=>change('outboundArrivalLocal',e.target.value)}/></label>
       <label>Return flight departure, departure-airport local time (optional)<input type="datetime-local" value={q.returnDepartureLocal||''} onChange={e=>change('returnDepartureLocal',e.target.value)}/></label>
@@ -123,10 +115,11 @@ function TravelQuoteEditor({initial,origins,gateways,onSave,onCancel}:{initial:F
   </section>;
 }
 function QuoteComparison({results,onEdit,onRemove,prefs}:{results:QuoteResult[];onEdit:(q:FlightQuote)=>void;onRemove:(q:FlightQuote)=>void;prefs:TravelPrefs}){
-  const bestCash=[...results].sort((a,b)=>a.cash-b.cash)[0];
-  const fullTime=results.filter(r=>r.quote.outboundMinutes>0&&r.quote.returnMinutes>0&&!r.warnings.some(w=>w.includes('Ground travel cannot')));
+  const complete=results.filter(result=>result.complete);
+  const bestCash=[...complete].sort((a,b)=>a.cash-b.cash)[0];
+  const fullTime=complete;
   const bestTime=[...fullTime].sort((a,b)=>a.totalMinutes-b.totalMinutes)[0];
-  const bestBalanced=[...results].sort((a,b)=>a.economicCost-b.economicCost)[0];
+  const bestBalanced=[...complete].sort((a,b)=>a.economicCost-b.economicCost)[0];
   return <>
     <div className="travel-winners">
       {[
@@ -147,9 +140,9 @@ function QuoteComparison({results,onEdit,onRemove,prefs}:{results:QuoteResult[];
       {results.map(r=><tr key={r.quote.id}>
         <td><strong>{r.quote.origin} → {r.quote.destination}{r.quote.returnOrigin!==r.quote.destination?' / '+r.quote.returnOrigin:''}</strong>
           <small>{r.quote.carrier||'Unspecified airline'} · {r.quote.source||'Source missing'} · checked {r.quote.observedOn||'date unknown'}</small></td>
-        <td><strong>{currency(r.quote.fare)}</strong></td><td><strong>{currency(r.cash)}</strong><small>Includes configurable allowances</small></td>
-        <td>{r.quote.outboundMinutes>0&&r.quote.returnMinutes>0?minutesLabel(r.totalMinutes):'Incomplete'}<small>{minutesLabel(r.groundMinutes)} ground {r.quote.verifiedGroundMinutes?'entered':'estimate'}</small></td>
-        <td>{r.quote.connections}</td><td>{r.homeArrivalLocal||'No landing time entered'}</td>
+        <td><strong>{currency(r.quote.fare)}</strong></td><td><strong>{currency(r.cash)}</strong><small>{r.complete?'Includes configurable allowances':'Known subtotal · missing costs excluded'}</small></td>
+        <td>{r.complete?minutesLabel(r.totalMinutes):'Incomplete'}<small>{r.groundKnown?minutesLabel(r.groundMinutes)+' ground '+(r.quote.verifiedGroundMinutes?'entered':'road estimate'):'Road timing unavailable'}</small></td>
+        <td>{r.quote.connections}</td><td>{r.homeArrivalLocal||'Landing time or home-drive time missing'}</td>
         <td><div className="op-row-actions">
           <button className="op-icon-button" title="Edit quote" onClick={()=>onEdit(r.quote)}><Pencil size={16}/></button>
           <button className="op-icon-button" title="Remove quote" onClick={()=>onRemove(r.quote)}><Trash2 size={16}/></button>
@@ -180,7 +173,7 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
   function addAirport(){
     if(!valid(candidate))return;
     if(form.homeAirports.includes(candidate))return;
-    setForm(prev=>({...prev,homeAirports:[...prev.homeAirports,candidate],homeDriveMinutes:{...prev.homeDriveMinutes,[candidate]:60}}));
+    setForm(prev=>({...prev,homeAirports:[...prev.homeAirports,candidate]}));
     setQuery('');setCandidate('');
   }
   return <div className="op-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onDismiss();}}>
@@ -191,8 +184,8 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
         <div className="travel-prefs-airports">
           {form.homeAirports.map(code=><div className="travel-prefs-origin" key={code}>
             <div><strong>{code}</strong><small>Approx. travel time from home</small></div>
-            <div className="travel-prefs-minutes"><input type="number" min="0" max="300" value={form.homeDriveMinutes[code]??60}
-              onChange={e=>setForm(p=>({...p,homeDriveMinutes:{...p.homeDriveMinutes,[code]:num(e.target.value)}}))}/><span>min</span></div>
+            <div className="travel-prefs-minutes"><input type="number" min="0" max="300" placeholder="Not supplied" value={form.homeDriveMinutes[code]??''}
+              onChange={e=>setForm(p=>{const next={...p.homeDriveMinutes};if(e.target.value==='')delete next[code];else next[code]=num(e.target.value);return {...p,homeDriveMinutes:next};})}/><span>min</span></div>
             <button className="op-icon-button" onClick={()=>setForm(p=>({...p,homeAirports:p.homeAirports.filter(x=>x!==code)}))}><X size={16}/></button>
           </div>)}
           <div className="travel-fields two">
@@ -220,12 +213,10 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
           <NumberField label="Estimated tolls per trip" value={form.tollsPerTrip} onChange={v=>setField('tollsPerTrip',v)} unit="$"/>
           <NumberField label="Other ground transport per trip" value={form.groundMiscPerTrip} onChange={v=>setField('groundMiscPerTrip',v)} unit="$"/>
           <NumberField label="Value of travel time" value={form.valueOfTimePerHour} onChange={v=>setField('valueOfTimePerHour',v)} unit="$/hr"/>
-          <NumberField label="Approx. road distance multiplier" value={form.roadMultiplier} onChange={v=>setField('roadMultiplier',v)} min={1} max={2.3} step={0.05}/>
-          <NumberField label="Approx. road speed" value={form.assumedRoadMph} onChange={v=>setField('assumedRoadMph',v)} unit="mph" min={15} max={75}/>
           <NumberField label="Maximum preferred connections" value={form.maxConnections} onChange={v=>setField('maxConnections',v)} max={4}/>
         </div>
         <label className="travel-checkbox"><input type="checkbox" checked={form.preferNonstop} onChange={e=>setField('preferNonstop',e.target.checked)}/> Prefer nonstop itineraries</label>
-        <div className="travel-fields"><label>Preferred airlines (optional)<input value={form.preferredAirlines} onChange={e=>setField('preferredAirlines',e.target.value)} placeholder="United, Delta, American…"/></label></div>
+        <div className="travel-fields"><label>Preferred airlines (optional)<input value={form.preferredAirlines} onChange={e=>setField('preferredAirlines',e.target.value)} placeholder="Airline names"/></label></div>
         <Note warn>These are planning assumptions only. Airport drive time is entered by you. Road distance/time uses a rough model and can differ substantially from actual traffic, geography or season.</Note>
       </div>
       <div className="travel-actions op-modal-footer"><button className="op-btn" onClick={onDismiss}>Cancel</button>
@@ -233,7 +224,7 @@ function TravelPrefsDialog({prefs,onDismiss,onSave,busy,airports}:{prefs:TravelP
     </div>
   </div>;
 }
-export default function AirTravelPage({initialTab='discover',seedPlan}:{initialTab?:'discover'|'smart'|'compare'|'saved';seedPlan?:TravelPlan}){
+export default function AirTravelPage({initialTab='discover',seedPlan,onBack,onDraft}:{initialTab?:'discover'|'smart'|'compare'|'saved';seedPlan?:TravelPlan;onBack?:(plan:TravelPlan)=>void;onDraft?:(plan:TravelPlan)=>void}){
   const ctx=useOp();
   const {board,airports,geo,geoBusy,geoError,identity}=ctx;
   const managers=board.managers||[];
@@ -241,12 +232,13 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
   const [currentId,setCurrentId]=useState('');
   const [stalePlan,setStalePlan]=useState(false);
   const [plan,setPlan]=useState<TravelPlan>(()=>seedPlan||newTravelPlan());
-  const [prefs,setPrefs]=useState<TravelPrefs>(defaultTravelPrefs);
+  const previousTrainer=useRef(ctx.activeTrainerId);
+  useEffect(()=>{onDraft?.(plan);},[plan,onDraft]);
+  const [storedPrefs,setPrefs]=useState<TravelPrefs>(defaultTravelPrefs);
   const [,setPrefsSaved]=useState(false);
   const [prefsOpen,setPrefsOpen]=useState(false);
   const [prefsBusy,setPrefsBusy]=useState(false);
   const [busy,setBusy]=useState(false);
-  const commitKey=useRef('');
   const [pageError,setPageError]=useState('');
   const [pageNotice,setPageNotice]=useState('');
   const [placeQuery,setPlaceQuery]=useState('');
@@ -260,13 +252,16 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
   const [tab,setTab]=useState<'discover'|'smart'|'compare'|'saved'>(initialTab);
   useEffect(()=>{setTab(initialTab);},[initialTab]);
   const [isFetching,setFetching]=useState(false);
-  const [useExample,setUseExample]=useState(false);
   const tripLocation=plan.destination;
   const isCanadian=!!CANADA_REGION_BY_CODE[ctx.state];
   const chosenManagers=managers.filter(m=>plan.managerIds.includes(m.id));
   const completePeople=chosenManagers.filter(m=>Number.isFinite(m.lat)&&Number.isFinite(m.lon));
-  const gateways=useMemo(()=>airportGateways(airports,tripLocation,chosenManagers,prefs,12),
-    [airports,tripLocation,chosenManagers,prefs]);
+  const road=useRoadPlanning({managerIds:plan.managerIds,destination:tripLocation,airportCodes:[plan.selectedArrival,...plan.quotes.flatMap(quote=>[quote.destination,quote.returnOrigin])].filter(Boolean)});
+  const prefs=useMemo(()=>({...storedPrefs,roadNetwork:road.network,
+    homeAirports:ctx.activeTrainer.homeAirports,homeDriveMinutes:ctx.activeTrainer.homeDriveMinutes,
+    preferredAirlines:ctx.activeTrainer.preferredAirlines,preferNonstop:ctx.activeTrainer.preferNonstop,maxConnections:ctx.activeTrainer.maxConnections,
+  }),[storedPrefs,road.network,ctx.activeTrainer]);
+  const gateways=road.gateways;
   // A calculated nearest airport is only a suggestion, never an implicit choice.
   // Confirming an arrival airport is required before itinerary scheduling.
   const suggestedGateway=gateways[0]?.airport;
@@ -275,7 +270,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
     :undefined;
   const arrivalCode=plan.selectedArrival||'';
   const compareQuotes=useMemo(()=>plan.quotes.map(q=>calcQuote(q,plan,prefs,airports,managers))
-    .sort((a,b)=>a.economicCost-b.economicCost),[plan,prefs,airports,managers]);
+    .sort((a,b)=>Number(b.complete)-Number(a.complete)||(a.complete&&b.complete?a.economicCost-b.economicCost:0)),[plan,prefs,airports,managers]);
   const compareManagers=managers.filter(m=>(m.name+' '+m.baseCity+' '+m.trainer+' '+m.baseState).toLowerCase().includes(managerQuery.toLowerCase()))
     .sort((a,b)=>Number(b.baseState===ctx.state)-Number(a.baseState===ctx.state)).slice(0,10);
   const places=(isCanadian?CANADA_CITIES.filter(c=>c.state===ctx.state):geo.places).filter(a=>(a.name+' '+a.code).toLowerCase().includes(placeQuery.toLowerCase())).slice(0,7);
@@ -305,7 +300,9 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
     let alive=true;
     if(identity!=='member'){setPlans([]);setPrefs(defaultTravelPrefs);setPrefsSaved(false);return;}
     setFetching(true);
-    setCurrentId('');
+    const trainerChanged=previousTrainer.current!==ctx.activeTrainerId;
+    previousTrainer.current=ctx.activeTrainerId;
+    if(trainerChanged)setCurrentId('');
     const traveler=ctx.activeTrainer;
     const key=ctx.activeTrainerId;
     Promise.all([api.get('/api/travel/plans'),api.get('/api/travel/preferences?slot='+key)]).then(([plansRes,prefsRes])=>{
@@ -315,17 +312,16 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
       const p=safeTravelPrefs(prefsRes.data.preferences||defaultTravelPrefs);
       // Home airport identity belongs to the chosen trainer, never the shared guest account.
       p.homeAirports=traveler.homeAirports.slice();
-      p.homeDriveMinutes={...p.homeDriveMinutes,...traveler.homeDriveMinutes};
+      p.homeDriveMinutes={...traveler.homeDriveMinutes};
       p.preferredAirlines=traveler.preferredAirlines;
       p.preferNonstop=traveler.preferNonstop;
       p.maxConnections=traveler.maxConnections;
       setPrefs(p);setPrefsSaved(!!prefsRes.data.preferences||traveler.homeAirports.length>0);
       setPlan(current=>({
         ...current,
-        id:'',
         trainer:traveler.name,
-        origins:traveler.homeAirports.slice(),
-        quotes:[],
+        ...(trainerChanged?{id:'',origins:traveler.homeAirports.slice(),quotes:[]}:
+          {origins:current.origins.length?current.origins:traveler.homeAirports.slice()}),
         // Preserve a state/manager selection coming from the map while
         // the trainer preference request finishes in the background.
       }));
@@ -355,7 +351,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
   useEffect(()=>{
     const req=ctx.travelRequest;
     if(!req)return;
-    commitKey.current='';
+
     const requestedIds=requestedManagerIds(req);
     const person=managers.find(manager=>manager.id===(req.managerId||requestedIds[0]));
     const hasManagerLocation=!!person&&Number.isFinite(person.lat)&&Number.isFinite(person.lon);
@@ -378,7 +374,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
       destination,selectedArrival:req.arrivalAirport||'',quotes:[],
     }));
     setPlaceQuery(destination?.name||'');
-    setUseExample(false);
+
     setShowManagers(requestedIds.length>0);
     if(requestedIds.length>1)setPageNotice(requestedIds.length+' managers carried into this circuit. Review locations and dates before saving.');
     setTab('discover');
@@ -391,30 +387,29 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
   },[tab]);
 
   function setField<K extends keyof TravelPlan>(key:K,value:TravelPlan[K]){
-    commitKey.current='';
+
     setPlan(prev=>({...prev,[key]:value}));
     setPageNotice('');
   }
   function chooseState(next:string){
-    commitKey.current='';
+
     ctx.setState(next);ctx.setMapMode('state');setPlaceQuery('');
     setPlan(p=>({...p,destination:p.destination?.state===next?p.destination:null}));
   }
   function choosePlace(p:TravelPlace){
-    commitKey.current='';
+
     setPlan(prev=>({...prev,destination:p,selectedArrival:'',quotes:prev.quotes}));
     ctx.setState(p.state);ctx.setMapMode('state');setPlaceQuery(p.name);
-    setUseExample(!!samplePlaces.find(x=>x.state===p.state&&x.name===p.name));
   }
   function toggleManager(id:string){
-    commitKey.current='';
+
     setPlan(p=>({...p,managerIds:p.managerIds.includes(id)?p.managerIds.filter(x=>x!==id):[...p.managerIds,id].slice(0,12),selectedArrival:''}));
   }
   function chooseGateway(code:string){
     if(code!==arrivalCode){
       setPlan(p=>({...p,selectedArrival:code}));
       setPageNotice('Arrival airport changed to '+code+'. Existing quotes are retained but apply only to their original airports. Recheck flight options.');
-      commitKey.current='';
+
     }
     setTab('discover');setManualAirport('');setAirportQuery('');
   }
@@ -422,16 +417,16 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
     setPlan(p=>({...p,origins:p.origins.includes(code)?p.origins.length>1?p.origins.filter(x=>x!==code):p.origins:[...p.origins,code].slice(0,6)}));
   }
   function choosePlan(record:TravelPlan){
-    commitKey.current='';
+
     setPlan({...record,quotes:(record.quotes||[]).map(q=>({...q}))});
     setCurrentId(record.id);setStalePlan(false);setTab('discover');setShowQuoteForm(false);
     setPageError('');setPageNotice('Travel plan loaded from your team.');
     if(record.destination)ctx.setState(record.destination.state);
   }
   function newPlan(){
-    commitKey.current='';
+
     setCurrentId('');setStalePlan(false);setPlan({...newTravelPlan(prefs.homeAirports[0]||''),trainer:ctx.activeTrainer.name,origins:prefs.homeAirports.slice()});
-    setUseExample(false);setPlaceQuery('');setPageError('');setPageNotice('New travel plan started.');setTab('discover');
+    setPlaceQuery('');setPageError('');setPageNotice('New travel plan started.');setTab('discover');
     setShowQuoteForm(false);
   }
   async function refresh(){
@@ -473,65 +468,12 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
     }catch(e){setPageError(e instanceof Error?e.message:'Could not delete the travel plan.');}
     finally{setBusy(false);}
   }
-  async function createItinerary(){
-    if(identity!=='member'){setPageError('Open your shared workspace before scheduling.');return;}
-    if(!chosenManagers.length){setPageError('Select at least one territory manager to create a coaching trip.');return;}
-    if(!arrivalCode){setPageError('Choose an arrival airport before transferring the trip.');return;}
-    const schedule=buildCoachingSchedule(plan,airport,managers,prefs);
-    if(!schedule.visits.length||schedule.unplaced.length){
-      setPageError('The proposed coaching visits do not all fit your working window. Expand the dates or shorten sessions before creating the itinerary.');
-      setTab('smart');
-      return;
-    }
-    const existing=board.visits||[];
-    const duplicate=schedule.visits.find(item=>existing.some(v=>
-      v.managerId===item.manager.id&&v.date===item.date&&v.status!=='Canceled'
-    ));
-    if(duplicate){
-      setPageError(duplicate.manager.name+' already has a visit on '+duplicate.date+'. Resolve the duplicate in Calendar first.');
-      setTab('smart');return;
-    }
-    const overlap=(board.trips||[]).find(t=>t.status==='Planned'&&
-      t.trainer===(plan.trainer||ctx.activeTrainer.name)&&t.startDate<=plan.returnDate&&t.endDate>=plan.departDate);
-    if(overlap){setPageError('This trainer already has a trip during these dates. Review the shared calendar.');setTab('smart');return;}
-    setBusy(true);setPageError('');
-    try{
-      if(!commitKey.current)commitKey.current=crypto.randomUUID();
-      const stops=schedule.visits.map(v=>({
-        managerId:v.manager.id,
-        startTime:v.start,endTime:v.end,
-        stateCode:(v.manager.baseState&&STATE_BY_CODE[v.manager.baseState])?v.manager.baseState:
-          (board.assignments||[]).find(a=>a.managerId===v.manager.id)?.stateCode||ctx.state,
-        date:v.date,
-        location:v.manager.baseCity ? v.manager.baseCity+', '+(v.manager.baseState||ctx.state) : '',
-        ...(v.manager.lat!==undefined&&v.manager.lon!==undefined?
-          {lat:v.manager.lat,lon:v.manager.lon}:{})
-      }));
-      const scheduleText=schedule.visits.map(v=>
-        v.date+' '+v.start+'-'+v.end+' '+v.manager.name+
-        (v.travelBeforeMinutes===null?' (transfer unknown)':' (transfer approx. '+minutesLabel(v.travelBeforeMinutes)+')')
-      ).join('\n');
-      const note='Generated from Field Sales Atlas smart coaching plan. Proposed appointment windows, not confirmed visits.\n'+
-        scheduleText+'\nGround travel approximated. Validate routes, airline schedules, local time zones and meetings before travel.';
-      const response=await api.post('/api/travel/commit',{
-        requestId:commitKey.current,expectedRevision:board.revision,trainerId:ctx.activeTrainerId,
-        title:(plan.title.trim()||'Air travel coaching circuit')+' · field itinerary',
-        trainer:plan.trainer.trim()||chosenManagers[0]?.trainer||ctx.activeTrainer.name,
-        startDate:plan.departDate,endDate:plan.returnDate,arrivalAirport:arrivalCode,
-        notes:note.slice(0,1500),stops
-      });
-      await ctx.reload();
-      ctx.setNotice((response.data.scheduledVisits||stops.length)+
-        ' proposed coaching visits and the itinerary added together to the shared calendar. Meeting times still need confirmation.');
-      ctx.go('calendar');
-    }catch(e){setPageError(e instanceof Error?e.message:'Could not schedule itinerary and visits together. Check the team calendar before retrying.');}
-    finally{setBusy(false);}
-  }
   async function savePrefs(next:TravelPrefs){
     if(identity!=='member'){setPageError('Open your shared workspace before saving travel preferences.');return;}
     setPrefsBusy(true);setPageError('');
     try{
-      const response=await api.put('/api/travel/preferences?slot='+ctx.activeTrainerId,next);
+      const {roadNetwork: _network,...stored}=next;
+      const response=await api.put('/api/travel/preferences?slot='+ctx.activeTrainerId,stored);
       const value=safeTravelPrefs(response.data.preferences||next);
       await api.put('/api/trainer-profiles/'+ctx.activeTrainerId,{
         ...ctx.activeTrainer,homeAirports:value.homeAirports,homeDriveMinutes:value.homeDriveMinutes,
@@ -561,9 +503,9 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
     const rows=compareQuotes.map(r=>({
       Origin:r.quote.origin,Arrival:r.quote.destination,ReturnFrom:r.quote.returnOrigin,
       Airline:r.quote.carrier,Source:r.quote.source,FareChecked:r.quote.observedOn,
-      EnteredFare:r.quote.fare,EstimatedCash:r.cash,EstimatedTravelMinutes:r.totalMinutes,
-      EstimatedGroundMinutes:r.groundMinutes,Connections:r.quote.connections,
-      EstimatedEconomicCost:r.economicCost,Warnings:r.warnings.join(' | ')
+      EnteredFare:r.quote.fare,KnownCashSubtotal:r.cash,EstimatedCash:r.complete?r.cash:'',EstimatedTravelMinutes:r.complete?r.totalMinutes:'',
+      EstimatedGroundMinutes:r.groundKnown?r.groundMinutes:'',Connections:r.quote.connections,
+      EstimatedEconomicCost:r.complete?r.economicCost:'',ComparisonComplete:r.complete,Warnings:r.warnings.join(' | ')
     }));
     if(!rows.length){setPageError('Add real flight quotes to export a comparison.');return;}
     exportCSV('field-atlas-air-travel-comparison.csv',rows);
@@ -579,8 +521,8 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
       'Preferred arrival: '+(arrivalCode||'Not selected'),
       '',...compareQuotes.map(r=>[
         r.quote.origin+' → '+r.quote.destination+' ('+(r.quote.carrier||'airline not entered')+')',
-        'Entered fare: '+currency(r.quote.fare)+' · estimated complete cash cost '+currency(r.cash),
-        'Estimated travel: '+minutesLabel(r.totalMinutes)+' · connections '+r.quote.connections
+        'Entered fare: '+currency(r.quote.fare)+' · '+(r.complete?'estimated cash cost ':'known subtotal, incomplete comparison ')+currency(r.cash),
+        'Estimated travel: '+(r.complete?minutesLabel(r.totalMinutes):'Incomplete; required travel inputs are missing')+' · connections '+r.quote.connections
       ].join('\n')),'','These figures are planning comparisons, not live fares, measured road routes, or confirmed booking availability.',
     ].join('\n');
     navigator.clipboard.writeText(text).then(()=>setPageNotice('Travel comparison copied.')).catch(()=>{downloadFile('travel-summary.txt',text,'text/plain');setPageNotice('Text summary downloaded.');});
@@ -599,6 +541,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
         </div>
       </div>
       <div className="travel-command-actions">
+        {onBack&&<button className="op-btn" onClick={()=>onBack(plan)} disabled={busy}><ArrowLeft size={16}/> Guided planner</button>}
         <button className="op-btn" onClick={newPlan} title="Start a new trip"><Plus size={16}/><span className="travel-command-long">New trip</span><span className="travel-command-short">New</span></button>
         <button className={'op-btn'+(tab==='saved'?' fsa-saved-current':'')} type="button" onClick={()=>setTab('saved')} aria-pressed={tab==='saved'}><Layers size={16}/> Saved plans</button>
         <button className="op-btn" onClick={()=>setPrefsOpen(true)} title="Edit travel preferences"><Settings2 size={16}/><span className="travel-command-long">Preferences</span><span className="travel-command-short">Settings</span></button>
@@ -652,13 +595,9 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
                 <MapPin size={14}/><span>{a.name}, {ctx.state}</span><ChevronRight size={13}/>
               </button>)}
             </div>}
-            {!isCanadian&&geoError&&<Note warn>City lookup: {geoError} You can still select a mapped manager or a sample city below.</Note>}
-            <div className="travel-city-shortcuts">
-              <span>{samplePlaces.some(p=>p.state===ctx.state)?'Quick city choices:':'Use the city search above or choose a manager below.'}</span>
-              {samplePlaces.filter(p=>p.state===ctx.state).slice(0,4).map(p=><button key={p.name} onClick={()=>choosePlace(p)}>{p.name}</button>)}
-            </div>
-            {tripLocation&&<div className="travel-selected-place"><MapPin size={18}/><div><strong>{tripLocation.name}{tripLocation.code==='region-reference'?'':', '+(STATE_BY_CODE[tripLocation.state]?.name||tripLocation.state)}</strong><span>{tripLocation.code==='manager-base'?'Manager base coordinates':tripLocation.code==='region-reference'?'State-region centroid, a starting point only':isCanadian?'Canadian city reference coordinates':useExample?'Approximate example city coordinates':'Census place center coordinates'} · not a confirmed meeting address</span></div>
-              <button onClick={()=>{setField('destination',null);setPlaceQuery('');setUseExample(false);}} aria-label="Clear destination"><X size={16}/></button></div>}
+            {!isCanadian&&geoError&&<Note warn>City lookup: {geoError} Select a saved mapped manager or retry the official lookup.</Note>}
+            {tripLocation&&<div className="travel-selected-place"><MapPin size={18}/><div><strong>{tripLocation.name}{tripLocation.code==='region-reference'?'':', '+(STATE_BY_CODE[tripLocation.state]?.name||tripLocation.state)}</strong><span>{tripLocation.code==='manager-base'?'Manager base coordinates':tripLocation.code==='region-reference'?'State-region centroid, a starting point only':isCanadian?'Canadian city reference coordinates':'Census place center coordinates'} · not a confirmed meeting address</span></div>
+              <button onClick={()=>{setField('destination',null);setPlaceQuery('');}} aria-label="Clear destination"><X size={16}/></button></div>}
             <div className="travel-fields two travel-date-fields">
               <label>Depart<input type="date" value={plan.departDate} onChange={e=>setField('departDate',e.target.value)}/></label>
               <label>Return<input type="date" min={plan.departDate} value={plan.returnDate} onChange={e=>setField('returnDate',e.target.value)}/></label>
@@ -701,7 +640,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
             <details className="travel-more-details">
               <summary>Trip name & additional details <ChevronDown size={16}/></summary>
               <div className="travel-fields"><label>Trip name <span className="travel-optional">(optional)</span>
-                <input value={plan.title} onChange={e=>setField('title',e.target.value)} placeholder="Example: Midwest coaching circuit"/>
+                <input value={plan.title} onChange={e=>setField('title',e.target.value)} placeholder="Name this trip"/>
               </label></div>
             </details>
             {chosenManagers.length>0&&<div className="travel-primary-next">
@@ -728,8 +667,12 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
       <div className="travel-right">
         <section id="travel-airport-options" className="travel-panel travel-airport-panel">
           <div className="travel-section-line"><div><Kicker>03 · ARRIVAL AIRPORTS</Kicker><h2>Where should you land?</h2><p>Compare airport proximity to your selected destination and visits.</p></div><PlaneLanding size={22}/></div>
+          {road.loading&&<p role="status">Checking road-network routes for this destination…</p>}
+          {(road.error||road.limitation)&&<p className="travel-note" role="status">{road.error||road.limitation}</p>}
+          {(tripLocation||chosenManagers.length>0)&&!road.loading&&!road.network&&<button className="op-btn" onClick={road.refresh}>Retry road comparison</button>}
+          {!!road.result?.evidence.length&&<details><summary>Road source, age and limitations</summary><TravelEvidence evidence={road.result.evidence}/></details>}
           {!gateways.length?<div className="travel-no-gateways"><PlaneLanding size={29}/><strong>Select a destination to compare airports</strong>
-            <p>Choose a city or add a manager above to see nearby airports and estimated ground travel.</p>
+            <p>Choose a sourced destination or a saved mapped manager. A valid road-network response is required for travel-time comparisons.</p>
             {ctx.airportSource==='starter'&&<Note warn>The live airport feed is unavailable. The limited starter airport list does not provide dependable route coordinates.</Note>}
             {ctx.airportSource==='cached'&&<Note warn>Using the last complete airport snapshot because the public provider is unavailable. Verify airport service and airline schedules.</Note>}
           </div>:<>
@@ -749,7 +692,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
                 <span className="travel-gateway-iata">{g.airport.iata}</span>
                 <div className="travel-gateway-title"><strong>{g.airport.name}</strong>
                   <span>{g.airport.state} · {g.airport.tier==='Major'?'Large airport':g.airport.tier==='Secondary'?'Secondary airport':'Regional airport'} · {g.airport.scheduled?'Scheduled service listed':'Service unconfirmed'}</span></div>
-                <div className="travel-gateway-time"><strong>{minutesLabel(Math.round(g.firstLegMiles*prefs.roadMultiplier/prefs.assumedRoadMph*60))}</strong><small>to first stop*</small></div>
+                <div className="travel-gateway-time"><strong>{g.firstLegMinutes===undefined?'Unavailable':minutesLabel(g.firstLegMinutes)}</strong><small>road estimate to first stop</small></div>
                 <span className="travel-gateway-select">{active?<CheckCircle2 size={17}/>:<ChevronRight size={17}/>}</span>
               </button>;
             })}</div>
@@ -796,27 +739,10 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
         <AviationWeather airport={airport} travelDate={plan.departDate}/>
       </div>
     </div>}
-    {tab==='smart'&&<SmartTripPanel
-      plan={plan}
-      prefs={prefs}
-      airport={airport}
-      airports={airports}
-      gateways={gateways}
-      managers={managers}
-      visits={board.visits||[]}
-      coaching={board.coaching||[]}
-      trips={board.trips||[]}
-      onPlanningChange={next=>setPlan(prev=>({...prev,planning:next}))}
-      onManagerAdd={toggleManager}
-      onAirportSelect={code=>setField('selectedArrival',code)}
-      onCreateItinerary={createItinerary}
-      onCompareFlights={()=>{setTab('compare');setShowQuoteForm(false);}}
-      onSave={savePlan}
-      onQuoteEdit={beginQuote}
-      signedIn={identity==='member'}
-      busy={busy}
-    />}
+    {tab==='smart'&&<JourneyIntelligence key={ctx.activeTrainerId} seedPlan={plan} seedPrefs={prefs} backLabel="Back to airport comparison" onBack={()=>setTab('discover')}/>}
     {tab==='compare'&&<div className="travel-comparison-view">
+      {(road.error||road.limitation)&&<p className="travel-note" role="status">{road.error||road.limitation}</p>}
+      {!!road.result?.evidence.length&&<details><summary>Road source, age and limitations</summary><TravelEvidence evidence={road.result.evidence}/></details>}
       <div className="travel-section-line"><div><Kicker>FLIGHT DECISIONS</Kicker><h2>Which flight is actually better?</h2><p>Compare the entire travel journey, not just the ticket price.</p></div>
         <div className="travel-inline-actions"><button className="op-btn" onClick={()=>setTab('discover')}><ArrowLeft size={15}/> Airports</button>
           <button className="op-btn primary" onClick={()=>beginQuote()} disabled={!arrivalCode}><Plus size={15}/> Add a real flight quote</button></div>
@@ -865,7 +791,7 @@ export default function AirTravelPage({initialTab='discover',seedPlan}:{initialT
       <div><strong>{currentId?'Editing saved team plan':'Unsaved travel plan'}</strong><span>{plan.title||'Add a name, locations, and travel details.'}{plan.quotes.length?' · '+plan.quotes.length+' entered flight quotes':''}</span></div>
       <div className="travel-inline-actions">{currentId&&<button className="op-btn danger" disabled={busy} onClick={removePlan}><Trash2 size={15}/> Delete</button>}
         {routeLink&&<a className="op-btn" target="_blank" rel="noreferrer" href={routeLink}><Route size={16}/> Check route <ExternalLink size={13}/></a>}
-        <button className="op-btn" onClick={createItinerary} disabled={busy||identity!=='member'||!chosenManagers.length||!arrivalCode}><Route size={16}/> Build field itinerary</button>
+        <button className="op-btn" onClick={()=>setTab('smart')} disabled={busy||identity!=='member'||!chosenManagers.length||!arrivalCode}><Route size={16}/> Build field itinerary</button>
         <button className="op-btn primary" onClick={savePlan} disabled={busy||identity!=='member'}><Check size={16}/>{busy?'Saving…':'Save travel plan'}</button></div>
     </div>
     <div className="travel-final-disclaimer"><ShieldCheck size={15}/> Field Sales Atlas plans and evaluates travel only. It does not book, sell, or charge for flights. Free FAA, NOAA, and NWS intelligence is separate from airline-specific flight status. Optional fare entries and approximate ground estimates must be verified externally.</div>

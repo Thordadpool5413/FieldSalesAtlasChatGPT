@@ -34,6 +34,12 @@ export function flightInstants(flight: ReadinessFlight) {
   if (duration <= 0 || duration > 36 * 60) throw new Error('Flight arrival must follow departure in real elapsed time (at most 36 hours).');
   return { departure, arrival };
 }
+export function connectionMargin(available: number | null, requirements?: ConnectionRequirements, inboundDelayMinutes=0): number | null {
+  if(available===null || !Number.isFinite(available) || !Number.isFinite(inboundDelayMinutes) || inboundDelayMinutes<0)return null;
+  const transfer=requirements?.transferMinutes, boarding=requirements?.boardingCutoffMinutes;
+  if(transfer===undefined || boarding===undefined || !Number.isFinite(transfer) || !Number.isFinite(boarding) || transfer<0 || boarding<0)return null;
+  return Math.floor(available-transfer-boarding-inboundDelayMinutes);
+}
 export function connectionConstraints(flights: ReadinessFlight[], fieldAirport?: string): ReadinessConstraint[] {
   const result: ReadinessConstraint[] = [];
   for (let i = 1; i < flights.length; i++) {
@@ -53,7 +59,7 @@ export function connectionConstraints(flights: ReadinessFlight[], fieldAirport?:
     result.push({
       id: 'connection-' + trainerId + '-' + i, trainerId, kind: 'connection',
       label: previous.destination === next.origin ? 'Connection at ' + next.origin : previous.destination + ' to ' + next.origin + ' airport transfer',
-      marginMinutes: available !== null && available < 0 ? available : known ? Math.floor(available! - requirements!.transferMinutes! - requirements!.boardingCutoffMinutes!) : null,
+      marginMinutes: available !== null && available < 0 ? available : known ? connectionMargin(available,requirements) : null,
       at: after?.departure, timeZone: next.departureZone, latestActionLabel: 'Latest inbound gate arrival',
       latestActionAt: known ? addMinutes(after!.departure, -requirements!.boardingCutoffMinutes! - requirements!.transferMinutes!) : undefined,
       basis: available === null ? 'Elapsed connection time unresolved.' : Math.round(available) + ' scheduled minutes; supplied transfer and boarding allowances, not an authoritative airline minimum connection time.',

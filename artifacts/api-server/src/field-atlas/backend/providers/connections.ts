@@ -39,7 +39,7 @@ export async function validateConnections(codes: string[], checkRouting: boolean
   const airports = await lookupAirports(codes);
   if (airports.length !== new Set(codes).size) throw new Error('Every requested airport must exist in the validated reference.');
   const results = await Promise.all(airports.map(async airport => ({ airport: airport.iata, checks: await publicAirportEvidence(airport) })));
-  const routing = checkRouting ? await roadMatrix([{ id: 'MCO-terminal-reference', name: 'Orlando airport reference', lat: 28.4294, lon: -81.309 },
-    { id: 'orlando-center-reference', name: 'Orlando city reference', lat: 28.5383, lon: -81.3792 }]) : null;
-  return { ...(await connectionStatus()), results, routingProbe: routing ? { roadBased: routing.roadBased, minutes: routing.durations[0][1], evidence: routing.evidence } : null };
+  const points=airports.slice(0,2).map(airport=>({id:airport.iata,name:airport.name,lat:airport.lat!,lon:airport.lon!}));
+  const routing = checkRouting && points.length===2 ? await roadMatrix(points) : null;
+  return { ...(await connectionStatus()), results, routingProbe: routing ? { roadBased: routing.roadBased, minutes: routing.roadBased?routing.durations[0][1]:null, evidence: routing.evidence } : null };
 }

@@ -18,6 +18,7 @@ import type { FlightChange } from '../../shared/travel/intelligence';
 import { connectionStatus, validateConnections } from '../providers/connections';
 import { adoptSavedTrips, attachItinerary } from './adopt';
 import { publicRoutingStatus } from '../providers/routingConfig';
+import { planningRoads, roadPlanningInput } from './roadPlanning';
 
 const reports = (workspaceId: string) => 'atlas_scenarios_' + workspaceId;
 export function makeTravelRoutes(deps: {
@@ -30,6 +31,13 @@ export function makeTravelRoutes(deps: {
 }): RouterRoutes {
   const access = deps.workspaceAccess;
   return {
+    'POST /api/travel/road-planning': [access,async ctx=>{
+      const m=await deps.member(ctx.user!.userId);if(!m)return error('Workspace required.',403);
+      const parsed=roadPlanningInput.safeParse(ctx.body);
+      if(!parsed.success)return error('Choose valid saved managers, airport codes and a mapped destination.',400);
+      try{return json(await planningRoads(parsed.data,await deps.load(m.workspaceId)));}
+      catch(failure){return error(failure instanceof Error?failure.message:'Road comparisons could not complete.',422);}
+    }],
     'GET /api/travel/airports/:iata/brief': [access, async ctx => {
       const code = String(ctx.params.iata).toUpperCase();
       if (!/^[A-Z]{3}$/.test(code)) return error('Provide a three-letter airport code.', 400);

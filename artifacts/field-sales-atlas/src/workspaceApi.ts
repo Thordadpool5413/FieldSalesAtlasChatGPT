@@ -8,7 +8,7 @@ let pending:Promise<string>|null=null;
 
 function providedKey(){
   if(typeof window==='undefined')return '';
-  return window.location.hash.match(/^#workspace=([0-9a-f]{64})$/i)?.[1]||'';
+  return window.location.hash.match(/^#workspace=([0-9a-f]{64})$/i)?.[1]?.toLowerCase()||'';
 }
 function rememberedKey(){
   try{return window.localStorage.getItem(STORAGE_KEY)||'';}catch{return '';}
@@ -24,6 +24,9 @@ export function getShareUrl(){
 }
 async function url(path:string){
   if(path.startsWith('/api/geography/')||path.startsWith('/api/travel/aviation/')||path.startsWith('/api/_healthcheck'))return path;
+  const selected=providedKey();
+  if(selected&&accessKey&&selected!==accessKey)
+    throw new Error('The workspace link changed. Reload to open the selected workspace before continuing.');
   if(!accessKey)await initializeWorkspace();
   if(!accessKey)throw Error('Workspace is still opening.');
   let trainerId='trainer_a';
@@ -50,25 +53,14 @@ export async function createNewWorkspace(){
   return key;
 }
 
-const RETURN_KEY='field-atlas-demo-return-v1';
-export async function openDemoWorkspace(){
-  const response=await transport.post('/api/demo/create',{});
-  const key=String(response.data?.workspaceKey||'');
-  if(!validKey.test(key))throw Error('Demo creation did not return a valid workspace.');
-  // Keep the real workspace link on this device, never inside demo records.
-  if(accessKey){
-    try{window.sessionStorage.setItem(RETURN_KEY,accessKey);}catch{throw Error('Browser storage is unavailable. Keep a copy of your current workspace link before opening a demo.');}
-  }
-  saveKey(key);
-}
-export function canReturnFromDemo(){
-  try{return validKey.test(window.sessionStorage.getItem(RETURN_KEY)||'');}catch{return false;}
-}
-export function returnFromDemo(){
-  const key=window.sessionStorage.getItem(RETURN_KEY)||'';
-  if(!validKey.test(key))throw Error('Open your original workspace link to return to your records.');
-  saveKey(key);
-  window.sessionStorage.removeItem(RETURN_KEY);
+export function watchWorkspaceLink() {
+  const changed=()=>{
+    const selected=providedKey();
+    if(selected&&accessKey&&selected!==accessKey)window.location.reload();
+  };
+  window.addEventListener('hashchange',changed);
+  window.addEventListener('pageshow',changed);
+  return ()=>{window.removeEventListener('hashchange',changed);window.removeEventListener('pageshow',changed);};
 }
 
 export async function joinWorkspaceLink(input:string){

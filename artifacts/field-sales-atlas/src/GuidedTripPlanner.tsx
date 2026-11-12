@@ -3,9 +3,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOp } from './Operations';
 import { today, dateLabel } from './opsModels';
 import type { TravelPlan } from './TravelLogic';
-import { airportGateways, defaultTravelPrefs, minutesLabel, money, newTravelPlan, safeTravelPrefs } from './TravelLogic';
-import { buildCoachingSchedule, getPlanning } from './TripIntelligence';
-import { tripConflicts } from './guidedPlanning';
+import { defaultTravelPrefs, minutesLabel, money, newTravelPlan, safeTravelPrefs } from './TravelLogic';
+import useRoadPlanning from './useRoadPlanning';
+import TravelEvidence from './TravelEvidence';
+import { getPlanning } from './TripIntelligence';
+import { currentAnalysisResult, type AnalysisSnapshot } from './analysisSnapshot';
+import type { ScenarioReport } from '../shared/travel/types';
+import BookingPicker from './BookingPicker';
+import { reviewedBookings,selectedBookingFlights } from './BookingHandoff';
+import { readBookedFlights } from './BookedFlightLogic';
 import { api } from './workspaceApi';
 import { CANADA_REGION_BY_CODE } from './CanadaRegions';
 
@@ -17,7 +23,7 @@ function requestedPlace(request: ReturnType<typeof useOp>['travelRequest']) {
   return province ? { name: province.anchorCity, state: request.state, lat: province.lat, lon: province.lon, code: 'province-reference' } : null;
 }
 
-export default function GuidedTripPlanner({ onAdvanced }: { onAdvanced: (plan: TravelPlan) => void }) {
+export default function GuidedTripPlanner({ onAdvanced, initialPlan, onDraft }: { onAdvanced: (plan: TravelPlan) => void; initialPlan?: TravelPlan; onDraft?:(plan:TravelPlan)=>void }) {
   const ctx = useOp();
   const request = ctx.travelRequest;
   const [plan, setPlan] = useState<TravelPlan>(() => ({
@@ -27,25 +33,34 @@ export default function GuidedTripPlanner({ onAdvanced }: { onAdvanced: (plan: T
     destination: requestedPlace(request),
     ...(request?.departDate ? { departDate: request.departDate } : {}),
     ...(request?.returnDate ? { returnDate: request.returnDate } : {}),
+    ...initialPlan,
   }));
   const [step, setStep] = useState(0);
+  useEffect(()=>{onDraft?.(plan);},[plan,onDraft]);
   const [search, setSearch] = useState('');
   const [storedPrefs, setStoredPrefs] = useState(defaultTravelPrefs);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [previewSnapshot,setPreviewSnapshot]=useState<AnalysisSnapshot<ScenarioReport>|null>(null);
+  const [acknowledged,setAcknowledged]=useState(false);
+  const [useBookings,setUseBookings]=useState(false),[bookingSelection,setBookingSelection]=useState<Record<string,string>>({});
+  const [clock,setClock]=useState(Date.now);
+  useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),30000);return ()=>clearInterval(timer);},[]);
   const saving = useRef(false);
-  const requestId = useRef('');
   const previousTrainer = useRef(ctx.activeTrainerId);
   const heading = useRef<HTMLHeadingElement>(null);
   const previousStep = useRef<number | null>(null);
   const managers = ctx.board.managers || [];
   const selected = managers.filter(person => plan.managerIds.includes(person.id));
-  const prefs = useMemo(() => ({ ...storedPrefs, homeAirports: ctx.activeTrainer.homeAirports, homeDriveMinutes: { ...storedPrefs.homeDriveMinutes, ...ctx.activeTrainer.homeDriveMinutes } }), [storedPrefs, ctx.activeTrainer]);
-  const gateways = useMemo(() => airportGateways(ctx.airports, null, selected, prefs, 6), [ctx.airports, selected, prefs]);
+  const road=useRoadPlanning({managerIds:plan.managerIds,airportCodes:plan.selectedArrival?[plan.selectedArrival]:[]});
+  const prefs = useMemo(() => ({ ...storedPrefs, roadNetwork:road.network,homeAirports: ctx.activeTrainer.homeAirports, homeDriveMinutes: { ...ctx.activeTrainer.homeDriveMinutes } }), [storedPrefs, ctx.activeTrainer,road.network]);
+  const gateways = road.gateways.slice(0,6);
   const airport = ctx.airports.find(item => item.iata === plan.selectedArrival);
   const planning = getPlanning(plan);
-  const schedule = useMemo(() => buildCoachingSchedule(plan, airport, managers, prefs), [plan, airport, managers, prefs]);
-  const conflicts = tripConflicts(plan, schedule, ctx.board, ctx.activeTrainerId);
+  const inputKey=JSON.stringify([ctx.board.team?.id,ctx.board.revision,ctx.activeTrainerId,plan,storedPrefs,useBookings,bookingSelection]);
+  const preview=currentAnalysisResult(previewSnapshot,inputKey,previewSnapshot?.result.evidence,previewSnapshot?.result.expiresAt,clock);
+  const scenario=preview?.scenarios.find(option=>option.feasible)||preview?.scenarios[0];
+  const bookingContext={trainerIds:[ctx.activeTrainerId],startDate:plan.departDate,endDate:plan.returnDate};
   const missingLocations = selected.filter(person => !Number.isFinite(person.lat) || !Number.isFinite(person.lon));
   const shownManagers = managers.filter(person => `${person.name} ${person.baseCity || ''} ${person.baseState || ''}`.toLowerCase().includes(search.toLowerCase()));
 
@@ -66,14 +81,12 @@ export default function GuidedTripPlanner({ onAdvanced }: { onAdvanced: (plan: T
       return;
     }
     previousTrainer.current = ctx.activeTrainerId;
-    requestId.current = '';
     setPlan(current => ({ ...current, trainer: ctx.activeTrainer.name, origins: ctx.activeTrainer.homeAirports.slice() }));
     setStep(0); setError('');
   }, [ctx.activeTrainerId, ctx.activeTrainer.name, ctx.activeTrainer.homeAirports]);
   useEffect(() => {
     if (!ctx.travelRequest) return;
     const next = ctx.travelRequest;
-    requestId.current = '';
     setPlan(current => ({ ...current,
       managerIds: next.managerIds || (next.managerId ? [next.managerId] : []),
       departDate: next.departDate || current.departDate, returnDate: next.returnDate || current.returnDate,
@@ -92,34 +105,39 @@ export default function GuidedTripPlanner({ onAdvanced }: { onAdvanced: (plan: T
 
   function change(patch: Partial<TravelPlan>) {
     if (saving.current) return;
-    requestId.current = ''; setError(''); setPlan(current => ({ ...current, ...patch }));
+    setAcknowledged(false);setError(''); setPlan(current => ({ ...current, ...patch }));
   }
   function validStep(index: number): boolean {
     if (index === 0) return selected.length > 0 && missingLocations.length === 0 && selected.every(person => person.baseState || ctx.board.assignments?.some(item => item.managerId === person.id));
     if (index === 1) return !!plan.departDate && plan.departDate >= today() && plan.returnDate >= plan.departDate && Number.isFinite(planning.sessionMinutes) && planning.sessionMinutes >= 30 && planning.dayEnd > planning.dayStart;
-    return index === 2 ? !!airport && plan.origins.length > 0 : conflicts.length === 0;
+    return index === 2 ? !!airport && plan.origins.length > 0 && !!road.network && !road.loading
+      : !!scenario?.feasible && acknowledged;
   }
   function advance() {
     if (!validStep(step)) { setError('Complete the required information before continuing.'); return; }
     setError(''); setStep(current => Math.min(3, current + 1));
+    if(step===2)void buildPreview();
+  }
+  async function buildPreview(){
+    if(saving.current)return;saving.current=true;setBusy(true);setError('');setAcknowledged(false);
+    try{
+      const flights=useBookings?selectedBookingFlights(readBookedFlights(),bookingSelection,bookingContext):[];
+      const response=await api.post('/api/travel/scenarios',{title:plan.title.trim(),managerIds:plan.managerIds,trainerIds:[ctx.activeTrainerId],
+        startDate:plan.departDate,endDate:plan.returnDate,arrivalAirport:plan.selectedArrival,
+        dayStart:planning.dayStart,dayEnd:planning.dayEnd,sessionMinutes:planning.sessionMinutes,breakMinutes:planning.breakMinutes,
+        includeWeekends:planning.includeWeekends,checkinMinutes:prefs.checkinMinutes,arrivalMinutes:prefs.rentalPickupMinutes,
+        returnMinutes:prefs.rentalReturnMinutes,hotelPerNight:prefs.hotelPerNight,mealsPerDay:prefs.mealsPerDay,rentalPerDay:prefs.rentalPerDay,
+        checkPublicSources:true,flights});
+      setPreviewSnapshot({context:inputKey,result:response.data});
+    }catch(failure){setError(failure instanceof Error?failure.message:'The travel preview could not be calculated.');}
+    finally{saving.current=false;setBusy(false);}
   }
   async function commit() {
     if (saving.current || ![0, 1, 2, 3].every(validStep)) return;
     saving.current = true; setBusy(true); setError('');
-    requestId.current ||= crypto.randomUUID();
     try {
-      const response = await api.post('/api/travel/commit', {
-        requestId: requestId.current, expectedRevision: ctx.board.revision, trainerId: ctx.activeTrainerId,
-        title: plan.title.trim() || `${selected[0].baseState || ctx.state} coaching circuit`,
-        trainer: ctx.activeTrainer.name, startDate: plan.departDate, endDate: plan.returnDate,
-        arrivalAirport: plan.selectedArrival,
-        notes: 'Proposed coaching windows from guided planning. Confirm appointments, actual driving routes, airline schedules and local time zones before travel.',
-        stops: schedule.visits.map(item => ({
-          managerId: item.manager.id, stateCode: item.manager.baseState || ctx.board.assignments?.find(area => area.managerId === item.manager.id)?.stateCode,
-          date: item.date, location: item.manager.baseCity || '', startTime: item.start, endTime: item.end,
-          lat: item.manager.lat, lon: item.manager.lon,
-        })),
-      });
+      if(!preview||!scenario)return;
+      const response = await api.post('/api/travel/scenarios/'+preview.id+'/approve', {scenarioId:scenario.id,acknowledgeGaps:acknowledged});
       await ctx.reload();
       ctx.setNotice(`${response.data.scheduledVisits} proposed visits and the trip saved together. Confirm meeting times before travel.`);
       ctx.go('calendar');
@@ -159,9 +177,15 @@ export default function GuidedTripPlanner({ onAdvanced }: { onAdvanced: (plan: T
           <label>Minutes per visit<input type="number" min={30} max={480} step={30} value={planning.sessionMinutes} onChange={event => change({ planning: { ...planning, sessionMinutes: Number(event.target.value) } })}/></label>
         </div>
         <label className="atlas-guided-check"><input type="checkbox" checked={planning.includeWeekends} onChange={event => change({ planning: { ...planning, includeWeekends: event.target.checked } })}/> Include weekend coaching days</label>
+        <label className="atlas-guided-check"><input type="checkbox" checked={useBookings} onChange={event=>setUseBookings(event.target.checked)}/> Attach a reviewed booking to check flight-day limits</label>
+        {useBookings&&<BookingPicker bookings={reviewedBookings(readBookedFlights(),bookingContext)} trainers={[ctx.activeTrainer]} selection={bookingSelection} onChange={setBookingSelection} onManage={()=>ctx.go('booked')}/>}
       </>}
       {step === 2 && <>
         <h2 ref={heading} tabIndex={-1}>Choose your arrival airport</h2><p>Ranked by estimated ground travel to your selected managers. These are reference gateways, not flight schedules.</p>
+        {road.loading&&<p role="status">Checking road-network routes to your saved manager locations…</p>}
+        {(road.error||road.limitation)&&<p className="atlas-data-source" role="status">{road.error||road.limitation}</p>}
+        {!road.loading&&!road.network&&<button className="op-btn" onClick={road.refresh}>Retry road comparison</button>}
+        {!!road.result?.evidence.length&&<details><summary>Road source, age and limitations</summary><TravelEvidence evidence={road.result.evidence}/></details>}
         <p className="atlas-data-source">Airport reference: {ctx.airportSource === 'live' ? 'current public directory' : ctx.airportSource === 'cached' ? 'cached directory' : 'limited starter directory'}</p>
         <label>Departure airport<select aria-label="Departure airport" value={plan.origins[0] || ''} onChange={event => change({ origins: event.target.value ? [event.target.value] : [] })}><option value="">Choose a home airport</option>{ctx.activeTrainer.homeAirports.map(code => <option value={code} key={code}>{code}</option>)}</select></label>
         {!ctx.activeTrainer.homeAirports.length && <button className="op-btn" onClick={ctx.openTrainers}>Set home airports</button>}
@@ -169,15 +193,22 @@ export default function GuidedTripPlanner({ onAdvanced }: { onAdvanced: (plan: T
           <input type="radio" name="guided-arrival" value={gateway.airport.iata} checked={plan.selectedArrival === gateway.airport.iata} onChange={() => change({ selectedArrival: gateway.airport.iata })}/>
           <strong>{gateway.airport.iata}</strong><span>{gateway.airport.name}<small>{minutesLabel(gateway.planningDriveMinutes)} estimated ground travel for the circuit</small></span><Plane size={18}/>
         </label>)}</div>
-        {!gateways.length && <p role="alert">No reference gateways are available for these manager locations. Review their coordinates or use advanced comparison.</p>}
+        {!gateways.length&&!road.loading && <p role="alert">A road-based airport comparison is not available yet. Check the saved locations and routing connection before scheduling.</p>}
       </>}
       {step === 3 && <>
         <h2 ref={heading} tabIndex={-1}>Review before adding to Calendar</h2>
         <div className="atlas-guided-summary"><strong>{plan.title || 'Coaching circuit'}</strong><span>{ctx.activeTrainer.name} · {dateLabel(plan.departDate)} – {dateLabel(plan.returnDate)}</span><span><Plane size={15}/> {plan.origins[0]} → {plan.selectedArrival} · flights researched separately</span></div>
-        <ol className="atlas-guided-itinerary">{schedule.visits.map(item => <li key={item.manager.id + item.date}><MapPin size={18}/><div><strong>{item.manager.name}</strong><span>{dateLabel(item.date)} · {item.start}–{item.end} · {item.manager.baseCity || item.manager.baseState}</span></div></li>)}</ol>
-        <p className="atlas-data-source">Estimated ground travel: {minutesLabel(schedule.drivingMinutes)}. Lodging baseline: {money(Math.max(0, Math.round((Date.parse(plan.returnDate) - Date.parse(plan.departDate)) / 86400000)) * prefs.hotelPerNight)} at your planning rate. Airfare and other trip costs excluded.</p>
-        {conflicts.length > 0 ? <div className="atlas-guided-warning" role="alert"><strong>Resolve these conflicts before saving</strong><ul>{conflicts.map(conflict => <li key={conflict}>{conflict}</li>)}</ul><button className="op-btn" onClick={() => ctx.go('calendar')}>Review shared calendar</button></div> : <p className="atlas-guided-clear"><Check size={17}/> No conflicts found in saved workspace records.</p>}
-        <p>Appointments, flight availability, actual driving routes and local time zones still need confirmation. Saving creates the trip and its proposed visits together.</p>
+        {busy&&!preview&&<p role="status">Calculating road routes, local appointment times and travel evidence…</p>}
+        {!busy&&!preview&&<><p role="status">The inputs, saved records or evidence changed. Calculate a current preview before saving.</p><button className="op-btn" onClick={()=>void buildPreview()}>Refresh travel preview</button></>}
+        {scenario&&<>
+          <ol className="atlas-guided-itinerary">{scenario.visits.map(item => <li key={item.managerId + item.date}><MapPin size={18}/><div><strong>{managers.find(person=>person.id===item.managerId)?.name || 'Manager unavailable'}</strong><span>{dateLabel(item.date)} · {item.startTime}–{item.endTime} · {item.timeZone}</span></div></li>)}</ol>
+          <p className="atlas-data-source">Road-network travel estimate: {minutesLabel(scenario.travelMinutes)}. Known planning subtotal: {money(scenario.budget.knownAmount)}. Allowances and missing costs are separate from confirmed prices.</p>
+          <p className={scenario.feasible?'atlas-guided-clear':'atlas-guided-warning'} role="status">{scenario.feasible?'The proposed visits fit the checked scheduling constraints.':scenario.unplaced.length+' requested visits could not be placed. Review dates, trainer assignments, locations and routing before saving.'}</p>
+          {!!scenario.gaps.length&&<div className="atlas-guided-warning"><strong>Review the remaining evidence gaps</strong><ul>{scenario.gaps.map(gap=><li key={gap}>{gap}</li>)}</ul></div>}
+          <details><summary>Evidence behind this preview</summary><TravelEvidence evidence={preview!.evidence}/></details>
+          <label className="atlas-guided-check"><input type="checkbox" checked={acknowledged} onChange={event=>setAcknowledged(event.target.checked)}/> I reviewed the proposed appointments and remaining evidence gaps.</label>
+        </>}
+        <p>Appointments and airline operation still require confirmation. Saving creates the trip and its proposed visits together after your review.</p>
       </>}
       {error && <p className="op-error" role="alert"><CircleAlert size={17}/>{error}</p>}
     </div>

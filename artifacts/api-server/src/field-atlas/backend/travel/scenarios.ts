@@ -1,3 +1,4 @@
+import bundledAirportSource from '../../src/airport-reference-source.json';
 import { connectionConstraints } from '../../shared/travel/readiness';
 import { flightReviewSchema, connectionSchema, journeyRequirementsSchema } from './readinessSchema';
 import { z } from 'zod';
@@ -20,6 +21,7 @@ const trainerId = z.enum(['trainer_a', 'trainer_b']);
 export const flightInput = z.object({ trainerId, carrier: z.string().max(3).default(''), flightNumber: z.string().max(5).default(''), origin: iata, destination: iata,
   departDate: date, departTime: clock, arriveDate: date, arriveTime: clock, departureZone: z.string().max(80).optional(), arrivalZone: z.string().max(80).optional(), fare: z.number().min(0).max(50000).nullable().optional(), providedAt: z.iso.datetime().optional(), review: flightReviewSchema.optional(), connection: connectionSchema.optional() });
 export const scenarioInput = z.object({
+  title:z.string().trim().max(180).optional(),
   managerIds: z.array(z.string().min(1).max(90)).min(1).max(12), trainerIds: z.array(trainerId).min(1).max(2),
   startDate: date, endDate: date, arrivalAirport: iata,
   dayStart: clock.default('09:00'), dayEnd: clock.default('17:00'), sessionMinutes: z.number().int().min(30).max(480).default(150),
@@ -81,11 +83,14 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
   const minutesAt = (instant: string) => Math.round((Date.parse(instant) - base) / 60000);
   const instantAt = (minutes: number) => new Date(base + minutes * 60000).toISOString();
   const matrix = await roadMatrix([{ id: airport.iata, name: airport.name, lat: airport.lat!, lon: airport.lon! }, ...people.map(person => ({ id: person.id, name: person.name, lat: person.lat!, lon: person.lon! }))]);
+  const routingVerified=matrix.roadBased && matrix.evidence.state==='current';
   const gaps: string[] = [];
   const notes = ['Working days with existing trainer visits or trips are reserved, rather than assuming there is spare time around them.', 'Each field day returns to the selected airport area. A specific hotel location has not been supplied.', 'Flight availability, fares, traffic and authoritative airline minimum connection times are not supplied by the optimizer.'];
   if (!matrix.roadBased || matrix.evidence.state !== 'current') gaps.push(matrix.evidence.limitation);
   const vehicles: OptimizerInput['vehicles'] = [];
   for (const profile of trainers) {
+    for(const block of board.availability || [])if(block.trainerId===profile.id && block.startDate<=input.endDate && block.endDate>=input.startDate)
+      gaps.push(`${profile.name}: unavailable ${block.startDate}–${block.endDate} (${block.reason}). Those days are excluded from scheduling.`);
     const ownFlights = flights.filter(flight => flight.trainerId === profile.id);
     const arrivals = ownFlights.filter(flight => flight.destination === airport.iata);
     const departures = ownFlights.filter(flight => flight.origin === airport.iata);
@@ -108,11 +113,12 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
     return { id: person.id, service: input.sessionMinutes, windows: windows.filter(([a, b]) => b >= a), priority: coachingPriority(person, board.visits || [], board.coaching || []).score,
       allowed: vehicles.flatMap((vehicle, v) => input.allowHandoffs || !owner || owner.id === vehicle.trainerId ? [v] : []) };
   });
-  const model: OptimizerInput = { jobs, vehicles, durations: matrix.durations, breakMinutes: input.breakMinutes, horizon: 35 * 1440 };
+  const durations=routingVerified?matrix.durations:matrix.durations.map((row,a)=>row.map((_,b)=>a===b?0:null));
+  const model: OptimizerInput = { jobs, vehicles, durations, breakMinutes: input.breakMinutes, horizon: 35 * 1440 };
   const optimized = await optimize(model);
   const evidence: Evidence[] = [matrix.evidence];
   const reference = await airportReferenceStatus();
-  evidence.push({ id: reference?.checksum || 'bundled-airports-2026', provider: 'OurAirports', subject: 'Airport coordinates', sourceUrl: reference?.sourceUrl || 'https://ourairports.com/data/', kind: 'reference', state: 'reference', retrievedAt: reference?.retrievedAt || '', version: reference?.checksum || 'bundled-102', scope: 'Airport reference coordinates and identifiers.', limitation: (reference?.stale ? 'This airport reference is stale or migrated; refresh its identifiers and coordinates before relying on changes. ' : !reference ? 'Limited bundled airport reference; retrieval age is unknown. ' : '') + 'Reference data is not an airline schedule or an availability check.' });
+  evidence.push({ id: reference?.checksum || bundledAirportSource.sourceSha256, provider: 'OurAirports', subject: 'Airport coordinates', sourceUrl: reference?.sourceUrl || bundledAirportSource.sourceUrl, kind: 'reference', state: 'reference', retrievedAt: reference?.retrievedAt || bundledAirportSource.retrievedAt, version: reference?.checksum || bundledAirportSource.sourceSha256, scope: 'Airport reference coordinates and identifiers.', limitation: (reference?.stale ? 'This airport reference is stale or migrated; refresh its identifiers and coordinates before relying on changes. ' : !reference ? 'Limited, dated bundled airport reference; newer changes may be missing. ' : '') + 'Reference data is not an airline schedule or an availability check.' });
   const flightLegs: JourneyLeg[] = [];
   for (const profile of trainers) {
     const own = flights.filter(flight => flight.trainerId === profile.id);
@@ -208,7 +214,7 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
       { label: 'Rental allowance', amount: fieldDays * input.rentalPerDay, basis: 'One vehicle per active trainer; allowance only.' },
       { label: 'Baggage, parking, fuel, tolls and other fees', amount: null, basis: 'Not supplied; excluded from known subtotal.' },
     ];
-    return { id: randomUUID(), title: solution.objective === 'balanced' ? 'Balanced field plan' : solution.objective === 'home' ? 'Fewer field days' : 'Compact field circuit', objective: solution.objective,
+    return { id: randomUUID(), title: input.title || (solution.objective === 'balanced' ? 'Balanced field plan' : solution.objective === 'home' ? 'Fewer field days' : 'Compact field circuit'), objective: solution.objective,
       feasible: solution.unplaced.length === 0 && visits.length === people.length, provisional: gaps.length > 0,
       reasons: [`${visits.length} of ${people.length} requested visits placed.`, `${active.length} trainers used.`, `Visit order and assignment solved jointly with ${optimized.engine}.`, 'Only known scheduling constraints were validated; evidence gaps remain separate.'],
       gaps: [...new Set(gaps)], visits, unplaced: solution.unplaced, travelMinutes, trainerIds: active.map(profile => profile.id), legs,
@@ -218,6 +224,6 @@ export async function buildScenarios(input: ScenarioInput, board: ScenarioBoard,
   const history = itineraryHistory(input.flights);
   evidence.push(...history.evidence); notes.push(...history.notes);
   return { id: randomUUID(), createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 15 * 60000).toISOString(), workspaceRevision: revision, startDate: input.startDate, endDate: input.endDate, arrivalAirport: airport.iata,
-    scenarios, evidence: [...new Map(evidence.map(item => [item.id, item])).values()], signals, notes, checkedAirports: input.checkPublicSources ? checkedAirports : [], optimizer: optimized.engine,
+    scenarios, routingVerified,evidence: [...new Map(evidence.map(item => [item.id, item])).values()], signals, notes, checkedAirports: input.checkPublicSources ? checkedAirports : [], optimizer: optimized.engine,
     sourceStatus: input.checkPublicSources ? 'Official checks requested for ' + checkedAirports.join(', ') + '. Each source and trip-time coverage gap is labeled below.' : 'Public-source checks were not requested.' };
 }

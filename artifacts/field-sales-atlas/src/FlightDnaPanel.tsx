@@ -8,6 +8,7 @@ TrendingUp
 import { useEffect,useMemo,useRef,useState } from 'react';
 import './FlightDnaPanel.css';
 import { api } from './workspaceApi';
+import { connectionMargin } from '../shared/travel/readiness';
 import OfficialFlightHistory from './OfficialFlightHistory';
 import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 
@@ -39,11 +40,11 @@ function coverageDate(value:string){
     ?date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})
     :'cutoff not supplied';
 }
-function bufferInitial(): number {
+function connectionPreference(key:'transferMinutes'|'boardingCutoffMinutes'): number | null {
   try {
-    const value = Number(localStorage.getItem('atlas-transfer-buffer-min-v1'));
-    return [25,35,45,60,75].includes(value) ? value : 45;
-  } catch { return 45; }
+    const value = JSON.parse(localStorage.getItem('atlas-connection-allowances-v2') || '{}')[key];
+    return typeof value==='number' && Number.isFinite(value) && value>=0 && value<=(key==='transferMinutes'?720:180)?value:null;
+  } catch { return null; }
 }
 function MetricCard({metric,subtitle}:{metric:Metric|null;subtitle:string}) {
   if (!metric) return <div className="fd-metric-empty">
@@ -79,7 +80,8 @@ export default function FlightDnaPanel({
 }: Props) {
   const [carrier,setCarrier] = useState(initialCarrier);
   const [flightNumber,setFlightNumber] = useState(initialFlightNumber);
-  const [buffer,setBuffer] = useState(bufferInitial);
+  const [buffer,setBuffer] = useState(()=>connectionPreference('transferMinutes'));
+  const [boarding,setBoarding] = useState(()=>connectionPreference('boardingCutoffMinutes'));
   const [report,setReport] = useState<DnaResponse|null>(null);
   const [busy,setBusy] = useState(false);
   const [error,setError] = useState('');
@@ -96,18 +98,19 @@ export default function FlightDnaPanel({
     setCopied(false);
   }, [sourceKey,onAnalyzed]);
   useEffect(() => {
-    try { localStorage.setItem('atlas-transfer-buffer-min-v1',String(buffer)); }
+    if(buffer===null&&boarding===null)return;
+    try { localStorage.setItem('atlas-connection-allowances-v2',JSON.stringify({transferMinutes:buffer,boardingCutoffMinutes:boarding})); }
     catch { /* User preference persistence unavailable. */ }
-  },[buffer]);
+  },[buffer,boarding]);
   const valid = /^[A-Z]{3}$/.test(origin) && /^[A-Z]{3}$/.test(destination) &&
     origin !== destination && (!connection || /^[A-Z]{3}$/.test(connection));
   const transferScenarios = useMemo(() => {
     const layover = Number(connectionMinutes);
     return connection && layover >= 1 ?
       [0,15,30,60].map(delay => ({
-        delay, remaining: layover - buffer - delay
+        delay, remaining: connectionMargin(layover,{transferMinutes:buffer??undefined,boardingCutoffMinutes:boarding??undefined},delay)
       })) : [];
-  },[connection,connectionMinutes,buffer]);
+  },[connection,connectionMinutes,buffer,boarding]);
   async function analyze(automatic = false) {
     if (!valid || (busy && !automatic)) return;
     const token = ++request.current;
@@ -321,25 +324,27 @@ export default function FlightDnaPanel({
       <div className="fd-section-label">
         <div><span className="fd-overline">LAYOVER ENGINE · YOUR ASSUMPTIONS</span>
           <h3>{connection ? 'Your layover at ' + connection : 'Start with your connecting airport'}</h3>
-          <p>{connection ? 'Simple what-if arithmetic using your entered layover of ' + (connectionMinutes || 'an unknown number of') + ' minutes and your gate-transfer allowance.' : 'Add a connecting airport and scheduled layover to calculate your margin. Atlas will not guess either value.'}</p></div>
+          <p>{connection ? 'Uses your entered layover of ' + (connectionMinutes || 'an unknown number of') + ' minutes, gate-transfer allowance and airline boarding cutoff. The same margin calculation is used in journey readiness.' : 'Add a connecting airport and scheduled layover to calculate your margin. Atlas will not guess either value.'}</p></div>
         <Clock3 size={21}/>
       </div>
       <button type="button" className="fi-inline-action" onClick={onEditConnection}><Clock3 size={17}/>{connection ? 'Edit connecting airport & layover' : 'Add connecting airport & layover'}<ArrowRight size={16}/></button>
       {connection && <div className="fd-buffer-row">
         <span>Allow for terminal / gate transfer</span>
-        <select aria-label="Gate-transfer allowance" value={buffer} onChange={e=>setBuffer(Number(e.target.value))}>
+        <select aria-label="Gate-transfer allowance" value={buffer??''} onChange={e=>setBuffer(e.target.value===''?null:Number(e.target.value))}>
+          <option value="">Choose a reviewed allowance</option>
           {[25,35,45,60,75].map(value=><option value={value} key={value}>{value} minutes</option>)}
         </select>
+        <label>Boarding cutoff before departure (minutes)<input aria-label="Boarding cutoff before departure in minutes" type="number" min="0" max="180" value={boarding??''} onChange={e=>setBoarding(e.target.value===''?null:Number(e.target.value))}/></label>
         <small>Remembered on this device</small>
       </div>}
       {transferScenarios.length > 0 ? <div className="fd-scenarios">
-        {transferScenarios.map(row=><div key={row.delay} className={row.remaining<0?'failed':row.remaining<15?'tight':'roomy'}>
+        {transferScenarios.map(row=><div key={row.delay} className={row.remaining===null?'unknown':row.remaining<0?'failed':row.remaining<15?'tight':'roomy'}>
           <span>Inbound arrives {row.delay} min late</span>
-          <strong>{row.remaining < 0 ? Math.abs(row.remaining)+' min short' :
+          <strong>{row.remaining===null?'Needs allowances':row.remaining < 0 ? Math.abs(row.remaining)+' min short' :
             row.remaining+' min spare'}</strong>
         </div>)}
       </div> : <p className="fd-empty">Enter the connecting layover above to see your margin under different delay scenarios.</p>}
-      <p className="fd-note">This is not a missed-connection probability. It excludes airline minimum connection rules, boarding-door cutoffs, aircraft and gate movements, separate tickets, immigration and accessibility needs.</p>
+      <p className="fd-note">Supply the transfer time and boarding cutoff you reviewed for this connection. Include applicable baggage, security, border and accessibility processing in your transfer allowance. This is a timing calculation, not a missed-connection probability, an authoritative airline minimum connection time or confirmation of ticket protection.</p>
     </section>}
     {view !== 'connection' && busy && <p className="fd-empty" role="status"><RefreshCw size={18} className="fd-spin"/> Reading independent historical samples. Official records load separately.</p>}
     {view !== 'connection' && !report && !busy && !error && <p className="fd-empty">

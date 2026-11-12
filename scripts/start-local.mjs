@@ -6,6 +6,7 @@ const webRoot = fileURLToPath(new URL('../artifacts/field-sales-atlas/', import.
 const apiEntry = fileURLToPath(new URL('../artifacts/api-server/dist/index.mjs', import.meta.url));
 const viteEntry = fileURLToPath(new URL('../artifacts/field-sales-atlas/node_modules/vite/bin/vite.js', import.meta.url));
 const preview = process.argv.includes('--preview');
+const testFixtures = process.argv.includes('--test-fixtures');
 const webPort = Number(process.env.PORT || 24397);
 const apiPort = Number(process.env.ATLAS_API_PORT || 8080);
 if (![webPort, apiPort].every(port => Number.isInteger(port) && port > 0 && port <= 65535) || webPort === apiPort) {
@@ -70,7 +71,8 @@ process.on('SIGINT', () => stop(0));
 process.on('SIGTERM', () => stop(0));
 
 start('API', ['--use-env-proxy', '--enable-source-maps', apiEntry], {
-  PORT: String(apiPort), NODE_ENV: preview ? 'production' : 'development',
+  PORT: String(apiPort), NODE_ENV: testFixtures ? 'test' : preview ? 'production' : 'development',
+  ATLAS_TEST_FIXTURES: testFixtures ? '1' : '0',
 });
 start('Web', [viteEntry, ...(preview ? ['preview'] : []), '--host', '0.0.0.0'], {
   PORT: String(webPort),

@@ -11,12 +11,13 @@ import type { BookedFlight,BookedLeg } from './BookedFlightLogic';
 import {
 coachingExposure,emptyBookedLeg,itineraryValid,normalizeAirport,
 normalizeCarrier,normalizeFlightNumber,parseBookedText,readBookedFlights,
-storeBookedFlights
+storeBookedFlights,readEarlierDeviceBookings
 } from './BookedFlightLogic';
 import './FlightGuardian.css';
 import { useOp } from './Operations';
 import { dateLabel,downloadFile } from './opsModels';
 import { api } from './workspaceApi';
+import { deviceWorkspaceScope } from './deviceWorkspace';
 
 type Props = { onResearch:()=>void; onCoordinate:()=>void; };
 type InputMode = 'paste'|'file'|'manual';
@@ -38,6 +39,7 @@ function editableFlight(legs:BookedLeg[],trainerId:BookedFlight['trainerId'],sou
 export default function FlightGuardian({onResearch,onCoordinate}:Props){
   const ctx=useOp();
   const [saved,setSaved]=useState<BookedFlight[]>(readBookedFlights);
+  const earlier=readEarlierDeviceBookings();
   const [selectedId,setSelectedId]=useState('');
   const [replacementId,setReplacementId]=useState('');
   const [checkingZones,setCheckingZones]=useState(false);
@@ -235,6 +237,7 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
       // One-time handoff to the app's existing free FAA/NOAA/NWS and BTS research.
       // No PNR, passenger name, full email or ticket data is transferred.
       sessionStorage.setItem('atlas-guardian-research-v1',JSON.stringify({
+        workspace:deviceWorkspaceScope(),
         origin:leg.origin,destination:leg.destination,
         travelDate:leg.departDate,
         carrier:leg.carrier,flightNumber:leg.flightNumber
@@ -326,6 +329,13 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
       <p>{selectedId?'Review your flight details and coaching impact.':
         'Import an itinerary, then protect your schedule.'}</p>
     </header>
+    {earlier.length>0&&<details className="fg-panel"><summary>Review earlier itineraries saved on this device</summary>
+      <p>Earlier itineraries are kept separately. Choose one that belongs in this workspace, then review its trainer, fields and requirements before saving or sharing.</p>
+      {earlier.map(record=><button key={record.id} type="button" className="op-btn" onClick={()=>{
+        setDraft({...record,id:crypto.randomUUID(),trainerId:ctx.activeTrainerId,verified:false,review:undefined,sharedTripId:undefined,revision:1});
+        setSelectedId('');setShowDetails(true);setNotice('Earlier itinerary opened for review. It has not been saved or shared in this workspace.');
+      }}>{record.legs[0]?.origin} → {record.legs.at(-1)?.destination} · {record.legs[0]?.departDate} · review in this workspace</button>)}
+    </details>}
     {savesForTrainer.length>0&&<nav className="fg-mobile-saved" aria-label="Saved flights on this device">
       {savesForTrainer.slice(0,6).map(record=>{
         const first=record.legs[0];
@@ -367,9 +377,9 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
           </button>
         </div>
         {source==='paste'&&<div className="fg-import-zone">
-          <label htmlFor="fg-email">Paste your itinerary text (example shown below)</label>
+          <label htmlFor="fg-email">Paste your actual itinerary text</label>
           <textarea id="fg-email" rows={5} value={paste} onChange={e=>setPaste(e.target.value.slice(0,60000))}
-            placeholder={'Flight UA 1234\nNov 12, 2026\nFrom: Orlando (MCO) 7:20 AM\nTo: Chicago (ORD) 9:15 AM\n\nPaste the actual itinerary. Example text is not imported.'}/>
+            placeholder='Paste the airline confirmation text with your flight numbers, airports, dates and local times.'/>
           <button type="button" className="fg-primary" onClick={parsePaste} disabled={paste.trim().length<12}>
             <Sparkles size={17}/> Extract flight details <ArrowRight size={17}/>
           </button>
@@ -425,22 +435,22 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
             </div>
             <div className="fg-fields fg-flight-code">
               <label>Operating airline code
-                <input value={leg.carrier} maxLength={2} placeholder="UA"
+                <input value={leg.carrier} maxLength={2} placeholder="Airline"
                   onChange={e=>editLeg(leg.id,{carrier:normalizeCarrier(e.target.value)})}/>
               </label>
               <label>Flight number
-                <input value={leg.flightNumber} inputMode="numeric" maxLength={4} placeholder="1234"
+                <input value={leg.flightNumber} inputMode="numeric" maxLength={4} placeholder="Number"
                   onChange={e=>editLeg(leg.id,{flightNumber:normalizeFlightNumber(e.target.value)})}/>
               </label>
             </div>
             <div className="fg-fields fg-airports">
               <label>From airport
-                <input value={leg.origin} maxLength={3} placeholder="MCO"
+                <input value={leg.origin} maxLength={3} placeholder="Code"
                   aria-label={'Leg '+(index+1)+' departure airport'}
                   list="fg-airports" onChange={e=>editLeg(leg.id,{origin:normalizeAirport(e.target.value)})}/>
               </label>
               <label>To airport
-                <input value={leg.destination} maxLength={3} placeholder="ORD"
+                <input value={leg.destination} maxLength={3} placeholder="Code"
                   aria-label={'Leg '+(index+1)+' arrival airport'}
                   list="fg-airports" onChange={e=>editLeg(leg.id,{destination:normalizeAirport(e.target.value)})}/>
               </label>
@@ -464,8 +474,8 @@ export default function FlightGuardian({onResearch,onCoordinate}:Props){
               </label>
             </div>
             <details className="fg-connection-settings"><summary>Time zones and connection requirements</summary>
-              <div className="fg-fields"><label>Departure IANA time zone<input value={leg.departureZone||''} placeholder="America/New_York" onChange={e=>editLeg(leg.id,{departureZone:e.target.value})}/></label>
-              <label>Arrival IANA time zone<input value={leg.arrivalZone||''} placeholder="America/Chicago" onChange={e=>editLeg(leg.id,{arrivalZone:e.target.value})}/></label></div>
+              <div className="fg-fields"><label>Departure IANA time zone<input value={leg.departureZone||''} placeholder="IANA zone" onChange={e=>editLeg(leg.id,{departureZone:e.target.value})}/></label>
+              <label>Arrival IANA time zone<input value={leg.arrivalZone||''} placeholder="IANA zone" onChange={e=>editLeg(leg.id,{arrivalZone:e.target.value})}/></label></div>
               {index>0&&<><p className="fg-muted">For the interval before this leg: include terminal transfer, applicable baggage collection/recheck, border and security procedures. Check the boarding cutoff with the operating airline. Blank means unknown.</p><div className="fg-fields">
                 <label>Gate-to-gate processing allowance (min)<input type="number" min={0} max={720} value={leg.connection?.transferMinutes??''} onChange={e=>editLeg(leg.id,{connection:{...leg.connection,transferMinutes:e.target.value===''?undefined:Number(e.target.value)}})}/></label>
                 <label>Boarding cutoff before departure (min)<input type="number" min={0} max={180} value={leg.connection?.boardingCutoffMinutes??''} onChange={e=>editLeg(leg.id,{connection:{...leg.connection,boardingCutoffMinutes:e.target.value===''?undefined:Number(e.target.value)}})}/></label>

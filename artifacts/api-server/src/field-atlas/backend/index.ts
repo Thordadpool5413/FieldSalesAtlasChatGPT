@@ -17,6 +17,7 @@ import { nwsAirportForecast } from './nwsForecast';
 import { flightHistory } from './flightHistory';
 import { securityHistory, supportedCheckpointAirports } from './securityHistory';
 import { createDemoWorkspace } from './demo';
+import { testFixturesEnabled } from './runtime/testFixtures';
 import { zoneAt } from './travel/zones';
 import { zonedInstant } from '../shared/travel/time';
 import { makeTravelRoutes } from './travel/routes';
@@ -348,7 +349,7 @@ function cleanTravelPrefs(b:Record<string,unknown>){
   const homeAirports=[...new Set(raw.map(x=>safe(String(x).toUpperCase(),3)).filter(validAirport))].slice(0,6);
   const homeDriveMinutes:Record<string,number>={};
   const drives=bodyOf(source.homeDriveMinutes);
-  for(const code of homeAirports)homeDriveMinutes[code]=boundedNumber(drives[code],0,300);
+  for(const code of homeAirports){const value=drives[code];if(value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))&&Number(value)>=0&&Number(value)<=300)homeDriveMinutes[code]=Math.round(Number(value));}
   return {
     homeAirports,homeDriveMinutes,
     checkinMinutes:boundedNumber(source.checkinMinutes,30,240),
@@ -362,8 +363,6 @@ function cleanTravelPrefs(b:Record<string,unknown>){
     tollsPerTrip:boundedNumber(source.tollsPerTrip,0,500),
     groundMiscPerTrip:boundedNumber(source.groundMiscPerTrip,0,1000),
     valueOfTimePerHour:boundedNumber(source.valueOfTimePerHour,0,500),
-    roadMultiplier:boundedNumber(source.roadMultiplier,1,2.3),
-    assumedRoadMph:boundedNumber(source.assumedRoadMph,15,75),
     preferNonstop:!!source.preferNonstop,
     maxConnections:boundedNumber(source.maxConnections,0,4),
     preferredAirlines:safe(String(source.preferredAirlines??''),170),
@@ -459,6 +458,11 @@ async function workspaceAccess(ctx:{
   const digest=createHash('sha256').update(key).digest('hex');
   const [link]=await db.get<SharedLink>(guestLinkTable,[digest],{consistent:true});
   if(!link||!link.actorId||!link.workspaceId)return error('Shared workspace link is invalid.',403);
+  if(!testFixturesEnabled()){
+    const [team]=await db.get<{name:string;testFixture?:boolean}>('atlas_teams',[link.workspaceId]);
+    if(team?.testFixture || team?.name==='Field Sales Atlas demo')
+      return error('This sample workspace is retired. Open your real workspace link or create an empty workspace.',410);
+  }
   // A trainer invitation binds its seat on the server. Clients cannot spoof attribution via query strings.
   if(link.seat==='trainer_a'||link.seat==='trainer_b')ctx.query.trainerId=link.seat;
   ctx.user={userId:link.actorId,name:'Shared workspace editor',
@@ -488,7 +492,7 @@ function validTrainerBody(value:unknown,slot:'trainer_a'|'trainer_b'):TrainerPro
   const homeAirports=[...new Set(raw.map(x=>String(x).trim().toUpperCase()).filter(x=>/^[A-Z]{3}$/.test(x)))].slice(0,6);
   const source=bodyOf(b.homeDriveMinutes);
   const homeDriveMinutes:Record<string,number>={};
-  for(const code of homeAirports)homeDriveMinutes[code]=Math.min(300,Math.max(0,Number.isFinite(Number(source[code]))?Math.round(Number(source[code])):60));
+  for(const code of homeAirports){const raw=source[code];if(raw!==null&&raw!==undefined&&raw!==''&&Number.isFinite(Number(raw)))homeDriveMinutes[code]=Math.min(300,Math.max(0,Math.round(Number(raw))));}
   return {
     id:slot,name,homeCity,homeAirports,homeDriveMinutes,
     preferredAirlines:strField(b,'preferredAirlines',160),
@@ -666,7 +670,8 @@ export const handler = router({
     try { await db.get('atlas_health_probe', ['ready']); return json({ status: 'ready' }); }
     catch { return json({ status: 'not-ready', limitation: 'The configured record store is not responding.' }, 503); }
   }],
-  'POST /api/demo/create': [createDemoWorkspace],
+  'POST /api/demo/create': [async ()=>error('Sample workspaces are no longer available. Create an empty workspace instead.',410)],
+  ...(testFixturesEnabled()?{'POST /api/testing/workspace': [async ()=>testFixturesEnabled()?createDemoWorkspace():error('API route not found.',404)]}:{}),
   'POST /api/guest/create': [async () => {
     // A workspace is usable only when all three records commit together.
     const workspaceKey=randomUUID().replace(/-/g,'')+randomUUID().replace(/-/g,'');
