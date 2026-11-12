@@ -80,6 +80,7 @@ export default function FlightToolkit({ active, onSelect, route, current, histor
     <div className="fi-context-tools"><span>Explore the area</span>
       <button type="button" aria-pressed={active === 'map'} aria-controls="flight-intelligence-results" onClick={() => onSelect('map')}><Map size={16}/> Route & airport map</button>
       <button type="button" aria-pressed={active === 'aircraft'} aria-controls="flight-intelligence-results" onClick={() => onSelect('aircraft')}><Plane size={16}/> Aircraft nearby</button>
+      <a className="fi-photo-credits" href="/resources/intelligence/CREDITS.html" target="_blank" rel="noreferrer">Photo credits</a>
     </div>
   </nav>;
 }

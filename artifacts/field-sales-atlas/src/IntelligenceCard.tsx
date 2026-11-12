@@ -10,7 +10,8 @@ export default function IntelligenceCard({ tool, onOpen, selected, value, detail
   return <button type="button" className={'ig-card fi-tool fi-tool-' + tool.id} onClick={onOpen}
     aria-label={tool.title} aria-description={value || tool.description} title={tool.description}
     aria-pressed={selected} aria-controls={controls}>
-    <img className="ig-card-photo" src={'/resources/intelligence/' + tool.photo + '.jpg'} alt="" aria-hidden="true" width="640" height="427" decoding="async"/>
+    <img className="ig-card-photo" src={'/resources/intelligence/' + tool.photo + '.jpg'} style={{objectPosition:tool.photoPosition}}
+      alt="" aria-hidden="true" width="960" height="640" decoding="async"/>
     <span className="ig-card-shade" aria-hidden="true"/>
     <span className="fi-tool-title"><Icon size={20}/><strong>{tool.title}</strong><ArrowRight size={16}/></span>
     <span className={'fi-tool-value fi-state-' + state}>{value || tool.description}</span>

@@ -5,7 +5,7 @@ test.beforeEach(async ({ context, baseURL }) => {
   await context.addInitScript(() => localStorage.setItem('field-atlas-map-source-v9', 'outline'));
 });
 
-for (const viewport of [{ width: 1536, height: 694 }, { width: 1366, height: 768 }, { width: 1280, height: 600 }]) {
+for (const viewport of [{ width: 1871, height: 847 }, { width: 1536, height: 694 }, { width: 1366, height: 768 }, { width: 1280, height: 600 }, { width: 1280, height: 480 }, { width: 1024, height: 768 }]) {
   test(`navigation and map fit a ${viewport.width} × ${viewport.height} laptop window`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
@@ -16,13 +16,28 @@ for (const viewport of [{ width: 1536, height: 694 }, { width: 1366, height: 768
     const primary = page.getByRole('navigation', { name: 'plan sections' });
     const firstLink = (await primary.getByRole('button').first().boundingBox())!;
     expect(before.y).toBeGreaterThanOrEqual(8);
-    expect(before.height).toBeGreaterThanOrEqual(96);
+    expect(before.height).toBeGreaterThanOrEqual(48);
+    expect(before.height).toBeLessThanOrEqual(96);
     expect(before.y + before.height).toBeLessThan(firstLink.y);
     const map = (await page.getByRole('group', { name: /Interactive United States map/ }).boundingBox())!;
-    expect(map.y).toBeLessThan(viewport.height * .76);
+    if (viewport.height >= 600) expect(map.y).toBeLessThan(viewport.height * .76);
 
     const tools = page.getByRole('region', { name: 'Workspace tools', exact: true });
+    const sidebar = page.locator('.fsa-sidebar');
+    const bounds = (await sidebar.boundingBox())!;
+    expect(Math.abs(bounds.y)).toBeLessThan(1);
+    expect(Math.abs(bounds.height - viewport.height)).toBeLessThan(1);
+    const links = sidebar.locator('.fsa-side-link');
+    await expect(links).toHaveCount(11);
+    for (const link of await links.all()) await expect(link).toBeInViewport({ ratio: 1 });
+    const scrollState = () => tools.evaluate(element => ({ content: element.scrollHeight, available: element.clientHeight, top: element.scrollTop }));
+    const initialScroll = await scrollState();
+    expect(initialScroll.content).toBeLessThanOrEqual(initialScroll.available + 1);
+    expect(initialScroll.top).toBe(0);
     await tools.getByText('More tools', { exact: true }).click();
+    const additional = page.getByRole('navigation', { name: 'Additional workspace tools' });
+    for (const button of await additional.getByRole('button').all()) await expect(button).toBeInViewport({ ratio: 1 });
+    expect(await scrollState()).toEqual(initialScroll);
     const lastTool = tools.getByRole('button').last();
     await lastTool.focus();
     await expect(lastTool).toBeInViewport();
@@ -34,9 +49,48 @@ for (const viewport of [{ width: 1536, height: 694 }, { width: 1366, height: 768
       await expect(link).toBeInViewport();
     }
     await expect(page.locator('.fsa-sidebar-controls summary')).toBeInViewport();
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+    expect(Math.abs((await sidebar.boundingBox())!.y)).toBeLessThan(1);
+    for (const link of await links.all()) await expect(link).toBeInViewport({ ratio: 1 });
+    expect(await scrollState()).toEqual(initialScroll);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
+
+test('More tools opens beside the rail and closes on Escape, outside focus, outside click and selection', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.goto('/');
+  const sidebar = page.locator('.fsa-sidebar');
+  const more = sidebar.locator('.fsa-more-tools');
+  const summary = more.locator('summary');
+  const panel = more.getByRole('navigation', { name: 'Additional workspace tools' });
+  const before = (await sidebar.boundingBox())!;
+
+  await summary.click();
+  await expect(panel.getByRole('button')).toHaveCount(4);
+  const panelBounds = (await panel.boundingBox())!;
+  expect(panelBounds.x).toBeGreaterThanOrEqual(before.x + before.width);
+  for (const button of await panel.getByRole('button').all()) await expect(button).toBeInViewport({ ratio: 1 });
+  await page.keyboard.press('Escape');
+  await expect(more).not.toHaveAttribute('open');
+  await expect(summary).toBeFocused();
+
+  await summary.click();
+  await sidebar.getByRole('button', { name: 'Atlas', exact: true }).focus();
+  await expect(more).not.toHaveAttribute('open');
+
+  await summary.click();
+  await page.getByRole('heading', { name: 'Your intelligence toolkit', exact: true }).click();
+  await expect(more).not.toHaveAttribute('open');
+
+  await summary.click();
+  await panel.getByRole('button', { name: 'County & ZIP explorer', exact: true }).click();
+  await expect(page).toHaveURL(/page=map/);
+  await expect(more).not.toHaveAttribute('open');
+  await expect(more).toHaveClass(/has-active-tool/);
+  const after = (await sidebar.boundingBox())!;
+  expect(after).toEqual(before);
+});
 
 for (const viewport of [
   { width: 844, height: 390 },
@@ -172,6 +226,7 @@ test('recovered workspace controls fit a short window and search works in focus 
   await controls.locator('summary').click();
   await controls.getByRole('button', { name: 'Focus workspace', exact: true }).click();
   await expect(page.locator('.fsa-sidebar')).toBeHidden();
+  expect((await page.locator('.fsa-stage').boundingBox())!.width).toBeGreaterThanOrEqual(1279);
   await page.keyboard.press('Control+k');
   const search = page.getByRole('dialog', { name: 'Search all workspace data' });
   await expect(search).toHaveCount(1);
@@ -238,7 +293,7 @@ test('desktop navigation and workspace search explain specialized tools without 
   await page.goto('/');
   const mission = page.getByRole('navigation', { name: 'insights sections' })
     .getByRole('button', { name: 'Mission Control', exact: true });
-  await mission.scrollIntoViewIfNeeded();
+  await mission.focus();
   await expect(mission.locator('small')).toHaveText('Review field readiness and find work that needs attention.');
   await expect(mission.locator('small')).toBeInViewport();
   await expect(mission).toHaveAccessibleDescription('Review field readiness and find work that needs attention.');

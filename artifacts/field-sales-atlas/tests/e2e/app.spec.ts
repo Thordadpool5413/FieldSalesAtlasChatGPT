@@ -135,7 +135,7 @@ test('guided planning saves the proposed trip and visits into the shared calenda
   expect(errors).toEqual([]);
 });
 
-test('compact Atlas shows the map early, loads vector mode without MapLibre, and opens region details', async ({ page }, info) => {
+test('Atlas shows the toolkit before the phone map, loads vector mode without MapLibre, and opens region details', async ({ page }, info) => {
   const requests: string[] = [];
   page.on('request', request => requests.push(request.url()));
   await page.addInitScript(() => localStorage.setItem('field-atlas-map-welcome-v1', 'seen'));
@@ -143,6 +143,12 @@ test('compact Atlas shows the map early, loads vector mode without MapLibre, and
   await expect(page.getByRole('button', { name: 'Explore Florida', exact: true })).toBeVisible();
   expect(requests.some(url => url.includes('/assets/LiveTerritoryMap-'))).toBe(false);
   const map = page.getByRole('group', { name: /Interactive United States map/ });
+  if (info.project.name === 'mobile') {
+    const shortcuts = page.getByRole('navigation', { name: 'Intelligence toolkit shortcuts' });
+    await expect(shortcuts.getByRole('button')).toHaveCount(6);
+    for (const button of await shortcuts.getByRole('button').all()) await expect(button).toBeInViewport({ ratio: 1 });
+    await map.scrollIntoViewIfNeeded();
+  }
   const bounds = await map.boundingBox();
   expect(bounds).not.toBeNull();
   expect(bounds!.y).toBeLessThan(page.viewportSize()!.height * .72);

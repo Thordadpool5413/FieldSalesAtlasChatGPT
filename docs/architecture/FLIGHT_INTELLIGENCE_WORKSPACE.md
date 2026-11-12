@@ -47,9 +47,16 @@ produces a source-specific error with no assigned rate, rather than crashing the
 travel page. Retrying historical analysis checks both sources again. Either
 source can remain useful while the other is unavailable.
 
-The old carousel is now a static photo grid. Its six original photographs are
-bundled under `public/resources/intelligence`, with source/credit information in
-`CREDITS.md`, so blocked third-party image hosts cannot remove the images. The
+The old carousel is now a static photo grid. Six tool-specific airport photographs
+show a departures board, apron traffic, an airliner in rain, a terminal moving
+walkway, a security scanner and directional airport signs. The files are bundled
+under `public/resources/intelligence`; each tool uses the same image and crop
+throughout Atlas, Travel and Intelligence. Descriptive filenames replace the
+earlier images so browser caches request the new assets. A small credits link
+opens the source, photographer and license details in `CREDITS.html`, with the
+same information in `CREDITS.md`. These are illustrative photographs, never
+current weather or flight information. Blocked third-party hosts cannot remove
+the images at runtime. The
 duplicate summary/map block and global deep-research disclosure were removed.
 The optional combined decision brief remains below the selected tool. Source
 records and limitations stay with the results they support.
@@ -69,3 +76,17 @@ compatible response: MCO–ATL matched 27,428 historical flights through August
 establish current airline service, every airport's coverage or continued provider
 uptime. Hosted Replit secrets, production BTS imports and the published runtime
 must still be verified on Replit. This change does not publish the application.
+
+## Desktop navigation
+
+`DesktopNavigation.css` sizes the sticky rail to the actual viewport. The logo,
+search, eleven destinations and workspace controls share that height without a
+nested navigation scroller. Labels remain visible; their purpose text appears on
+hover or keyboard focus and remains the accessible description. Short windows
+put search beside the logo; below 500 px high, navigation uses two columns.
+The mobile drawer and five bottom tabs retain their existing touch layout.
+
+More tools opens a panel beside the rail, without expanding its height. It closes
+on Escape, selection, outside pointer interaction or focus leaving the panel.
+The rail stays at the top during page scrolling; its background also fills the
+sidebar column on long pages. Focus workspace still gives the content full width.

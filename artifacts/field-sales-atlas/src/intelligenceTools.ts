@@ -1,12 +1,12 @@
 import { Activity, Clock3, CloudLightning, Radar, Route, ShieldCheck } from 'lucide-react';
 
 export const INTELLIGENCE_TOOLS = [
-  { id: 'dna', title: 'Flight DNA', icon: Activity, description: 'Explore historical arrivals, cancellations and route patterns.', terms: 'history airline reliability flight number BTS', photo: 'dna' },
-  { id: 'pressure', title: 'Airport pressure', icon: Radar, description: 'Review FAA airport events and runway configuration.', terms: 'FAA airport delays ground stop capacity', photo: 'pressure' },
-  { id: 'weather', title: 'Weather risk', icon: CloudLightning, description: 'Check aviation observations, forecasts and weather warnings.', terms: 'NOAA NWS ECCC METAR TAF forecast weather', photo: 'weather' },
-  { id: 'connection', title: 'Connection survival', icon: Clock3, description: 'Test a layover against delays and your transfer allowance.', terms: 'layover connecting gate terminal margin', photo: 'connection' },
-  { id: 'security', title: 'Security & airport', icon: ShieldCheck, description: 'Explore checkpoint history and your airport experience.', terms: 'TSA checkpoint queues security airport memory', photo: 'security' },
-  { id: 'alternatives', title: 'Alternatives', icon: Route, description: 'Research historical connections and alternative arrival airports.', terms: 'backup alternative corridor connecting hubs', photo: 'alternatives' },
+  { id: 'dna', title: 'Flight DNA', icon: Activity, description: 'Explore historical arrivals, cancellations and route patterns.', terms: 'history airline reliability flight number BTS', photo: 'flight-information', photoPosition: 'center 45%' },
+  { id: 'pressure', title: 'Airport pressure', icon: Radar, description: 'Review FAA airport events and runway configuration.', terms: 'FAA airport delays ground stop capacity', photo: 'airport-traffic', photoPosition: 'center 58%' },
+  { id: 'weather', title: 'Weather risk', icon: CloudLightning, description: 'Check aviation observations, forecasts and weather warnings.', terms: 'NOAA NWS ECCC METAR TAF forecast weather', photo: 'airport-weather', photoPosition: 'center' },
+  { id: 'connection', title: 'Connection survival', icon: Clock3, description: 'Test a layover against delays and your transfer allowance.', terms: 'layover connecting gate terminal margin', photo: 'terminal-transfer', photoPosition: 'center 58%' },
+  { id: 'security', title: 'Security & airport', icon: ShieldCheck, description: 'Explore checkpoint history and your airport experience.', terms: 'TSA checkpoint queues security airport memory', photo: 'security-checkpoint', photoPosition: 'center 35%' },
+  { id: 'alternatives', title: 'Alternatives', icon: Route, description: 'Research historical connections and alternative arrival airports.', terms: 'backup alternative corridor connecting hubs', photo: 'route-options', photoPosition: 'center 55%' },
 ] as const;
 
 export type CoreFlightTool = typeof INTELLIGENCE_TOOLS[number]['id'];

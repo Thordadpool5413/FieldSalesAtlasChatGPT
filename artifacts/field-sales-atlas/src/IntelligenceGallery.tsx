@@ -13,5 +13,6 @@ export default function IntelligenceGallery({ compact = false }: { compact?: boo
     <div className="ig-context-links"><button type="button" onClick={() => openIntelligenceTool('map')}><Map size={16}/> Route & airport map</button>
       <button type="button" onClick={() => openIntelligenceTool('aircraft')}><Plane size={16}/> Aircraft nearby</button></div>
     {!compact && <p className="ig-gallery-note">Public evidence and your planning assumptions. Source times and coverage are shown inside each tool.</p>}
+    <p className="ig-photo-credit"><a href="/resources/intelligence/CREDITS.html" target="_blank" rel="noreferrer">Illustrative photography · Photo credits</a></p>
   </section>;
 }

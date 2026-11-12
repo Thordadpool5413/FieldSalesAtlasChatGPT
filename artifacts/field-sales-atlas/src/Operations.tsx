@@ -18,11 +18,12 @@ Smartphone,
 Sun,
 Users,X
 } from 'lucide-react';
-import type { Dispatch,SetStateAction } from 'react';
+import type { CSSProperties,Dispatch,SetStateAction } from 'react';
 import { Component,createContext,lazy,Suspense,useContext,useEffect,useMemo,useRef,useState } from 'react';
 import AirportAlertRail from './AirportAlertRail';
 import './AtlasFoundation.css';
 import './IntelligenceNavigation.css';
+import './DesktopNavigation.css';
 import { CANADA_STARTER_AIRPORTS } from './CanadaRegions';
 import { uniqueManagerIds } from './fieldExperience';
 import GlobalFinder from './GlobalFinder';
@@ -604,6 +605,19 @@ function Product(){
     };
   },[]);
   useEffect(()=>{
+    const closeSidebarPanels=(event:Event)=>{
+      document.querySelectorAll<HTMLDetailsElement>('.fsa-sidebar details[open]').forEach(panel=>{
+        if(event.target instanceof Node&&!panel.contains(event.target))panel.open=false;
+      });
+    };
+    document.addEventListener('pointerdown',closeSidebarPanels);
+    document.addEventListener('focusin',closeSidebarPanels);
+    return ()=>{
+      document.removeEventListener('pointerdown',closeSidebarPanels);
+      document.removeEventListener('focusin',closeSidebarPanels);
+    };
+  },[]);
+  useEffect(()=>{
     if(!quickAddOpen)return;
     const old=document.activeElement as HTMLElement|null;
     const before=document.body.style.overflow;
@@ -694,7 +708,8 @@ function Product(){
             aria-expanded={quickAddOpen} onClick={()=>setQuickAddOpen(true)}>
             <Plus size={20}/><span>New field record</span><ArrowRight size={17}/>
           </button>
-          {DESKTOP_NAV_GROUPS.map(group=><section className="fsa-sidebar-group" key={group.label}>
+          {DESKTOP_NAV_GROUPS.map(group=><section className="fsa-sidebar-group" key={group.label}
+            style={{'--sidebar-tool-count':group.items.length} as CSSProperties}>
             <div className="fsa-sidebar-label">{group.label}</div>
             <nav className="fsa-side-nav fsa-side-tools" aria-label={group.label.toLowerCase()+' sections'}>
               {group.items.map(item=>{
@@ -705,7 +720,7 @@ function Product(){
                 aria-current={active?'page':undefined}
                 aria-label={item.label}
                 aria-describedby={item.description?'fsa-tool-description-desktop-'+item.id:undefined}
-                title={item.label} onClick={()=>item.id==='radar'?openIntelligenceTool('dna'):go(item.page)}>
+                onClick={()=>item.id==='radar'?openIntelligenceTool('dna'):go(item.page)}>
                 <Icon size={19}/><span className="fsa-tool-copy">
                   <strong id={'fsa-tool-label-desktop-'+item.id}>{item.label}</strong>
                   <small id={'fsa-tool-description-desktop-'+item.id}>{item.description}</small>
@@ -714,8 +729,15 @@ function Product(){
             })}
             </nav>
           </section>)}
-          <details className="fsa-more-tools" key={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.page,view,planSection,peopleSection))?'more-active':'more-inactive'}
-            open={ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.page,view,planSection,peopleSection))?true:undefined}>
+          <details className={'fsa-more-tools'+(ADDITIONAL_TOOLS.some(item=>isNavItemActive(item.page,view,planSection,peopleSection))?' has-active-tool':'')}
+            onKeyDown={event=>{
+              if(event.key==='Escape'){
+                event.currentTarget.open=false;
+                event.currentTarget.querySelector('summary')?.focus();
+              }
+            }} onClick={event=>{
+              if((event.target as Element).closest('button'))event.currentTarget.open=false;
+            }}>
             <summary><Settings size={19}/><span>More tools</span><ChevronDown size={15}/></summary>
             <nav aria-label="Additional workspace tools">
               {ADDITIONAL_TOOLS.map(item=>{
