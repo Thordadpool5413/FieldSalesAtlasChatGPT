@@ -10,6 +10,7 @@ import './styles/miami-vice-system.css';
 import './styles/map-priority.css';
 import './styles/operational-polish.css';
 import './styles/atlas-final-theme.css';
+import './styles/refined-controls.css';
 
 const queryClient = new QueryClient();
 

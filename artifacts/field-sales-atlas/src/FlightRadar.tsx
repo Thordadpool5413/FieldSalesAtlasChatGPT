@@ -9,8 +9,9 @@ Wind
 } from 'lucide-react';
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react';
 import TravelEvidence from './TravelEvidence';
-import { flightAirportData } from './FlightAirportData';
+import { flightAirportData, forecastOverlapsDate } from './FlightAirportData';
 import RegionalAirportWeather from './RegionalAirportWeather';
+import AirportWeatherSummary from './AirportWeatherSummary';
 import type { OfficialHistoryLeg } from './OfficialFlightHistory';
 import type { AirportBrief, AirportProduct } from '../shared/travel/airportBrief';
 import type { Evidence } from '../shared/travel/types';
@@ -46,7 +47,7 @@ type FaaAirport = {
   code: string;
   level: 'critical' | 'caution' | 'none' | 'unknown';
   headline: string;
-  events: Array<{ kind: string; reason: string; avgMinutes: number | null; updatedAt: string }>;
+  events: Array<{ kind: string; reason: string; avgMinutes: number | null; updatedAt: string; validFrom?: string; validTo?: string; advisoryUrl?: string }>;
   config?: {arrivalRate:number|null;arrivalRunways:string;departureRunways:string;updatedAt:string}|null;
 };
 type FaaResult = {
@@ -55,23 +56,7 @@ type FaaResult = {
   airports: FaaAirport[];
   message?: string;
 };
-type AviationResult = {
-  evidence?: Evidence[];
-  icao: string;
-  available: boolean;
-  checkedAt: string;
-  source: string;
-  message: string;
-  observation: null | {
-    reportTime: string | null;
-    category: string;
-    raw: string;
-    windKnots: number | null;
-    visibility: string | null;
-    temperatureC: number | null;
-  };
-  forecast: null | { raw: string; validFrom: string | null; validTo: string | null };
-};
+type AviationResult = ReturnType<typeof flightAirportData>['aviation'];
 type NwsAlert = {
   id: string; event: string; severity: string; urgency: string; headline: string;
   area: string; effective: string; expires: string;
@@ -85,7 +70,8 @@ type ForecastResult = {
   evidence?: Evidence;
   available:boolean;checkedAt:string;message:string;source:string;
   periods:Array<{
-    number:number;name:string;startTime:string;temperature:number|null;
+    number:number;name:string;startTime:string;endTime:string;temperature:number|null;
+    probabilityOfPrecipitation:number|null;
     temperatureUnit:string;shortForecast:string;windSpeed:string;signals:string[];
   }>;
 };
@@ -99,6 +85,12 @@ type AirportResult = {
   outlook?: ForecastResult;outlookIssue:string;
 };
 type Analysis = { at: string; airports: AirportResult[] };
+function airportSources(row: AirportResult): Evidence[] {
+  const evidence=[...(row.faa?.evidence?[row.faa.evidence]:[]),...(row.aviation?.evidence||[]),
+    ...(row.nws?.evidence?[row.nws.evidence]:[]),...(row.outlook?.evidence?[row.outlook.evidence]:[]),
+    ...(row.regional||[]).map(product=>product.evidence)];
+  return [...new Map(evidence.map(item=>[item.id,item])).values()];
+}
 type Level = 'critical' | 'caution' | 'none' | 'unknown';
 const defaultRoute: RouteEntry = {
   origin: '', connection: '', destination: '', alternate: '', connectionMinutes: ''
@@ -495,8 +487,8 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
       if (!faa) {
         setError('The FAA check could not be reached. Airport status remains unknown; other official observations are shown separately.');
       } else if (!faa.available && faa.airports.length > 0) {
-        setError('The FAA returned no current airport listing for ' + codes.join(', ') +
-          '. Their FAA status remains unknown; other official observations are shown separately.');
+        setError('Current FAA status could not be verified for ' + codes.join(', ') +
+          '. Published notices, when available, are shown with their issue time; missing coverage is not an all-clear.');
       } else if (!faa.available) {
         setError(faa.message || 'The FAA source did not return current airport evidence. Airport status remains unknown.');
       }
@@ -510,7 +502,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
     const current = (evidence?: Evidence) => !evidence || describeEvidence(evidence).state === 'current';
     return { ...item, faaAvailable: item.faaAvailable && current(item.faa?.evidence),
       faa: item.faa && !current(item.faa.evidence) ? { ...item.faa, level: 'unknown' as const,
-        headline: 'Previous FAA evidence expired; current airport status is unknown', events: [], config: null } : item.faa,
+        headline: describeEvidence(item.faa.evidence!).state === 'stale' ? 'FAA source is out of date; current status is unknown' : 'No current FAA status verified for this airport' } : item.faa,
       aviation: item.aviation ? { ...item.aviation,
         observation: current(item.aviation.evidence?.[0]) ? item.aviation.observation : null,
         forecast: current(item.aviation.evidence?.[1]) ? item.aviation.forecast : null } : undefined,
@@ -551,7 +543,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
   for (const item of rows) {
     if (!item.outlook?.available) continue;
     const signals=[...new Set(item.outlook.periods
-      .filter(period=>period.startTime.slice(0,10)===travelDate)
+      .filter(period=>forecastOverlapsDate(period,travelDate))
       .flatMap(period=>period.signals))].slice(0,3);
     if (signals.length)highlights.push(
       'NWS seven-day point forecast for '+item.code+' on '+travelDate+
@@ -595,9 +587,15 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
         ...row.assessment.unknowns.map(v => 'Unknown: ' + v),
         ...(row.outlook?.available
           ? [...new Set(row.outlook.periods
-              .filter(period=>period.startTime.slice(0,10)===travelDate)
+              .filter(period=>forecastOverlapsDate(period,travelDate))
               .flatMap(period=>period.signals))].map(v=>'Forecast weather cue: '+v)
           : []),
+        ...airportSources(row).flatMap(item=>[
+          'Source: '+item.provider+' · '+item.subject+' · '+describeEvidence(item).state,
+          'Source observation/issue: '+(item.observedAt||'Unknown')+' · Retrieved: '+item.retrievedAt,
+          ...(item.validFrom||item.validTo?['Published coverage: '+(item.validFrom||'Unknown')+' – '+(item.validTo||'Unknown')]:[]),
+          'Scope: '+item.scope,'Limitations: '+item.limitation,...(item.sourceUrl?[item.sourceUrl]:[]),
+        ]),
       ]),
       '', 'REVIEW: ', ...highlights,
       '', 'Sources: FAA NAS, NOAA Aviation Weather, NWS point products and ECCC Canadian regional observations, forecasts and warnings. See each source’s coverage and time limits.',
@@ -796,10 +794,15 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
               'No FAA entry; event status unknown' : row.faa?.headline ||
                 'FAA feed unavailable; airport status unknown'}</strong>
             {row.faa?.events.slice(0, 3).map((event, idx) => <small key={idx}>
-              {event.kind}{event.reason ? ' · ' + event.reason : ''}
-              {event.avgMinutes !== null ? ' · FAA average ' + event.avgMinutes + ' min' : ''}
+              <strong>{event.kind}{event.reason ? ' · ' + event.reason : ''}</strong>
+              {event.avgMinutes !== null ? 'Published FAA average delay: ' + event.avgMinutes + ' min. ' : ''}
+              {event.updatedAt ? 'Issued ' + timeLabel(event.updatedAt) + '. ' : ''}
+              {event.validFrom ? 'Effective ' + timeLabel(event.validFrom) + '. ' : ''}
+              {event.validTo ? 'Until ' + timeLabel(event.validTo) + '. ' : ''}
+              {!row.faaAvailable && 'Previously published advisory; current applicability has not been verified.'}
+              {event.advisoryUrl&&<a className="fr-advisory-link" href={event.advisoryUrl} target="_blank" rel="noreferrer">Read FAA advisory <ExternalLink size={13}/></a>}
             </small>)}
-            {row.faaAvailable && <small>FAA checked {timeLabel(row.faaCheckedAt)}</small>}
+            <small>FAA checked {timeLabel(row.faaCheckedAt)} · Source {row.faa?.evidence?.observedAt ? 'issued ' + timeLabel(row.faa.evidence.observedAt) : 'issue time unavailable'}</small>
           </div>
           {row.faa?.config && <div className="fr-evidence">
             <div className="fr-evidence-label"><Activity size={16}/> FAA operational configuration</div>
@@ -810,25 +813,13 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
             {row.faa.config.updatedAt && <small>FAA config timestamp: {timeLabel(row.faa.config.updatedAt)}</small>}
             {(faaDeltas[row.code] || []).map((change,index) =>
               <p key={index} className="fr-configuration-change">{change}</p>)}
-            <small>Change detection compares only this device's previously saved FAA snapshot, not a historical airport capacity model.</small>
+            <small>Published configuration, not live runway availability. Change detection compares this device’s saved snapshot.</small>
           </div>}
           </>}
           {activeTool === 'weather' && <>
           <div className="fr-evidence">
             <div className="fr-evidence-label"><Wind size={16}/> NOAA station weather</div>
-            {row.aviation?.observation ? <>
-              <strong>{row.aviation.observation.category || 'Flight category unavailable'}
-                {row.aviation.observation.windKnots !== null ?
-                  ' · ' + row.aviation.observation.windKnots + ' kt sustained' : ''}
-              </strong>
-              <small>Observed {timeLabel(row.aviation.observation.reportTime)}
-                {ageMinutes(row.aviation.observation.reportTime) !== null &&
-                  ageMinutes(row.aviation.observation.reportTime)! > 180 ? ' · STALE' : ''}</small>
-            </> : <strong>{row.aviationIssue}</strong>}
-            {row.aviation?.forecast?.raw && <details className="fr-forecast">
-              <summary>Read terminal forecast <ChevronDown size={15}/></summary>
-              <p>{row.aviation.forecast.raw}</p>
-            </details>}
+            <AirportWeatherSummary aviation={row.aviation} issue={row.aviationIssue}/>
           </div>
           {!row.regional?.length && <><div className="fr-evidence">
             <div className="fr-evidence-label"><CloudLightning size={16}/> NWS alerts at airport</div>
@@ -842,15 +833,17 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           </div>
           <div className="fr-evidence fr-future-forecast">
             <div className="fr-evidence-label"><CalendarDays size={16}/> NWS travel-date weather outlook</div>
-            {row.outlook?.available ? row.outlook.periods.some(period=>period.startTime.slice(0,10)===travelDate) ? <>
+            {row.outlook?.available ? row.outlook.periods.some(period=>forecastOverlapsDate(period,travelDate)) ? <>
               <small>Forecast for {travelDate}. National Weather Service point forecast, not a flight-status prediction.</small>
               <div className="fr-outlook-period-list">
-                {row.outlook.periods.filter(period=>period.startTime.slice(0,10)===travelDate)
+                {row.outlook.periods.filter(period=>forecastOverlapsDate(period,travelDate))
                   .map(period=><div key={period.number} className={'fr-outlook-period'+(period.signals.length?' has-weather-cues':'')}>
                     <span>{period.name}</span>
+                    <small>{period.startTime.slice(0,10)} {period.startTime.slice(11,16)} – {period.endTime.slice(0,10)} {period.endTime.slice(11,16)} airport local</small>
                     <strong>{period.temperature===null?'Temperature unavailable':period.temperature+'°'+period.temperatureUnit}
                       {' · '}{period.shortForecast||'Forecast detail unavailable'}</strong>
                     {period.windSpeed&&<small>Wind: {period.windSpeed}</small>}
+                    {period.probabilityOfPrecipitation!=null&&<small>Precipitation chance: {period.probabilityOfPrecipitation}%</small>}
                     {period.signals.length>0&&<small className="fr-outlook-cue">
                       <CloudLightning size={13}/>{period.signals.join(' · ')}
                     </small>}
@@ -862,10 +855,7 @@ export default function FlightRadar({onToolChange}:{onToolChange?:(tab:'radar'|'
           </div></>}
           {!!row.regional?.length && <RegionalAirportWeather products={row.regional}/>}
           </>}
-          <TravelEvidence evidence={activeTool === 'pressure' ? (row.faa?.evidence ? [row.faa.evidence] : []) : [
-            ...(row.aviation?.evidence || []), ...(row.nws?.evidence ? [row.nws.evidence] : []),
-            ...(row.outlook?.evidence ? [row.outlook.evidence] : []), ...(row.regional || []).map(product => product.evidence)
-          ]}/>
+          <details className="fi-source-details"><summary>Sources, freshness & limitations</summary><TravelEvidence evidence={airportSources(row).filter(item=>activeTool==='pressure'?item.provider==='FAA NAS':item.provider!=='FAA NAS')}/></details>
           <small className="fi-evidence-note">Missing or expired evidence does not establish current conditions.</small>
         </article>)}
       </div>

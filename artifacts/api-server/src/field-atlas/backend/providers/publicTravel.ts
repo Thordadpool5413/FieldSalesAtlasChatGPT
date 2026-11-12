@@ -26,37 +26,69 @@ function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 export type TravelSignal = AirportSignal;
-export function faa(airport: string) {
-  return source<TravelSignal[]>({ provider: 'FAA NAS', subject: airport, url: 'https://nasstatus.faa.gov/api/airport-events', kind: 'observation',
-    scope: 'Airport-wide notices only. Not flight-specific status.', ttlMs: 120000, maxAgeMs: 20 * 60000, version: 'faa-2',
+type FaaNotice = TravelSignal & {
+  operation: { kind: string; reason: string; avgMinutes: number | null; updatedAt: string; validFrom: string; validTo: string; critical: boolean; advisoryUrl: string };
+};
+type FaaSnapshot = { notices: FaaNotice[]; config: { arrivalRate: number | null; arrivalRunways: string; departureRunways: string; updatedAt: string } | null };
+export function faaSnapshot(airport: string) {
+  return source<FaaSnapshot>({ provider: 'FAA NAS', subject: airport, url: 'https://nasstatus.faa.gov/api/airport-events', kind: 'observation',
+    scope: 'Airport-wide notices only. Not flight-specific status.', ttlMs: 120000, maxAgeMs: 20 * 60000, version: 'faa-4',
     parse(value) {
       if (!Array.isArray(value)) throw new Error('Invalid FAA feed.');
       const record = value.map(object).find(row => row.airportId === airport);
-      if (!record) return { data: [], limitation: 'Airport omitted from the feed. Its current operational status is unknown.' };
-      const result: TravelSignal[] = [];
-      for (const key of ['groundStop', 'groundDelay', 'airportClosure', 'arrivalDelay', 'departureDelay']) {
+      if (!record) return { data: {notices: [], config: null}, limitation: 'Airport omitted from the feed. Its current operational status is unknown.' };
+      const notices: FaaNotice[] = [], noticeTimes: string[] = [];
+      const names: Record<string,string> = {groundStop:'Ground stop',groundDelay:'Ground delay program',airportClosure:'Airport closure advisory',arrivalDelay:'Arrival delays',departureDelay:'Departure delays'};
+      for (const key of Object.keys(names)) {
         const rows = Array.isArray(record[key]) ? record[key] as unknown[] : record[key] ? [record[key]] : [];
         for (const raw of rows.slice(0, 8)) {
           const item = object(raw);
-          const detail = report(item.reason || item.simpleText || item.text);
-          if (key === 'airportClosure' && /NON[\s-]?SKED|TRANSIENT\s+GA|PPR\b/i.test(detail)) continue;
-          result.push({ title: key.replace(/[A-Z]/g, c => ' ' + c.toLowerCase()), detail, validFrom: dated(item.startTime), validTo: dated(item.endTime) });
+          const reason = report(item.reason || item.impactingCondition || item.simpleText || item.text || item.delayReason);
+          if (key === 'airportClosure' && /NON[\s-]?SKED|TRANSIENT\s+GA|PPR\b/i.test(reason)) continue;
+          const rawDelay = item.averageDelayMinutes ?? item.avgDelayMinutes ?? item.averageDelay ?? item.avgDelay ?? item.avg;
+          const parsed = typeof rawDelay === 'number' ? rawDelay : typeof rawDelay === 'string' ? Number(rawDelay.match(/\d+/)?.[0]) : NaN;
+          const avgMinutes = Number.isFinite(parsed) && parsed >= 0 && parsed < 900 ? Math.round(parsed) : null;
+          const updatedAt = dated(item.sourceTimeStamp || item.updatedAt) || dated(record.sourceTimeStamp || record.updatedAt) || '';
+          if (updatedAt) noticeTimes.push(updatedAt);
+          const validFrom = dated(item.startTime), validTo = dated(item.endTime);
+          let advisoryUrl = '';
+          try { const url = new URL(String(item.advisoryUrl)); if (url.protocol === 'https:' && ['www.fly.faa.gov', 'fly.faa.gov', 'nasstatus.faa.gov'].includes(url.hostname)) advisoryUrl = url.href; } catch { /* An absent or untrusted advisory link remains unavailable. */ }
+          notices.push({title:key.replace(/[A-Z]/g,c=>' '+c.toLowerCase()),detail:reason+(avgMinutes===null?'':` · Published average delay ${avgMinutes} min`),validFrom,validTo,
+            operation:{kind:names[key],reason,avgMinutes,updatedAt,validFrom:validFrom||'',validTo:validTo||'',critical:['groundStop','groundDelay','airportClosure'].includes(key),advisoryUrl}});
         }
       }
-      return { data: result, observedAt: dated(record.sourceTimeStamp || record.updatedAt || object(record.airportConfig).sourceTimeStamp), limitation: 'Returned notices describe the airport, not an individual flight.' };
+      const raw = object(record.airportConfig), rate = raw.arrivalRate;
+      const config = Object.keys(raw).length ? {
+        arrivalRate: typeof rate === 'number' && Number.isFinite(rate) && rate >= 0 && rate <= 250 ? rate : null,
+        arrivalRunways:text(raw.arrivalRunwayConfig),departureRunways:text(raw.departureRunwayConfig),updatedAt:dated(raw.sourceTimeStamp)||''
+      } : null;
+      // The oldest notice issue time gates the entire snapshot conservatively.
+      // A runway configuration has its own timestamp and never freshens notices.
+      return {data:{notices,config},observedAt:notices.length ? (noticeTimes.length === notices.length ? noticeTimes.sort()[0] : undefined) : dated(record.sourceTimeStamp || record.updatedAt)||dated(raw.sourceTimeStamp),
+        limitation:'Returned notices describe the airport, not an individual flight. Published effective periods do not reconfirm the notice at retrieval.'};
     },
   });
 }
+export async function faa(airport: string): Promise<SourceResult<TravelSignal[]>> {
+  const result = await faaSnapshot(airport);
+  return {evidence:result.evidence,data:result.data?.notices.filter(notice=>!notice.validTo||Date.parse(notice.validTo)>Date.now())|| (result.data ? [] : null)};
+}
 export function metar(icao: string) {
   return source<TravelSignal[]>({ provider: 'NOAA Aviation Weather', subject: icao, url: `https://aviationweather.gov/api/data/metar?ids=${encodeURIComponent(icao)}&format=json`,
-    kind: 'observation', scope: 'Aviation weather observation at this reporting airport.', ttlMs: 5 * 60000, maxAgeMs: 90 * 60000, version: 'metar-2',
+    kind: 'observation', scope: 'Aviation weather observation at this reporting airport.', ttlMs: 5 * 60000, maxAgeMs: 90 * 60000, version: 'metar-3',
     parse(value) {
       if (!Array.isArray(value)) throw new Error('Invalid METAR response.');
       const row = value.map(object).find(row => row.icaoId === icao);
       if (!row) throw new Error('No matching observation.');
       const detail = report(row.rawOb);
       if (!detail) throw new Error('Observation missing.');
-      return { data: [{ title: text(row.fltCat) || 'Aviation observation', detail, observation: { windKnots: typeof row.wspd === 'number' ? row.wspd : null, visibility: row.visib === undefined ? null : String(row.visib), temperatureC: typeof row.temp === 'number' ? row.temp : null } }], observedAt: dated(row.obsTime || row.reportTime), limitation: 'Weather observations do not determine airline cancellations or operational safety.' };
+      const numeric = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max ? v : null;
+      return { data: [{ title: text(row.fltCat) || 'Aviation observation', detail, observation: {
+        windKnots: numeric(row.wspd, 0, 300), windGustKnots: numeric(row.wgst, 0, 300),
+        windDirection: row.wdir === 'VRB' ? 'Variable' : typeof row.wdir === 'number' && row.wdir >= 0 && row.wdir <= 360 ? row.wdir + '°' : null,
+        visibility: typeof row.visib === 'string' || typeof row.visib === 'number' ? String(row.visib) : null,
+        temperatureC: numeric(row.temp, -100, 70),
+      } }], observedAt: dated(row.obsTime || row.reportTime), limitation: 'Weather observations do not determine airline cancellations or operational safety.' };
     },
   });
 }

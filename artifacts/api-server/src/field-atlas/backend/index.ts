@@ -15,7 +15,7 @@ import { nwsPointAlerts } from './nwsAlerts';
 import { searchCensusZctas, resolveCensusZcta } from './censusZcta';
 import { nwsAirportForecast } from './nwsForecast';
 import { flightHistory } from './flightHistory';
-import { securityHistory, supportedCheckpointAirports } from './securityHistory';
+import { securityHistory } from './securityHistory';
 import { createDemoWorkspace } from './demo';
 import { testFixturesEnabled } from './runtime/testFixtures';
 import { zoneAt } from './travel/zones';
@@ -27,7 +27,7 @@ import { liveAircraftNearAirport, liveAircraftProductionGate } from './providers
 import { historyCoverage } from './providers/bts';
 import { roadMatrix } from './providers/routing';
 import { publicRoutingStatus } from './providers/routingConfig';
-import { publicAirportEvidence, faa, metar as stationMetar, taf as stationTaf } from './providers/publicTravel';
+import { publicAirportEvidence, faa, faaSnapshot, metar as stationMetar, taf as stationTaf } from './providers/publicTravel';
 import type { ScenarioBoard } from './travel/scenarios';
 
 type Member = { id: string; workspaceId: string; role: 'owner' | 'member' };
@@ -69,78 +69,6 @@ type Visit = {
   source?: string;
   updatedAt?: string;
 };
-
-/* FAA NAS airport-wide operational advisories. Not an airline/flight tracker.
-   Only one FAA fetch per cache window, with bounded response data and no secrets. */
-type NasSignal={code:string;level:'critical'|'caution'|'none'|'unknown';headline:string;
-  events:Array<{kind:string;reason:string;avgMinutes:number|null;updatedAt:string}>;
-  config:{arrivalRate:number|null;arrivalRunways:string;departureRunways:string;updatedAt:string}|null;
-  };
-let nasCache:{expires:number;checkedAt:string;data:Map<string,NasSignal>}|null=null;
-let nasFetch:Promise<{checkedAt:string;data:Map<string,NasSignal>}>|null=null;
-const faaEventCodes=['groundStop','groundDelay','airportClosure','arrivalDelay','departureDelay'] as const;
-const faaEventNames:Record<string,string>={
- groundStop:'Ground stop',groundDelay:'Ground delay program',
- airportClosure:'Airport closure advisory',arrivalDelay:'Arrival delays',
- departureDelay:'Departure delays'
-};
-function safeAirportEvent(raw:unknown){
- const event=bodyOf(raw);
- const reason=safe(String(event.reason||event.simpleText||event.text||event.delayReason||''),220);
- const delay=event.averageDelayMinutes??event.avgDelayMinutes??event.averageDelay??event.avgDelay??event.avg;
- const parsed=Number(typeof delay==='string'?delay.match(/\d+/)?.[0]:delay);
- const avgMinutes=delay!==undefined&&delay!==null&&Number.isFinite(parsed)&&parsed>=0&&parsed<900?Math.round(parsed):null;
- const updatedAt=String(event.updatedAt||event.sourceTimeStamp||event.startTime||'').slice(0,35);
- return {reason,avgMinutes,updatedAt};
-}
-async function currentNas(){
- if(nasCache&&nasCache.expires>Date.now())return {checkedAt:nasCache.checkedAt,data:nasCache.data};
- if(!nasFetch){
-   nasFetch=(async()=>{
-     const rows: unknown = await officialJson('https://nasstatus.faa.gov/api/airport-events');
-     if(!Array.isArray(rows))throw Error('FAA event feed schema changed');
-     const result=new Map<string,NasSignal>();
-     for(const rawItem of rows.slice(0,1000)){
-       const item=bodyOf(rawItem);
-       const code=String(item.airportId||'').trim().toUpperCase();
-       if(!/^[A-Z]{3}$/.test(code))continue;
-       const events:NasSignal['events']=[];
-       let level:NasSignal['level']='none';
-       for(const kind of faaEventCodes){
-         const notices = Array.isArray(item[kind]) ? item[kind] as unknown[] : item[kind] && typeof item[kind] === 'object' ? [item[kind]] : [];
-         for (const notice of notices.slice(0, 8)) {
-           const information=safeAirportEvent(notice);
-           // Private/general-aviation restrictions do not imply closure to scheduled flights.
-           if(kind==='airportClosure'&&/NON[\s-]?SKED|TRANSIENT\s+GA|PPR\b/i.test(information.reason))continue;
-           events.push({kind:faaEventNames[kind],...information});
-           if(['groundStop','groundDelay','airportClosure'].includes(kind))level='critical';
-           else if(level!=='critical')level='caution';
-         }
-       }
-       const configRaw=bodyOf(item.airportConfig);
-       const rateSource=configRaw.arrivalRate;
-       const arrivalRate=rateSource!==undefined&&rateSource!==null&&
-         Number.isFinite(Number(rateSource))&&Number(rateSource)>=0&&Number(rateSource)<=250?
-         Number(rateSource):null;
-       const config=Object.keys(configRaw).length?{
-         arrivalRate,
-         arrivalRunways:typeof configRaw.arrivalRunwayConfig==='string'?safe(configRaw.arrivalRunwayConfig,100):'',
-         departureRunways:typeof configRaw.departureRunwayConfig==='string'?safe(configRaw.departureRunwayConfig,100):'',
-         updatedAt:typeof configRaw.sourceTimeStamp==='string'?safe(configRaw.sourceTimeStamp,40):''
-       }:null;
-       result.set(code,{
-         code,level,
-         headline:events[0]?.kind||'No current FAA airport-wide restriction in this feed',
-         events:events.slice(0,6),config
-       });
-     }
-     const checkedAt=new Date().toISOString();
-     nasCache={expires:Date.now()+120000,checkedAt,data:result};
-     return {checkedAt,data:result};
-   })().finally(()=>{nasFetch=null;});
- }
- return nasFetch;
-}
 
 const validStates = new Set(
   'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY AB BC MB NB NL NS NT NU ON PE QC SK YT'.split(
@@ -1910,16 +1838,11 @@ export const handler = router({
     if(!membership)return error('Workspace required.',403);
     const airport=String(ctx.query?.airport||'').toUpperCase();
     const date=String(ctx.query?.date||'');
-    const hour=Number(ctx.query?.hour);
+    const suppliedHour=String(ctx.query?.hour??'');
+    const hour=Number(suppliedHour);
     if(!/^[A-Z]{3}$/.test(airport)||!/^(20\d{2})-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(date)||
-       !Number.isInteger(hour)||hour<0||hour>23)
+       !/^\d{1,2}$/.test(suppliedHour)||!Number.isInteger(hour)||hour<0||hour>23)
        return error('Provide an IATA airport, date, and hour (0–23).',400);
-    if(!supportedCheckpointAirports.includes(airport))
-       return json({available:false,airport,checkedAt:new Date().toISOString(),rows:[],
-         message:'This open archive does not currently cover this airport.',
-         source:'US Airport Security & Immigration Wait Times',
-         sourceUrl:'https://huggingface.co/datasets/digitalhen/us-airport-wait-times',
-         license:'CC BY 4.0',limitations:['Coverage is limited to participating airports.']});
     return json(await securityHistory(airport,date,hour));
   }],
   'GET /api/travel/flight-history': [workspaceAccess,async ctx=>{
@@ -1952,14 +1875,21 @@ export const handler = router({
     const codes=[...new Set(raw.split(',').map(x=>x.trim()).filter(x=>/^[A-Z]{3}$/.test(x)))].slice(0,16);
     if(!codes.length)return error('Provide up to 16 valid IATA airport codes.',400);
     try{
-      const [snapshot, checks] = await Promise.all([currentNas(), Promise.all(codes.map(code => faa(code)))]);
+      const checks = await Promise.all(codes.map(code => faaSnapshot(code)));
       return json({
         available:checks.some(row => row.evidence.state === 'current'),source:'FAA National Airspace System',sourceUrl:'https://nasstatus.faa.gov/',
-        checkedAt:snapshot.checkedAt,
-        scope:'Current airport-wide FAA events; not flight-specific or future-date predictions. FAA feed coverage may be limited for Canadian airports.',
-        airports:codes.map((code, index) => ({ ...(checks[index].evidence.state === 'current' ? snapshot.data.get(code) : null) || {
-          code,level:'unknown',headline:'Airport status could not be verified from current FAA evidence',events:[],config:null
-        }, evidence: checks[index].evidence }))
+        checkedAt:new Date().toISOString(),
+        scope:'Airport-wide FAA notices. Published notices and configuration retain source times. Not flight-specific or future-date predictions.',
+        airports:codes.map((code,index)=>{
+          const check=checks[index],published=check.data;
+          const current=check.evidence.state==='current';
+          const unexpired=published?.notices.filter(item=>!item.validTo||Date.parse(item.validTo)>Date.now())||[];
+          const level=current?(unexpired.some(item=>item.operation.critical)?'critical':unexpired.length?'caution':'none'):'unknown';
+          return {code,level,
+            headline:current?(unexpired[0]?.operation.kind||'No unexpired FAA airport-wide restrictions in this published record')
+              :published?.notices.length?'Published FAA advisory; current status is unverified':'Airport status could not be verified from current FAA evidence',
+            events:published?.notices.slice(0,6).map(item=>item.operation)||[],config:published?.config||null,evidence:check.evidence};
+        })
       });
     }catch(err){
       console.warn('FAA airport status fetch failed',err instanceof Error?err.name:'unknown');

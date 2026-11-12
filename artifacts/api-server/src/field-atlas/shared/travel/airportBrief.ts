@@ -2,7 +2,7 @@ import type { Evidence } from './types';
 
 export type AirportSignal = {
   title: string; detail: string; validFrom?: string; validTo?: string;
-  observation?: { windKnots: number | null; visibility: string | null; temperatureC: number | null };
+  observation?: { windKnots: number | null; windGustKnots?: number | null; windDirection?: string | null; visibility: string | null; temperatureC: number | null };
   alert?: { id: string; severity: string; urgency: string; area: string };
   forecast?: { number: number; isDaytime: boolean; temperature: number | null; temperatureUnit: string;
     windSpeed: string; windDirection: string; shortForecast: string; probabilityOfPrecipitation: number | null;

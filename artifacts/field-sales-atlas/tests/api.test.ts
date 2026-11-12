@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 const directory = mkdtempSync(join(tmpdir(), 'atlas-api-'));
 process.env.ATLAS_DATA_DIR = directory;
@@ -161,6 +161,7 @@ test('checkpoint history preserves validated historical rows through outages and
   const {securityHistory}=await import('../../api-server/src/field-atlas/backend/securityHistory');
   const original=globalThis.fetch;let calls=0;
   globalThis.fetch=async input=>{
+    if(!String(input).startsWith('https://datasets-server.huggingface.co/'))throw Error('Published archive unavailable in isolated fallback contract');
     calls++;
     const queue=String(input).includes('precheck')?'precheck':'standard';
     const row={airport:'MCO',queue_type:queue,terminal:'A',p50_wait:0,p75_wait:10,p95_wait:null,hour_et:'2026-11-01T08:00:00-05:00'};
@@ -187,6 +188,53 @@ test('checkpoint history refuses an ambiguous daylight-saving hour without fetch
   try{
     const result=await securityHistory('MCO','2026-11-01',1);
     assert.equal(result.available,false);assert.equal(result.rows.length,0);assert.match(result.message,/ambiguous.*daylight-saving/);
+  }finally{globalThis.fetch=original;}
+});
+
+test('unsupported checkpoint airports use the same validated response contract and an empty hour never becomes midnight',async()=>{
+  const key=await workspace();
+  for(const query of ['','&hour='])assert.equal((await request('GET','/api/travel/security-history?airport=YYZ&date=2026-12-03'+query,key)).status,400);
+  const response=await request('GET','/api/travel/security-history?airport=YYZ&date=2026-12-03&hour=8',key);
+  const {securityHistorySchema}=await import('../src/SecurityHistoryData');
+  assert.equal(response.status,200);assert.equal(securityHistorySchema.safeParse(response.data).success,true);
+  assert.equal(response.data.available,false);assert.equal(response.data.localDate,'2026-12-03');assert.equal(response.data.localHour,8);assert.deepEqual(response.data.rows,[]);
+});
+
+test('checkpoint upgrades retry legacy failures instead of hiding the repaired source until an old cooldown expires',async()=>{
+  const {securityHistory}=await import('../../api-server/src/field-atlas/backend/securityHistory');
+  const id=createHash('sha256').update('checkpoint-v3|MCO|6|14').digest('hex');
+  await db.tx.update('atlas_checkpoint_history_v3',[{id,record:{queryVersion:3,retryAfter:new Date(Date.now()+86400000).toISOString(),lastFailure:{available:false,message:'Previous strategy failed'}}}]);
+  const original=globalThis.fetch;
+  globalThis.fetch=async input=>{
+    const url=new URL(String(input));if(url.hostname!=='datasets-server.huggingface.co')throw Error('Use isolated viewer contract');
+    const queue=url.searchParams.get('where')!.includes('precheck')?'precheck':'standard';
+    return new Response(JSON.stringify({rows:[{row:{airport:'MCO',queue_type:queue,terminal:'Recovery contract',hour_et:'2026-11-07T14:00:00',p50_wait:10,p75_wait:15,p95_wait:null}}]}));
+  };
+  try{
+    const recovered=await securityHistory('MCO','2026-11-14',14);
+    assert.equal(recovered.available,true);assert.equal(recovered.rows.length,2);
+    const [saved]=await db.get<{queryVersion:number}>('atlas_checkpoint_history_v3',[id]);assert.equal(saved!.queryVersion,4);
+  }finally{globalThis.fetch=original;}
+});
+
+test('checkpoint percentiles keep their own coverage when only part of the historical sample reports p95',async()=>{
+  const {securityHistory}=await import('../../api-server/src/field-atlas/backend/securityHistory');
+  const {securityHistorySchema}=await import('../src/SecurityHistoryData');
+  const original=globalThis.fetch;
+  globalThis.fetch=async input=>{
+    const url=new URL(String(input));if(url.hostname!=='datasets-server.huggingface.co')throw Error('Use isolated archive contract');
+    const queue=url.searchParams.get('where')!.includes('precheck')?'precheck':'standard';
+    return new Response(JSON.stringify({rows:[
+      {hour_et:'2026-11-05T11:00:00',p50_wait:5,p75_wait:10,p95_wait:20},
+      {hour_et:'2026-10-29T11:00:00',p50_wait:90,p75_wait:100,p95_wait:null},
+      {hour_et:'2026-10-22T11:00:00',p50_wait:90,p75_wait:100,p95_wait:null},
+    ].map(row=>({row:{...row,airport:'SFO',queue_type:queue,terminal:'Partial-percentile contract'}}))}));
+  };
+  try{
+    const report=await securityHistory('SFO','2026-11-12',8);
+    assert.equal(report.available,true);assert.equal(report.rows[0].hourRecords,3);
+    assert.equal(report.rows[0].typicalHourlyP75,100);assert.equal(report.rows[0].typicalHourlyP95,20);assert.equal(report.rows[0].p95Records,1);
+    assert.equal(securityHistorySchema.safeParse(report).success,true);
   }finally{globalThis.fetch=original;}
 });
 
@@ -1000,20 +1048,46 @@ test('source diagnostics paginate all stations and retain only the latest check 
   } finally { await db.delete(table, [...ids, prefix + '-newer']); }
 });
 
-test('FAA legacy route preserves array notices and leaves an omitted airport unknown', async () => {
-  const original = globalThis.fetch, key = await workspace();
-  const sourceTimeStamp = new Date().toISOString();
-  globalThis.fetch = async () => new Response(JSON.stringify([{ airportId: 'ZZA', sourceTimeStamp,
-    groundDelay: [{ reason: 'Weather fixture', avgDelayMinutes: 35 }], airportConfig: { sourceTimeStamp, arrivalRate: 40 } }]));
-  try {
-    const result = await request('GET', '/api/travel/disruptions?airports=ZZA,ZZB', key);
-    assert.equal(result.status, 200);
-    assert.equal(result.data.airports[0].level, 'critical');
-    assert.equal(result.data.airports[0].events[0].avgMinutes, 35);
-    assert.equal(result.data.airports[0].evidence.state, 'current');
-    assert.equal(result.data.airports[1].level, 'unknown');
-    assert.equal(result.data.airports[1].evidence.state, 'partial');
-  } finally { globalThis.fetch = original; }
+test('FAA mapping preserves array notices, cause, delay and effective periods while leaving stale and omitted airports unknown',async()=>{
+  const original=globalThis.fetch,key=await workspace(),now=Date.now();
+  const issued=new Date(now-60000).toISOString(),old=new Date(now-5*3600000).toISOString();
+  const start=new Date(now+3600000).toISOString(),end=new Date(now+4*3600000).toISOString();
+  globalThis.fetch=async()=>new Response(JSON.stringify([
+    {airportId:'ZZA',sourceTimeStamp:issued,groundDelay:[{reason:'Weather contract',avgDelayMinutes:35}],airportConfig:{sourceTimeStamp:issued,arrivalRate:40}},
+    ...['ZZC','ZZD'].map((airportId,index)=>({airportId,sourceTimeStamp:index?issued:undefined,
+      groundDelay:{impactingCondition:'Low ceilings contract',avgDelay:80,sourceTimeStamp:index?old:issued,startTime:start,endTime:end,advisoryUrl:'https://www.fly.faa.gov/adv/adv_otherdis.jsp?advn=28'},
+      airportConfig:{arrivalRate:34,arrivalRunwayConfig:'04L',departureRunwayConfig:'04R',sourceTimeStamp:old}})),
+    {airportId:'ZZE',groundDelay:{reason:'Undated notice contract',avgDelay:15,advisoryUrl:'https://untrusted.invalid/'},airportConfig:{sourceTimeStamp:issued,arrivalRate:30}}]));
+  try{
+    const result=await request('GET','/api/travel/disruptions?airports=ZZA,ZZB,ZZC,ZZD,ZZE',key);
+    assert.equal(result.status,200);
+    const [array,omitted,fresh,aged,undated]=result.data.airports;
+    assert.equal(array.level,'critical');assert.equal(array.events[0].avgMinutes,35);
+    assert.equal(omitted.level,'unknown');assert.equal(omitted.evidence.state,'partial');
+    assert.equal(fresh.evidence.observedAt,issued);assert.equal(fresh.level,'critical');
+    assert.equal(fresh.events[0].reason,'Low ceilings contract');assert.equal(fresh.events[0].avgMinutes,80);
+    assert.equal(fresh.events[0].validFrom,start);assert.equal(fresh.events[0].validTo,end);
+    assert.equal(new URL(fresh.events[0].advisoryUrl).hostname,'www.fly.faa.gov');
+    assert.equal(aged.level,'unknown');assert.equal(aged.evidence.state,'stale');
+    assert.equal(aged.events[0].avgMinutes,80);assert.equal(aged.config.updatedAt,old);
+    assert.equal(undated.evidence.state,'partial');assert.equal(undated.level,'unknown');
+    assert.equal(undated.events[0].advisoryUrl,'');
+  }finally{globalThis.fetch=original;}
+});
+
+test('normalized station observations keep actual visibility, wind direction, gusts and missing values',async()=>{
+  const original=globalThis.fetch,now=new Date().toISOString();
+  globalThis.fetch=async input=>{const code=new URL(String(input)).searchParams.get('ids');return new Response(JSON.stringify([{icaoId:code,rawOb:'METAR contract',obsTime:now,fltCat:'MVFR',wspd:0,wgst:22,wdir:'VRB',visib:'6+',temp:0} ]));};
+  try{
+    const {metar}=await import('../../api-server/src/field-atlas/backend/providers/publicTravel');
+    const {flightAirportData}=await import('../src/FlightAirportData');
+    const product=await metar('KZZC');assert.equal(product.evidence.state,'current');
+    const projected=flightAirportData({airport:{iata:'ZZC',name:'Isolated station'},checkedAt:now,products:[product]});
+    assert.deepEqual(projected.aviation.observation,{reportTime:now,category:'MVFR',raw:'METAR contract',windKnots:0,windGustKnots:22,windDirection:'Variable',visibility:'6+',temperatureC:0});
+    globalThis.fetch=async()=>new Response(JSON.stringify([{icaoId:'KZZD',rawOb:'METAR missing fields',obsTime:now,fltCat:'VFR',wspd:null,wgst:'unknown',wdir:null,visib:null,temp:null}]));
+    const missing=(await metar('KZZD')).data![0].observation!;
+    assert.equal(missing.visibility,null);assert.equal(missing.windKnots,null);assert.equal(missing.temperatureC,null);assert.equal(missing.windGustKnots,null);
+  }finally{globalThis.fetch=original;}
 });
 
 test('full source scan includes each historical dataset and flags an incomplete checkpoint sample', async () => {

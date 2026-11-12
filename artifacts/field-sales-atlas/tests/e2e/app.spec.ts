@@ -652,13 +652,27 @@ test('flight intelligence displays source age and stops using expired station ev
   await page.getByRole('button', { name: 'Analyze flight', exact: true }).click();
   await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Weather risk', exact: true }).click();
   const operations = page.locator('#atlas-airport-operations');
-  await expect(operations.getByText('IFR · 5 kt sustained', { exact: true }).first()).toBeVisible();
+  await expect(operations.locator('.fr-weather-condition').first()).toContainText('IFR');
+  await expect(operations.locator('.fr-weather-metrics').first()).toContainText('5 kt');
+  await expect(operations.locator('.fr-weather-metrics').first()).toContainText('20°C');
+  await expect(operations.locator('.fr-weather-metrics').first()).toContainText('3 statute mi');
+  const sourceDetails=operations.locator('.fi-source-details').first();
+  await expect(sourceDetails).not.toHaveAttribute('open','');
+  await sourceDetails.locator('summary').click();
+  await expect(sourceDetails.locator('.journey-source')).toBeVisible();
   await page.getByText('How this evidence affects your trip', { exact: true }).click();
   await expect(page.getByRole('region', { name: 'Combined flight decision intelligence' }).getByText('FAA restriction at MCO', { exact: true })).toBeVisible();
   const source = operations.locator('.travel-evidence-grid').first();
   await expect(source).toContainText('Under a minute old');
+  await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async(value:string)=>{(window as unknown as {copiedBrief:string}).copiedBrief=value;}}}));
+  await operations.getByRole('button',{name:'Copy evidence brief',exact:true}).click();
+  const copied=await page.evaluate(()=>(window as unknown as {copiedBrief:string}).copiedBrief);
+  expect(copied).toContain('Source: NOAA Aviation Weather');
+  expect(copied).toContain('Source observation/issue: '+new Date(now).toISOString());
+  expect(copied).toContain('https://aviationweather.gov/');
+  expect(copied).toContain('Limitations:');
   await page.clock.fastForward(61000);
-  await expect(operations.getByText('IFR · 5 kt sustained', { exact: true })).toHaveCount(0);
+  await expect(operations.locator('.fr-weather-metrics')).toHaveCount(0);
   await expect(source.locator('.journey-state')).toHaveText(['stale']);
   await page.getByRole('navigation', { name: 'Flight intelligence tools' }).getByRole('button', { name: 'Airport pressure', exact: true }).click();
   await expect(operations.getByText('Fixture ground stop', { exact: true })).toHaveCount(0);
@@ -976,6 +990,11 @@ test('intelligence toolkit is upfront and every tool opens a distinct usable vie
   await expect(page.locator('#atlas-airport-operations')).not.toContainText('FAA airport events');
   await tools.getByRole('button', { name: 'Alternatives', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Alternative route research' })).toContainText('MCO → CLT → ATL');
+  const path=page.locator('.fd-path').first();
+  await expect(path.locator('.fd-path-legs > div')).toHaveCount(2);
+  await expect(path).toContainText('historical flights');
+  await expect(path).toContainText('verify with your airline');
+  await expect(page.getByText('Exposure proxy*',{exact:true})).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Official BTS route history' })).toBeHidden();
   await page.goBack();
   await expect(page.getByRole('heading', { name: 'Weather risk', exact: true })).toBeVisible();
@@ -1269,7 +1288,7 @@ test('advanced travel settings leave new drive times blank and use live trainer 
 
 test('checkpoint history exposes partial coverage, archive age and missing percentiles',async({page})=>{
   const stamp=new Date().toISOString();
-  await page.route('**/api/travel/security-history?*',route=>route.fulfill({json:{state:'historical',available:true,checkedAt:stamp,airport:'MCO',localDate:'2026-11-12',localHour:8,etHour:8,etWeekday:4,timezone:'America/New_York',
+  await page.route('**/api/travel/security-history?*',route=>route.fulfill({json:{state:'historical',available:true,checkedAt:stamp,airport:'MCO',localDate:new URL(route.request().url()).searchParams.get('date'),localHour:8,etHour:8,etWeekday:4,timezone:'America/New_York',
     rows:[{terminal:'Contract fixture',queue:'standard',hourRecords:1,historicalMedianPosted:0,typicalHourlyP75:10,typicalHourlyP95:null,observedStart:'2026-11-05T13:00:00Z',observedEnd:'2026-11-05T13:00:00Z'}],requestedQueues:['standard','precheck'],
     limitations:['Closed checkpoints and unobserved queues are not zero waits.'],source:'Isolated checkpoint contract',sourceUrl:'https://huggingface.co/datasets/digitalhen/us-airport-wait-times',attribution:'Test fixture',license:'CC BY 4.0',
     message:'PreCheck records unavailable. Standard history uses a published archive snapshot.',archive:{sourceUrl:'https://huggingface.co/datasets/digitalhen/us-airport-wait-times',sha256:'a'.repeat(64),retrievedAt:stamp,revision:'b'.repeat(40)}}}));
@@ -1284,4 +1303,31 @@ test('checkpoint history exposes partial coverage, archive age and missing perce
   await expect(security.getByRole('link',{name:'Published source file'})).toBeVisible();
   await security.getByText('Source scope and limitations',{exact:true}).click();
   await expect(security.getByText('Closed checkpoints and unobserved queues are not zero waits.',{exact:true})).toBeVisible();
+});
+
+test('checkpoint selectors support keyboard selection and malformed data can be retried without a page failure',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/?page=plan&tool=radar&intel=security');
+  const security=page.getByRole('region',{name:'Airport checkpoint intelligence'});
+  const airport=security.getByRole('combobox',{name:'Airport',exact:true});
+  await airport.selectOption('MCO');
+  const arrival=security.getByLabel('Checkpoint arrival time');
+  await arrival.focus();await arrival.press('Space');
+  await expect.poll(()=>arrival.evaluate(node=>node.matches(':open'))).toBe(true);
+  await page.keyboard.press('End');await page.keyboard.press('Enter');
+  await expect(arrival).toHaveValue('23');await expect(arrival).toBeFocused();
+  await arrival.selectOption('14');
+  let broken=true;
+  await page.route('**/api/travel/security-history?*',route=>{
+    const url=new URL(route.request().url());
+    return route.fulfill({json:broken?{available:true,rows:null}:{state:'unavailable',available:false,checkedAt:new Date().toISOString(),airport:'MCO',localDate:url.searchParams.get('date'),localHour:14,etHour:14,etWeekday:4,timezone:'America/New_York',rows:[],requestedQueues:['standard','precheck'],limitations:['No source rows'],source:'Isolated contract',sourceUrl:'https://huggingface.co/datasets/digitalhen/us-airport-wait-times',attribution:'Test only',license:'CC BY 4.0',message:'No matching source rows'}});
+  });
+  const analyze=security.getByRole('button',{name:'Analyze checkpoint history',exact:true});
+  await analyze.click();await expect(security.getByRole('alert')).toContainText('unreadable result');
+  await expect(security.locator('.sh-stats')).toHaveCount(0);
+  broken=false;await analyze.click();
+  await expect(security).toContainText('No usable checkpoint history returned for MCO');
+  await expect(security.getByRole('alert')).toHaveCount(0);
+  expect(errors).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });

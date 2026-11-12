@@ -194,12 +194,12 @@ export default function FlightDnaPanel({
       </label>
       <label>Operating airline (optional)
         <input value={carrier} onChange={e=>setCarrier(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,2))}
-          maxLength={2} placeholder="DL / AA / WN"/>
+          maxLength={2} placeholder="Operating carrier code"/>
       </label>
       <label>First-leg flight number (optional)
         <input inputMode="numeric" value={flightNumber}
           onChange={e=>setFlightNumber(e.target.value.replace(/\D/g,'').slice(0,4))}
-          maxLength={4} placeholder="e.g. 1046"/>
+          maxLength={4} placeholder="Flight number on your itinerary"/>
       </label>
       <button type="button" className="fd-cta" onClick={()=>void analyze()} disabled={!valid||busy}>
         {busy?<RefreshCw size={17} className="fd-spin"/>:<Database size={17}/>}
@@ -277,17 +277,19 @@ export default function FlightDnaPanel({
           <Route size={22}/>
         </div>
         <div className="fd-path-list">
-          {report.alternatePaths.slice(0,6).map((path,i)=><div className="fd-path" key={path.connection}>
+          {report.alternatePaths.slice(0,8).map((path,i)=><div className="fd-path" key={path.connection}>
             <span className="fd-path-index">{i+1}</span>
-            <div><strong>{origin} → {path.connection} → {destination}</strong>
-              <small>{path.legs.map(leg=>leg.origin+'–'+leg.destination+' · '+readable(leg.severePct,'%')+' severe / '+readable(leg.cancelPct,'%',2)+' cancelled').join(' | ')}</small>
-            </div>
-            <div className="fd-path-proxy">
-              <strong>{path.index.toFixed(1)}</strong><small>Exposure proxy*</small>
+            <div className="fd-path-evidence"><strong>{origin} → {path.connection} → {destination}</strong>
+              <div className="fd-path-legs">{path.legs.map(leg=><div key={leg.origin+leg.destination}>
+                <strong>{leg.origin} → {leg.destination}</strong>
+                <span>{readable(leg.severePct,'%')} arrived 60+ min late · {readable(leg.cancelPct,'%',2)} cancelled</span>
+                <small>{number(leg.flights)} historical flights · {coverageDate(leg.periodStart)} – {coverageDate(leg.periodEnd)}</small>
+              </div>)}</div>
+              <small className="fd-path-verification">Schedule, seats and connection protection: verify with your airline.</small>
             </div>
           </div>)}
         </div>
-        <p className="fd-note">* Lowest proxy listed first. The proxy is the largest leg's historical 60+ minute delay percentage plus the largest leg's cancellation percentage. It is an internal comparison heuristic, not a probability or a guarantee of better routing. Actual airline schedules remain unverified.</p>
+        <details className="fd-ranking-method"><summary>How these corridors are ordered</summary><p className="fd-note">Lower historical disruption exposure is listed first: the largest leg's 60+ minute arrival-delay percentage plus the largest leg's cancellation percentage. This internal sorting method is not a journey probability, a schedule check or a guarantee of better routing. Samples cover different flights and reporting periods.</p></details>
       </section>}
       {view === 'dna' && report.monthly.length > 0 && <section className="fd-months">
         <div className="fd-section-label"><div><span className="fd-overline">AIRPORT TREND · HISTORICAL</span>

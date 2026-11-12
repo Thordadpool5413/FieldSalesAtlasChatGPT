@@ -59,3 +59,21 @@
 @media(max-width:530px){.mv-app .sh-query{grid-template-columns:repeat(2,minmax(0,1fr))}.mv-app .sh-run{grid-column:1/-1}.mv-app .sh-stats strong{font-size:19px}.mv-app .sh-log-form{grid-template-columns:repeat(2,minmax(0,1fr))}.mv-app .sh-save{grid-column:1/-1}.mv-app .sh-row-top{align-items:start}.mv-app .sh-row-top small{font-size:9px}.mv-app .sh-memory-heading button{width:100%;justify-content:center}}
 
 .mv-app .sh-observed-period{display:block;margin:0 0 12px;color:var(--at-muted);font-size:11.5px;line-height:1.5}
+.mv-app.atlas-product-v4 .sh-coverage-summary{display:flex;align-items:start;gap:12px;padding:18px;background:var(--at-aqua-soft);border-radius:14px;color:var(--at-text)}
+.mv-app.atlas-product-v4 .sh-coverage-summary>svg{flex-shrink:0;color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .sh-coverage-summary strong{font-size:15px}
+.mv-app.atlas-product-v4 .sh-coverage-summary p{margin:5px 0 0;font-size:13px;line-height:1.6;color:var(--at-muted)}
+.mv-app.atlas-product-v4 .sh-row{padding:18px;border-radius:15px}
+.mv-app.atlas-product-v4 .sh-stats span{font-size:12px;line-height:1.45}
+.mv-app.atlas-product-v4 .sh-stats strong{font:600 26px/1.6 var(--atlas-font);letter-spacing:-.6px}
+.mv-app.atlas-product-v4 .sh-empty-source{background:var(--at-field);border-color:var(--at-border);border-radius:14px;padding:18px}
+.mv-app.atlas-product-v4 .sh-empty-source a{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:var(--at-cyan)}
+.mv-app.atlas-product-v4 .sh-source-details{font:400 13px/1.6 var(--atlas-font);color:var(--at-muted)}
+.mv-app.atlas-product-v4 .sh-comparison-controls{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr));gap:16px;align-items:end;padding:16px;border:1px solid var(--at-border-soft);border-radius:14px;background:var(--at-field)}
+.mv-app.atlas-product-v4 .sh-comparison-controls strong{font-size:14px;color:var(--at-text)}
+.mv-app.atlas-product-v4 .sh-comparison-controls p{margin:5px 0 0;font-size:12px;line-height:1.5;color:var(--at-muted)}
+.mv-app.atlas-product-v4 .sh-comparison-controls label{display:flex;flex-direction:column;gap:7px;font-size:12px;color:var(--at-muted);min-width:0}
+.mv-app.atlas-product-v4 .sh-memory-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mv-app.atlas-product-v4 .sh-memory-overview>div{align-self:stretch;min-height:88px;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:700px){.mv-app.atlas-product-v4 .sh-comparison-controls{grid-template-columns:minmax(0,1fr)}.mv-app.atlas-product-v4 .sh-query{grid-template-columns:minmax(0,1fr)}.mv-app.atlas-product-v4 .sh-row-top small{font-size:11px}}
+@media(max-width:530px){.mv-app.atlas-product-v4 .sh-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.mv-app.atlas-product-v4 .sh-stats>div:last-child{grid-column:1/-1}.mv-app.atlas-product-v4 .sh-stats strong{font-size:24px}}

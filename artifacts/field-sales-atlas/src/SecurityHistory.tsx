@@ -11,21 +11,10 @@ import { useOp } from './Operations';
 import { today } from './opsModels';
 import './SecurityHistory.css';
 import { api } from './workspaceApi';
+import { securityHistorySchema, type SecurityHistoryReport as Report } from './SecurityHistoryData';
+import { STARTER_AIRPORTS } from './opsModels';
 
 type Queue = 'standard'|'precheck';
-type Stats = {
-  terminal:string;queue:Queue;hourRecords:number;
-  historicalMedianPosted:number;typicalHourlyP75:number;typicalHourlyP95:number|null;
-  observedStart:string;observedEnd:string;
-};
-type Report = {
-  state?:'historical'|'stale'|'unavailable';lastAttemptAt?:string;
-  archive?:{sourceUrl:string;sha256:string;retrievedAt:string;revision:string};
-  available:boolean;checkedAt:string;airport:string;localDate:string;localHour:number;
-  etHour:number|null;etWeekday:number|null;timezone:string;
-  rows:Stats[];requestedQueues:Queue[];limitations:string[];
-  source:string;sourceUrl:string;attribution:string;license:string;message:string;
-};
 type Personal = {
   id:string;airport:string;terminal:string;queue:Queue;
   minutes:number;date:string;
@@ -99,7 +88,10 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
     const params=new URLSearchParams({airport:code,date,hour:String(hour)});
     try{
       const res=await api.get('/api/travel/security-history?'+params.toString());
-      if(token===request.current)setReport(res.data as Report);
+      const parsed=securityHistorySchema.safeParse(res.data);
+      if(!parsed.success)throw Error('The checkpoint source returned an unreadable result. No wait estimate was assigned. Try again or check the public source.');
+      if(parsed.data.airport!==code||parsed.data.localDate!==date||parsed.data.localHour!==hour)throw Error('The returned history does not match your airport and arrival time. Run the check again.');
+      if(token===request.current)setReport(parsed.data);
     }catch(err){
       if(token===request.current)setError(err instanceof Error?err.message:'The historical airport data could not be read.');
     }finally{if(token===request.current)setLoading(false);}
@@ -139,7 +131,7 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
         <select value={code} onChange={event=>setSelected(event.target.value)}>
           {!code&&<option value="">Choose your airport</option>}
           {!!code&&!validCodes.has(code)&&<option value={code}>{code} · archive coverage unverified</option>}
-          {covered.map(value=><option key={value} value={value}>{value}</option>)}
+          {[...covered].sort().map(value=><option key={value} value={value}>{value} · {STARTER_AIRPORTS.find(item=>item.iata===value)?.name || 'Query checkpoint archive'}</option>)}
         </select>
       </label>
       <label>Airport local date (selects historical weekday)
@@ -156,6 +148,8 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
         {loading?'Reading history…':'Analyze checkpoint history'} <ArrowRight size={16}/>
       </button>
     </div>
+    {!report&&!loading&&!error&&<p className="sh-note"><Info size={15}/>Choose when you plan to reach security, then analyze. The date matches historical weekdays; it does not predict your wait.</p>}
+    {loading&&<p className="sh-note" role="status"><RefreshCw size={15} className="fr-spinning"/>Checking the published archive and matching your airport, weekday and local hour…</p>}
     {airport&&/^[A-Z]{3}$/.test(airport)&&!validCodes.has(airport)&&
       <p className="sh-note"><Info size={14}/>
         Archive coverage for your route's departure airport {airport} is unverified.
@@ -164,13 +158,27 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
     {error&&<p className="sh-error" role="alert">{error}</p>}
     {report&&!report.available&&<div className="sh-error sh-empty-source" role="status">
       <div><strong>No usable checkpoint history returned for {code}</strong>
-        <p>{report.message ||
-          'No historical posted waits could be matched for this weekday and time.'}</p>
+        <p>Your airport, weekday and hour could not be matched to a usable historical sample. Allow time based on your airline and airport guidance.</p>
         <small>Unsupported, unavailable and empty sample results are not an estimate of zero minutes.</small>
       </div>
       <a href="https://huggingface.co/datasets/digitalhen/us-airport-wait-times"
         target="_blank" rel="noreferrer">View the public source <ArrowRight size={14}/></a>
+      <details className="sh-source-details"><summary>Why history is unavailable</summary><p>{report.message}</p></details>
     </div>}
+    <div className="sh-comparison-controls" aria-label="Your security comparison"><div><strong>Your comparison</strong><p>Optional: compare the archive with your own allowance. This does not set a recommended wait time.</p></div>
+        <label>Screening lane to compare
+          <select value={queue} onChange={event=>setQueue(event.target.value as Queue)}>
+            <option value="standard">Standard</option>
+            <option value="precheck">TSA PreCheck</option>
+          </select>
+        </label>
+        <label>Use this many minutes for security
+          <select value={buffer??''} onChange={event=>setBuffer(event.target.value===''?null:Number(event.target.value))}>
+            <option value="">Choose your allowance</option>
+            {[15,20,25,30,35,45,60,75,90].map(value=><option key={value} value={value}>{value} min</option>)}
+          </select>
+        </label>
+    </div>
     {report?.available&&<div className="sh-results">
       {report.state==='stale'&&<p className="sh-error" role="status">{report.message} Last refresh attempt: {report.lastAttemptAt?new Date(report.lastAttemptAt).toLocaleString():'Unknown'}.</p>}
       {report.state!=='stale'&&report.message&&<p className="sh-note" role="status"><Info size={15}/>{report.message}</p>}
@@ -178,10 +186,11 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
         <div><span className="sh-overline">AIRPORT-PUBLISHED ESTIMATE ARCHIVE</span>
           <h3>{report.airport} · {hourLabel(report.localHour)} local</h3>
           <p>Source checked {new Date(report.checkedAt).toLocaleString()}.
-            Historical observations are grouped by terminal and security type.</p></div>
+            Historical observations are grouped by the source’s checkpoint / terminal label and screening lane.</p></div>
         <span>Source timezone: U.S. Eastern</span>
       </div>
-      {report.archive&&<p className="sh-note"><span>Historical archive snapshot retrieved {new Date(report.archive.retrievedAt).toLocaleString()}. <a href={report.archive.sourceUrl} target="_blank" rel="noreferrer">Published source file</a> · Revision {report.archive.revision.slice(0,12)} · SHA-256 {report.archive.sha256.slice(0,12)}. This is not a live wait estimate.</span></p>}
+      <div className="sh-coverage-summary"><ShieldCheck size={23}/><div><strong>{report.rows.length} checkpoint and lane groups matched</strong><p>{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(date+'T12:00:00').getDay()]} around {hourLabel(hour!)} at {code}. Historical posted estimates, not live queues or a boarding guarantee.</p></div></div>
+      {report.archive&&<p className="sh-note"><span>Verified archive retrieved {new Date(report.archive.retrievedAt).toLocaleString()}. <a href={report.archive.sourceUrl} target="_blank" rel="noreferrer">Published source file</a>. This is not a live wait estimate.</span></p>}
       <div className="sh-rows">
         {report.rows.map((row,index)=><article className="sh-row" key={index}>
           <div className="sh-row-top">
@@ -191,14 +200,15 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
           </div>
           <small className="sh-observed-period">Observed {observationDate(row.observedStart)} – {observationDate(row.observedEnd)}</small>
           <div className="sh-stats">
-            <div><span>Median of hourly p50s</span>
+            <div><span>Typical posted wait</span>
               <strong>{row.historicalMedianPosted}<small> min</small></strong></div>
-            <div><span>Median of hourly p75s</span>
+            <div><span>Busier-hour benchmark</span>
               <strong>{row.typicalHourlyP75}<small> min</small></strong></div>
-            <div><span>Median of hourly p95s</span>
-              <strong>{row.typicalHourlyP95===null?'Not reported':<>{row.typicalHourlyP95}<small> min</small></>}</strong></div>
+            <div><span>High-wait benchmark</span>
+              <strong>{row.typicalHourlyP95===null?'Not reported':<>{row.typicalHourlyP95}<small> min</small></>}</strong>
+              {row.p95Records!==undefined&&row.p95Records<row.hourRecords&&<small>{row.p95Records} of {row.hourRecords} records include p95</small>}</div>
           </div>
-          <div className="sh-buffer-review">
+          {buffer!==null&&row.queue===queue&&<div className="sh-buffer-review">
             <div><Clock3 size={15}/><span>Your security-time allowance</span></div>
             <strong>{buffer===null?'Not supplied':buffer+' min'}</strong>
             {row.queue===queue && buffer!==null ? <span className={buffer<row.typicalHourlyP75?'sh-review-rose':'sh-review-aqua'}>
@@ -206,12 +216,12 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
                 buffer<row.typicalHourlyP75?
                   'Below the recent sampled hourly p75 benchmark. Consider more time.' :
                   'Above the recent sampled hourly p75 benchmark. Real waits may still be longer.'}
-            </span> : <span>Choose this lane below to compare its archive with your selected allowance.</span>}
-          </div>
+            </span> : <span>Choose this lane above to compare its archive with your selected allowance.</span>}
+          </div>}
         </article>)}
       </div>
-      <p className="sh-note"><Info size={15}/> These values are medians across up to 100 recent matching hourly records per queue, grouped by terminal. Each hourly record has its own published p50/p75/p95. These are not pooled passenger percentiles. The selected date determines weekday and time-zone conversion; it is not a forecast for that calendar date. The readings are airport-posted estimates, not measured passenger waits. Only open lanes are included; closed checkpoints and missing queues do not mean zero waits.</p>
-      {!!report.limitations?.length&&<details><summary>Source scope and limitations</summary><ul>{report.limitations.map(item=><li key={item}>{item}</li>)}</ul></details>}
+      <p className="sh-note"><Info size={15}/>Typical, busier-hour and high-wait benchmarks are medians of the archive’s available hourly p50, p75 and p95 values. P95 can cover fewer records, so the benchmarks may describe different samples. They are posted estimates, not pooled passenger waits. Only open lanes are included; a missing value is not zero.</p>
+      <details className="sh-source-details"><summary>Source scope and limitations</summary><p>The selected date chooses weekday and time-zone conversion, not a forecast for that calendar date. Up to 100 recent matching hourly records per queue are grouped by terminal.</p><ul>{report.limitations.map(item=><li key={item}>{item}</li>)}</ul>{report.archive&&<p>Verified revision {report.archive.revision} · SHA-256 {report.archive.sha256}</p>}</details>
     </div>}
     <div className="sh-memory">
       <div className="sh-memory-heading">
@@ -229,18 +239,7 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
       <div className="sh-memory-overview">
         <div><span>Recorded trips at {code}</span><strong>{currentPersonal.length}</strong></div>
         <div><span>Personal median · {queue==='precheck'?'PreCheck':'Standard'}</span><strong>{memory===null?'Not yet recorded':memory+' min'}</strong></div>
-        <label>Screening lane to compare
-          <select value={queue} onChange={event=>setQueue(event.target.value as Queue)}>
-            <option value="standard">Standard</option>
-            <option value="precheck">TSA PreCheck</option>
-          </select>
-        </label>
-        <label>Use this many minutes for security
-          <select value={buffer??''} onChange={event=>setBuffer(event.target.value===''?null:Number(event.target.value))}>
-            <option value="">Choose your allowance</option>
-            {[15,20,25,30,35,45,60,75,90].map(value=><option key={value} value={value}>{value} min</option>)}
-          </select>
-        </label>
+
       </div>
       {showLog&&<div className="sh-log-form">
         <label>Observed elapsed minutes
@@ -249,7 +248,7 @@ export default function SecurityHistory({airport,travelDate}:{airport:string;tra
         </label>
         <label>Terminal (optional)
           <input value={terminal} onChange={event=>setTerminal(event.target.value)}
-            maxLength={45} placeholder="Terminal A"/>
+            maxLength={45} placeholder="Enter the terminal you used"/>
         </label>
         <label>Security lane
           <select value={queue} onChange={event=>setQueue(event.target.value as Queue)}>

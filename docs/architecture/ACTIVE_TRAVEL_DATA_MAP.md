@@ -21,7 +21,7 @@ tools now open distinct, visible results rather than one hidden research section
 | ECCC active regional warnings | Warning adapter; airport brief | Canadian weather cards, combined flight brief, journey evidence and reviews | Regional bounding-box/polygon coverage; a returned warning does not establish that the airport itself is affected. |
 | Installed official BTS monthly flights | `providers/bts.ts`; `/api/travel/history` | Flight DNA summary and per-leg official history; joint journey/assistant/recovery historical context; manual history checker | U.S. covered domestic reporting carriers, publication lag; each rate needs 30 eligible observations. Import time and reporting months are separate. |
 | Independent Flyerintel airport/route/flight/month aggregates | `flightHistory.ts`; `/api/travel/flight-history` | Flight DNA, historical network comparisons and monthly charts | Separate cohorts and licence/attribution. Never pooled with the official import, never live availability. Its failure does not hide installed official records. |
-| Historical airport-posted checkpoint samples | `securityHistory.ts`; `/api/travel/security-history` | Security history within Flight DNA | Validated, timestamped historical rows are cached durably. A bounded, license-checked, revision-pinned Parquet archive backs up the query service, with checksum and retrieval receipt. Missing percentiles stay absent; outages retain a labeled stale snapshot. Ambiguous DST hours are rejected. Not a current TSA wait API or measured passenger wait. |
+| Historical airport-posted checkpoint samples | `securityHistory.ts`; `/api/travel/security-history` | Security history within Flight DNA | Validated, timestamped historical rows are cached durably. A bounded, license-checked, revision-pinned Parquet archive is the primary source, with checksum and retrieval receipt; the query service is an independent fallback. Missing percentiles stay absent; outages retain a labeled stale snapshot. Ambiguous DST hours are rejected. Not a current TSA wait API or measured passenger wait. |
 | OpenRouteService / configured OSRM matrices | `providers/routing.ts`; `/api/travel/road-planning`; scenario/readiness/assistant/recovery calculations | Guided and advanced airport comparisons, quote calculations, joint planner, readiness, assistant/recovery and reviewed calendar updates | The same directed road matrices serve all active planners. Missing/currently unreachable road data cannot create a feasible schedule or complete quote ranking. User-entered checked ground estimates remain explicitly identified. Live traffic, closures, border queues and airline inventory remain unknown. |
 | adsb.lol aircraft observations | `providers/liveAircraft.ts`; `/api/travel/live-aircraft` | On-demand aircraft panel within Flight DNA | Position observations, not confirmed flight/booking/aircraft assignment. Production provider-review gate remains separate. |
 | Census county/place/ZCTA geography | Geography adapters and geography APIs | Atlas territories, county/ZIP explorer and base reference tools | Reference geography, not an independently verified street address or USPS delivery ZIP. |
@@ -153,3 +153,67 @@ The source file was pinned to revision
 `716a95800929db49f8c2ebac248fd4dcc6f90fcb` with SHA-256
 `ad9e0961497934827c002f67193f365da807f107828ea6d75ba91f186e34c190`.
 These are source checks and historical records, not live boarding or queue guarantees.
+
+
+## Intelligence tool presentation and connection repairs · 2026-11-12
+
+- **Security & airport:** Prefer the verified hourly archive before the query
+  viewer, sharing downloads and matching work across both lane requests. Retry
+  failed older query strategies on upgrade while retaining successful snapshots.
+  Supported, unsupported and unavailable results share one validated response
+  contract; malformed or mismatched responses never become wait estimates.
+  Empty arrival times are rejected. Available p95 record counts are preserved; an upper benchmark from a smaller sample is not rejected by comparing unrelated medians. Lane and allowance controls sit before the
+  results, and source checkpoint labels, observation ranges and sample sizes
+  remain visible. Personal records are still private to this device/workspace.
+- **Airport pressure:** One normalized, cached FAA snapshot now supplies both
+  the airport brief and the legacy disruptions endpoint. Removed the second
+  feed parser/cache. Advisory cause, published average delay, effective period,
+  runway configuration, official advisory deep links and their source times are retained. A newer advisory
+  is not dated by an older configuration; the oldest notice issue time gates
+  multiple notices conservatively. Aged notices remain visible as published
+  evidence with unknown current applicability. They never become current
+  planning evidence; ended notices do not create current alerts.
+- **Weather risk:** Station temperature, visibility in statute miles, wind
+  direction/speed/gusts and terminal forecast validity are visible before raw
+  reports. Unknown measurements stay unknown. Published NWS periods overlapping
+  the travel date include the previous overnight period, with airport-local
+  times and precipitation probability. Observations, forecasts and warnings
+  keep separate meanings. Complete receipts remain in accessible disclosures. Copied briefs carry source links, observation/retrieval times, states, coverage and limitations; forecast cues use the same travel-date overlap rule as the cards.
+- **Flight DNA:** The imported official monthly cohort is labeled separately
+  from the broader independently published aggregate. Reporting periods,
+  denominators and the historical meaning of the 90th percentile remain
+  explicit; these rates are never pooled or treated as predictions.
+- **Alternatives:** Display per-leg historical delay/cancellation rates,
+  sample counts and reporting periods for all eight bounded corridor results, rather than hiding the final two. Keep the internal ranking method
+  inspectable, without presenting its numerical proxy as a journey risk score.
+  Airline schedule, seats and protection still require verification.
+- **Connection survival:** Preserve the shared reviewed transfer/cutoff margin
+  engine; the new selection styling retains semantic native controls and does
+  not introduce preset factual answers.
+- **All tools:** Keep all six distinct photographs. Smaller context banners,
+  larger primary measurements and collapsed receipts reduce scrolling. Native
+  selection controls use progressive `base-select` styling for themed menus,
+  keyboard operation and selected checks; older browsers retain platform
+  pickers. No synthetic operational data or fixture endpoints are enabled in
+  normal runtimes. The static shell cache advances to v16 without forcing a
+  reload over an unsaved form.
+
+A normal local runtime checked MCO, Thursday at 2 PM, against the real archive
+at 2026-11-12 16:17 UTC: six checkpoint/lane summaries, source revision
+`c46843ab60ec34a9977e709d7b3a0c63076c677f`, SHA-256
+`d365a3113881e1ec10ab570fff2e0fee86d39af409a64f9879acafd516dfccd0`.
+This check used no source fixtures or private host credentials. It establishes
+that the connection returned verified historical records for that query, not
+live queue lengths or universal coverage. Publishing was not performed.
+
+
+Validation for this change: the production build and API/runtime smoke checks
+passed. The full local data suite passed 84 checks (five database-specific
+checks required PostgreSQL); the separate PostgreSQL/API run then passed all
+58 checks with zero skips. Desktop, phone, keyboard, malformed-response retry,
+source-expiry and navigation-fit verification passed 23 browser checks, including
+six laptop viewport sizes and three short landscape-phone sizes. Earlier browser
+verification also covered all six tool photos and shared connection assumptions.
+Screenshots and live-check receipts are held outside the repository. A historical
+MCO sample succeeded; no claim is made about every airport, live TSA queues,
+airline inventory or the separately published Replit deployment.

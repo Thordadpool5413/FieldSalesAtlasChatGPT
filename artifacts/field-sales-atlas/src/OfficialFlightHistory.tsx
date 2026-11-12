@@ -37,16 +37,18 @@ export default function OfficialFlightHistory({ origin, destination, connection,
   if (!analysisToken || !state || state.key !== key) return null;
   return <section className="fd-official-history" aria-label="Official BTS route history">
     <h3>Official BTS records for this route</h3>
-    <p>Imported U.S. reporting-carrier history. Kept separate from the independent aggregates below; sample sizes and rates are never combined.</p>
+    <p>Official monthly sample. The broader published history below covers a different period and population, so its rates may differ. These samples are never combined.</p>
     {state.busy ? <p role="status">Reading installed official records…</p> : state.legs.map(leg => <article className="fd-metric-card" key={leg.origin + leg.destination}>
       <h4>{leg.origin} → {leg.destination}</h4>
       {leg.error ? <p role="alert">{leg.error}</p> : leg.result ? <>
         {leg.result.summary ? <>
-          <p>{leg.result.summary.sampleSize.toLocaleString()} matching records · {leg.result.summary.outcomeSampleSize.toLocaleString()} eligible arrival outcomes · {leg.result.summary.cancellationSampleSize.toLocaleString()} known cancellation outcomes.</p>
+          <p className="fd-cohort-period">{leg.result.coverage.periods.map(period => period.period).join(', ') || 'Reporting period unavailable'} · {leg.result.summary.sampleSize.toLocaleString()} matching records</p>
+          <p>{leg.result.summary.outcomeSampleSize.toLocaleString()} eligible arrival outcomes · {leg.result.summary.cancellationSampleSize.toLocaleString()} known cancellation outcomes.</p>
           <dl className="journey-costs"><div><dt>Observed on-time rate</dt><dd>{percent(leg.result.summary.onTimeRate)}</dd></div>
             <div><dt>Observed cancellation rate</dt><dd>{percent(leg.result.summary.cancellationRate)}</dd></div>
             <div><dt>90th-percentile arrival delay</dt><dd>{leg.result.summary.p90ArrivalDelayMinutes === null ? 'Insufficient evidence' : leg.result.summary.p90ArrivalDelayMinutes + ' min'}</dd></div></dl>
           <p>{leg.result.summary.definition}</p>
+          {leg.result.summary.p90ArrivalDelayMinutes!==null&&<p>90% of this sample’s eligible arrival delays were at or below {leg.result.summary.p90ArrivalDelayMinutes} minutes. This is a historical benchmark, not your flight’s expected delay.</p>}
         </> : <p>No official monthly history is installed. No reliability score was assigned.</p>}
         <p>Reporting months: {leg.result.coverage.periods.map(period => period.period).join(', ') || 'None'}. Historical outcomes do not predict your flight or establish current service.</p>
         <details className="journey-details"><summary>Official history source, age and limitations</summary><TravelEvidence evidence={[leg.result.evidence]}/></details>

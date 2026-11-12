@@ -1,0 +1,75 @@
+/* Native selection semantics, with a fully themed picker where supported.
+   Safari and touch browsers retain their accessible platform selection sheet. */
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]) {
+  appearance: none;
+  color-scheme: dark;
+  min-height: 44px;
+  min-width: 0; max-width: 100%;
+  padding: 11px 40px 11px 14px;
+  border: 1px solid var(--at-border);
+  border-radius: 12px;
+  background-color: var(--at-field);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23899dab' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-position: right 13px center;
+  background-repeat: no-repeat;
+  color: var(--at-text);
+  font: 500 14px/1.4 var(--atlas-font);
+  letter-spacing: normal;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 2px #0000000a;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product[data-theme='light'] select { color-scheme: light; }
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--at-cyan) 60%, var(--at-border));
+  background-color: var(--at-raised);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]):focus-visible {
+  border-color: var(--at-cyan);
+  outline: 2px solid var(--at-cyan);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--at-cyan) 12%, transparent);
+}
+.mv-app.atlas-design-v3.atlas-product-v4.vice-product select:disabled { cursor: not-allowed; }
+@supports (appearance: base-select) {
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]):not([size]),
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]):not([size])::picker(select) { appearance: base-select; }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]):not([size]) {
+    background-image: none; padding-right: 14px; gap: 16px; align-items: center;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select::picker-icon {
+    content: ''; width: 14px; height: 14px; flex-shrink: 0;
+    background: var(--at-muted);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: rotate .15s ease;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select:open::picker-icon { rotate: 180deg; }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select::picker(select) {
+    background: var(--at-stage); color: var(--at-text);
+    border: 1px solid var(--at-border); border-radius: 16px;
+    padding: 6px; margin-block: 6px; box-shadow: 0 16px 48px #00000045;
+    max-height: min(360px, 60dvh); max-width: min(520px, calc(100vw - 24px)); overflow: auto; overscroll-behavior: contain;
+    font: 500 14px/1.45 var(--atlas-font);
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select option {
+    min-height: 44px; padding: 10px 12px; border: 0; border-radius: 9px;
+    gap: 12px; color: var(--at-text); background: transparent; cursor: pointer;
+    white-space: normal; overflow-wrap: anywhere;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select option:is(:hover, :focus-visible) {
+    background: var(--at-raised); outline: 2px solid var(--at-cyan); outline-offset: -2px;
+  }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select option:checked { background: var(--at-aqua-soft); font-weight: 700; }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select option::checkmark { color: var(--at-cyan); }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select option:disabled { color: var(--at-muted); opacity: .6; cursor: not-allowed; }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select optgroup { color: var(--at-muted); padding: 8px 2px; font-size: 12px; }
+}
+@media (max-width: 700px) {
+  /* Preserve readable input text when mobile browsers focus a form control. */
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product select:not([multiple]) { font-size: 16px; }
+  .mv-app.atlas-design-v3.atlas-product-v4.vice-product .mv-mobile-trainer select:not([multiple]) {
+    font-size: 13px; white-space: nowrap; gap: 8px; padding: 6px 8px;
+    background-color: transparent; border: 0; box-shadow: none; border-radius: 8px;
+  }
+}

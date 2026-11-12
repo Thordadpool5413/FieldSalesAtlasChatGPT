@@ -16,6 +16,7 @@ type TerminalStats = {
   historicalMedianPosted: number;
   typicalHourlyP75: number;
   typicalHourlyP95: number|null;
+  p95Records?: number;
   observedStart: string;
   observedEnd: string;
 };
@@ -135,11 +136,13 @@ async function loadQueue(code:string, hour:number, weekday:number, queue:Queue) 
       partial:!!data.partial
     };
   };
-  try{return {...await viewer(),archive:undefined as CheckpointArchiveReceipt|undefined};}
-  catch{
-    const fallback=await checkpointArchiveRows(code,hour,weekday);
-    return {observations:fallback.rows.filter(row=>row.queue_type===queue).slice(0,100),total:fallback.rows.length,partial:false,archive:fallback.receipt};
-  }
+  // The published file is bounded, licensed, revision-pinned and shared between
+  // concurrent queue queries. Prefer it to the frequently unavailable viewer.
+  // Keep the viewer as an independent fallback when the archive cannot validate.
+  try{
+    const archive=await checkpointArchiveRows(code,hour,weekday);
+    return {observations:archive.rows.filter(row=>row.queue_type===queue).slice(0,100),total:archive.rows.length,partial:false,archive:archive.receipt};
+  }catch{return {...await viewer(),archive:undefined as CheckpointArchiveReceipt|undefined};}
 }
 async function loadSecurity(code:string, date:string, hour:number):Promise<SecurityHistoryReport> {
   const zone=timezone[code]||'';
@@ -179,7 +182,7 @@ async function loadSecurity(code:string, date:string, hour:number):Promise<Secur
         detail.slice(0,85)+').');
       continue;
     }
-    if(entry.value.archive){archive=entry.value.archive;warnings.push('The query service was unavailable. A validated, revision-pinned published hourly archive supplied these historical records.');}
+    if(entry.value.archive)archive=entry.value.archive;
     if(entry.value.partial)warnings.push('Dataset viewer indexing is partial; historical coverage may be incomplete.');
     for(const row of entry.value.observations){
       const terminal=String(row.terminal||'Unknown').slice(0,45);
@@ -209,6 +212,7 @@ async function loadSecurity(code:string, date:string, hour:number):Promise<Secur
       historicalMedianPosted:median(observations.map(item=>num(item.p50_wait)!).filter(Number.isFinite))!,
       typicalHourlyP75:median(observations.map(item=>num(item.p75_wait)!).filter(Number.isFinite))!,
       typicalHourlyP95:median(observations.flatMap(item=>num(item.p95_wait)===null?[]:[num(item.p95_wait)!])),
+      p95Records:observations.filter(item=>num(item.p95_wait)!==null).length,
       observedStart:timestamps[0]||'',observedEnd:timestamps[timestamps.length-1]||''
     });
   }
@@ -230,7 +234,7 @@ export async function securityHistory(
   if(current&&current.expires>Date.now())return current.value;
   if(pending.has(key))return pending.get(key)!;
   const task=(async()=>{
-    const [saved]=await db.get<{result?:SecurityHistoryReport;lastFailure?:SecurityHistoryReport;retryAfter:string;lastAttemptAt:string}>('atlas_checkpoint_history_v3',[storageId]);
+    const [saved]=await db.get<{queryVersion?:number;result?:SecurityHistoryReport;lastFailure?:SecurityHistoryReport;retryAfter:string;lastAttemptAt:string}>('atlas_checkpoint_history_v3',[storageId]);
     const snapshot=saved?.result;
     const valid=!!snapshot?.available && snapshot.airport===airport && snapshot.etHour===bucket?.hour && snapshot.etWeekday===bucket?.weekday
       && Number.isFinite(Date.parse(snapshot.checkedAt)) && Date.now()-Date.parse(snapshot.checkedAt)<=30*86400000
@@ -238,14 +242,16 @@ export async function securityHistory(
       && snapshot.rows.every(row=>row.hourRecords>0 && num(row.historicalMedianPosted)!==null && num(row.typicalHourlyP75)!==null
         &&(row.typicalHourlyP95===null||num(row.typicalHourlyP95)!==null) && !!observationTime(row.observedStart) && !!observationTime(row.observedEnd));
     if(valid&&Date.parse(saved!.retryAfter)>Date.now())return {...snapshot!,localDate:date,localHour:hour,lastAttemptAt:saved!.lastAttemptAt};
-    if(!valid&&saved?.lastFailure&&Date.parse(saved.retryAfter)>Date.now())return {...saved.lastFailure,localDate:date,localHour:hour};
+    // Retry failures from older query strategies immediately after an upgrade;
+    // successful verified snapshots remain reusable and are never discarded.
+    if(!valid&&saved?.queryVersion===4&&saved.lastFailure&&Date.parse(saved.retryAfter)>Date.now())return {...saved.lastFailure,localDate:date,localHour:hour};
     const fresh=await loadSecurity(airport,date,hour);
     const lastAttemptAt=new Date().toISOString();
     const value:SecurityHistoryReport=fresh.available?{...fresh,state:'historical',lastAttemptAt}
       :valid?{...snapshot!,state:'stale',lastAttemptAt,localDate:date,localHour:hour,
         message:'The archive could not be refreshed. Showing previously validated historical records; this is not a current wait estimate. '+fresh.message}
       :{...fresh,state:'unavailable',lastAttemptAt};
-    await db.tx.update('atlas_checkpoint_history_v3',[{id:storageId,record:{result:value.available?value:undefined,lastFailure:value.available?undefined:value,lastAttemptAt,
+    await db.tx.update('atlas_checkpoint_history_v3',[{id:storageId,record:{queryVersion:4,result:value.available?value:undefined,lastFailure:value.available?undefined:value,lastAttemptAt,
       retryAfter:new Date(Date.now()+(fresh.available?24*3600000:15*60000)).toISOString()}}]);
     return value;
   })().catch(():SecurityHistoryReport=>({

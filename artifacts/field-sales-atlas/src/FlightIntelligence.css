@@ -202,3 +202,61 @@
 @media (prefers-reduced-motion: reduce) {
   .mv-app.atlas-design-v3.atlas-product-v4 .fi-page .fi-tool { transition: none; }
 }
+/* Intelligence results: facts first, with readable context and optional receipts. */
+.mv-app.atlas-design-v3.atlas-product-v4 .fi-results {
+  padding: clamp(16px, 2vw, 28px); border-radius: 20px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 :is(.fi-panel-heading, .fd-head, .sh-head) h2 {
+  font-size: clamp(26px, 2.4vw, 32px); line-height: 1.15; letter-spacing: -.4px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 :is(.fi-panel-heading, .fd-head, .sh-head) p {
+  font: 400 14px/1.65 var(--atlas-font); max-width: 76ch;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-airports { gap: 18px; align-items: start; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-airport {
+  border: 1px solid var(--at-border-soft); border-radius: 16px; padding: 22px;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-airport > h3 { font: 600 15px/1.5 var(--atlas-font); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-evidence { padding-block: 18px; gap: 8px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-evidence > strong { font-size: 14px; line-height: 1.55; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-evidence small { font-size: 12px; line-height: 1.6; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-evidence > small > strong { display: block; margin-bottom: 4px; color: var(--at-text); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-advisory-link { display: flex; align-items: center; gap: 6px; width: fit-content; min-height: 44px; color: var(--at-cyan); font-weight: 600; }
+.mv-app.atlas-design-v3.atlas-product-v4 :is(.fi-source-details, .sh-source-details, .fd-ranking-method) {
+  border-top: 1px solid var(--at-border-soft); margin-top: 12px; min-width: 0; overflow-wrap: anywhere;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 :is(.fi-source-details, .sh-source-details, .fd-ranking-method) > summary {
+  min-height: 48px; padding-block: 14px; font: 600 13px/1.5 var(--atlas-font); color: var(--at-cyan); cursor: pointer;
+}
+.mv-app.atlas-design-v3.atlas-product-v4 .fi-source-details .travel-evidence-grid { grid-template-columns: minmax(0,1fr); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fi-evidence-note { display: block; margin-top: 8px; font-size: 12px; line-height: 1.5; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-condition { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-condition > strong { font-size: 28px; letter-spacing: -.6px; color: var(--at-cyan); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-condition > span { font-size: 13px; color: var(--at-text); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-summary .fr-observation-time { color: var(--at-muted); font: 400 12px/1.6 var(--atlas-font); margin: 8px 0 16px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 18px 0; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics > div { min-width: 0; padding: 12px 10px; background: var(--at-surface); border-radius: 12px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics dt { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--at-muted); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics dt svg { flex-shrink: 0; color: var(--at-cyan); }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics dd { font: 600 23px/1.5 var(--atlas-font); letter-spacing: -.6px; font-variant-numeric: tabular-nums; margin: 7px 0 0; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics dd small { font: 400 12px/1.4 var(--atlas-font); color: var(--at-muted); letter-spacing: normal; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-taf-coverage { border-top: 1px solid var(--at-border-soft); padding-top: 16px; margin-top: 12px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-taf-coverage > strong { font-size: 13px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-taf-coverage > p { font-size: 12px; color: var(--at-muted); line-height: 1.6; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fr-raw-weather { font: 400 12px/1.7 ui-monospace, monospace; overflow-wrap: anywhere; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path { align-items: start; padding: 18px; gap: 14px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-evidence { flex: 1; min-width: 0; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-evidence > strong { font-size: 16px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-legs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 14px 0; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-legs > div { display: flex; flex-direction: column; gap: 6px; border-left: 2px solid var(--at-border); padding-left: 12px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-legs span { font-size: 13px; line-height: 1.5; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-legs small { font-size: 11px; line-height: 1.5; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-path-verification { color: var(--at-cyan); font-size: 12px; }
+.mv-app.atlas-design-v3.atlas-product-v4 .fd-cohort-period { font-weight: 600; color: var(--at-cyan); }
+@media(max-width:700px) {
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-airport { padding: 16px; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics { gap: 6px; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics > div { padding: 10px 8px; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fr-weather-metrics dd { font-size: 20px; }
+  .mv-app.atlas-design-v3.atlas-product-v4 .fd-path-legs { grid-template-columns: minmax(0,1fr); }
+}
